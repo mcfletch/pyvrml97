@@ -110,7 +110,7 @@ scenegraphs.
 		],
 
 		package_dir = {
-			'vrml':'.',
+			'vrml':'vrml',
 		},
 		# non python files of examples      
 		include_package_data = True,
