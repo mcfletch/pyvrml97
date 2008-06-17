@@ -81,7 +81,7 @@ if __name__ == "__main__":
 			"""Topic :: Multimedia :: Graphics :: 3D Rendering""",
 			"""Intended Audience :: Developers""",
 		],
-		'download_url': "https://sourceforge.net/project/showfiles.php?group_id=5988",
+		'download_url': "https://sourceforge.net/project/showfiles.php?group_id=19262",
 		'keywords': 'VRML,VRML97,scenegraph',
 		'long_description' : """VRML97 Scenegraph modelling objects for Python 
 

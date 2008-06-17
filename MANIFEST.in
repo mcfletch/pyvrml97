@@ -1,0 +1,3 @@
+include license.txt
+include *.in
+include accellerate/*.c

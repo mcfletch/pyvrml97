@@ -42,7 +42,7 @@ class Node( object ):
 	DEF = fieldtypes.SFString(' DEF',1, '')
 	#scenegraph = None # will be created below...
 	#rootSceneGraph = None # will be created below
-	externalURL = ()
+	externalURL = fieldtypes.MFString( 'externalURL', 1)
 	PROTO = ""
 	def __init__( self, **namedarguments ):
 		"""Initialise the node with appropriate named args
@@ -155,12 +155,16 @@ class PrototypedNode( object ):
 		the like.
 		"""
 		from vrml import route
-		for cls in self.__class__.__mro__:
+		isMappings = None
+		for cls in self.__class__.__mro__[:-1]:
 			template = PrototypedNode.scenegraph.fget( cls )
 			if template:
 				# use ismaps for the instantiated scenegraph
 				isMappings = ismaps(cls).items()
 				break
+		if isMappings is None:
+			# no scenegraph defined...
+			raise ValueError( """Attempting to instantiate a prototyped node with no scenegraph defined: %s"""%( self,))
 
 		copier = copiermodule.Copier()
 		sg = template.copy( copier )
