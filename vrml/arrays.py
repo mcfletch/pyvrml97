@@ -67,6 +67,14 @@ else:
 		frustcullaccel = None
 	del a
 	
+def safeCompare( first, second ):
+	"""Watch out for pointless numpy truth-value checks"""
+	try:
+		return bool(first == second )
+	except ValueError, err:
+		return bool( any( first == second ) )
+
+	
 def contiguous( a ):
 	"""Force to a contiguous array"""
 	return array( a, typeCode(a) )

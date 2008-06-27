@@ -424,9 +424,12 @@ class _MFVec( object ):
 		return 0
 	def vrmlstr( self, value, lineariser=None):
 		"""Convert the given value to a VRML97 representation"""
-		if not value:
-			return '[ ]'
-		print self
+		try:
+			if not value:
+				return '[ ]'
+		except ValueError, err:
+			# numpy arrays can't be tested for null-ity, should be a typeerror, but whatever
+			pass
 		linvalues = _linvalues( lineariser )
 		sets = [
 			linvalues['numsep'].join(

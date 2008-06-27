@@ -1,6 +1,7 @@
 """object for linearizing a scene graph to VRML97
 """
 import types, cStringIO, operator, traceback, warnings
+from vrml import arrays
 from vrml.protofunctions import *
 from vrml import node
 
@@ -298,7 +299,6 @@ class Lineariser:
 		self._dedent()
 		self.alreadydone[ id(clientNode) ] = startind, buffer.tell()
 		return None
-			
 	def _attrDict(self, object ):
 		"""Write out the attribute dictionary for an object"""
 		buffer = self.buffer
@@ -332,7 +332,13 @@ class Lineariser:
 				buffer.write(
 					'%(full_element_separator)s%(curindent)s%(indent)s%%s IS %%s\t'%linvalues%(field.name, isMaps.get(field.name) )
 				)
-			elif (default is not None and default != val) or default is None:
+			elif (
+				(
+					default is not None and 
+					not arrays.safeCompare( default, val)
+				) or 
+				default is None
+			):
 				buffer.write(
 					'%(full_element_separator)s%(curindent)s%(indent)s%%s\t'%linvalues%(field.name, )
 				)
