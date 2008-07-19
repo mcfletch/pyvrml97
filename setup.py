@@ -118,6 +118,7 @@ scenegraphs.
 		ext_modules=extensions,
 		install_requires = [ 
 			'PyDispatcher',
+			'numpy',
 		],
 		dependency_links = [
 			# SimpleParse
@@ -128,7 +129,7 @@ scenegraphs.
 			"http://sourceforge.net/project/showfiles.php?group_id=1369",
 		],
 		extras_require = {
-			'numpy':  ["numpy"],
+			#'numpy':  ["numpy"],
 			'numeric':  ["Numeric"],
 			'parsing': ["simpleparse"],
 		},

@@ -222,6 +222,7 @@ class FontStyle( node.Node ):
 	spacing = field.newField( 'spacing', 'SFFloat', 0, 1.0)
 	leftToRight = field.newField( 'leftToRight', 'SFBool', 0, 1)
 	size = field.newField( 'size', 'SFFloat', 0, 1.0)
+	
 	#Events
 	
 
