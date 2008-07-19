@@ -2,74 +2,7 @@
 """Installs vrml scenegraph modelling engine using setuptools (eggs)
 """
 import os, sys
-from setuptools import setup, find_packages, Extension
-extensions = [
-	Extension("vrml.fieldaccel", [
-			os.path.join( 'accellerate', "fieldaccel.c")
-			# is just a Python-API function...
-		],
-	),
-]
-
-try:
-	import numpy
-except ImportError, err:
-	sys.stderr.write(
-		"""Unable to import numpy, skipping numpy extension building\n"""
-	)
-else:
-	if hasattr( numpy, 'get_include' ):
-		includeDirectories = [
-			numpy.get_include(),
-		]
-	else:
-		includeDirectories = [
-			os.path.join(
-				os.path.dirname( numpy.__file__ ),
-				'core',
-				'include',
-			),
-		]
-	definitions = [
-		('USE_NUMPY', True ),
-	]
-	extensions.extend( [
-		Extension("vrml.tmatrixaccelnumpy", [
-				os.path.join( 'accellerate', "tmatrixaccel.c")
-			],
-			include_dirs = includeDirectories,
-			define_macros = definitions,
-		),
-		Extension("vrml.frustcullaccelnumpy", [
-				os.path.join( 'accellerate', "frustcullaccel.c")
-			],
-			include_dirs = includeDirectories,
-			define_macros = definitions,
-		),
-	])
-try:
-	import Numeric
-except ImportError, err:
-	sys.stderr.write(
-		"""Unable to import Numeric, skipping Numeric extension building\n"""
-	)
-else:
-	definitions = [
-		('USE_NUMPY', False ),
-	]
-	extensions.extend( [
-		Extension("vrml.tmatrixaccelnumeric", [
-				os.path.join( 'accellerate', "tmatrixaccel.c")
-			],
-			undefine_macros = definitions,
-		),
-		Extension("vrml.frustcullaccelnumeric", [
-				os.path.join( 'accellerate', "frustcullaccel.c")
-			],
-			undefine_macros = definitions,
-		),
-	])
-	
+from setuptools import setup, find_packages
 
 if __name__ == "__main__":
 	extraArguments = {
@@ -132,6 +65,7 @@ scenegraphs.
 			#'numpy':  ["numpy"],
 			'numeric':  ["Numeric"],
 			'parsing': ["simpleparse"],
+			'accellerate':['PyVRML97-accellerate'],
 		},
 		**extraArguments
 	)
