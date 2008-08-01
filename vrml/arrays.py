@@ -15,14 +15,7 @@ except ImportError, err:
 			if x:
 				return True 
 		return False
-	try:
-		from vrml import tmatrixaccelnumeric as tmatrixaccel
-	except ImportError, err:
-		tmatrixaccel = None
-	try:
-		from vrml import frustcullaccelnumeric as frustcullaccel
-	except ImportError, err:
-		frustcullaccel = None
+	implementation_name = 'numeric'
 else:
 	# why did this get taken out?  Is divide now safe?
 	amin = amin 
@@ -57,15 +50,8 @@ else:
 				return a.dtype.char
 			except AttributeError, err:
 				return a.typecode()
-	try:
-		from vrml import tmatrixaccelnumpy as tmatrixaccel
-	except ImportError, err:
-		tmatrixaccel = None
-	try:
-		from vrml import frustcullaccelnumpy as frustcullaccel
-	except ImportError, err:
-		frustcullaccel = None
 	del a
+	implementation_name = 'numpy'
 	
 def safeCompare( first, second ):
 	"""Watch out for pointless numpy truth-value checks"""
@@ -79,3 +65,21 @@ def contiguous( a ):
 	"""Force to a contiguous array"""
 	return array( a, typeCode(a) )
 	
+
+# conditional import via package entry points
+def entryFor( point ):
+	import pkg_resources
+	entrypoints = list(pkg_resources.iter_entry_points(
+		point
+	))
+	for entry in entrypoints:
+		if entry.name == implementation_name:
+			try:
+				return entry.load()
+			except ImportError, err:
+				pass
+	print 'no implementation found for:', point, implementation_name
+	return None
+
+tmatrixaccel = entryFor( 'vrml.tmatrixaccel' )
+frustcullaccel = entryFor( 'vrml.frustcullaccel' )

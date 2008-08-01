@@ -3,11 +3,17 @@ from pydispatch import dispatcher, robustapply
 import weakref
 from vrml import protonamespace
 
-try:
-	raise ImportError( 'blah' )
-	from vrml import fieldaccel
-except ImportError:
-	fieldaccel = None
+# conditional import via package entry points
+import pkg_resources
+entrypoints = list(pkg_resources.iter_entry_points(
+	"vrml.fieldaccel"
+))
+fieldaccel = None
+for entry in entrypoints:
+	try:
+		fieldaccel = entry.load()
+	except ImportError, err:
+		pass
 
 baseFieldTypes = protonamespace.ProtoNamespace({})
 baseEventTypes = protonamespace.ProtoNamespace({})

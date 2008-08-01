@@ -122,6 +122,10 @@ within the PyVRML97 and OpenGLContext rendering engine.
 				'numpy=vrml_accellerate.tmatrixaccelnumpy',
 				'numeric=vrml_accellerate.tmatrixaccelnumeric',
 			],
+			'vrml.frustcullaccel': [
+				'numpy=vrml_accellerate.frustcullaccelnumpy',
+				'numeric=vrml_accellerate.frustcullaccelnumeric',
+			],
 		},
 		extras_require = {
 			#'numpy':  ["numpy"],
