@@ -48,7 +48,6 @@ scenegraphs.
 		# non python files of examples      
 		include_package_data = True,
 		zip_safe = False,
-		ext_modules=extensions,
 		install_requires = [ 
 			'PyDispatcher',
 			'numpy',
