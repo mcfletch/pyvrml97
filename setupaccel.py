@@ -108,7 +108,7 @@ within the PyVRML97 and OpenGLContext rendering engine.
 		zip_safe = False,
 		ext_modules=extensions,
 		install_requires = [ 
-			'numpy',
+			#'numpy', # not installable via setuptools
 		],
 		dependency_links = [
 			# Numpy/Numeric
@@ -129,7 +129,7 @@ within the PyVRML97 and OpenGLContext rendering engine.
 		},
 		extras_require = {
 			#'numpy':  ["numpy"],
-			'numeric':  ["Numeric"],
+			#'numeric':  ["Numeric"],
 		},
 		**extraArguments
 	)

@@ -50,7 +50,7 @@ scenegraphs.
 		zip_safe = False,
 		install_requires = [ 
 			'PyDispatcher',
-			'numpy',
+			#'numpy', # doesn't work as an egg install on Linux
 		],
 		dependency_links = [
 			# SimpleParse
