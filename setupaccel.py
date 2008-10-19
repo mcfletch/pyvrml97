@@ -107,29 +107,5 @@ within the PyVRML97 and OpenGLContext rendering engine.
 		include_package_data = False,
 		zip_safe = False,
 		ext_modules=extensions,
-		install_requires = [ 
-			#'numpy', # not installable via setuptools
-		],
-		dependency_links = [
-			# Numpy/Numeric
-			"http://sourceforge.net/project/showfiles.php?group_id=1369",
-		],
-		entry_points = {
-			'vrml.fieldaccel': [
-				'default=vrml_accellerate.fieldaccel',
-			],
-			'vrml.tmatrixaccel': [
-				'numpy=vrml_accellerate.tmatrixaccelnumpy',
-				'numeric=vrml_accellerate.tmatrixaccelnumeric',
-			],
-			'vrml.frustcullaccel': [
-				'numpy=vrml_accellerate.frustcullaccelnumpy',
-				'numeric=vrml_accellerate.frustcullaccelnumeric',
-			],
-		},
-		extras_require = {
-			#'numpy':  ["numpy"],
-			#'numeric':  ["Numeric"],
-		},
 		**extraArguments
 	)

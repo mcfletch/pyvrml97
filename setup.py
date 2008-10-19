@@ -48,23 +48,5 @@ scenegraphs.
 		# non python files of examples      
 		include_package_data = True,
 		zip_safe = False,
-		install_requires = [ 
-			'PyDispatcher',
-			#'numpy', # doesn't work as an egg install on Linux
-		],
-		dependency_links = [
-			# SimpleParse
-			"http://sourceforge.net/project/showfiles.php?group_id=55673",
-			# PyDispatcher
-			"http://sourceforge.net/project/showfiles.php?group_id=79755",
-			# Numpy/Numeric
-			"http://sourceforge.net/project/showfiles.php?group_id=1369",
-		],
-		extras_require = {
-			#'numpy':  ["numpy"],
-			'numeric':  ["Numeric"],
-			'parsing': ["simpleparse"],
-			'accellerate':['PyVRML97-accellerate'],
-		},
 		**extraArguments
 	)
