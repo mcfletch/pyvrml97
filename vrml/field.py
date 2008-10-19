@@ -4,16 +4,10 @@ import weakref
 from vrml import protonamespace
 
 # conditional import via package entry points
-import pkg_resources
-entrypoints = list(pkg_resources.iter_entry_points(
-	"vrml.fieldaccel"
-))
-fieldaccel = None
-for entry in entrypoints:
-	try:
-		fieldaccel = entry.load()
-	except ImportError, err:
-		pass
+try:
+	from vrml_accellerate import fieldaccel
+except ImportError, err:
+	fieldaccel = None
 
 baseFieldTypes = protonamespace.ProtoNamespace({})
 baseEventTypes = protonamespace.ProtoNamespace({})

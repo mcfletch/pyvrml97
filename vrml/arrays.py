@@ -5,6 +5,11 @@ Numeric tends to be a bit flaky...
 """
 try:
 	from numpy import *
+	try:
+		from vrml_accellerate import tmatrixaccelnumpy as tmatrixaccel
+		from vrml_accellerate import frustcullaccelnumpy as frustcullaccel
+	except ImportError, err:
+		tmatrixaccel = frustcullaccel = None
 except ImportError, err:
 	from Numeric import *
 	def typeCode( a ):
@@ -16,6 +21,11 @@ except ImportError, err:
 				return True 
 		return False
 	implementation_name = 'numeric'
+	try:
+		from vrml_accellerate import tmatrixaccelnumeric as tmatrixaccel
+		from vrml_accellerate import frustcullaccelnumeric as frustcullaccel
+	except ImportError, err:
+		tmatrixaccel = frustcullaccel = None
 else:
 	# why did this get taken out?  Is divide now safe?
 	amin = amin 
@@ -64,22 +74,3 @@ def safeCompare( first, second ):
 def contiguous( a ):
 	"""Force to a contiguous array"""
 	return array( a, typeCode(a) )
-	
-
-# conditional import via package entry points
-def entryFor( point ):
-	import pkg_resources
-	entrypoints = list(pkg_resources.iter_entry_points(
-		point
-	))
-	for entry in entrypoints:
-		if entry.name == implementation_name:
-			try:
-				return entry.load()
-			except ImportError, err:
-				pass
-	print 'no implementation found for:', point, implementation_name
-	return None
-
-tmatrixaccel = entryFor( 'vrml.tmatrixaccel' )
-frustcullaccel = entryFor( 'vrml.frustcullaccel' )
