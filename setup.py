@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 """Installs vrml scenegraph modelling engine using setuptools (eggs)
 """
-import os, sys
-from setuptools import setup, find_packages
+from distutils.core import setup
+import sys, os
+sys.path.insert(0, '.' )
+
+def is_package( path ):
+	return os.path.isfile( os.path.join( path, '__init__.py' ))
+def find_packages( root ):
+	"""Find all packages under this directory"""
+	for path, directories, files in os.walk( root ):
+		if is_package( path ):
+			yield path.replace( '/','.' )
 
 if __name__ == "__main__":
 	extraArguments = {
@@ -30,23 +39,17 @@ scenegraphs.
 
 	setup (
 		name = "PyVRML97",
-		version = "2.2.0a1",
+		version = "2.2.0a2",
 		description = "VRML97 Scenegraph model for Python",
 		author = "Mike C. Fletcher",
 		author_email = "mcfletch@vrplumber.com",
+		options = {
+			'sdist': {
+				'formats':['gztar','zip'],
+			}
+		},
 		url = "http://pyopengl.sourceforge.net/context/",
 		license = "BSD-style, see license.txt for details",
-		packages = [
-			'vrml',
-			'vrml.vrml97',
-			'vrml.vrml200x',
-		],
-
-		package_dir = {
-			'vrml':'vrml',
-		},
-		# non python files of examples      
-		include_package_data = True,
-		zip_safe = False,
+		packages = list(find_packages( 'vrml' )),
 		**extraArguments
 	)

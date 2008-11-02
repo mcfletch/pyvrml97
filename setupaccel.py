@@ -1,8 +1,18 @@
 #!/usr/bin/env python
 """Builds accelleration functions for the VRML97 scenegraph
 """
-import os, sys
-from setuptools import setup, find_packages, Extension
+from distutils.core import setup,Extension
+import sys, os
+sys.path.insert(0, '.' )
+
+def is_package( path ):
+	return os.path.isfile( os.path.join( path, '__init__.py' ))
+def find_packages( root ):
+	"""Find all packages under this directory"""
+	for path, directories, files in os.walk( root ):
+		if is_package( path ):
+			yield path.replace( '/','.' )
+
 extensions = [
 	Extension("vrml_accellerate.fieldaccel", [
 			os.path.join( 'accellerate', "fieldaccel.c")
@@ -100,12 +110,8 @@ within the PyVRML97 and OpenGLContext rendering engine.
 		author_email = "mcfletch@vrplumber.com",
 		url = "http://pyopengl.sourceforge.net/context/",
 		license = "BSD-style, see license.txt for details",
-		package_dir = {
-			'vrml_accellerate':'vrml_accellerate',
-		},
+		packages = list(find_packages( 'vrml_accellerate')),
 		# non python files of examples      
-		include_package_data = False,
-		zip_safe = False,
 		ext_modules=extensions,
 		**extraArguments
 	)
