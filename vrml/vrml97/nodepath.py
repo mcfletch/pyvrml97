@@ -13,6 +13,7 @@ class _NodePath( object ):
 	attributes.
 	"""
 	matrix = None
+	parentMatrixInfo = None,0
 	def isTransform( self, item ):
 		"""Customization Point: determine whether a node is a Transform"""
 		return isinstance(item, nodetypes.Transforming)
@@ -31,6 +32,22 @@ class _NodePath( object ):
 		"""
 		if self.matrix is not None:
 			return self.matrix
+		elif self.parentMatrixInfo[0] is not None:
+			matrix,start = self.parentMatrixInfo
+			t = nodetypes.Transforming
+			for item in super( NodePath,self).__getslice__( start, len(self)):
+				if isinstance( item, t ):
+					d = item.__dict__
+					matrix = transformmatrix.transformMatrix (
+						translation = d.get( "translation"),
+						rotation = d.get( "rotation"),
+						scale = d.get( "scale"),
+						scaleOrientation = d.get( "scaleOrientation"),
+						center = d.get( "center"),
+						parentMatrix = matrix,
+					)
+			self.matrix = matrix
+			return matrix
 		matrix = identity(4, 'd')
 		for item in self.transformChildren():
 			### this isn't quite right, it's Transform-specific,
@@ -81,21 +98,7 @@ class _NodePath( object ):
 	def __add__(self, other):
 		"""Add parent-matrix pre-caching support to nodepaths"""
 		base = super( _NodePath, self).__add__( other )
-		if self.matrix is not None and any( other ):
-			matrix = self.matrix
-			t = nodetypes.Transforming
-			for item in other:
-				if isinstance( item, t ):
-					d = item.__dict__
-					matrix = transformmatrix.transformMatrix (
-						translation = d.get( "translation"),
-						rotation = d.get( "rotation"),
-						scale = d.get( "scale"),
-						scaleOrientation = d.get( "scaleOrientation"),
-						center = d.get( "center"),
-						parentMatrix = matrix,
-					)
-			base.matrix = matrix
+		base.parentMatrixInfo = self.matrix,len(self)
 		return base
 
 class NodePath( _NodePath, nodepath.NodePath ):
