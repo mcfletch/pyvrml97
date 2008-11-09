@@ -282,6 +282,12 @@ class _MFInt32 ( object ):
 		"""Copy a value for copier"""
 		return arrays.array(value, arrays.typeCode(value) )
 
+class _MFUInt32( _MFInt32 ):
+	"""Unsigned integer version of MFInt32 (mostly for indices)"""
+	defaultDefault = list
+	arrayDataType = 'I'
+	acceptedTypes = ('I',UINT_TYPE)
+
 class _SFImage( _MFInt32 ):
 	"""SFImage field/event type base-class
 
@@ -534,6 +540,12 @@ class MFInt32Evt( _MFInt32, field.Event, ):
 	"""MFInt32 Event class"""
 	fieldType = 'MFInt32'
 
+class MFUInt32( _MFUInt32, field.Field ):
+	"""MFUInt32 Field class"""
+class MFUInt32Evt( _MFUInt32, field.Event, ):
+	"""MFUInt32 Event class"""
+	fieldType = 'MFUInt32'
+
 class MFRotation( _MFRotation, field.Field ):
 	"""MFRotation Field class"""
 class MFRotationEvt( _MFRotation, field.Event, ):
@@ -643,6 +655,7 @@ field.register( MFColor )
 field.register( MFRotation )
 field.register( SFRotation )
 field.register( MFInt32 )
+field.register( MFUInt32 )
 field.register( MFString )
 field.register( SFImage )
 field.register( SFFloat )
@@ -665,6 +678,7 @@ field.register( MFColorEvt )
 field.register( MFRotationEvt )
 field.register( SFRotationEvt )
 field.register( MFInt32Evt )
+field.register( MFUInt32Evt )
 field.register( MFStringEvt )
 field.register( SFImageEvt )
 field.register( SFFloatEvt )
