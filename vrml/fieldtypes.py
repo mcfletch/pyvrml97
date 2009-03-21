@@ -338,34 +338,45 @@ class _SFVec( object ):
 	
 	Stored as a Numeric-python double array of self.length
 	"""
-	length = 3
+	acceptedTypes = ('d',DOUBLE_TYPE)
+	targetType = DOUBLE_TYPE
+	dimension = (3,) # our dimension...
+	@property
+	def length( self ):
+		import operator
+		length = self.length = reduce( operator.mul, self.dimension )
+		return self.length
 	def defaultDefault( self ):
 		"""Default default value for vectors/colours"""
-		return [0]*self.length
+		return arrays.zeros( self.dimension, self.targetType )
 	def coerce( self, value ):
 		"""Base coercion mechanism for vector-like field types"""
 		if isinstance(value, (int,long,float)):
-			value = arrays.array([float(value)]*self.length,'d')
+			value = arrays.zeros( self.dimension, self.targetType )
+			value[:] = float(value)
 		elif isinstance( value, arrays.ArrayType ):
-			if arrays.typeCode(value) not in ( 'd', DOUBLE_TYPE ):
-				value = value.astype( 'd')
-			value = arrays.ravel(value)
+			if arrays.typeCode(value) not in self.acceptedTypes:
+				value = value.astype(self.targetType)
+			value = value.reshape( self.dimension )
 		elif isinstance( value, field.SEQUENCE_TYPES):
-			value = arrays.array(
-				map( float, collapse( value) ),
-				'd',
+			value = arrays.asarray(
+				map(float, collapse(value)),
+				self.targetType
 			)
+			value.reshape( self.dimension )
 		else:
 			try:
-				value = arrays.asarray( value, 'd' )
+				value = arrays.asarray( value, self.targetType )
 			except Exception:
 				raise ValueError( """Attempted to set value for an %s field which is not compatible: %s"""%( self.typeName(), repr(value) ))
-		if len(value) != self.length:
+			else:
+				value.reshape( self.dimension )
+		if value.shape != self.dimension:
 			raise ValueError(
-				"""%s value of incorrect length (is %s, should be %s)"""%(
+				"""%s value of incorrect shape (is %s, should be %s)"""%(
 					self.__class__.__name__,
-					len(value),
-					self.length,
+					value.shape,
+					self.dimension,
 				)
 			)
 		value = arrays.contiguous( value )
@@ -396,26 +407,40 @@ class _MFVec( object ):
 	Stored as x * self.length Numeric Python double array
 	"""
 	defaultDefault = list
+	acceptedTypes = ('d',DOUBLE_TYPE)
+	targetType = DOUBLE_TYPE
+	dimension = (3,) # our dimension...
+	@property
+	def length( self ):
+		import operator
+		length = self.length = reduce( operator.mul, self.dimension )
+		return self.length
 	def coerce( self, value ):
 		"""Base coercion mechanism for vector-like fields"""
 		if isinstance( value, arrays.ArrayType ):
-			if arrays.typeCode(value) not in ('d',DOUBLE_TYPE):
-				value = value.astype( 'd')
-			value = arrays.reshape(value, (-1,self.length))
+			if arrays.typeCode(value) not in self.acceptedTypes:
+				value = value.astype( self.targetType )
+			value = arrays.reshape(value, (-1,)+self.dimension)
 		elif isinstance( value, field.SEQUENCE_TYPES):
 			try:
-				value = arrays.reshape(arrays.array( value, 'd'), (-1,self.length))
+				value = arrays.reshape(
+					arrays.array( value, self.targetType), 
+					(-1,)+self.dimension
+				)
 			except ValueError:
 				value = arrays.reshape(
 					arrays.array(
 						map( float, collapse( value) ),
-						'd',
+						self.targetType,
 					),
-					(-1,self.length)
+					(-1,)+self.dimension
 				)
 		else:
 			try:
-				value = arrays.reshape(arrays.asarray( value, 'd' ), (-1,self.length))
+				value = arrays.reshape(
+					arrays.asarray( value, self.targetType ), 
+					(-1,)+self.dimension
+				)
 			except Exception:
 				raise ValueError( """Attempted to set value for an %s field which is not compatible: %s"""%( self.typeName(), repr(value) ))
 		value = arrays.contiguous( value )
@@ -423,9 +448,9 @@ class _MFVec( object ):
 	def check( self, value ):
 		"""Check that the given value is of exactly the expected type"""
 		if isinstance( value, arrays.ArrayType ):
-			if arrays.typeCode(value) not in ( 'd', DOUBLE_TYPE ):
+			if arrays.typeCode(value) not in self.acceptedTypes:
 				s = arrays.shape(value)
-				if len(s) ==2 and s[-1] == self.length:
+				if len(s) == len(self.dimension)+1 and s[1:] == self.dimension:
 					return 1
 		return 0
 	def vrmlstr( self, value, lineariser=None):
@@ -439,7 +464,7 @@ class _MFVec( object ):
 		linvalues = _linvalues( lineariser )
 		sets = [
 			linvalues['numsep'].join(
-				map(str, vector)
+				map(str, vector.ravel())
 			)
 			for vector in value
 		]
@@ -458,19 +483,53 @@ class _MFVec( object ):
 		"""Copy a value for copier"""
 		return arrays.array(value, arrays.typeCode(value) )
 
+class _SFVec32( _SFVec ):
+	acceptedTypes = ('f',FLOAT_TYPE)
+	targetType = FLOAT_TYPE
+class _MFVec32( _MFVec ):
+	acceptedTypes = ('f',FLOAT_TYPE)
+	targetType = FLOAT_TYPE
 
-class _SFVec2f( _SFVec ):
+class _SFVec2f( _SFVec32 ):
 	"""SFVec2f field/event type base-class"""
-	length = 2
-class _SFVec3f( _SFVec ):
+	dimension = (2,)
+class _SFVec3f( _SFVec32 ):
 	"""SFVec3f field/event type base-class"""
-	length = 3
-class _SFVec4f( _SFVec ):
+	dimension = (3,)
+class _SFVec4f( _SFVec32 ):
 	"""SFVec4f field/event type base-class"""
-	length = 4
-class _SFRotation( _SFVec ):
+	dimension = (4,)
+class _SFRotation( _SFVec32 ):
 	"""SFRotation field/event type base-class"""
-	length = 4
+	dimension = (4,)
+class _SFMatrix3f( _SFVec32 ):
+	"""3x3 matrix field/event type base-class"""
+	dimension = (3,3)
+	def defaultDefault( self ):
+		"""Default default value for vectors/colours"""
+		return arrays.identity( self.dimension[0], self.targetType )
+class _SFMatrix4f( _SFVec32 ):
+	"""4x4 matrix field/event type base-class"""
+	dimension = (4,4)
+	def defaultDefault( self ):
+		"""Default default value for vectors/colours"""
+		return arrays.identity( self.dimension[0], self.targetType )
+
+class _SFVec2d( _SFVec ):
+	"""SFVec2f field/event type base-class"""
+	dimension = (2,)
+class _SFVec3d( _SFVec ):
+	"""SFVec3f field/event type base-class"""
+	dimension = (3,)
+class _SFVec4d( _SFVec ):
+	"""SFVec4f field/event type base-class"""
+	dimension = (4,)
+class _SFMatrix3d( _SFVec ):
+	"""3x3 matrix field/event type base-class"""
+	dimension = (3,3)
+class _SFMatrix4d( _SFVec ):
+	"""4x4 matrix field/event type base-class"""
+	dimension = (4,4)
 
 class _SFColor( _Color, _SFVec3f ):
 	"""SFColor field/event type base-class"""
@@ -482,15 +541,27 @@ class _SFColor( _Color, _SFVec3f ):
 	# can't use classmethod because then super's get class instead of instance
 	#coerce = classmethod( coerce )
 _SFCOLOR_TOOL = _SFColor()
-class _MFVec2f( _MFVec ):
+
+class _MFVec2f( _MFVec32 ):
 	"""MFVec2f field/event type base-class"""
-	length = 2
-class _MFVec3f( _MFVec ):
+	dimension = (2,)
+class _MFVec3f( _MFVec32 ):
 	"""MFVec3f field/event type base-class"""
-	length = 3
-class _MFVec4f( _MFVec ):
+	dimension = (3,)
+class _MFVec4f( _MFVec32 ):
 	"""MFVec4f field/event type base-class"""
-	length = 4
+	dimension = (4,)
+
+class _MFVec2d( _MFVec ):
+	"""MFVec2d field/event type base-class"""
+	dimension = (2,)
+class _MFVec3d( _MFVec ):
+	"""MFVec3d field/event type base-class"""
+	dimension = (3,)
+class _MFVec4d( _MFVec ):
+	"""MFVec4d field/event type base-class"""
+	dimension = (4,)
+
 class _MFColor( _Color, _MFVec3f ):
 	"""MFColor field/event type base-class"""
 	def coerce( self, value ):
@@ -519,7 +590,21 @@ class _MFColor( _Color, _MFVec3f ):
 		
 class _MFRotation( _MFVec ):
 	"""MFRotation field/event type base-class"""
-	length = 4
+	dimension = (4,)
+
+class _MFMatrix3f( _MFVec32 ):
+	"""3x3 matrix-set field/event type base-class"""
+	dimension = (3,3)
+class _MFMatrix4f( _MFVec32 ):
+	"""4x4 matrix-set field/event type base-class"""
+	dimension = (4,4)
+class _MFMatrix3d( _MFVec ):
+	"""3x3 matrix-set field/event type base-class"""
+	dimension = (3,3)
+class _MFMatrix4d( _MFVec ):
+	"""4x4 matrix-set field/event type base-class"""
+	dimension = (4,4)
+
 
 ### The concrete field and event classes (auto-generated).
 class MFColor( _MFColor, field.Field ):
@@ -569,18 +654,54 @@ class MFVec2f( _MFVec2f, field.Field ):
 class MFVec2fEvt( _MFVec2f, field.Event, ):
 	"""MFVec2f Event class"""
 	fieldType = 'MFVec2f'
+class MFVec2d( _MFVec2f, field.Field ):
+	"""MFVec2d Field class"""
+class MFVec2dEvt( _MFVec2d, field.Event, ):
+	"""MFVec2d Event class"""
+	fieldType = 'MFVec2d'
 
 class MFVec3f( _MFVec3f, field.Field ):
 	"""MFVec3f Field class"""
 class MFVec3fEvt( _MFVec3f, field.Event, ):
 	"""MFVec3f Event class"""
 	fieldType = 'MFVec3f'
+class MFVec3d( _MFVec3d, field.Field ):
+	"""MFVec3d Field class"""
+class MFVec3dEvt( _MFVec3d, field.Event, ):
+	"""MFVec3d Event class"""
+	fieldType = 'MFVec3d'
 
 class MFVec4f( _MFVec4f, field.Field ):
 	"""MFVec4f Field class"""
 class MFVec4fEvt( _MFVec4f, field.Event, ):
 	"""MFVec4f Event class"""
 	fieldType = 'MFVec4f'
+class MFVec4d( _MFVec4d, field.Field ):
+	"""MFVec4d Field class"""
+class MFVec4dEvt( _MFVec4d, field.Event, ):
+	"""MFVec4d Event class"""
+	fieldType = 'MFVec4d'
+
+class MFMatrix3f( _MFMatrix3f, field.Field ):
+	"""MFMatrix3f Field class"""
+class MFMatrix3fEvt( _MFMatrix3f, field.Event ):
+	"""MFMatrix3f Field class"""
+	fieldType = 'MFMatrix3f'
+class MFMatrix3d( _MFMatrix3d, field.Field ):
+	"""MFMatrix3d Field class"""
+class MFMatrix3dEvt( _MFMatrix3d, field.Event ):
+	"""MFMatrix3d Field class"""
+	fieldType = 'MFMatrix3d'
+class MFMatrix4f( _MFMatrix4f, field.Field ):
+	"""MFMatrix4f Field class"""
+class MFMatrix4fEvt( _MFMatrix4f, field.Event ):
+	"""MFMatrix4f Field class"""
+	fieldType = 'MFMatrix4f'
+class MFMatrix4d( _MFMatrix4d, field.Field ):
+	"""MFMatrix4d Field class"""
+class MFMatrix4dEvt( _MFMatrix4d, field.Event ):
+	"""MFMatrix3d Field class"""
+	fieldType = 'MFMatrix4d'
 
 class SFBool( _SFBool, field.Field ):
 	"""SFBool Field class"""
@@ -635,18 +756,55 @@ class SFVec2f( _SFVec2f, field.Field ):
 class SFVec2fEvt( _SFVec2f, field.Event, ):
 	"""SFVec2f Event class"""
 	fieldType = 'SFVec2f'
+class SFVec2d( _SFVec2d, field.Field ):
+	"""SFVec2d Field class"""
+class SFVec2dEvt( _SFVec2d, field.Event, ):
+	"""SFVec2d Event class"""
+	fieldType = 'SFVec2d'
 
 class SFVec3f( _SFVec3f, field.Field ):
 	"""SFVec3f Field class"""
 class SFVec3fEvt( _SFVec3f, field.Event, ):
 	"""SFVec3f Event class"""
 	fieldType = 'SFVec3f'
+class SFVec3d( _SFVec3d, field.Field ):
+	"""SFVec3f Field class"""
+class SFVec3dEvt( _SFVec3d, field.Event, ):
+	"""SFVec3d Event class"""
+	fieldType = 'SFVec3d'
 
 class SFVec4f( _SFVec4f, field.Field ):
 	"""SFVec4f Field class"""
 class SFVec4fEvt( _SFVec4f, field.Event, ):
 	"""SFVec4f Event class"""
 	fieldType = 'SFVec4f'
+class SFVec4d( _SFVec4d, field.Field ):
+	"""SFVec4d Field class"""
+class SFVec4dEvt( _SFVec4d, field.Event, ):
+	"""SFVec4f Event class"""
+	fieldType = 'SFVec4d'
+
+class SFMatrix3f( _SFMatrix3f, field.Field ):
+	"""SFMatrix3f Field class"""
+class SFMatrix3fEvt( _SFMatrix3f, field.Event ):
+	"""SFMatrix3f Field class"""
+	fieldType = 'SFMatrix3f'
+class SFMatrix3d( _SFMatrix3d, field.Field ):
+	"""SFMatrix3d Field class"""
+class SFMatrix3dEvt( _SFMatrix3d, field.Event ):
+	"""SFMatrix3d Field class"""
+	fieldType = 'SFMatrix3d'
+class SFMatrix4f( _SFMatrix4f, field.Field ):
+	"""SFMatrix4f Field class"""
+class SFMatrix4fEvt( _SFMatrix4f, field.Event ):
+	"""SFMatrix4f Field class"""
+	fieldType = 'SFMatrix4f'
+class SFMatrix4d( _SFMatrix4d, field.Field ):
+	"""SFMatrix4d Field class"""
+class SFMatrix4dEvt( _SFMatrix4d, field.Event ):
+	"""SFMatrix3d Field class"""
+	fieldType = 'SFMatrix4d'
+
 
 ### Now register everything
 field.register( MFFloat )
@@ -670,6 +828,16 @@ field.register( SFVec4f )
 field.register( MFVec2f )
 field.register( MFVec3f )
 field.register( MFVec4f )
+field.register( MFMatrix3f )
+field.register( MFMatrix4f )
+field.register( SFVec2d )
+field.register( SFVec3d )
+field.register( SFVec4d )
+field.register( MFVec2d )
+field.register( MFVec3d )
+field.register( MFVec4d )
+field.register( MFMatrix3d )
+field.register( MFMatrix4d )
 
 ## event classes...
 field.register( MFFloatEvt )
@@ -693,6 +861,16 @@ field.register( SFVec4fEvt )
 field.register( MFVec2fEvt )
 field.register( MFVec3fEvt )
 field.register( MFVec4fEvt )
+field.register( MFMatrix3fEvt )
+field.register( MFMatrix4fEvt )
+field.register( SFVec2dEvt )
+field.register( SFVec3dEvt )
+field.register( SFVec4dEvt )
+field.register( MFVec2dEvt )
+field.register( MFVec3dEvt )
+field.register( MFVec4dEvt )
+field.register( MFMatrix3dEvt )
+field.register( MFMatrix4dEvt )
 
 if __name__ == "__main__":
 	import unittest
