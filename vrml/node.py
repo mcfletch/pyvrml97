@@ -164,7 +164,11 @@ class PrototypedNode( object ):
 				break
 		if isMappings is None:
 			# no scenegraph defined...
-			raise ValueError( """Attempting to instantiate a prototyped node with no scenegraph defined: %s"""%( self,))
+			from vrml.vrml97 import scenegraph
+			template = scenegraph.SceneGraph()
+			PrototypedNode.scenegraph.fset( cls, template )
+			isMappings = []
+#			raise ValueError( """Attempting to instantiate a prototyped node with no scenegraph defined: %s"""%( self,))
 
 		copier = copiermodule.Copier()
 		sg = template.copy( copier )
