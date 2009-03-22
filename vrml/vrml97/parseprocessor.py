@@ -3,6 +3,7 @@
 from simpleparse.dispatchprocessor import *
 from vrml import node, field, fieldtypes
 from vrml.protofunctions import *
+from vrml.arrays import array
 
 class ParseProcessor( DispatchProcessor ):
 	"""Builds in-memory node-graph from VRML97 parse-tree
@@ -346,6 +347,18 @@ class ParseProcessor( DispatchProcessor ):
 	SFColor = SFVec3f
 	def SFRotation( self, (x,y,z,a), buffer ):
 		return [ float( getString(item,buffer)) for item in (x,y,z,a) ]
+	
+	def SFArray( self, values, buffer, final=True ):
+		"""Process a vector-of-values data-set"""
+		result = []
+		for (tag,start,stop,children) in values:
+			if tag == 'vector':
+				result.append( self.SFArray( children, buffer, final=False ))
+			else:
+				result.append( float(buffer[start:stop] ) )
+		if final:
+			result = array( result, 'f' )
+		return result 
 
 	def MFInt32( self, tuples, buffer ):
 		# localisation

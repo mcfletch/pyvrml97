@@ -225,7 +225,29 @@ class _SFInt32( object ):
 			if base and base[-1] in ('l','L'):
 				base = base[:-1]
 			return base + ' # Overly long number\n'
+class _SFUInt32( _SFInt32 ):
+	"""SFUInt32 base-class"""
+	def coerce( self, value ):
+		"""Coerce the given value to our type
+		Allowable types:
+			any object with true/false protocol
+		"""
+		try:
+			return long( value )
+		except ValueError:
+			raise ValueError( """Attempted to set value for an %s field which is not compatible: %s"""%( self.typeName(), repr(value) ))
+	def check( self, value ):
+		"""Check that the given value is of exactly expected type"""
+		if isinstance( value, long):
+			return 1
+		return 0
 
+	def vrmlstr( self, value, lineariser=None):
+		"""Convert the given value to a VRML97 representation"""
+		base = str( long(value) )
+		if base[-1] in ('l','L'):
+			base = base[:-1]
+		return base
 
 
 class _SFFloat( object ):
@@ -401,7 +423,51 @@ class _Color( object ):
 		"""Copy a value for copier"""
 		return arrays.array(value, arrays.typeCode(value) )
 
-class _MFVec( object ):
+class _SFArray( object ):
+	"""Base class which holds a single array-type value"""
+	defaultDefault = list
+	acceptedTypes = ('d',DOUBLE_TYPE)
+	targetType = DOUBLE_TYPE
+	def reshape( self, value ):
+		"""Do reshape of value to our target dimensions"""
+		return value
+	def coerce( self, value ):
+		if isinstance( value, arrays.ArrayType ):
+			if arrays.typeCode(value) not in self.acceptedTypes:
+				value = value.astype( self.targetType )
+		elif isinstance( value, field.SEQUENCE_TYPES):
+			try:
+				value = arrays.array( value, self.targetType)
+			except ValueError:
+				value = arrays.array(
+					map( float, collapse( value) ),
+					self.targetType,
+				)
+		elif isinstance( value, (int,long,float)):
+			value = arrays.array( [value], self.targetType )
+		else:
+			try:
+				value = arrays.asarray( value, self.targetType )
+			except Exception:
+				raise ValueError( """Attempted to set value for an %s field which is not compatible: %s"""%( self.typeName(), repr(value) ))
+		value = arrays.contiguous( self.reshape(value) )
+		return value
+	def check( self, value ):
+		"""Check that the given value is of exactly the expected type"""
+		if isinstance( value, arrays.ArrayType ):
+			if arrays.typeCode(value) in self.acceptedTypes:
+				s = arrays.shape(value)
+				if len(s) == len(self.dimension)+1 and s[1:] == self.dimension:
+					return 1
+		return 0
+	def vrmlstr( self, value, lineariser=None):
+		"""Convert the given value to a VRML97 representation"""
+		return str(value)
+	def copyValue( self, value, copier=None ):
+		"""Copy a value for copier"""
+		return arrays.array(value, arrays.typeCode(value) )
+
+class _MFVec( _SFArray ):
 	"""MFVecXX field/event type base-class
 
 	Stored as x * self.length Numeric Python double array
@@ -415,40 +481,12 @@ class _MFVec( object ):
 		import operator
 		length = self.length = reduce( operator.mul, self.dimension )
 		return self.length
-	def coerce( self, value ):
-		"""Base coercion mechanism for vector-like fields"""
-		if isinstance( value, arrays.ArrayType ):
-			if arrays.typeCode(value) not in self.acceptedTypes:
-				value = value.astype( self.targetType )
-			value = arrays.reshape(value, (-1,)+self.dimension)
-		elif isinstance( value, field.SEQUENCE_TYPES):
-			try:
-				value = arrays.reshape(
-					arrays.array( value, self.targetType), 
-					(-1,)+self.dimension
-				)
-			except ValueError:
-				value = arrays.reshape(
-					arrays.array(
-						map( float, collapse( value) ),
-						self.targetType,
-					),
-					(-1,)+self.dimension
-				)
-		else:
-			try:
-				value = arrays.reshape(
-					arrays.asarray( value, self.targetType ), 
-					(-1,)+self.dimension
-				)
-			except Exception:
-				raise ValueError( """Attempted to set value for an %s field which is not compatible: %s"""%( self.typeName(), repr(value) ))
-		value = arrays.contiguous( value )
-		return value
+	def reshape( self, value ):
+		return arrays.reshape(value, (-1,)+self.dimension)
 	def check( self, value ):
 		"""Check that the given value is of exactly the expected type"""
 		if isinstance( value, arrays.ArrayType ):
-			if arrays.typeCode(value) not in self.acceptedTypes:
+			if arrays.typeCode(value) in self.acceptedTypes:
 				s = arrays.shape(value)
 				if len(s) == len(self.dimension)+1 and s[1:] == self.dimension:
 					return 1
@@ -613,6 +651,12 @@ class MFColorEvt( _MFColor, field.Event, ):
 	"""MFColor Event class"""
 	fieldType = 'MFColor'
 
+class SFArray( _SFArray, field.Field ):
+	"""SFArray Field class"""
+class SFArrayEvt( _SFArray, field.Event ):
+	"""SFArray Event class"""
+	fieldType = 'SFArray'
+
 class MFFloat( _MFFloat, field.Field ):
 	"""MFFloat Field class"""
 class MFFloatEvt( _MFFloat, field.Event, ):
@@ -732,6 +776,11 @@ class SFInt32( _SFInt32, field.Field ):
 class SFInt32Evt( _SFInt32, field.Event, ):
 	"""SFInt32 Event class"""
 	fieldType = 'SFInt32'
+class SFUInt32( _SFUInt32, field.Field ):
+	"""SFInt32 Field class"""
+class SFUInt32Evt( _SFUInt32, field.Event, ):
+	"""SFInt32 Event class"""
+	fieldType = 'SFUInt32'
 
 class SFRotation( _SFRotation, field.Field ):
 	"""SFRotation Field class"""
@@ -822,9 +871,11 @@ field.register( MFTime )
 field.register( SFColor )
 field.register( SFString )
 field.register( SFInt32 )
+field.register( SFUInt32 )
 field.register( SFVec2f )
 field.register( SFVec3f )
 field.register( SFVec4f )
+field.register( SFArray )
 field.register( MFVec2f )
 field.register( MFVec3f )
 field.register( MFVec4f )
@@ -855,9 +906,11 @@ field.register( MFTimeEvt )
 field.register( SFColorEvt )
 field.register( SFStringEvt )
 field.register( SFInt32Evt )
+field.register( SFUInt32Evt )
 field.register( SFVec2fEvt )
 field.register( SFVec3fEvt )
 field.register( SFVec4fEvt )
+field.register( SFArrayEvt )
 field.register( MFVec2fEvt )
 field.register( MFVec3fEvt )
 field.register( MFVec4fEvt )
