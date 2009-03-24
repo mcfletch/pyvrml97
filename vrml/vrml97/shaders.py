@@ -35,7 +35,6 @@ class FloatUniform( node.Node ):
     """
     name = field.newField( 'name', 'SFString', 1, '' )
     # type values, 1f, 2f, 3f, 4f, m2, m3, m4, m2x3,m3x2,m2x4,m4x2,m3x4,m4x3
-    type = field.newField( 'type',  'SFString', 1,  '1f' )
     value = field.newField( 'value',  'SFArray',  1,  list )
 
 class IntUniform( node.Node ):
@@ -44,8 +43,13 @@ class IntUniform( node.Node ):
 	PROTO = "IntUniform"
 	name = field.newField( 'name', 'SFString', 1, '' )
 	# type values, 1i,2i,3i,4i
-	type = field.newField( 'type',  'SFString', 1,  '1f' )
 	value = field.newField( 'value',  'MFInt32',  1,  list )
+
+class TextureUniform( node.Node ):
+	"""Uniform which specifies a texture sampler"""
+	PROTO = 'TextureUniform'
+	name = field.newField( 'name','SFString', 1, '' )
+	value = field.newField( 'value', 'SFNode', 1, node.NULL )
 
 class GLSLShader( node.Node ):
 	"""GLSL-based shader node"""
@@ -61,6 +65,8 @@ class GLSLObject( node.Node ):
 	uniforms = field.newField( 'uniforms',  'MFNode',  1,  list )
 	attributes = field.newField( 'attributes',  'MFNode',  1,  list )
 	shaders = field.newField( 'shaders',  'MFNode',  1,  list )
+	# textures is a set of texture uniforms...
+	textures = field.newField( 'textures', 'MFNode', 1, list )
 
 class Shader( node.Node ):
 	"""Shader is a programmable substitute for an Appearance node"""
