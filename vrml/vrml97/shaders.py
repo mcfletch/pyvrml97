@@ -1,34 +1,55 @@
 """Node definitions for a non-standard Programable Shaders extension
-
-Shaders are defined like so:
-
 """
 from vrml.vrml97 import nodetypes
 from vrml import field, node, fieldtypes
 
+
 class ShaderGeometry( node.Node ):
 	"""Generic geometry definition for a shader-based renderer
 	
-	vertices -- X * Y array of vertex values for the data-set 
-	vertexDefinition -- string definition of mappings from 
-		vertex fields to GLSL attribute definitions 
+	attributes -- define the attribute pointers which feed the 
+		shader, the individual attributes may share a buffer or 
+		define one per attribute 
+	offsets -- starting offsets for drawing operations, indexed 
+		to counts, if null, do glDrawArrays or glDrawElements 
+		for the whole data-set or whole index-set
+	counts -- element counts for drawing operations, indexed 
+		to offsets.  Counts from offsets into indices or data-
+		arrays to draw.
+	indices -- if present, node defining index array to be used 
+		to index into buffers, will be uploaded to an element 
+		buffer
 	uniforms -- Uniform nodes which are bound/updated on the 
-		geometry before rendering...
-	indices -- index array for rendering geometry 
-	offsets -- array of offsets into indices from which to 
-		begin each individual render 
-	counts -- count of indices to render for each individual
-		render
-	offsetUniforms -- arrays of (name,value) pairs to assign 
-		before each individual render 
+		shader before rendering this geometry, binds to the 
+		shader's location == to the uniform's name.
 	"""
 	PROTO = "ShaderGeometry"
-	vertices = field.newField( 'vertices','MFFloat', 1, list )
 	indices = field.newField( 'indices', 'MFInt32', 1, list )
 	offsets = field.newField( 'offsets', 'MFInt32', 1, list )
 	attributes = field.newField( 'attributes','MFNode',1,list )
 	uniforms = field.newField( 'uniforms','MFNode',1,list)
 
+class ShaderAttribute( node.Node ):
+	"""Attribute (variable) binding for a shader
+	"""
+	name = field.newField( 'name', 'SFString', 1, '' )
+	offset = field.newField( 'offset','SFInt32',1, 0 )
+	stride = field.newField( 'stride', 'SFInt32',1, -1 ) # default to buffer natural stride
+	size = field.newField( 'size','SFInt32',1,3 ) # default num of elements
+	dataType = field.newField( 'dataType','SFString', 1, 'FLOAT' )
+	# the buffer into which we index...
+	buffer = field.newField( 'buffer','SFNode',1,node.NULL )
+class ShaderBuffer( node.Node ):
+	"""Buffer of data into which pointers can be generated"""
+	type = field.newField( 'type','SFString', 1, 'ARRAY' )
+	usage = field.newField( 'usage','SFString', 1, 'DYNAMIC_DRAW' )
+	buffer = field.newField( 'buffer','SFArray', 1, list )
+class ShaderIndexBuffer( ShaderBuffer ):
+	"""Buffer of data from which indices are generated"""
+	type = field.newField( 'type','SFString', 1, 'ELEMENT' )
+	usage = field.newField( 'usage','SFString', 1, 'DYNAMIC_DRAW' )
+	indices = field.newField( 'indices','MFUInt32', 1, list )
+	
 
 class FloatUniform( node.Node ):
     """Uniform (variable) binding for a shader
