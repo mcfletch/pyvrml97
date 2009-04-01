@@ -119,9 +119,6 @@ class Field( property ):
 			raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
 		except TypeError, x:
 			raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
-		if client is object:
-			import pdb
-			pdb.set_trace()
 		if isinstance( client, type ):
 			setattr( client, self.name, value )
 		else:

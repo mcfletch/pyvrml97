@@ -3,30 +3,32 @@
 from vrml.vrml97 import nodetypes
 from vrml import field, node, fieldtypes
 
-
-class ShaderGeometry( node.Node ):
+class ShaderGeometry( nodetypes.Children, nodetypes.Rendering, node.Node ):
 	"""Generic geometry definition for a shader-based renderer
 	
 	attributes -- define the attribute pointers which feed the 
 		shader, the individual attributes may share a buffer or 
 		define one per attribute 
-	offsets -- starting offsets for drawing operations, indexed 
-		to counts, if null, do glDrawArrays or glDrawElements 
-		for the whole data-set or whole index-set
-	counts -- element counts for drawing operations, indexed 
-		to offsets.  Counts from offsets into indices or data-
-		arrays to draw.
 	indices -- if present, node defining index array to be used 
 		to index into buffers, will be uploaded to an element 
 		buffer
 	uniforms -- Uniform nodes which are bound/updated on the 
 		shader before rendering this geometry, binds to the 
 		shader's location == to the uniform's name.
+	slices -- slices of the array to render, if not specified 
+		then we'll render the whole data-set
 	"""
 	PROTO = "ShaderGeometry"
 	indices = field.newField( 'indices', 'MFInt32', 1, list )
-	offsets = field.newField( 'offsets', 'MFInt32', 1, list )
 	attributes = field.newField( 'attributes','MFNode',1,list )
+	slices = field.newField( 'slices', 'MFNode',1,list )
+	uniforms = field.newField( 'uniforms','MFNode',1,list )
+	appearance = field.newField( 'appearance', 'SFNode',1,list )
+
+class ShaderSlice( node.Node ):
+	"""Segment of a shader geometry element to render"""
+	offset = field.newField( 'offset', 'SFUInt32',1, -1 )
+	count = field.newField( 'count', 'SFUInt32',1, -1 )
 	uniforms = field.newField( 'uniforms','MFNode',1,list)
 
 class ShaderAttribute( node.Node ):
@@ -84,7 +86,6 @@ class GLSLObject( node.Node ):
 	"""GLSL-based shader object (compiled set of shaders)"""
 	PROTO = "GLSLObject"
 	uniforms = field.newField( 'uniforms',  'MFNode',  1,  list )
-	attributes = field.newField( 'attributes',  'MFNode',  1,  list )
 	shaders = field.newField( 'shaders',  'MFNode',  1,  list )
 	# textures is a set of texture uniforms...
 	textures = field.newField( 'textures', 'MFNode', 1, list )
