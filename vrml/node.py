@@ -5,7 +5,10 @@ extensive use of properties
 """
 from vrml import field, fieldtypes, weaklist, weakkeydictfix
 from vrml import copier as copiermodule
+from vrml import olist
 from vrml.protofunctions import *
+from pydispatch import dispatcher
+import weakref
 
 class Node( object ):
 	"""A generic scene graph node
@@ -356,12 +359,26 @@ Node.rootSceneGraph = WeakSFNode(
 	NULL
 )
 
+def _changeSender( nodeRef, field ):
+	"""Utility function to send node-change messages on olist updates"""
+	def onOListChange( sender, signal, value ):
+		client = nodeRef()
+		if client:
+			dispatcher.send( 
+				('set',field), 
+				client, 
+				value=sender, 
+				subsignal=signal, 
+				subvalue=value,
+			)
+	return onOListChange
+
 class _MFNode( object ):
 	"""(Restricted) MFNode field-type-definition"""
 	nodes = 1
-	defaultDefault = list
+	defaultDefault = olist.OList
 	baseSFNode = SFNode('GeneralSFNode')
-	baseObjectType = list
+	baseObjectType = olist.OList
 	def fset( self, client, value, notify = 1 ):
 		"""Set the client's value for this property
 
@@ -375,6 +392,16 @@ class _MFNode( object ):
 		without sending notify events.
 		"""
 		value = super( _MFNode, self).fset( client, value, notify )
+		# register for updates to the list...
+		# we just send "changed" events for the field whenever 
+		# there's an update to the list... a bit wasteful, as 
+		# our clients might want to know about just the changed 
+		# values, but for now...
+		dispatcher.connect( 
+			_changeSender( weakref.ref( client ), self ), 
+			sender = value,
+			weak=False, # don't weakref receiver so it will hang around...
+		)
 		if value:
 			clientRoot = Node.rootSceneGraph.fget( client )
 			if clientRoot:
