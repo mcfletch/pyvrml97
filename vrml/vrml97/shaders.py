@@ -35,9 +35,9 @@ class ShaderAttribute( node.Node ):
 	"""Attribute (variable) binding for a shader
 	"""
 	name = field.newField( 'name', 'SFString', 1, '' )
-	offset = field.newField( 'offset','SFInt32',1, 0 )
-	stride = field.newField( 'stride', 'SFInt32',1, -1 ) # default to buffer natural stride
-	size = field.newField( 'size','SFInt32',1,3 ) # default num of elements
+	offset = field.newField( 'offset','SFUInt32',1, 0 )
+	stride = field.newField( 'stride', 'SFUInt32',1, 0 ) # default to buffer natural stride
+	size = field.newField( 'size','SFUInt32',1,3 ) # default num of elements
 	dataType = field.newField( 'dataType','SFString', 1, 'FLOAT' )
 	# the buffer into which we index...
 	buffer = field.newField( 'buffer','SFNode',1,node.NULL )
@@ -45,7 +45,7 @@ class ShaderBuffer( node.Node ):
 	"""Buffer of data into which pointers can be generated"""
 	type = field.newField( 'type','SFString', 1, 'ARRAY' )
 	usage = field.newField( 'usage','SFString', 1, 'DYNAMIC_DRAW' )
-	buffer = field.newField( 'buffer','SFArray', 1, list )
+	buffer = field.newField( 'buffer','SFArray32', 1, list )
 class ShaderIndexBuffer( ShaderBuffer ):
 	"""Buffer of data from which indices are generated"""
 	type = field.newField( 'type','SFString', 1, 'ELEMENT' )

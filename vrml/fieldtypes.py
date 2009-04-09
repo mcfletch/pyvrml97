@@ -467,6 +467,12 @@ class _SFArray( object ):
 		"""Copy a value for copier"""
 		return arrays.array(value, arrays.typeCode(value) )
 
+class _SFArray32( _SFArray ):
+	"""32-bit version of SFArrays
+	"""
+	acceptedTypes = ('f',FLOAT_TYPE)
+	targetType = FLOAT_TYPE
+
 class _MFVec( _SFArray ):
 	"""MFVecXX field/event type base-class
 
@@ -656,6 +662,11 @@ class SFArray( _SFArray, field.Field ):
 class SFArrayEvt( _SFArray, field.Event ):
 	"""SFArray Event class"""
 	fieldType = 'SFArray'
+class SFArray32( _SFArray32, field.Field ):
+	"""SFArray32 Field class"""
+class SFArray32Evt( _SFArray32, field.Event ):
+	"""SFArray32 Event class"""
+	fieldType = 'SFArray32'
 
 class MFFloat( _MFFloat, field.Field ):
 	"""MFFloat Field class"""
@@ -876,6 +887,7 @@ field.register( SFVec2f )
 field.register( SFVec3f )
 field.register( SFVec4f )
 field.register( SFArray )
+field.register( SFArray32 )
 field.register( MFVec2f )
 field.register( MFVec3f )
 field.register( MFVec4f )
@@ -911,6 +923,7 @@ field.register( SFVec2fEvt )
 field.register( SFVec3fEvt )
 field.register( SFVec4fEvt )
 field.register( SFArrayEvt )
+field.register( SFArray32Evt )
 field.register( MFVec2fEvt )
 field.register( MFVec3fEvt )
 field.register( MFVec4fEvt )
