@@ -54,11 +54,16 @@ class ShaderIndexBuffer( ShaderBuffer ):
 	
 
 class FloatUniform( node.Node ):
-    """Uniform (variable) binding for a shader
-    """
-    name = field.newField( 'name', 'SFString', 1, '' )
-    # type values, 1f, 2f, 3f, 4f, m2, m3, m4, m2x3,m3x2,m2x4,m4x2,m3x4,m4x3
-    value = field.newField( 'value',  'SFArray',  1,  list )
+	"""Uniform (variable) binding for a shader
+	
+	The FloatUniform is the base class for FloatUniforms,
+	that is, there are FloatUniform1f, FloatUniform2f,
+	FloatUniformm3x2, etceteras Node-types, but not a
+	FloatUniform node-type.
+	"""
+	name = field.newField( 'name', 'SFString', 1, '' )
+	# type values, 1f, 2f, 3f, 4f, m2, m3, m4, m2x3,m3x2,m2x4,m4x2,m3x4,m4x3
+	value = field.newField( 'value',  'SFArray',  1,  list )
 
 class IntUniform( node.Node ):
 	"""Uniform (variable) binding for a shader (integer form)
