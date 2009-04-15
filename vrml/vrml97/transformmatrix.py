@@ -211,38 +211,3 @@ else:
 		T = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [x,y,z,1] ], 'd' )
 		T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'd' )
 		return T, T1
-
-if __name__ == "__main__":
-	import sys
-##	print transMatrix( (-1,-1,-1) )[0]
-	for (matrix,point, expected, name) in [
-		(transMatrix( (1,0,0) )[0], (0, 0,0,1), (1,0,0,1), "Simple translation"),
-		(transMatrix( (-1,-1,-1) )[0], (1, 1,1,1), (0,0,0,1), "Simple translation"),
-		(transMatrix( (0,0,1) )[0], (0, 0,0,1), (0,0,1,1), "Simple translation"),
-		(rotMatrix( (0,1,0,pi) )[0], (1, 0,0,1), (-1,0,0,1), "Simple rotation"),
-		(rotMatrix( (0,1,0,pi/2) )[0], (1, 0,0,1), (0,0,-1,1), "Simple rotation"),
-		(rotMatrix( (0,0,1,pi/2) )[0], (1, 0,0,1), (0,1,0,1), "Simple rotation"),
-		(rotMatrix( (0,0,1,-(pi/2)) )[0], (1, 0,0,1), (0,-1,0,1), "Simple rotation"),
-		(rotMatrix( (0,0,-1,-(pi/2)) )[0], (1, 0,0,1), (0,1,0,1), "Simple rotation"),
-		(rotMatrix( (0,0,-2,-(pi/2)) )[0], (1, 0,0,1), (0,1,0,1), "Simple rotation"),
-		(rotMatrix( (1,0,0,-(pi/2)) )[0], (1, 0,0,1), (1,0,0,1), "Simple rotation"),
-		(rotMatrix( (0,0,1,pi/2) )[0], (0,1,0,1), (-1,0,0,1), "Simple rotation"),
-		(rotMatrix( (1,0,0,pi/2) )[0], (0,0,1,1), (0,-1,0,1), "Simple rotation"),
-		(scaleMatrix( (1,1,2) )[0], (1, 1,1,1), (1,1,2,1), "Simple scale"),
-		(scaleMatrix( (-1,1,2) )[0], (1, 1,1,1), (-1,1,2,1), "Simple scale"),
-		(scaleMatrix( (-1,0,2) )[0], (1, 1,1,1), (-1,0,2,1), "Simple scale"),
-		(scaleMatrix( (-1,0,0) )[0], (1, 1,1,1), (-1,0,0,1), "Simple scale"),
-		(scaleMatrix( (0,0,0) )[0], (1, 1,1,1), (0,0,0,1), "Simple scale"),
-		(rotMatrix([ 0.,0.,1., -0.515])[0], (1,0,0,1), (0.87029272,-0.49253485,0.,1.), "Make sure rotation uses float check for abs value" ),
-	]:
-##		print matrix
-##		print point
-		try:
-			result = dot( point,matrix)
-		except TypeError, err:
-			sys.stderr.write("""\nF (TypeError):\n\tpoint=%(point)s\n\t%(matrix)s\n"""%(locals()))
-		else:
-			assert allclose( result, expected),"""Transformation matrix %(matrix)s test %(name)s did not properly transform: result was %(result)s"""%locals()
-			sys.stderr.write('.')
-			
-

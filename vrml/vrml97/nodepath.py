@@ -47,7 +47,7 @@ class _NodePath( object ):
 		key=('matrix',translate,scale,rotate)
 		mHolder = CACHE.getData( self, key=key )
 		if mHolder is None:
-			print 'recalc matrix', key, len(self)
+#			print 'recalc matrix', key, len(self)
 			matrix = None
 			holder = CACHE.holder( self, None, key=key )
 			fields = []
