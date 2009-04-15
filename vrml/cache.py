@@ -141,6 +141,9 @@ class CacheHolder( object ):
 		if set is None:
 			cache[ client_id ] = set = {}
 		set[key] = self
+	def set( self, data ):
+		"""Set data after instantiation"""
+		self.data = data
 	
 	def depend( self, node, field=None ):
 		"""Add a dependency on given node's field value
@@ -162,29 +165,36 @@ class CacheHolder( object ):
 		if field is not None:
 			if isinstance( field, (str,unicode)):
 				field = protofunctions.getField(node, field)
-			dispatcher.connect(
-				self, # receiver
+			self.depend_signal(
 				('set', field),#signal
 				node, # sender
 			)
-			dispatcher.connect(
-				self, # receiver
+			self.depend_signal(
 				('del', field),#signal
 				node, # sender
 			)
-			dispatcher.connect(
-				self, # receiver
+			self.depend_signal(
 				('route', field),#signal
 				node, # sender
 			)
 		else:
 			# dependency on the mere existence of the node
-			self.nodeDependencies.append(
-				weakref.ref(
-					node,
-					self,
-				)
+			self.depend_object( node )
+	def depend_signal( self, signal, sender=dispatcher.Any ):
+		"""Depend on signal from sender"""
+		dispatcher.connect(
+			self,#receiver
+			signal,
+			sender,
+		)
+	def depend_object( self, node ):
+		"""Depend on node's existence"""
+		self.nodeDependencies.append(
+			weakref.ref(
+				node,
+				self,
 			)
+		)
 	def __call__( self, signal=None, sender=None ):
 		"""Delete the cached value (this object)
 
@@ -206,6 +216,7 @@ class CacheHolder( object ):
 				return 0
 			client_id = id(client)
 			current = cache.get( client_id )
+			self.data = None
 			if current is None:
 				return 0
 			try:

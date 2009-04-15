@@ -28,4 +28,10 @@ class TestNodePath( unittest.TestCase ):
 			m2,
 			array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],'f')
 		), m2
-		
+	def test_change_rotation( self ):
+		self.first_child[-1].rotation = (0,1,0,3.14)
+		m = self.second_child.transformMatrix( translate=False, scale=False)
+		self.first_child[-1].rotation = (0,1,0,0.0)
+		m2 = self.second_child.transformMatrix( translate=False, scale=False)
+		assert not allclose( m,m2 ), (m,m2)
+	

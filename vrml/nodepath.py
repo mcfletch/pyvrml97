@@ -1,15 +1,14 @@
 """Representation and manipulation of scenegraph paths
 """
-from vrml import node, weaktuple
+from vrml import node, weaklist
 
-class NodePath( tuple ):
+class NodePath( list ):
 	"""Path within a scenegraph from root to particular node
 
 	Has minimal operations, most high-level functionality is
 	provided by sub-classes such as vrml.vrml97.nodepath and
 	OpenGLContext.scenegraph.nodepath
 	"""
-	__slots__ = ()
 	def __repr__( self ):
 		"""Code-like representation of the node path
 
@@ -42,7 +41,7 @@ class NodePath( tuple ):
 	def __add__(self, other):
 		"""Return a new path with other as tail"""
 		if isinstance( other, node.Node ):
-			other = (other,)
+			other = [other]
 		return self.__class__( super(NodePath, self).__add__( other))
 	def __getslice__(self, start, stop):
 		"""Return a new path with our items from start to stop"""
@@ -56,7 +55,7 @@ class NodePath( tuple ):
 				return 0
 		return 1
 
-class WeakNodePath( NodePath, weaktuple.WeakTuple ):
+class WeakNodePath( NodePath, weaklist.WeakList ):
 	"""Node path that uses weak-references to nodes
 
 	You hold strong references to these paths, then
