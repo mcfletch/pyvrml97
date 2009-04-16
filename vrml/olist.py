@@ -1,6 +1,6 @@
 """Observable list class"""
 from pydispatch.dispatcher import send
-import sets
+import sets,weakref
 
 class OList( list ):
 	"""List sub-class which generates pydispatch events on changes
@@ -25,14 +25,31 @@ class OList( list ):
 	NEW_PARENT_EVT = 'added'
 	DEL_CHILD_EVT = 'del'
 	DEL_PARENT_EVT = 'removed'
+	sender = None
+	extraArgs = None
+	def setSender( self, sender, **named ):
+		"""Set the (node) from which messages should be sent"""
+		if sender is not None:
+			sender = weakref.ref(sender)
+		self.sender = sender
+		self.extraArgs = named
+	def _sender( self ):
+		sender = self
+		if self.sender is not None:
+			sender = self.sender()
+			if sender is None:
+				sender = self
+		return sender
 	def _sendAdded( self, value ):
 		"""Send events for adding value to self"""
-		send( self.NEW_CHILD_EVT, self, value=value)
-		send( self.NEW_PARENT_EVT, value, parent=self)
+		sender = self._sender()
+		send( self.NEW_CHILD_EVT, sender, value=value, **(self.extraArgs or {}))
+		send( self.NEW_PARENT_EVT, value, parent=sender,**(self.extraArgs or {}))
 	def _sendRemoved( self, value ):
 		"""Send events for removing value from self"""
-		send( self.DEL_CHILD_EVT, self, value=value)
-		send( self.DEL_PARENT_EVT, value, parent=self)
+		sender = self._sender()
+		send( self.DEL_CHILD_EVT, self, value=value,**(self.extraArgs or {}))
+		send( self.DEL_PARENT_EVT, value, parent=self,**(self.extraArgs or {}))
 	
 	def append( self, value ):
 		"""Append a value and send a message"""
@@ -98,3 +115,4 @@ class OList( list ):
 		"""Do an in-place add"""
 		return self.__setslice__( len(self),len(self), iterable )
 	extend = __iadd__
+	
