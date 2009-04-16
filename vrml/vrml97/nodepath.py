@@ -157,12 +157,13 @@ class _NodePath( object ):
 		return base
 	def iterchildren( self ):
 		"""Iterate over child paths which are still live"""
-		for childref in self.children[:]:
-			child = childref()
-			if child is not None:
-				yield child 
-			else:
-				self.children.remove( childref )
+		if self.children is not None:
+			for childref in self.children[:]:
+				child = childref()
+				if child is not None:
+					yield child 
+				else:
+					self.children.remove( childref )
 	def iterdescendents( self ):
 		"""Iterate over all descendent paths"""
 		for child in self.iterchildren():

@@ -48,8 +48,8 @@ class OList( list ):
 	def _sendRemoved( self, value ):
 		"""Send events for removing value from self"""
 		sender = self._sender()
-		send( self.DEL_CHILD_EVT, self, value=value,**(self.extraArgs or {}))
-		send( self.DEL_PARENT_EVT, value, parent=self,**(self.extraArgs or {}))
+		send( self.DEL_CHILD_EVT, sender, value=value,**(self.extraArgs or {}))
+		send( self.DEL_PARENT_EVT, value, parent=sender,**(self.extraArgs or {}))
 	
 	def append( self, value ):
 		"""Append a value and send a message"""
