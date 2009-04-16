@@ -35,3 +35,10 @@ class TestNodePath( unittest.TestCase ):
 		m2 = self.second_child.transformMatrix( translate=False, scale=False)
 		assert not allclose( m,m2 ), (m,m2)
 	
+	def test_iterchildren( self ):
+		l = list( self.first_child.iterchildren())
+		assert l == [ self.second_child ]
+	def test_iterdescendents( self ):
+		l = list( self.empty.iterdescendents())
+		assert l == [ self.first_child, self.second_child ]
+		

@@ -19,6 +19,7 @@ class _NodePath( object ):
 	attributes.
 	"""
 	parent = None
+	children = None
 	active = True
 	broken = False
 	def isTransform( self, item ):
@@ -148,10 +149,26 @@ class _NodePath( object ):
 		"""Add parent-matrix pre-caching support to nodepaths"""
 		base = super( _NodePath, self).__add__( other )
 		base.parent = self
+		if self.children is None:
+			self.children = []
+		self.children.append( weakref.ref( base ))
 		# watch for other sending events which say that 
 		# this relationship is no longer active...
 		return base
-
+	def iterchildren( self ):
+		"""Iterate over child paths which are still live"""
+		for childref in self.children[:]:
+			child = childref()
+			if child is not None:
+				yield child 
+			else:
+				self.children.remove( childref )
+	def iterdescendents( self ):
+		"""Iterate over all descendent paths"""
+		for child in self.iterchildren():
+			yield child 
+			for desc in child.iterchildren():
+				yield desc 
 
 class NodePath( _NodePath, nodepath.NodePath ):
 	"""Strong-reference version of VRML97 NodePath"""
