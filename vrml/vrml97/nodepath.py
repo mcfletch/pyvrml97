@@ -20,6 +20,7 @@ class _NodePath( object ):
 	"""
 	parent = None
 	active = True
+	broken = False
 	def isTransform( self, item ):
 		"""Customization Point: determine whether a node is a Transform"""
 		return isinstance(item, nodetypes.Transforming)
@@ -47,7 +48,6 @@ class _NodePath( object ):
 		key=('matrix',translate,scale,rotate)
 		mHolder = CACHE.getData( self, key=key )
 		if mHolder is None:
-#			print 'recalc matrix', key, len(self)
 			matrix = None
 			holder = CACHE.holder( self, None, key=key )
 			fields = []
@@ -63,19 +63,17 @@ class _NodePath( object ):
 			start = 0
 			parent = self.parent 
 			if parent is not None:
-				parent = parent()
-				if parent is not None:
-					mHolder = parent.transformMatrix(
-						translate=translate,rotate=rotate,scale=scale,
-						matrixHolder=True
-					)
-					# holder needs to depend on parentMatrix,
-					# as we're going to use it to calculate our 
-					# own matrix...
-					if mHolder is not None:
-						holder.depend( mHolder )
-					matrix = mHolder.matrix
-					start = len(parent)
+				mHolder = parent.transformMatrix(
+					translate=translate,rotate=rotate,scale=scale,
+					matrixHolder=True
+				)
+				# holder needs to depend on parentMatrix,
+				# as we're going to use it to calculate our 
+				# own matrix...
+				if mHolder is not None:
+					holder.depend( mHolder )
+				matrix = mHolder.matrix
+				start = len(parent)
 			if matrix is None:
 				matrix = identity(4, 'd')
 			# now calculate delta from parent to self...
@@ -149,8 +147,11 @@ class _NodePath( object ):
 	def __add__(self, other):
 		"""Add parent-matrix pre-caching support to nodepaths"""
 		base = super( _NodePath, self).__add__( other )
-		base.parent = weakref.ref( self )
+		base.parent = self
+		# watch for other sending events which say that 
+		# this relationship is no longer active...
 		return base
+
 
 class NodePath( _NodePath, nodepath.NodePath ):
 	"""Strong-reference version of VRML97 NodePath"""
