@@ -391,17 +391,31 @@ class _MFNode( object ):
 		if there is no current root).  This is done
 		without sending notify events.
 		"""
-		value = super( _MFNode, self).fset( client, value, notify )
-		# register for updates to the list...
-		# we just send "changed" events for the field whenever 
-		# there's an update to the list... a bit wasteful, as 
-		# our clients might want to know about just the changed 
-		# values, but for now...
-		dispatcher.connect( 
-			_changeSender( weakref.ref( client ), self ), 
-			sender = value,
-			weak=False, # don't weakref receiver so it will hang around...
-		)
+		previous = client.__dict__.get( self.name )
+		if previous is not None:
+			previous[:] = [self.coerce(x) for x in value]
+			value = previous 
+		else:
+			value = super( _MFNode, self).fset( client, value, notify )
+			# register for updates to the list...
+			# we just send "changed" events for the field whenever 
+			# there's an update to the list... a bit wasteful, as 
+			# our clients might want to know about just the changed 
+			# values, but for now...
+			value.setSender( client, field=self )
+			cs = _changeSender( weakref.ref( client ), self )
+			dispatcher.connect( 
+				cs, 
+				sender = client,
+				signal = olist.OList.DEL_CHILD_EVT,
+				weak=False, # don't weakref receiver so it will hang around...
+			)
+			dispatcher.connect( 
+				cs, 
+				sender = client,
+				signal = olist.OList.NEW_CHILD_EVT,
+				weak=False, # don't weakref receiver so it will hang around...
+			)
 		if value:
 			clientRoot = Node.rootSceneGraph.fget( client )
 			if clientRoot:
