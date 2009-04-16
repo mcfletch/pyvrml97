@@ -169,6 +169,11 @@ class _NodePath( object ):
 			yield child 
 			for desc in child.iterchildren():
 				yield desc 
+	def invalidate( self ):
+		"""Set this path to be invalid (and all children paths)"""
+		self.broken = True 
+		for desc in self.iterdescendents( ):
+			desc.broken = True 
 
 class NodePath( _NodePath, nodepath.NodePath ):
 	"""Strong-reference version of VRML97 NodePath"""
