@@ -25,6 +25,8 @@ from vrml.arrays import *
 
 # used to determine whether angles are non-null
 TWOPI = pi * 2.0
+RADTODEG = 360./TWOPI
+DEGTORAD = TWOPI/360.
 # used to determine the center point of a transform
 ORIGINPOINT = array([0,0,0,1],'d')
 
@@ -211,3 +213,18 @@ else:
 		T = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [x,y,z,1] ], 'd' )
 		T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'd' )
 		return T, T1
+
+def perspectiveMatrix( fovy, aspect, zNear, zFar ):
+	"""Create a perspective matrix from given parameters
+	
+	Note that this is the same matrix as for gluPerspective,
+	save that we are using radians...
+	"""
+	f = 1.0/tan( (fovy/2.0) ) # cotangent( fovy/2.0 )
+	zDelta = zNear-zFar
+	return array([
+		[f/aspect,0,0,0],
+		[0,f,0,0],
+		[0,0,(zFar+zNear)/zDelta,-1],
+		[0,0,(2*zFar*zNear)/zDelta,0]
+	],'d')

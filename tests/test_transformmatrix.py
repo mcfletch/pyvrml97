@@ -32,4 +32,14 @@ class TestTransformMatrix( unittest.TestCase ):
 		(rotMatrix([ 0.,0.,1., -0.515])[0], (1,0,0,1), (0.87029272,-0.49253485,0.,1.), "Make sure rotation uses float check for abs value" ),
 	]
 		
-
+	def test_perspectiveMatrix( self ):
+		"""Test that perspective matrix calculation matches expected values"""
+		result = perspectiveMatrix(
+			59.999999999999993*DEGTORAD, 1.0, 0.29999999999999999, 50000
+		)
+		expected = array([
+			[ 1.73205081,  0.,          0.,          0.,        ],
+			[ 0.,          1.73205081,  0.,          0.,        ],
+			[ 0.,          0.,         -1.000012, -1.,        ],
+			[ 0.,          0.,         -0.6000036,   0.,        ],],'f')
+		assert allclose(result,expected), result
