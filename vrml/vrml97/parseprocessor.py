@@ -362,11 +362,21 @@ class ParseProcessor( DispatchProcessor ):
 
 	def MFInt32( self, tuples, buffer ):
 		# localisation
-		return [int(buffer[start:stop],0) for (tag, start, stop, children) in tuples]
+		return [
+			int(buffer[start:stop],0) 
+			for (tag, start, stop, children) in tuples
+		]
 	SFImage = MFInt32
+	def MFUInt32( self, tuples, buffer ):
+		# localisation
+		return [
+			long(buffer[start:stop],0) 
+			for (tag, start, stop, children) in tuples
+		]
 	def MFFloat( self, tuples, buffer ):
 		return [float(buffer[start:stop]) for (tag, start, stop, children) in tuples]
 	MFColor = MFRotation = MFVec2f = MFVec3f = MFTime = MFFloat
+	
 
 	def MFString( self, tuples, buffer ):
 		bigresult = []
