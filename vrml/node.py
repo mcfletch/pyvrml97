@@ -339,6 +339,7 @@ class SFNode( _SFNode, field.Field ):
 	This is the publically available SFNode type,
 	a sub-class of _SFNode and field.Field
 	"""
+SFNode.requiredTypes = (Node,)
 
 class SFNodeEvt( _SFNode, field.Event ):
 	fieldType = 'SFNode'
@@ -393,7 +394,7 @@ class _MFNode( object ):
 		"""
 		previous = client.__dict__.get( self.name )
 		if previous is not None:
-			previous[:] = [self.coerce(x) for x in value]
+			previous[:] = self.coerce(value)
 			value = previous 
 		else:
 			value = super( _MFNode, self).fset( client, value, notify )
