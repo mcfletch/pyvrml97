@@ -183,7 +183,7 @@ class CacheHolder( object ):
 	def depend_signal( self, signal, sender=dispatcher.Any ):
 		"""Depend on signal from sender"""
 		dispatcher.connect(
-			self,#receiver
+			self.clear,#receiver
 			signal,
 			sender,
 		)
@@ -195,6 +195,12 @@ class CacheHolder( object ):
 				self,
 			)
 		)
+	def clear( self, signal=None, sender=None ):
+		"""Clear this object's held value (only)"""
+		if not self.client():
+			self( signal=signal, sender=sender )
+		else:
+			self.data = None 
 	def __call__( self, signal=None, sender=None ):
 		"""Delete the cached value (this object)
 
