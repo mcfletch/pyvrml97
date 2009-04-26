@@ -1,8 +1,17 @@
 #include "Python.h"
+
+#if PY_VERSION_HEX < 0x02050000
+typedef int Py_ssize_t;
+#define PY_SSIZE_T_MAX INT_MAX
+#define PY_SSIZE_T_MIN INT_MIN
+#endif
+
 #ifdef USE_NUMPY
 #include "numpy/arrayobject.h"
+#define NEW_ARRAY_FUNC PyArray_SimpleNew
 #else
 #include "Numeric/arrayobject.h"
+#define NEW_ARRAY_FUNC PyArray_FromDims
 #endif
 
 #ifdef __cplusplus
@@ -21,10 +30,9 @@ PyObject * new_transMatrix( double x, double y, double z ) {
 	*/
 	PyObject * result = NULL;
 	PyArrayObject * resultArray = NULL;
-	npy_intp dims[2] = {4,4};
+	Py_ssize_t dims[2] = {4,4};
 	double resultTemp[4][4] = {{1.0,0.0,0.0,0.0}, {0.0,1.0,0.0,0.0}, {0.0,0.0,1.0,0.0}, {x,y,z,1.0}};
-	/* result = PyArray_FromDims( 2, dims, PyArray_DOUBLE );*/
-	result = PyArray_SimpleNew( 2, dims, PyArray_DOUBLE);
+	result = NEW_ARRAY_FUNC( 2, dims, PyArray_DOUBLE);
 	if (!result) {
 		PyErr_Format(
 			PyExc_MemoryError,
@@ -43,13 +51,12 @@ PyObject * new_scaleMatrix( double x, double y, double z ) {
 	*/
 	PyObject * result = NULL;
 	PyArrayObject * resultArray = NULL;
-	npy_intp dims[2] = {4,4};
+	Py_ssize_t dims[2] = {4,4};
 	double resultTemp[4][4] = {{x,0.0,0.0,0.0}, {0.0,y,0.0,0.0}, {0.0,0.0,z,0.0}, {0.0,0.0,0.0,1.0}};
 	resultTemp[0][0] = x;
 	resultTemp[1][1] = y;
 	resultTemp[2][2] = z;
-	/* result = PyArray_FromDims( 2, dims, PyArray_DOUBLE );*/
-	result = PyArray_SimpleNew( 2, dims, PyArray_DOUBLE);
+	result = NEW_ARRAY_FUNC( 2, dims, PyArray_DOUBLE);
 	if (!result) {
 		PyErr_Format(
 			PyExc_MemoryError,
@@ -69,7 +76,7 @@ PyObject * new_rotMatrix( double x, double y, double z, double a ) {
 
 	PyObject * result = NULL;
 	PyArrayObject * resultArray = NULL;
-	npy_intp dims[2] = {4,4};
+	Py_ssize_t dims[2] = {4,4};
 	double resultTemp[4][4] = {{1.0,0.0,0.0,0.0}, {0.0,1.0,0.0,0.0}, {0.0,0.0,1.0,0.0}, {0.0,0.0,0.0,1.0}};
 	double c,s,t;
 	c = cos( a );
@@ -79,8 +86,7 @@ PyObject * new_rotMatrix( double x, double y, double z, double a ) {
 	resultTemp[0][0] = t*x*x+c; resultTemp[0][1] = t*x*y+s*z; resultTemp[0][2] = t*x*z-s*y;
 	resultTemp[1][0] = t*x*y-s*z; resultTemp[1][1] = t*y*y+c; resultTemp[1][2] = t*y*z+s*x;
 	resultTemp[2][0] = t*x*z+s*y; resultTemp[2][1] = t*y*z-s*x; resultTemp[2][2] = t*z*z+c;
-	/* result = PyArray_FromDims( 2, dims, PyArray_DOUBLE ); */
-	result = PyArray_SimpleNew( 2, dims, PyArray_DOUBLE);
+	result = NEW_ARRAY_FUNC( 2, dims, PyArray_DOUBLE);
 	if (!result) {
 		PyErr_Format(
 			PyExc_MemoryError,
