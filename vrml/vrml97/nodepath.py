@@ -47,10 +47,16 @@ class _NodePath( object ):
 		make it the first item in the dot'ing.
 		"""
 		key=('matrix',translate,scale,rotate)
-		mHolder = CACHE.getData( self, key=key )
+		holder = CACHE.getHolder( self, key=key )
+		if holder is None:
+			doConnect = True 
+			holder = CACHE.holder( self, None, key=key )
+			mHolder = None
+		else:
+			doConnect = False
+			mHolder = holder.data
 		if mHolder is None:
 			matrix = None
-			holder = CACHE.holder( self, None, key=key )
 			fields = []
 			if translate:
 				fields.append( 'translation' )
@@ -71,7 +77,7 @@ class _NodePath( object ):
 				# holder needs to depend on parentMatrix,
 				# as we're going to use it to calculate our 
 				# own matrix...
-				if mHolder is not None:
+				if doConnect and mHolder is not None:
 					holder.depend( mHolder )
 				matrix = mHolder.matrix
 				start = len(parent)
@@ -91,8 +97,9 @@ class _NodePath( object ):
 						parentMatrix = matrix,
 						**args
 					)
-					for k in fields:
-						holder.depend( item, k )
+					if doConnect:
+						for k in fields:
+							holder.depend( item, k )
 			mHolder = _MatrixHolder(matrix)
 			holder.set( mHolder )
 		if matrixHolder:
