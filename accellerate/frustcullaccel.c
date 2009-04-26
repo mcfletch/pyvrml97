@@ -38,15 +38,15 @@ static PyObject * planeCull( PyObject * self, PyObject * args ) {
 	if (frustArray->dimensions[1] != 4) {
 		PyErr_Format(
 			PyExc_TypeError,
-			"Frustum must be an x*4 array, second dimension was %d",
-			frustArray->dimensions[1]
+			"Frustum must be an x*4 array, second dimension was %ld",
+			(long)(frustArray->dimensions[1])
 		);
 	}
 	if ((pointArray->dimensions[1] > 4) | (pointArray->dimensions[1] < 3)) {
 		PyErr_Format(
 			PyExc_TypeError,
-			"Points must be an x*3 or x*4 array, second dimension was %d",
-			pointArray->dimensions[1]
+			"Points must be an x*3 or x*4 array, second dimension was %ld",
+			(long)(pointArray->dimensions[1])
 		);
 	}
 	minDistance = -minDistance;
