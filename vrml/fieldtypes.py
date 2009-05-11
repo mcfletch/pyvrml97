@@ -349,6 +349,12 @@ class _MFFloat( object ):
 		"""Copy a value for copier"""
 		return arrays.array(value, arrays.typeCode(value) )
 
+class _MFFloat32( _MFFloat ):
+	"""32-BIT floating-point type"""
+	acceptedTypes = ('d',DOUBLE_TYPE,'f',FLOAT_TYPE)
+	targetType = FLOAT_TYPE
+	fieldType = 'MFFloat32'
+
 class _MFTime( _MFFloat ):
 	"""MFTime field/event type base-class
 
@@ -673,6 +679,11 @@ class MFFloat( _MFFloat, field.Field ):
 class MFFloatEvt( _MFFloat, field.Event, ):
 	"""MFFloat Event class"""
 	fieldType = 'MFFloat'
+class MFFloat32( _MFFloat32, field.Field ):
+	"""MFFloat32 Field class"""
+class MFFloat32Evt( _MFFloat32, field.Event, ):
+	"""MFFloat32 Event class"""
+	fieldType = 'MFFloat32'
 
 class MFInt32( _MFInt32, field.Field ):
 	"""MFInt32 Field class"""
@@ -868,6 +879,7 @@ class SFMatrix4dEvt( _SFMatrix4d, field.Event ):
 
 ### Now register everything
 field.register( MFFloat )
+field.register( MFFloat32 )
 field.register( SFBool )
 field.register( MFColor )
 field.register( MFRotation )
@@ -904,6 +916,7 @@ field.register( MFMatrix4d )
 
 ## event classes...
 field.register( MFFloatEvt )
+field.register( MFFloat32Evt )
 field.register( SFBoolEvt )
 field.register( MFColorEvt )
 field.register( MFRotationEvt )
