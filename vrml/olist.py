@@ -1,6 +1,10 @@
 """Observable list class"""
 from pydispatch.dispatcher import send
-import sets,weakref
+import weakref
+try:
+	set 
+except NameError, err:
+	from sets import Set as set
 
 class OList( list ):
 	"""List sub-class which generates pydispatch events on changes
@@ -98,7 +102,7 @@ class OList( list ):
 		"""Set values and send messages"""
 		values = list(iterable)
 		previous = self.__getslice__( i,j )
-		currents = sets.Set( previous )
+		currents = set( previous )
 		super(OList,self).__setslice__( i,j, values )
 		for value in values:
 			if value not in currents:
