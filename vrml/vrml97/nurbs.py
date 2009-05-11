@@ -26,10 +26,10 @@ class Polyline2D( node.Node ):
 class NurbsCurve2D( node.Node ):
 	"""A 2D nurbs curve normally used for trimming surfaces"""
 	PROTO = "NurbsCurve2D"
-	knot = field.newField( 'knot', 'MFFloat', 1, list)
+	knot = field.newField( 'knot', 'MFFloat32', 1, list)
 	order = field.newField( 'order', 'SFInt32', 1, 3)
 	controlPoint = field.newField( 'controlPoint', 'MFVec2f', 1, list)
-	weight = field.newField( 'weight', 'MFFloat', 1, list)
+	weight = field.newField( 'weight', 'MFFloat32', 1, list)
 	tessellation = field.newField( 'tessellation', 'SFInt32', 1, 0)
 
 ### Surfaces and Curves
