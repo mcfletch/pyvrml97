@@ -401,7 +401,10 @@ class PointSet( nodetypes.Geometry, node.Node ):
 	#Fields
 	color = field.newField( 'color', 'SFNode', 1, node.NULL)
 	coord = field.newField( 'coord', 'SFNode', 1, node.NULL)
-	#Events
+	
+	minSize = field.newField( 'minSize','SFFloat',1, 0.0 )
+	maxSize = field.newField( 'minSize','SFFloat',1, 1.0 )
+	attenuation = field.newField( 'attenuation','SFVec3f',1,[1.0,0.0,0.0])
 	
 
 class PositionInterpolator( nodetypes.Children, nodetypes.Interpolator, node.Node ):
