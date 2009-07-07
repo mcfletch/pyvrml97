@@ -37,11 +37,11 @@ class NurbsCurve( nodetypes.Geometry, node.Node ):
 	"""A 3D nurbs curve (a curvy line in 3D space)
 	"""
 	PROTO = "NurbsCurve"
-	knot = field.newField( 'knot', 'MFFloat', 1, list)
+	knot = field.newField( 'knot', 'MFFloat32', 1, list)
 	order = field.newField( 'order', 'SFInt32', 1, 3)
 	controlPoint = field.newField( 'controlPoint', 'MFVec3f', 1, list)
 	color = field.newField( 'color', 'MFColor', 1, list)
-	weight = field.newField( 'weight', 'MFFloat', 1, list)
+	weight = field.newField( 'weight', 'MFFloat32', 1, list)
 	tessellation = field.newField( 'tessellation', 'SFInt32', 1, 0)
 
 class NurbsSurface( nodetypes.Geometry, node.Node ):
@@ -49,13 +49,13 @@ class NurbsSurface( nodetypes.Geometry, node.Node ):
 	PROTO = "NurbsSurface"
 	uDimension = field.newField( 'uDimension', 'SFInt32', 1, 0)
 	vDimension = field.newField( 'vDimension', 'SFInt32', 1, 0)
-	uKnot = field.newField( 'uKnot', 'MFFloat', 1, list)
-	vKnot = field.newField( 'vKnot', 'MFFloat', 1, list)
+	uKnot = field.newField( 'uKnot', 'MFFloat32', 1, list)
+	vKnot = field.newField( 'vKnot', 'MFFloat32', 1, list)
 	uOrder = field.newField( 'uOrder', 'SFInt32', 1, 3)
 	vOrder = field.newField( 'vOrder', 'SFInt32', 1, 3)
 	controlPoint = field.newField( 'controlPoint', 'MFVec3f', 1, list)
 	color = field.newField( 'color', 'MFColor', 1, list)
-	weight = field.newField( 'weight', 'MFFloat', 1, list)
+	weight = field.newField( 'weight', 'MFFloat32', 1, list)
 	uTessellation = field.newField( 'uTessellation', 'SFInt32', 1, 0)
 	vTessellation = field.newField( 'vTessellation', 'SFInt32', 1, 0)
 	texCoord = field.newField( 'texCoord', 'SFNode', 1, node.NULL)

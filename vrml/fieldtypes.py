@@ -328,21 +328,23 @@ class _MFFloat( object ):
 	Stored as a flat Numeric-python array
 	"""
 	defaultDefault = list
+	acceptedTypes = ('d',DOUBLE_TYPE)
+	targetType = DOUBLE_TYPE
 	def coerce( self, value ):
 		"""Base coercion mechanism for floating point field types"""
 		if isinstance(value, field.NUMERIC_TYPES):
-			return arrays.array([float(value)],'d')
+			return arrays.array([float(value)],self.targetType)
 		elif isinstance( value, arrays.ArrayType ):
-			if arrays.typeCode(value) not in ('d',FLOAT_TYPE):
-				value = value.astype( 'd')
+			if arrays.typeCode(value) not in self.acceptedTypes:
+				value = value.astype(self.targetType)
 			return arrays.contiguous( arrays.ravel(value) )
 		elif isinstance( value, field.SEQUENCE_TYPES):
 			return arrays.array(
 				map( float, collapse( value) ),
-				'd',
+				self.targetType,
 			)
 		elif not value:
-			return arrays.array([],'d')
+			return arrays.array([],self.targetType)
 		raise ValueError( """Attempted to set value for an %s field which is not compatible: %s"""%( self.typeName(), repr(value) ))
 	vrmlstr = staticmethod(MFSimple_vrmlstr)
 	def copyValue( self, value, copier=None ):
@@ -351,7 +353,7 @@ class _MFFloat( object ):
 
 class _MFFloat32( _MFFloat ):
 	"""32-BIT floating-point type"""
-	acceptedTypes = ('d',DOUBLE_TYPE,'f',FLOAT_TYPE)
+	acceptedTypes = ('f',FLOAT_TYPE)
 	targetType = FLOAT_TYPE
 	fieldType = 'MFFloat32'
 
