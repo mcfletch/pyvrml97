@@ -375,7 +375,7 @@ class ParseProcessor( DispatchProcessor ):
 		]
 	def MFFloat( self, tuples, buffer ):
 		return [float(buffer[start:stop]) for (tag, start, stop, children) in tuples]
-	MFColor = MFRotation = MFVec2f = MFVec3f = MFTime = MFFloat
+	MFColor = MFRotation = MFVec2f = MFVec3f = MFTime = MFFloat32 = MFFloat
 	
 
 	def MFString( self, tuples, buffer ):
