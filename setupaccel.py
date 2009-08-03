@@ -14,8 +14,8 @@ def find_packages( root ):
 			yield path.replace( '/','.' )
 
 extensions = [
-	Extension("vrml_accellerate.fieldaccel", [
-			os.path.join( 'accellerate', "fieldaccel.c")
+	Extension("vrml_accelerate.fieldaccel", [
+			os.path.join( 'accelerate', "fieldaccel.c")
 			# is just a Python-API function...
 		],
 	),
@@ -44,14 +44,14 @@ else:
 		('USE_NUMPY', True ),
 	]
 	extensions.extend( [
-		Extension("vrml_accellerate.tmatrixaccelnumpy", [
-				os.path.join( 'accellerate', "tmatrixaccel.c")
+		Extension("vrml_accelerate.tmatrixaccelnumpy", [
+				os.path.join( 'accelerate', "tmatrixaccel.c")
 			],
 			include_dirs = includeDirectories,
 			define_macros = definitions,
 		),
-		Extension("vrml_accellerate.frustcullaccelnumpy", [
-				os.path.join( 'accellerate', "frustcullaccel.c")
+		Extension("vrml_accelerate.frustcullaccelnumpy", [
+				os.path.join( 'accelerate', "frustcullaccel.c")
 			],
 			include_dirs = includeDirectories,
 			define_macros = definitions,
@@ -68,13 +68,13 @@ else:
 		('USE_NUMPY', False ),
 	]
 	extensions.extend( [
-		Extension("vrml_accellerate.tmatrixaccelnumeric", [
-				os.path.join( 'accellerate', "tmatrixaccel.c")
+		Extension("vrml_accelerate.tmatrixaccelnumeric", [
+				os.path.join( 'accelerate', "tmatrixaccel.c")
 			],
 			undefine_macros = definitions,
 		),
-		Extension("vrml_accellerate.frustcullaccelnumeric", [
-				os.path.join( 'accellerate', "frustcullaccel.c")
+		Extension("vrml_accelerate.frustcullaccelnumeric", [
+				os.path.join( 'accelerate', "frustcullaccel.c")
 			],
 			undefine_macros = definitions,
 		),
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 			"""Intended Audience :: Developers""",
 		],
 		'download_url': "https://sourceforge.net/project/showfiles.php?group_id=19262",
-		'keywords': 'VRML,VRML97,scenegraph,accellerate,fields',
+		'keywords': 'VRML,VRML97,scenegraph,accelerate,fields',
 		'long_description' : """Scenegraph accelleration code for PyVRML97
 
 This set of C extensions provides accelleration of common operations
@@ -103,14 +103,14 @@ within the PyVRML97 and OpenGLContext rendering engine.
 	### Now the actual set up call
 
 	setup (
-		name = "PyVRML97-accellerate",
+		name = "PyVRML97-accelerate",
 		version = "2.2.0a1",
-		description = "Scenegraph accelleration code for PyVRML97",
+		description = "Scenegraph acceleration code for PyVRML97",
 		author = "Mike C. Fletcher",
 		author_email = "mcfletch@vrplumber.com",
 		url = "http://pyopengl.sourceforge.net/context/",
 		license = "BSD-style, see license.txt for details",
-		packages = list(find_packages( 'vrml_accellerate')),
+		packages = list(find_packages( 'vrml_accelerate')),
 		# non python files of examples      
 		ext_modules=extensions,
 		**extraArguments

@@ -6,8 +6,8 @@ Numeric tends to be a bit flaky...
 try:
 	from numpy import *
 	try:
-		from vrml_accellerate import tmatrixaccelnumpy as tmatrixaccel
-		from vrml_accellerate import frustcullaccelnumpy as frustcullaccel
+		from vrml_accelerate import tmatrixaccelnumpy as tmatrixaccel
+		from vrml_accelerate import frustcullaccelnumpy as frustcullaccel
 	except ImportError, err:
 		tmatrixaccel = frustcullaccel = None
 except ImportError, err:
@@ -22,8 +22,8 @@ except ImportError, err:
 		return False
 	implementation_name = 'numeric'
 	try:
-		from vrml_accellerate import tmatrixaccelnumeric as tmatrixaccel
-		from vrml_accellerate import frustcullaccelnumeric as frustcullaccel
+		from vrml_accelerate import tmatrixaccelnumeric as tmatrixaccel
+		from vrml_accelerate import frustcullaccelnumeric as frustcullaccel
 	except ImportError, err:
 		tmatrixaccel = frustcullaccel = None
 else:

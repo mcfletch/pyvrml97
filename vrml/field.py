@@ -5,7 +5,7 @@ from vrml import protonamespace
 
 # conditional import via package entry points
 try:
-	from vrml_accellerate import fieldaccel
+	from vrml_accelerate import fieldaccel
 except ImportError, err:
 	fieldaccel = None
 
