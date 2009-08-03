@@ -64,6 +64,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
 			*args,
 			**namedargs
 		)
+		node.Node.rootSceneGraph.fset( self, self )
 	def getProto( self, name ):
 		"""Get a prototype by name
 

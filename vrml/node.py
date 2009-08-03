@@ -351,10 +351,37 @@ class WeakSFNode( _SFNode, field.WeakField, field.Field):
 	"""Weak-referenced SFNode field-type"""
 	fieldType = 'WeakSFNode'
 
+class RootScenegraphNode( WeakSFNode ):
+	def fset( self, client, value, notify = 1 ):
+		"""Set the root scenegraph node (recursively)"""
+		result = super( RootScenegraphNode, self ).fset( 
+			client, value, notify 
+		)
+		for field in getFields( client.__class__ ):
+			if isinstance( field, SFNode ) and not isinstance( field, RootScenegraphNode ):
+				try:
+					child = field.__get__( client )
+				except ValueError, err:
+					pass 
+				else:
+					self.fset( child, value, notify=False )
+			elif isinstance( field, MFNode ):
+				try:
+					for child in field.__get__( client ):
+						self.fset( child, value, notify=False )
+				except AttributeError, err:
+					pass 
+			elif field.name == ' DEF':
+				try:
+					DEF = field.__get__( client )
+					value.regDefName( DEF, client )
+				except AttributeError, err:
+					pass 
+
 field.register( WeakSFNode )
 
 PrototypedNode.scenegraph = SFNode(' scenegraph', 1, NULL)
-Node.rootSceneGraph = WeakSFNode(
+Node.rootSceneGraph = RootScenegraphNode(
 	' root',
 	1,
 	NULL
