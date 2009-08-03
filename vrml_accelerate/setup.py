@@ -5,17 +5,16 @@ from distutils.core import setup,Extension
 import sys, os
 sys.path.insert(0, '.' )
 
-def is_package( path ):
-	return os.path.isfile( os.path.join( path, '__init__.py' ))
-def find_packages( root ):
-	"""Find all packages under this directory"""
-	for path, directories, files in os.walk( root ):
-		if is_package( path ):
-			yield path.replace( '/','.' )
+def find_version( ):
+	for line in open( '__init__.py'):
+		if line.strip().startswith( '__version__' ):
+			return eval(line.strip().split('=')[1].strip())
+	raise RuntimeError( """No __version__ = 'string' in __init__.py""" )
+version = find_version()
 
 extensions = [
 	Extension("vrml_accelerate.fieldaccel", [
-			os.path.join( 'accelerate', "fieldaccel.c")
+			os.path.join( 'src', "fieldaccel.c")
 			# is just a Python-API function...
 		],
 	),
@@ -45,13 +44,13 @@ else:
 	]
 	extensions.extend( [
 		Extension("vrml_accelerate.tmatrixaccelnumpy", [
-				os.path.join( 'accelerate', "tmatrixaccel.c")
+				os.path.join( 'src', "tmatrixaccel.c")
 			],
 			include_dirs = includeDirectories,
 			define_macros = definitions,
 		),
 		Extension("vrml_accelerate.frustcullaccelnumpy", [
-				os.path.join( 'accelerate', "frustcullaccel.c")
+				os.path.join( 'src', "frustcullaccel.c")
 			],
 			include_dirs = includeDirectories,
 			define_macros = definitions,
@@ -69,12 +68,12 @@ else:
 	]
 	extensions.extend( [
 		Extension("vrml_accelerate.tmatrixaccelnumeric", [
-				os.path.join( 'accelerate', "tmatrixaccel.c")
+				os.path.join( 'src', "tmatrixaccel.c")
 			],
 			undefine_macros = definitions,
 		),
 		Extension("vrml_accelerate.frustcullaccelnumeric", [
-				os.path.join( 'accelerate', "frustcullaccel.c")
+				os.path.join( 'src', "frustcullaccel.c")
 			],
 			undefine_macros = definitions,
 		),
@@ -104,14 +103,22 @@ within the PyVRML97 and OpenGLContext rendering engine.
 
 	setup (
 		name = "PyVRML97-accelerate",
-		version = "2.2.0a1",
+		version = version,
 		description = "Scenegraph acceleration code for PyVRML97",
 		author = "Mike C. Fletcher",
 		author_email = "mcfletch@vrplumber.com",
 		url = "http://pyopengl.sourceforge.net/context/",
 		license = "BSD-style, see license.txt for details",
-		packages = list(find_packages( 'vrml_accelerate')),
+		packages = ['vrml_accelerate'],
 		# non python files of examples      
 		ext_modules=extensions,
+		options = {
+			'sdist': {
+				'formats': ['gztar','zip'],
+			},
+		},
+		package_dir = {
+			'vrml_accelerate':'.',
+		},
 		**extraArguments
 	)

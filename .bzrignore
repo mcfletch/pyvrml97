@@ -3,3 +3,7 @@ pyvrml97.e4p
 pyvrml97.e4q
 pyvrml97.e4t
 .eric4project
+MANIFEST
+vrml_accelerate/MANIFEST
+vrml_accelerate/dist
+dist
