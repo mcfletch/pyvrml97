@@ -178,7 +178,7 @@ else:
 		if source is None:
 			return None,None
 		else:
-			(x,y,z) = source
+			(x,y,z) = source[:3]
 		if x == y == z == 1.0:
 			return None, None
 		S = array( [ [x,0,0,0], [0,y,0,0], [0,0,z,0], [0,0,0,1] ], 'd' )
@@ -207,7 +207,7 @@ else:
 		if source is None:
 			return None,None
 		else:
-			(x,y,z) = source
+			(x,y,z) = source[:3]
 		if x == y == z == 0.0:
 			return None, None
 		T = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [x,y,z,1] ], 'd' )
