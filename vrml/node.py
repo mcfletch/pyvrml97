@@ -352,8 +352,12 @@ class WeakSFNode( _SFNode, field.WeakField, field.Field):
 	fieldType = 'WeakSFNode'
 
 class RootScenegraphNode( WeakSFNode ):
+	fieldType = 'RootScenegraphNode'
 	def fset( self, client, value, notify = 1 ):
-		"""Set the root scenegraph node (recursively)"""
+		"""Set the root scenegraph node (recursively)
+		
+		TODO: this will blow up on cyclic graphs!
+		"""
 		result = super( RootScenegraphNode, self ).fset( 
 			client, value, notify 
 		)
@@ -377,8 +381,8 @@ class RootScenegraphNode( WeakSFNode ):
 					value.regDefName( DEF, client )
 				except AttributeError, err:
 					pass 
-
 field.register( WeakSFNode )
+field.register( RootScenegraphNode )
 
 PrototypedNode.scenegraph = SFNode(' scenegraph', 1, NULL)
 Node.rootSceneGraph = RootScenegraphNode(
