@@ -90,7 +90,7 @@ if __name__ == "__main__":
 			"""Topic :: Multimedia :: Graphics :: 3D Rendering""",
 			"""Intended Audience :: Developers""",
 		],
-		'download_url': "https://sourceforge.net/project/showfiles.php?group_id=19262",
+		'download_url': "https://sourceforge.net/projects/pyvrml97/files/PyVRML97/",
 		'keywords': 'VRML,VRML97,scenegraph,accelerate,fields',
 		'long_description' : """Scenegraph accelleration code for PyVRML97
 
