@@ -22,6 +22,13 @@ class ROUTE( node.Node ):
 		Calls self.bind() after normal node.Node
 		argument processing.
 		"""
+		if arguments:
+			if len(arguments) == 4:
+				named['source'] = arguments[0]
+				named['sourceField'] = arguments[1]
+				named['destination'] = arguments[2]
+				named['destinationField'] = arguments[3]
+				arguments = ()
 		super( ROUTE, self ).__init__( *arguments, **named )
 		self.bind()
 	def bind( self ):

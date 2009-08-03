@@ -104,11 +104,26 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
 		proto -- Prototype PROTO
 		'''
 		self.protoTypes[protofunctions.name( proto ) ] = proto
-	def addRoute(self, route):
+	def addRoute(self, route, *args):
 		'''Add a route to the scenegraph
-		XXX should check validity...
 		'''
+		if args:
+			route = (route,) + args
+		if isinstance( route, (tuple,list)):
+			from vrml.route import ROUTE
+			source,sourceField,destination,destinationField = route 
+			if isinstance( source, (str,unicode)):
+				source = self.getDEF( source )
+			if isinstance( destination, (str,unicode)):
+				destination = self.getDEF( destination )
+			route = ROUTE( 
+				source = source,
+				sourceField = sourceField,
+				destination = destination,
+				destinationField = destinationField,
+			)
 		self.routes.append( route )
+		return route
 ##	def addIsMap( self, name, node, field ):
 ##		"""Add an isMap for the given name to the given node+field"""
 ##		self.isMaps.setdefault( name, []).append( (node,field) )

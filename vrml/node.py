@@ -319,7 +319,7 @@ class _SFNode( object ):
 			return NULL
 		elif isinstance( value, str ):
 			raise ValueError(
-				"""SFNode field %s was set to a string, not current supported: %s"""%(
+				"""SFNode field %s was set to a string, not currently supported: %s"""%(
 					self, value[:30]
 				)
 			)
