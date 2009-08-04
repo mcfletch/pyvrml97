@@ -59,7 +59,9 @@ class ROUTE( node.Node ):
 					)
 		else:
 			print """NULL ROUTE bound""", self
-	def forward( self, signal, sender, event=None, value=None, **arguments ):
+	def forward( 
+		self, signal, sender, event=None, value=None, **arguments 
+	):
 		"""Forward a value update to our destination
 		"""
 		return self._forward(
@@ -141,6 +143,7 @@ class IS( ROUTE ):
 	to and from a given field on the base node to
 	the sub-nodes.
 	"""
+	PROTO = "IS"
 	def bind( self ):
 		"""Bind the in and out routes for the IS mapping
 		"""
