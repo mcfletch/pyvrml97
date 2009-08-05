@@ -59,12 +59,14 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
 			defNames = {}
 		self.defNames = defNames
 		namedargs['children'] = children
-		namedargs['routes'] = routes or []
 		super( SceneGraph, self ).__init__(
 			*args,
 			**namedargs
 		)
 		node.Node.rootSceneGraph.fset( self, self )
+		if routes:
+			for route in routes:
+				self.addRoute( route )
 	def getProto( self, name ):
 		"""Get a prototype by name
 
@@ -107,22 +109,46 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
 		self.protoTypes[protofunctions.name( proto ) ] = proto
 	def addRoute(self, route, *args):
 		'''Add a route to the scenegraph
+		
+		route,args -- Possible forms:
+		
+			ROUTE object -- added to routes
+			((source)node,field,(destination)node,field) -- ROUTE
+				created, nodes may be strings, in which case 
+				getDEF( node ) is called for each
+			((source)node,field,target( signal, sender, value )) -- 
+				field.watch( target ) is called for the source 
+				node (which can be a DEF name).
 		'''
 		if args:
 			route = (route,) + args
 		if isinstance( route, (tuple,list)):
-			from vrml.route import ROUTE
-			source,sourceField,destination,destinationField = route 
-			if isinstance( source, (str,unicode)):
-				source = self.getDEF( source )
-			if isinstance( destination, (str,unicode)):
-				destination = self.getDEF( destination )
-			route = ROUTE( 
-				source = source,
-				sourceField = sourceField,
-				destination = destination,
-				destinationField = destinationField,
-			)
+			if len(route) == 4:
+				# 4-element route definition, e.g. from strings...
+				from vrml.route import ROUTE
+				source,sourceField,destination,destinationField = route 
+				if isinstance( source, (str,unicode)):
+					source = self.getDEF( source )
+				if isinstance( destination, (str,unicode)):
+					destination = self.getDEF( destination )
+				route = ROUTE( 
+					source = source,
+					sourceField = sourceField,
+					destination = destination,
+					destinationField = destinationField,
+				)
+			elif len(route) == 3:
+				# 2-element source plus a function to receive...
+				source,sourceField,target = route 
+				if not callable( target ):
+					raise TypeError(
+						"""Need a callable target object!"""
+					)
+				if isinstance( source, (str,unicode)):
+					source = self.getDEF( source )
+				field = protofunctions.getField( source, sourceField )
+				field.watch( source, target, ('set',field) )
+				field.watch( source, target, ('del',field) )
 		self.routes.append( route )
 		return route
 ##	def addIsMap( self, name, node, field ):

@@ -237,7 +237,14 @@ class Field( property ):
 			lineariser.buffer.write( result )
 		return
 	def watch( self, node, receiver, signal = dispatcher.Any ):
-		"""Make receiver receive all update events for this field+node"""
+		"""Make receiver receive all update events for this field+node
+		
+		receiver( signal, sender, value=None )
+		
+			signal -- ('del',self), ('set',self) etc...
+			sender -- node 
+			value -- new value set (for set values)
+		"""
 		return dispatcher.connect(
 			receiver = receiver,
 			sender = node,
@@ -405,3 +412,17 @@ class Event( object ):
 		)
 		lineariser.buffer.write( base )
 		return base
+	def watch( self, node, receiver, signal = dispatcher.Any ):
+		"""Make receiver receive all update events for this field+node
+		
+		receiver( signal, sender, value=None )
+		
+			signal -- ('del',self), ('set',self) etc...
+			sender -- node 
+			value -- new value set (for set values)
+		"""
+		return dispatcher.connect(
+			receiver = receiver,
+			sender = node,
+			signal = signal,
+		)
