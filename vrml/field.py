@@ -24,7 +24,7 @@ def register( cls ):
 		dictionary = baseEventTypes
 	else:
 		dictionary = baseFieldTypes
-	if dictionary.has_key( name ):
+	if name in dictionary:
 		print 'Warning: redefining field-type %s from %s to %s'%( name, dictionary.get(name), cls)
 	dictionary[ name ] = cls
 		
@@ -100,7 +100,7 @@ class Field( property ):
 		if client, set client's attribute to default
 		without sending a notification event.
 		"""
-		if callable( self.default ):
+		if hasattr(self.default, '__call__' ):
 			default = self.default()
 		else:
 			default = self.default
@@ -143,7 +143,7 @@ class Field( property ):
 		if isinstance( client, type ):
 			delattr( client, self.name)
 		else:
-			if client.__dict__.has_key( self.name ):
+			if self.name in client.__dict__:
 				del client.__dict__[ self.name ]
 		if notify:
 			dispatcher.send( ('del',self), client, field=self )
