@@ -4,4 +4,3 @@ Includes a full VRML97 parser and lineariser
 for SimpleParse 2.0.x
 """
 
-

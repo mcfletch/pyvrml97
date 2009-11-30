@@ -76,12 +76,12 @@ ESCAPEDCHAR    := '\\"'/'\134\134'
 '''
 
 class VRMLParser( Parser ):
-	"""Simple subclassing of Parser to create proper ParseProcessor"""
-	def buildProcessor( self ):
-		"""Build and return a vrml.vrml97.parseprocessor.ParseProcessor"""
-		from vrml.vrml97 import parseprocessor
-		return parseprocessor.ParseProcessor()
+    """Simple subclassing of Parser to create proper ParseProcessor"""
+    def buildProcessor( self ):
+        """Build and return a vrml.vrml97.parseprocessor.ParseProcessor"""
+        from vrml.vrml97 import parseprocessor
+        return parseprocessor.ParseProcessor()
 
 def buildParser( declaration = grammar ):
-	"""Build a new VRMLParser object"""
-	return VRMLParser( declaration, "vrmlFile" )
+    """Build a new VRMLParser object"""
+    return VRMLParser( declaration, "vrmlFile" )

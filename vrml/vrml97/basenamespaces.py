@@ -11,18 +11,18 @@ from vrml import node, protonamespace, fieldtypes, route
 from vrml.vrml97 import script, basenodes, scenegraph
 
 basePrototypes = protonamespace.ProtoNamespace(
-	{
-		'PROTO': node.prototype,
-		'sceneGraph': scenegraph.SceneGraph,
-		'ROUTE': route.ROUTE,
-		'NULL': node.NULL,
-		'Script': script.Script,
-	}
+    {
+        'PROTO': node.prototype,
+        'sceneGraph': scenegraph.SceneGraph,
+        'ROUTE': route.ROUTE,
+        'NULL': node.NULL,
+        'Script': script.Script,
+    }
 )
 for key,value in basenodes.__dict__.items():
-	try:
-		if issubclass( value, node.Node ):
-			basePrototypes[key] = value
-	except:
-		pass
-	
+    try:
+        if issubclass( value, node.Node ):
+            basePrototypes[key] = value
+    except:
+        pass
+    
