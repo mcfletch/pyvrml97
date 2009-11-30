@@ -17,7 +17,7 @@ class NodePath( list ):
 		creating a name like:
 			WeakNodePath( WeakTuple( Node, Node,...))
 		"""
-		return '%s(%s)'%(self.__class__.__name__, tuple.__repr__( self ))
+		return '%s(%s)'%(self.__class__.__name__, list.__repr__( self ))
 	def __str__( self ):
 		"""Simple representation of a node-path for human consumption"""
 		return "%s(%s)"%(
