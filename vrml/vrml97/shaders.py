@@ -41,6 +41,8 @@ class ShaderAttribute( node.Node ):
     dataType = field.newField( 'dataType','SFString', 1, 'FLOAT' )
     # the buffer into which we index...
     buffer = field.newField( 'buffer','SFNode',1,node.NULL )
+    isCoord = field.newField( 'isCoord','SFBool',1,False)
+    
 class ShaderBuffer( node.Node ):
     """Buffer of data into which pointers can be generated"""
     type = field.newField( 'type','SFString', 1, 'ARRAY' )
