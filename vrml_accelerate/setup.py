@@ -4,6 +4,12 @@
 from distutils.core import setup,Extension
 import sys, os
 sys.path.insert(0, '.' )
+try:
+    from Cython.Distutils import build_ext
+except ImportError, err:
+    have_cython = False 
+else:
+    have_cython = True
 
 def find_version( ):
     for line in open( '__init__.py'):
@@ -13,12 +19,12 @@ def find_version( ):
 version = find_version()
 
 extensions = [
-    Extension("vrml_accelerate.fieldaccel", [
-            os.path.join( 'src', "fieldaccel.c")
-            # is just a Python-API function...
+    Extension("vrml_accelerate.fieldaccel2", [
+            os.path.join( 'src', ["fieldaccel2.c","fieldaccel2.pyx"][have_cython])
         ],
     ),
 ]
+    
 
 try:
     import numpy
@@ -56,29 +62,6 @@ else:
             define_macros = definitions,
         ),
     ])
-try:
-    import Numeric
-except ImportError, err:
-    sys.stderr.write(
-        """Unable to import Numeric, skipping Numeric extension building\n"""
-    )
-else:
-    definitions = [
-        ('USE_NUMPY', False ),
-    ]
-    extensions.extend( [
-        Extension("vrml_accelerate.tmatrixaccelnumeric", [
-                os.path.join( 'src', "tmatrixaccel.c")
-            ],
-            undefine_macros = definitions,
-        ),
-        Extension("vrml_accelerate.frustcullaccelnumeric", [
-                os.path.join( 'src', "frustcullaccel.c")
-            ],
-            undefine_macros = definitions,
-        ),
-    ])
-    
 
 if __name__ == "__main__":
     extraArguments = {
@@ -100,6 +83,10 @@ within the PyVRML97 and OpenGLContext rendering engine.
         'platforms': ['Win32','Linux','OS-X','Posix'],
     }
     ### Now the actual set up call
+    if have_cython:
+        extraArguments['cmdclass'] = {
+            'build_ext': build_ext,
+        }
 
     setup (
         name = "PyVRML97-accelerate",
