@@ -52,7 +52,7 @@ class ShaderIndexBuffer( ShaderBuffer ):
     """Buffer of data from which indices are generated"""
     type = field.newField( 'type','SFString', 1, 'ELEMENT' )
     usage = field.newField( 'usage','SFString', 1, 'DYNAMIC_DRAW' )
-    indices = field.newField( 'indices','MFUInt32', 1, list )
+    buffer = field.newField( 'buffer','MFUInt32', 1, list )
     
 
 class FloatUniform( node.Node ):
@@ -86,8 +86,15 @@ class GLSLShader( node.Node ):
     PROTO = "GLSLShader"
     url = field.newField( 'url', 'MFString', 1, list)
     source = field.newField( 'source','MFString',1, list)
+    imports = field.newField( 'imports', 'MFNode', 1, list )
     # type values, VERTEX or FRAGMENT
     type = field.newField( 'type',  'SFString', 1,  'VERTEX' ) 
+
+class GLSLImport( node.Node ):
+    """GLSL-base shader source-code import"""
+    PROTO = "GLSLImport"
+    url = field.newField( 'url', 'MFString', 1, list)
+    source = field.newField( 'source','MFString',1, list)
 
 class GLSLObject( node.Node ):
     """GLSL-based shader object (compiled set of shaders)"""
@@ -102,7 +109,6 @@ class Shader( node.Node ):
     PROTO = 'Shader'
     #Fields
     material = field.newField( 'material', 'SFNode', 1, node.NULL)
-    textures = field.newField( 'textures', 'MFNode',  1,  list )
     objects = field.newField( 'objects',  'MFNode',  1,  list )
     
     implementation = field.newField( 'implementation','SFNode',1,node.NULL)
