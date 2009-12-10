@@ -70,7 +70,7 @@ class Node( object ):
             else:
                 if not (hasattr( f, '__get__') and hasattr( f, '__set__')):
                     raise TypeError ("""Attempt to set a non-field attribute %s to %s for node type %s"""%(key, value, self.__class__.__name__))
-                setattr( self, key, value )
+                f.fset( self, value )
     def __str__( self ):
         """Get a friendly representation of the Node"""
         if self.__dict__.has_key( ' DEF' ) and defName(self):
