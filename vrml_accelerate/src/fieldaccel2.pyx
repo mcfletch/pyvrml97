@@ -6,6 +6,7 @@ cdef class BaseField( object ):
     cdef public object defaultobj
     cdef public int call_default
     def __init__( self, str name, object default ):
+        """Initialize the BaseField parameters"""
         self.name = name 
         self.defaultobj = default
         if hasattr(default, '__call__' ):
@@ -23,50 +24,20 @@ cdef class BaseField( object ):
         if current is _NULL:
             return self.getDefault( client )
         return current 
-    fget = __get__ 
     def __set__( self, client, value ):
-        """Set value for given instance"""
-        value = self._set( client, value )
-        send( 
-            ('set',self), 
-            client, 
-            value=value,
-        )
-        #return value
-    def fset( self, client, value, int notify=True ):
-        value = self._set( client, value )
-        if notify:
-            send( 
-                ('set',self),
-                client, 
-                value=value,
-            )
-        return value
-    cdef _set(self, client, value ):
-        try:
-            value = self.coerce( value )
-        except ValueError, x:
-            raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
-        except TypeError, x:
-            raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
-        if isinstance( client, type ):
-            setattr( client, self.name, value )
-        else:
-            client.__dict__[self.name] = value
-        return value 
+        """Set value for given instance (notifies)"""
+        self._set( client, value, True )
     def __del__( self, client ):
-        """Delete our value from client's dictionary"""
-        try:
-            client.__dict__[ self.name ]
-        except KeyError, err:
-            raise AttributeError( self.name )
-    def fdel( self, client, notify=True ):
-        """Delete with notify"""
-        self.__del__( client )
-        send(
-            ('del',self), 
-            client, 
-        )
+        """Delete our value from client's dictionary (notifies)"""
+        self._del( client, True )
+    # Protocols with notification suppression...
+    def fset( self, client, value, int notify=True ):
+        """Set value, with option to notify"""
+        return self._set( client, value, bool(notify) )
+    def fdel( self, client, int notify=True ):
+        """Delete with option to notify"""
+        return self._del( client, bool(notify) )
+    fget = __get__ 
         
     def coerce( self, value ):
         """Coerce the given value to our type"""
@@ -86,5 +57,37 @@ cdef class BaseField( object ):
         else:
             defaultobj = self.defaultobj
         if client is not None:
-            defaultobj = self._set( client, defaultobj )
+            defaultobj = self._set( client, defaultobj, 0 )
         return defaultobj
+
+    cdef _del(self, client, int notify):
+        """Delete the value, with notifications"""
+        try:
+            value = client.__dict__.pop( self.name )
+        except KeyError, err:
+            raise AttributeError( self.name )
+        if notify:
+            send(
+                ('del',self), 
+                client, 
+            )
+        return value
+    cdef _set(self, client, value, int notify ):
+        """Set value to give value, with coercion"""
+        try:
+            value = self.coerce( value )
+        except ValueError, x:
+            raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
+        except TypeError, x:
+            raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
+        if isinstance( client, type ):
+            setattr( client, self.name, value )
+        else:
+            client.__dict__[self.name] = value
+        if notify:
+            send( 
+                ('set',self), 
+                client, 
+                value=value,
+            )
+        return value 
