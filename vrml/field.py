@@ -5,9 +5,9 @@ from vrml import protonamespace
 
 # conditional import via package entry points
 try:
-    from vrml_accelerate import fieldaccel
-except ImportError, err:
-    fieldaccel = None
+    from vrml_accelerate import fieldaccel2
+except Exception, err:
+    fieldaccel2 = None
 
 baseFieldTypes = protonamespace.ProtoNamespace({})
 baseEventTypes = protonamespace.ProtoNamespace({})
@@ -57,8 +57,93 @@ def newEvent( name, dataType, direction=1 ):
         dataType = baseEventTypes[dataType]
     return dataType( name, direction )
 
+if fieldaccel2:
+    BaseField = fieldaccel2.BaseField 
+else:
+    class BaseField( object ):
+        def __init__( self, name, default ):
+            self.name = name 
+            self.defaultobj = default
+            if hasattr(self.default, '__call__' ):
+                self.call_default = True
+            else:
+                self.call_default = False
+        def __get__( self, client, cls ):
+            """Retrieve value for given instance (or self for cls)"""
+            if client is None:
+                return self 
+            idict = client.__dict__
+            current = idict.get( self.name, _NULL )
+            if current is _NULL:
+                return self.getDefault( client )
+            return current 
+        def __set__( self, client, value ):
+            """Set value for given instance"""
+            value = self._set( client, value )
+            dispatcher.send( 
+                ('set',self), 
+                client, 
+                value=value,
+            )
+            #return value
+        def fset( self, client, value ):
+            value = self._set( client, value )
+            dispatcher.send( 
+                ('set',self), 
+                client, 
+                value=value,
+            )
+            return value
+        def _set(self, client, value ):
+            try:
+                value = self.coerce( value )
+            except ValueError, x:
+                raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
+            except TypeError, x:
+                raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
+            if isinstance( client, type ):
+                setattr( client, self.name, value )
+            else:
+                client.__dict__[self.name] = value
+            return value 
+            
+        def coerce( self, value ):
+            """Coerce the given value to our type"""
+            return value
+        def check( self, value ):
+            "Raise ValueError if isn't correct type"
+            return value
+        def getDefault( self, client = None ):
+            """Get the default value of this field
 
-class Field( property ):
+            if client, set client's attribute to default
+            without sending a notification event.
+            """
+            if self.call_default:
+                defaultobj = self.defaultobj()
+            else:
+                defaultobj = self.defaultobj
+            if client is not None:
+                defaultobj = self._set( client, defaultobj )
+            return defaultobj
+        
+        def __del__( self, client ):
+            """Delete our value from client's dictionary"""
+            try:
+                client.__dict__[ self.name ]
+            except KeyError, err:
+                raise AttributeError( self.name )
+    
+        def fdel( self, client, notify=True ):
+            """Delete with notify"""
+            self.__del__( client )
+            send(
+                ('del',self), 
+                client, 
+            )
+
+
+class Field( BaseField ):
     """Property sub-class with VRML field semantics
 
     The field basically binds a name, a dataType, and
@@ -87,66 +172,11 @@ class Field( property ):
         exposure -- boolean (0/1) indicating whether this is an exposed field
         default -- default value for the field
         """
-        self.name = name
         self.exposure = exposure
         if default is _NULL:
             default = self.defaultDefault
-        self.default = default
-        property.__init__( self, self.fget, self.fset, self.fdel, repr(self))
-        setattr( self, "__doc__", str(self))
-    def getDefault( self, client = None ):
-        """Get the default value of this field
-
-        if client, set client's attribute to default
-        without sending a notification event.
-        """
-        if hasattr(self.default, '__call__' ):
-            default = self.default()
-        else:
-            default = self.default
-        if client is not None:
-            default = self.fset( client, default, notify=0)
-        return default
-        
-    def fset( self, client, value, notify = 1 ):
-        """Set the client's value for this property
-
-        if notify is true send a notification event.
-        """
-        try:
-            value = self.coerce( value )
-        except ValueError, x:
-            raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
-        except TypeError, x:
-            raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
-        if isinstance( client, type ):
-            setattr( client, self.name, value )
-        else:
-            client.__dict__[self.name] = value
-        if notify:
-            dispatcher.send( ('set',self), client, value=value)
-        return value
-    def fget( self, client ):#, notify=0 ):
-        """Get the client's value for this property
-
-        if notify is true send a notification event.
-        """
-        current = client.__dict__.get( self.name, _NULL )
-        if current is _NULL:
-            current = self.getDefault(client)
-        return current
-    def fdel( self, client, notify=1 ):
-        """Delete the client's value for this property
-
-        if notify is true send a notification event.
-        """
-        if isinstance( client, type ):
-            delattr( client, self.name)
-        else:
-            if self.name in client.__dict__:
-                del client.__dict__[ self.name ]
-        if notify:
-            dispatcher.send( ('del',self), client, field=self )
+        super( Field, self ).__init__( name, default )
+        #setattr( self, "__doc__", str(self))
     def fhas( self, client ):
         """Determine whether the client currently has a non-default value"""
         if isinstance( client, type ):
@@ -196,13 +226,6 @@ class Field( property ):
             exposed = "field"
         return '%s %s %s %s'%(exposed, self.typeName(), self.name, str(self.default)[:20])
 
-
-    def coerce( self, value ):
-        """Coerce the given value to our type"""
-        return value
-    def check( self, value ):
-        "Raise ValueError if isn't correct type"
-        return value
     def vrmlstr( self, value, lineariser ):
         """Convert the given value to a VRML97 representation"""
         return ""
@@ -251,12 +274,6 @@ class Field( property ):
             signal = signal,
         )
 
-
-if fieldaccel:
-    import new
-    Field.fget = new.instancemethod(fieldaccel.simpleGet, None, Field )
-
-
 class WeakField( object ):
     """A Mix-in for fields which stores weak-references to values"""
     def fset( self, client, value, notify = 1 ):
@@ -289,53 +306,6 @@ class WeakField( object ):
                 self.fdel( client, notify=0 )
             return None # super( WeakField, self).fget( client )
         return value
-        
-##
-##
-##class PROTOField( Field ):
-##	"""Field on a prototyped node"""
-##	def fset( self, client, value ):
-##		"""Set the client's value for this property"""
-##		value = super(PROTOField, self).fset( client, value )
-##		for (node,field) in client._Node__isMaps.get(self.name,[]):
-##			field.fset( node, value )
-##		return value
-##
-##
-##class IsField( Field ):
-##	"""Field defined as a reference to a node + a field"""
-##	def __init__( self, name, field, node=None ):
-##		"""Initialise the field object
-##
-##		name -- string name
-##		field -- pointer to the property from which we derive
-##		node -- either the prototyped node or the prototype class
-##		"""
-##		self.field = field
-##		self.node = node
-##		super( IsField, self).__init__( name, field.exposure, field.default )
-##	def fset( self, client, value ):
-##		"""Set the outer-node's value (fail if un-instantiated)"""
-##		if isinstance( self.node, type):
-##			raise TypeError( """Attempted to set value %s of an un-instantiated is-mapped field %s for node %s of proto %s"""%( value, self, client, self.node ))
-##		setattr( self.node, self.field.name, value )
-##	def fget( self, client ):
-##		"""Get the outer-node's value (default if un-instantiated)"""
-##		if isinstance( self.node, type):
-##			value = self.field.default
-##			if callable( value):
-##				value = value()
-##			return value
-##		return getattr( self.node, self.field.name )
-##	def fdel( self, client ):
-##		"""Delete the outer-node's value (fail if un-instantiated)"""
-##		if isinstance( self.node, type):
-##			raise TypeError( """Attempted to delete value %s of an un-instantiated is-mapped field %s for node %s of proto %s"""%( value, self, client, self.node ))
-##		return delattr( self.node, self.field.name )
-##		
-##	def __str__( self ):
-##		return """%s IS %s"""%( self.name, self.field.name )
-
 
 class Event( object ):
     """An Event-handling Port definition
