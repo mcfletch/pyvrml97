@@ -64,11 +64,11 @@ else:
         def __init__( self, name, default ):
             self.name = name 
             self.defaultobj = default
-            if hasattr(self.default, '__call__' ):
+            if hasattr(default, '__call__' ):
                 self.call_default = True
             else:
                 self.call_default = False
-        def __get__( self, client, cls ):
+        def __get__( self, client, cls=None ):
             """Retrieve value for given instance (or self for cls)"""
             if client is None:
                 return self 
@@ -77,6 +77,7 @@ else:
             if current is _NULL:
                 return self.getDefault( client )
             return current 
+        fget = __get__
         def __set__( self, client, value ):
             """Set value for given instance"""
             value = self._set( client, value )
@@ -86,13 +87,14 @@ else:
                 value=value,
             )
             #return value
-        def fset( self, client, value ):
+        def fset( self, client, value, notify=True ):
             value = self._set( client, value )
-            dispatcher.send( 
-                ('set',self), 
-                client, 
-                value=value,
-            )
+            if notify:
+                dispatcher.send( 
+                    ('set',self), 
+                    client, 
+                    value=value,
+                )
             return value
         def _set(self, client, value ):
             try:
@@ -137,10 +139,11 @@ else:
         def fdel( self, client, notify=True ):
             """Delete with notify"""
             self.__del__( client )
-            send(
-                ('del',self), 
-                client, 
-            )
+            if notify:
+                send(
+                    ('del',self), 
+                    client, 
+                )
 
 
 class Field( BaseField ):
