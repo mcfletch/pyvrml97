@@ -56,10 +56,11 @@ scenegraphs.
         options = {
             'sdist': {
                 'formats':['gztar','zip'],
-            }
+            },
         },
         url = "http://pyopengl.sourceforge.net/context/",
         license = "BSD-style, see license.txt for details",
         packages = list(find_packages( 'vrml' )),
+        zip_safe = False,
         **extraArguments
     )
