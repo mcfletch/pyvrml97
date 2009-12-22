@@ -27,9 +27,10 @@ cdef class BaseField( object ):
     def __set__( self, client, value ):
         """Set value for given instance (notifies)"""
         self._set( client, value, True )
-    def __del__( self, client ):
+    def __del__( self, client=None ):
         """Delete our value from client's dictionary (notifies)"""
-        self._del( client, True )
+        if client is not None:
+            self._del( client, True )
     # Protocols with notification suppression...
     def fset( self, client, value, int notify=True ):
         """Set value, with option to notify"""

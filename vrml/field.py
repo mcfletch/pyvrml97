@@ -179,7 +179,7 @@ class Field( BaseField ):
         if default is _NULL:
             default = self.defaultDefault
         super( Field, self ).__init__( name, default )
-        #setattr( self, "__doc__", str(self))
+        setattr( self, "__doc__", str(self))
     def fhas( self, client ):
         """Determine whether the client currently has a non-default value"""
         if isinstance( client, type ):
@@ -206,7 +206,7 @@ class Field( BaseField ):
             return self.__class__(
                 self.name,
                 self.exposure,
-                self.copyValue(self.default, copier),
+                self.copyValue(self.defaultobj, copier),
             )
         elif self.fhas( client ):
             return self.copyValue( self.fget( client ), copier)
@@ -227,7 +227,16 @@ class Field( BaseField ):
             exposed = "exposedField"
         else:
             exposed = "field"
-        return '%s %s %s %s'%(exposed, self.typeName(), self.name, str(self.default)[:20])
+        if self.defaultobj is list:
+            default = '[]'
+        else:
+            default = str(self.defaultobj)[:20]
+        return '%s %s %s %s'%(
+            exposed, 
+            self.typeName(), 
+            self.name, 
+            default,
+        )
 
     def vrmlstr( self, value, lineariser ):
         """Convert the given value to a VRML97 representation"""
