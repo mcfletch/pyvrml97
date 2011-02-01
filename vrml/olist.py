@@ -1,6 +1,6 @@
 """Observable list class"""
 from pydispatch.dispatcher import send
-import weakref
+import weakref, types
 try:
     set 
 except NameError, err:
@@ -79,44 +79,48 @@ class OList( list ):
         return item
     def __delitem__( self, index ):
         """Delete a single item"""
-        value = self[index]
-        self._sendRemoved( value )
-        return value
-    def __delslice__( self, i,j ):
-        """Delete a slice of sub-items"""
-        current = self[i:j]
-        for value in current:
+        if isinstance( index, types.SliceType ):
+            current = self.__getitem__( index )
+            for value in current:
+                self._sendRemoved( value )
+            super( OList,self ).__delitem__( index )
+            return current 
+        else:
+            value = self[index]
             self._sendRemoved( value )
-        super( OList,self ).__delslice__( i,j )
-        return current 
+        return value
+    def __delslice__( self, i,j):
+        return self.__delitem__( slice(i,j))
     def __setitem__( self, index, value ):
         """Set a value and send a message"""
-        current = self[index]
-        if current is not value:
-            self._sendRemoved( current )
-        super( OList,self ).__setitem__( index, value )
-        if current is not value:
-            self._sendAdded( value )
-        return value 
-    def __setslice__(self, i,j, iterable ):
-        """Set values and send messages"""
-        values = list(iterable)
-        previous = self.__getslice__( i,j )
-        currents = set( previous )
-        super(OList,self).__setslice__( i,j, values )
-        for value in values:
-            if value not in currents:
+        if isinstance( index, types.SliceType ):
+            values = list(value)
+            previous = self.__getitem__( index )
+            currents = set( previous )
+            super(OList,self).__setitem__( index, values )
+            for value in values:
+                if value not in currents:
+                    self._sendAdded( value )
+                else:
+                    try:
+                        previous.remove( value )
+                    except ValueError, err:
+                        pass
+            for current in previous:
+                self._sendRemoved( current )
+            return values 
+        else:
+            current = self[index]
+            if current is not value:
+                self._sendRemoved( current )
+            super( OList,self ).__setitem__( index, value )
+            if current is not value:
                 self._sendAdded( value )
-            else:
-                try:
-                    previous.remove( value )
-                except ValueError, err:
-                    pass
-        for current in previous:
-            self._sendRemoved( current )
-        return values 
+            return value 
+    def __setslice__( self, i,j, iterable ):
+        return self.__setitem__( slice(i,j), iterable)
     def __iadd__( self, iterable ):
         """Do an in-place add"""
-        return self.__setslice__( len(self),len(self), iterable )
+        return self.__setitem__( slice(len(self),len(self)), iterable )
     extend = __iadd__
     

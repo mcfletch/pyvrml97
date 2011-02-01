@@ -184,7 +184,7 @@ class Field( BaseField ):
         """Determine whether the client currently has a non-default value"""
         if isinstance( client, type ):
             return hasattr( client, self.name )
-        elif client.__dict__.has_key( self.name ):
+        elif self.name in client.__dict__:
             return 1
         else:
             return 0

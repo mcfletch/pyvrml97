@@ -73,7 +73,7 @@ class Node( object ):
                 f.fset( self, value )
     def __str__( self ):
         """Get a friendly representation of the Node"""
-        if self.__dict__.has_key( ' DEF' ) and defName(self):
+        if 'DEF' in self.__dict__ and defName(self):
             return """%s( DEF=%r @0x%X )"""%(
                 self.__class__.__name__,
                 defName( self ),
@@ -92,7 +92,7 @@ class Node( object ):
         """
         attributes = []
         for field in getFields( self ):
-            if self.__dict__.has_key( field.name ):
+            if field.name in self.__dict__:
                 value = getattr( self, field.name)
                 if isinstance( value, Node ):
                     representation = str(value)

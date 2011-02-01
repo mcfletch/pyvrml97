@@ -1,6 +1,7 @@
 """list sub-class which holds weak references to objects"""
 from __future__ import generators
 import weakref
+import types
 
 class WeakList( list ):
     """list sub-class holding weakrefs to items
@@ -62,13 +63,12 @@ class WeakList( list ):
 
     def __setitem__( self, index, item ):
         """Set the item at the given index"""
+        if isinstance( index, types.SliceType ):
+            item = [self.wrap(x) for x in item]
+        else:
+            item = self.wrap(x)
         return super( WeakList,self).__setitem__(
-            index, self.wrap(item)
-        )
-    def __setslice__( self, start, stop, sequence ):
-        """Set a sequence of items from the start to the stop index"""
-        return super( WeakList,self).__setslice__(
-            start, stop, map(self.wrap, sequence)
+            index, item
         )
     
     def append( self, item ):
@@ -87,12 +87,6 @@ class WeakList( list ):
     def __getitem__( self, index ):
         """Get the item at the given index"""
         return self.unwrap(super (WeakList,self).__getitem__( index))
-    def __getslice__( self, start, stop ):
-        """Get the items in the range start to stop"""
-        return map(
-            self.unwrap,
-            super (WeakList,self).__getslice__( start, stop)
-        )
     def pop( self, index=-1 ):
         """Pop an item from the list, removing it and returning it"""
         return self.unwrap( super(WeakList,self).pop(index))

@@ -12,9 +12,6 @@ class TestOList( unittest.TestCase ):
     def test_append( self ):
         self.olist.append( 'this' )
         assert self.out == [('new','this')], self.out
-    def test_setslice( self ):
-        self.olist[0:2] = [ 'those','them' ]
-        assert self.out == [('new','those'),('new','them'),('del','this'),], self.out
     def test_setitem( self ):
         self.olist[:] = [ 'those','them','their' ]
         del self.out[:]

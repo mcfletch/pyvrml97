@@ -137,7 +137,7 @@ class Lineariser:
         # linearise the "free" prototypes (any actually registered with the sceneGraph)
         if not self.skipUnusedProtos: # are supposed to linearise all prototypes currently in the sceneGraph, regardless of whether they are used
             for proto in clientNode.protoTypes.values():
-                if not self.protoalreadydone.has_key( id( proto )):
+                if not id( proto ) in self.protoalreadydone:
                     self._proto( proto )
         # linearise the node/script children, they will include their prototypes if they are not already done
         for child in clientNode.children:
@@ -165,7 +165,7 @@ class Lineariser:
         if builtin( clientNode ):
             # this prototype should not be linearised
             return 0
-        if self.protoalreadydone.has_key( id( clientNode) ):
+        if id( clientNode) in self.protoalreadydone:
             # this precise prototype has been linearised already...
             return 1
         elif self.protoalreadydone.get(name(clientNode) ):
@@ -207,7 +207,7 @@ class Lineariser:
             sg = getSceneGraph(clientNode)
             if sg is not None:
                 self._sceneGraph( sg )
-            if linvalues.has_key('EndComments') and linvalues['EndComments']*60 < ( (buffer.tell())):
+            if 'EndComments' in linvalues and linvalues['EndComments']*60 < ( (buffer.tell())):
                 buffer.write( '\n}#End PROTO %s\n'%(clientName) )
             else:
                 buffer.write( '\n}\n' )
@@ -253,7 +253,7 @@ class Lineariser:
         # write the node-ending comment
         if buffer.tell() == position:
             buffer.write( "%(courtesyspace)s}"%linvalues)
-        elif linvalues.has_key( 'EndComments') and linvalues['EndComments']*60 < ( (buffer.tell()-startind)):
+        elif 'EndComments'in linvalues and linvalues['EndComments']*60 < ( (buffer.tell()-startind)):
             DEF = name( clientNode)
             PROTO = protoName( clientNode )
             buffer.write( '%(full_element_separator)s%(curindent)s} #EndNode %%s'%linvalues%( DEF or PROTO ) )
@@ -328,7 +328,7 @@ class Lineariser:
             # following slows us down, but prevents the chaff from showing up...
             val = field.fget( object )
             default = field.getDefault()
-            if isMaps.has_key( field.name ):
+            if field.name in isMaps:
                 buffer.write(
                     '%(full_element_separator)s%(curindent)s%(indent)s%%s IS %%s\t'%linvalues%(field.name, isMaps.get(field.name) )
                 )
@@ -456,7 +456,7 @@ class Lineariser:
             self.indentationlevel = self.indentationlevel+1
         self.linvalues['curindent'] = self.linvalues['indent']*self.indentationlevel
     def _canUse( self, clientNode ):
-        if self.alreadydone.has_key( id(clientNode) ):
+        if id(clientNode) in self.alreadydone:
             DEF = defName( clientNode )
             if DEF:
                 return 'USE '+ DEF
