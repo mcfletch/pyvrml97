@@ -53,7 +53,6 @@ class ShaderIndexBuffer( ShaderBuffer ):
     type = field.newField( 'type','SFString', 1, 'ELEMENT' )
     usage = field.newField( 'usage','SFString', 1, 'DYNAMIC_DRAW' )
     buffer = field.newField( 'buffer','MFUInt32', 1, list )
-    
 
 class FloatUniform( node.Node ):
     """Uniform (variable) binding for a shader
@@ -80,6 +79,12 @@ class TextureUniform( node.Node ):
     PROTO = 'TextureUniform'
     name = field.newField( 'name','SFString', 1, '' )
     value = field.newField( 'value', 'SFNode', 1, node.NULL )
+class TextureBufferUniform( node.Node ):
+    """Uniform which specifies a texture across vbo data"""
+    PROTO = 'TextureBufferUniform'
+    name = field.newField( 'name','SFString', 1, '' )
+    value = field.newField( 'value', 'SFNode', 1, node.NULL )
+    format = field.newField( 'format', 'SFString',1,'RGBA32F' )
 
 class GLSLShader( node.Node ):
     """GLSL-based shader node"""
