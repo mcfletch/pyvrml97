@@ -44,6 +44,14 @@ else:
             return a.typecode()
 del a
 implementation_name = 'numpy'
+try:
+    # PyVRML97 is from before numpy printed errors, we explicitly do not care 
+    # about the divide-by-zero, which commonly happens in mesh data processing
+    # TODO: likely should rework the mesh processing to check manually and remove 
+    # this sledge-hammer approach
+    seterr(all='ignore')
+except Exception, err:
+    pass
     
 def safeCompare( first, second ):
     """Watch out for pointless numpy truth-value checks"""
