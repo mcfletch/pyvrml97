@@ -49,17 +49,15 @@ else:
         ('USE_NUMPY', True ),
     ]
     extensions.extend( [
-        Extension("vrml_accelerate.tmatrixaccelnumpy", [
-                os.path.join( 'src', "tmatrixaccel.c")
-            ],
-            include_dirs = includeDirectories,
-            define_macros = definitions,
-        ),
         Extension("vrml_accelerate.frustcullaccelnumpy", [
                 os.path.join( 'src', "frustcullaccel.c")
             ],
             include_dirs = includeDirectories,
             define_macros = definitions,
+        ),
+        Extension("vrml_accelerate.tmatrixaccel2", [
+                os.path.join( 'src', ["tmatrixaccel.c","tmatrixaccel.pyx"][have_cython])
+            ],
         ),
     ])
 
