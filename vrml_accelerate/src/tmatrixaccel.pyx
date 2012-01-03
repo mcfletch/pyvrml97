@@ -27,10 +27,14 @@ def rotMatrix( float x=0.0, float y=1.0, float z=0.0, float a=0.0 ):
     c = np.cos( a )
     s = np.sin( a )
     t = 1-c
-    
     return np.array([
         [   t*x*x+c,    t*x*y+s*z,  t*x*z-s*y,  0.0],
         [   t*x*y-s*z,  t*y*y+c,    t*y*z+s*x,  0.0],
         [   t*x*z+s*y,  t*y*z-s*x,  t*z*z+c,    0.0], 
         [   0.0,         0.0,         0.0,        1.0],
     ], dtype=np.float32)
+
+# def perspectiveMatrix( ):
+# def frustumMatrix( ):
+# def orthoMatrix( ):
+# def nodePath( ):
