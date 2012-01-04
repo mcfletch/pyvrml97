@@ -29,6 +29,7 @@ RADTODEG = 360./TWOPI
 DEGTORAD = TWOPI/360.
 # used to determine the center point of a transform
 ORIGINPOINT = array([0,0,0,1],'d')
+VERY_SMALL = 1e-300
 
 def transformMatrix(
         translation = (0,0,0),
@@ -124,9 +125,61 @@ def center(
     return dot( ORIGINPOINT, parentMatrix )
 
 if tmatrixaccel:
-    rotMatrix = tmatrixaccel.rotMatrix
-    scaleMatrix = tmatrixaccel.scaleMatrix
-    transMatrix = tmatrixaccel.transMatrix
+    def rotMatrix( source = None ):
+        """Convert a VRML rotation to rotation matrices
+
+        Returns (R, R') (R and the inverse of R), with both
+        being 4x4 transformation matrices.
+            or
+        None,None if the angle is an exact multiple of 2pi
+
+        x,y,z -- (normalised) rotational vector
+        a -- angle in radians
+        """
+        if source is None:
+            return None,None
+        else:
+            (x,y,z, a) = source
+        if a % TWOPI:
+            return tmatrixaccel.rotMatrix( x,y,z,a ),tmatrixaccel.rotMatrix( x,y,z,-a )
+        return None,None
+    def scaleMatrix( source=None ):
+        """Convert a VRML scale to scale matrices
+
+        Returns (S, S') (S and the inverse of S), with both
+        being 4x4 transformation matrices.
+            or
+        None,None if x == y == z == 1.0
+
+        x,y,z -- scale vector
+        """
+        if source is None:
+            return None,None
+        else:
+            (x,y,z) = source[:3]
+        if x == y == z == 1.0:
+            return None, None
+        forward = tmatrixaccel.scaleMatrix( x,y,z )
+        backward = tmatrixaccel.scaleMatrix( 1.0/(x or VERY_SMALL),1.0/(y or VERY_SMALL), 1.0/(z or VERY_SMALL) )
+        return forward, backward
+    def transMatrix( source=None ):
+        """Convert a VRML translation to translation matrices
+
+        Returns (T, T') (T and the inverse of T), with both
+        being 4x4 transformation matrices.
+            or
+        None,None if x == y == z == 0.0
+
+        x,y,z -- scale vector
+        """
+        if source is None:
+            return None,None
+        else:
+            (x,y,z) = source[:3]
+        if x == y == z == 0.0:
+            return None, None 
+        return tmatrixaccel.transMatrix( x,y,z ),tmatrixaccel.transMatrix( -x, -y, -z )
+    perspectiveMatrix = tmatrixaccel.perspectiveMatrix
 else:
     def rotMatrix( source=None ):
         """Convert a VRML rotation to rotation matrices
@@ -182,16 +235,12 @@ else:
         if x == y == z == 1.0:
             return None, None
         S = array( [ [x,0,0,0], [0,y,0,0], [0,0,z,0], [0,0,0,1] ], 'd' )
-        try:
-            S1 = array( [ [1./x,0,0,0], [0,1./y,0,0], [0,0,1./z,0], [0,0,0,1] ], 'd' )
-        except ZeroDivisionError:
-            if x == 0:
-                x = 1e-300 # arbitrary, small value...
-            if y == 0:
-                y = 1e-300 # arbitrary, small value...
-            if z == 0:
-                z = 1e-300 # arbitrary, small value...
-            S1 = array( [ [1./x,0,0,0], [0,1./y,0,0], [0,0,1./z,0], [0,0,0,1] ], 'd' )
+        S1 = array( [ 
+            [1./(x or VERY_SMALL),0,0,0], 
+            [0,1./(y or VERY_SMALL),0,0], 
+            [0,0,1./(z or VERY_SMALL),0], 
+            [0,0,0,1] ], 'd' 
+        )
         return S, S1
 
     def transMatrix( source=None ):
@@ -214,17 +263,31 @@ else:
         T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'd' )
         return T, T1
 
-def perspectiveMatrix( fovy, aspect, zNear, zFar ):
-    """Create a perspective matrix from given parameters
-    
-    Note that this is the same matrix as for gluPerspective,
-    save that we are using radians...
-    """
-    f = 1.0/tan( (fovy/2.0) ) # cotangent( fovy/2.0 )
-    zDelta = zNear-zFar
-    return array([
-        [f/aspect,0,0,0],
-        [0,f,0,0],
-        [0,0,(zFar+zNear)/zDelta,-1],
-        [0,0,(2*zFar*zNear)/zDelta,0]
-    ],'d')
+    def perspectiveMatrix( fovy, aspect, zNear, zFar ):
+        """Create a perspective matrix from given parameters
+        
+        Note that this is the same matrix as for gluPerspective,
+        save that we are using radians...
+        """
+        f = 1.0/tan( (fovy/2.0) ) # cotangent( fovy/2.0 )
+        zDelta = zNear-zFar
+        return array([
+            [f/aspect,0,0,0],
+            [0,f,0,0],
+            [0,0,(zFar+zNear)/zDelta,-1],
+            [0,0,(2*zFar*zNear)/zDelta,0]
+        ],'d')
+    def orthoMatrix( left=-1.0, right=1.0, bottom=-1.0, top=1.0, zNear=-1.0, zFar=1.0 ):
+        """Calculate an orthographic projection matrix
+        
+        Similar to glOrtho 
+        """
+        tx = - ( right + left ) / float( right-left )
+        ty = - ( top + bottom ) / float( top-bottom )
+        tz = - ( zFar + zNear ) / float( zFar-zNear )
+        return array([
+            [2/(right-left),	0,	0,	 tx],
+            [0,	 2/(top-bottom),	0,	 ty],
+            [0,	0,	 -2/(zFar-zNear),	 tz],
+            [0,	0,	0,	1],
+        ], dtype='d')    

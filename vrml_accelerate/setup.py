@@ -55,7 +55,7 @@ else:
             include_dirs = includeDirectories,
             define_macros = definitions,
         ),
-        Extension("vrml_accelerate.tmatrixaccel2", [
+        Extension("vrml_accelerate.tmatrixaccel", [
                 os.path.join( 'src', ["tmatrixaccel.c","tmatrixaccel.pyx"][have_cython])
             ],
         ),

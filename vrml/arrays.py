@@ -5,7 +5,7 @@ Numeric tends to be a bit flaky...
 """
 from numpy import *
 try:
-    from vrml_accelerate import tmatrixaccelnumpy as tmatrixaccel
+    from vrml_accelerate import tmatrixaccel
     from vrml_accelerate import frustcullaccelnumpy as frustcullaccel
 except ImportError, err:
     tmatrixaccel = frustcullaccel = None
