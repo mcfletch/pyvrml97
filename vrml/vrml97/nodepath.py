@@ -82,7 +82,7 @@ class _NodePath( object ):
                 matrix = mHolder.matrix
                 start = len(parent)
             if matrix is None:
-                matrix = identity(4, 'd')
+                matrix = identity(4, 'f')
             # now calculate delta from parent to self...
             # for each item, we determine our dependencies 
             # based on *all* of the child's transform fields
@@ -105,7 +105,7 @@ class _NodePath( object ):
         if matrixHolder:
             return mHolder
         return mHolder.matrix
-#		matrix = identity(4, 'd')
+#		matrix = identity(4, 'f')
 #		for item in self.transformChildren():
 #			### this isn't quite right, it's Transform-specific,
 #			### won't work for billboards and the like.
@@ -126,7 +126,7 @@ class _NodePath( object ):
 
         See transformMatrix for semantics
         """
-        matrix = identity(4, 'd')
+        matrix = identity(4, 'f')
         for item in self.transformChildren(reverse=1):
             d = item.__dict__
             matrix = transformmatrix.itransformMatrix (

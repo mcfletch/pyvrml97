@@ -28,7 +28,7 @@ TWOPI = pi * 2.0
 RADTODEG = 360./TWOPI
 DEGTORAD = TWOPI/360.
 # used to determine the center point of a transform
-ORIGINPOINT = array([0,0,0,1],'d')
+ORIGINPOINT = array([0,0,0,1],'f')
 VERY_SMALL = 1e-300
 
 def transformMatrix(
@@ -234,12 +234,12 @@ else:
             (x,y,z) = source[:3]
         if x == y == z == 1.0:
             return None, None
-        S = array( [ [x,0,0,0], [0,y,0,0], [0,0,z,0], [0,0,0,1] ], 'd' )
+        S = array( [ [x,0,0,0], [0,y,0,0], [0,0,z,0], [0,0,0,1] ], 'f' )
         S1 = array( [ 
             [1./(x or VERY_SMALL),0,0,0], 
             [0,1./(y or VERY_SMALL),0,0], 
             [0,0,1./(z or VERY_SMALL),0], 
-            [0,0,0,1] ], 'd' 
+            [0,0,0,1] ], 'f' 
         )
         return S, S1
 
@@ -259,8 +259,8 @@ else:
             (x,y,z) = source[:3]
         if x == y == z == 0.0:
             return None, None
-        T = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [x,y,z,1] ], 'd' )
-        T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'd' )
+        T = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [x,y,z,1] ], 'f' )
+        T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'f' )
         return T, T1
 
     def perspectiveMatrix( fovy, aspect, zNear, zFar ):
@@ -276,7 +276,7 @@ else:
             [0,f,0,0],
             [0,0,(zFar+zNear)/zDelta,-1],
             [0,0,(2*zFar*zNear)/zDelta,0]
-        ],'d')
+        ],'f')
     def orthoMatrix( left=-1.0, right=1.0, bottom=-1.0, top=1.0, zNear=-1.0, zFar=1.0 ):
         """Calculate an orthographic projection matrix
         
@@ -290,4 +290,4 @@ else:
             [0,	 2/(top-bottom),	0,	 ty],
             [0,	0,	 -2/(zFar-zNear),	 tz],
             [0,	0,	0,	1],
-        ], dtype='d')    
+        ], dtype='f')    
