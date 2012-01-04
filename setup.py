@@ -59,7 +59,7 @@ scenegraphs.
             },
         },
         url = "http://pyopengl.sourceforge.net/context/",
-        license = "BSD-style, see license.txt for details",
+        license = "BSD",
         packages = list(find_packages( 'vrml' )),
         zip_safe = False,
         **extraArguments
