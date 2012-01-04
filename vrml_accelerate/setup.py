@@ -49,8 +49,8 @@ else:
         ('USE_NUMPY', True ),
     ]
     extensions.extend( [
-        Extension("vrml_accelerate.frustcullaccelnumpy", [
-                os.path.join( 'src', "frustcullaccel.c")
+        Extension("vrml_accelerate.frustcullaccel", [
+                os.path.join( 'src', ["frustcullaccel.c","frustcullaccel.pyx"][have_cython])
             ],
             include_dirs = includeDirectories,
             define_macros = definitions,
