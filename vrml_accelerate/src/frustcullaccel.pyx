@@ -17,6 +17,8 @@ def planeCull( np.ndarray[DTYPE_T,ndim=2] planes, np.ndarray[DTYPE_T,ndim=2] poi
     cdef float distance,plane0,plane1,plane2,plane3,point0,point1,point2
     cdef np.ndarray plane,point
     
+    planeCount = planes.shape[0]
+    pointCount = points.shape[0]
     if planes.shape[1] != 4:
         raise TypeError( "Need an Nx4 array of plane equation floats" )
     elif points.shape[1] not in (3,4):

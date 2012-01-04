@@ -6,7 +6,7 @@ Numeric tends to be a bit flaky...
 from numpy import *
 try:
     from vrml_accelerate import tmatrixaccel
-    from vrml_accelerate import frustcullaccelnumpy as frustcullaccel
+    from vrml_accelerate import frustcullaccel
 except ImportError, err:
     tmatrixaccel = frustcullaccel = None
 # why did this get taken out?  Is divide now safe?
