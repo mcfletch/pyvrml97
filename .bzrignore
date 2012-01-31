@@ -7,3 +7,4 @@ MANIFEST
 vrml_accelerate/MANIFEST
 vrml_accelerate/dist
 dist
+vrml_accelerate/*.so
