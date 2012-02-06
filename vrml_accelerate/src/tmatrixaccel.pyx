@@ -29,10 +29,26 @@ def rotMatrix( float x=0.0, float y=1.0, float z=0.0, float a=0.0 ):
     c = np.cos( a )
     s = np.sin( a )
     t = 1-c
+    if x == y == z == 0.0:
+        y = 1.0
+    # x,y,z must be a *normalized* vector for the rotation matrix...
+    x2 = x*x
+    y2 = y*y
+    z2 = z*z
+    h2 = x2+y2+z2
+    if h2 != 1.0:
+        h = h2 ** .5 
+        x = x/h 
+        y = y/h
+        z = z/h
+        x2 = x*x 
+        y2 = y*y 
+        z2 = z*z
+    
     return np.array([
-        [   t*x*x+c,    t*x*y+s*z,  t*x*z-s*y,  0.0],
-        [   t*x*y-s*z,  t*y*y+c,    t*y*z+s*x,  0.0],
-        [   t*x*z+s*y,  t*y*z-s*x,  t*z*z+c,    0.0], 
+        [   (x2*t)+c,    y*x*t+z*s,  x*z*t-y*s,  0.0],
+        [   x*y*t-z*s,  y2*t +c,    y*z*t+x*s,  0.0],
+        [   x*z*t+y*s,  y*z*t-x*s,  z2*t+c,    0.0], 
         [   0.0,         0.0,         0.0,        1.0],
     ], dtype=np.float32)
 

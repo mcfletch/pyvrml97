@@ -10,7 +10,7 @@ class TestTransformMatrix( unittest.TestCase ):
             except TypeError, err:
                 sys.stderr.write("""\nF (TypeError):\n\tpoint=%(point)s\n\t%(matrix)s\n"""%(locals()))
             else:
-                assert allclose( result, expected),(name,matrix,expected,result)
+                assert allclose( result, expected, 0, 0.000001 ),(name,matrix,point,expected,result)
     TEST_DATA = [
         (transMatrix( (1,0,0) )[0], (0, 0,0,1), (1,0,0,1), "Simple translation"),
         (transMatrix( (-1,-1,-1) )[0], (1, 1,1,1), (0,0,0,1), "Simple translation"),
@@ -20,7 +20,7 @@ class TestTransformMatrix( unittest.TestCase ):
         (rotMatrix( (0,0,1,pi/2) )[0], (1, 0,0,1), (0,1,0,1), "Simple rotation"),
         (rotMatrix( (0,0,1,-(pi/2)) )[0], (1, 0,0,1), (0,-1,0,1), "Simple rotation"),
         (rotMatrix( (0,0,-1,-(pi/2)) )[0], (1, 0,0,1), (0,1,0,1), "Simple rotation"),
-        (rotMatrix( (0,0,-2,-(pi/2)) )[0], (1, 0,0,1), (0,1,0,1), "Simple rotation"),
+        (rotMatrix( (0,0,-2,-(pi/2)) )[0], (1, 0,0,1), (0,1,0,1), "Simple rotation (w/normalize)"),
         (rotMatrix( (1,0,0,-(pi/2)) )[0], (1, 0,0,1), (1,0,0,1), "Simple rotation"),
         (rotMatrix( (0,0,1,pi/2) )[0], (0,1,0,1), (-1,0,0,1), "Simple rotation"),
         (rotMatrix( (1,0,0,pi/2) )[0], (0,0,1,1), (0,-1,0,1), "Simple rotation"),
