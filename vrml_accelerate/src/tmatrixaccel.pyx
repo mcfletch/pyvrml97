@@ -4,6 +4,7 @@ import numpy as np
 cimport numpy as np
 
 cdef float VERY_SMALL = 1e-300
+cdef float TWOPI = np.pi * 2.0
 
 def transMatrix( float x=0.0, float y=0.0, float z=0.0 ):
     """Produce a translation matrix moving (x,y,z)"""
@@ -44,13 +45,15 @@ def rotMatrix( float x=0.0, float y=1.0, float z=0.0, float a=0.0 ):
         x2 = x*x 
         y2 = y*y 
         z2 = z*z
-    
-    return np.array([
-        [   (x2*t)+c,    y*x*t+z*s,  x*z*t-y*s,  0.0],
-        [   x*y*t-z*s,  y2*t +c,    y*z*t+x*s,  0.0],
-        [   x*z*t+y*s,  y*z*t-x*s,  z2*t+c,    0.0], 
-        [   0.0,         0.0,         0.0,        1.0],
-    ], dtype=np.float32)
+    if a % TWOPI:
+        return np.array([
+            [   (x2*t)+c,    y*x*t+z*s,  x*z*t-y*s,  0.0],
+            [   x*y*t-z*s,  y2*t +c,    y*z*t+x*s,  0.0],
+            [   x*z*t+y*s,  y*z*t-x*s,  z2*t+c,    0.0], 
+            [   0.0,         0.0,         0.0,        1.0],
+        ], dtype=np.float32)
+    else:
+        return None
 
 def perspectiveMatrix( float fovy=np.pi/2.0, float aspect=1.0, float zNear=0.1, float zFar=10000.0 ):
     """Create a perspective (frustum) matrix from given parameters
