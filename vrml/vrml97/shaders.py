@@ -42,6 +42,7 @@ class ShaderAttribute( node.Node ):
     # the buffer into which we index...
     buffer = field.newField( 'buffer','SFNode',1,node.NULL )
     isCoord = field.newField( 'isCoord','SFBool',1,False)
+    bufferKey = field.newField( 'bufferKey', 'SFString', 1,'')
     
 class ShaderBuffer( node.Node ):
     """Buffer of data into which pointers can be generated"""
