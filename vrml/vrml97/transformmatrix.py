@@ -197,6 +197,13 @@ else:
         else:
             (x,y,z, a) = source
         if a % TWOPI:
+            # normalize the rotation vector!
+            squared = x*x + y*y + z*z
+            if squared != 1.0:
+                length = squared ** .5
+                x /= squared 
+                y /= squared 
+                z /= squared
             c = cos( a )
             c1 = cos( -a )
             s = sin( a )
