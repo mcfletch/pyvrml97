@@ -451,9 +451,9 @@ class _Color( object ):
         return arrays.array(value, arrays.typeCode(value) )
 
 class _SFArray( object ):
-    """Base class which holds a single array-type value"""
+    """Base class which holds a single array-type value (can be arbitrarily spec'd numpy array)"""
     defaultDefault = list
-    acceptedTypes = ('d',DOUBLE_TYPE)
+    acceptedTypes = ('d',DOUBLE_TYPE,'V')
     targetType = DOUBLE_TYPE
     def reshape( self, value ):
         """Do reshape of value to our target dimensions"""
@@ -482,15 +482,22 @@ class _SFArray( object ):
                 value = arrays.asarray( value, self.targetType )
             except Exception:
                 raise ValueError( """Attempted to set value for an %s field which is not compatible: %s"""%( self.typeName(), repr(value) ))
-        value = arrays.contiguous( self.reshape(value) )
+        # special casing, again, for explicitly structured arrays 
+        if not arrays.typeCode( value ) == 'V':
+            value = arrays.contiguous( self.reshape(value) )
         return value
     def check( self, value ):
         """Check that the given value is of exactly the expected type"""
         if isinstance( value, arrays.ArrayType ):
-            if arrays.typeCode(value) in self.acceptedTypes:
-                s = arrays.shape(value)
-                if len(s) == len(self.dimension)+1 and s[1:] == self.dimension:
+            typeCode = arrays.typeCode(value)
+            if typeCode in self.acceptedTypes:
+                if typeCode == 'V':
+                    # special vector type 
                     return 1
+                else:
+                    s = arrays.shape(value)
+                    if len(s) == len(self.dimension)+1 and s[1:] == self.dimension:
+                        return 1
         return 0
     def vrmlstr( self, value, lineariser=None):
         """Convert the given value to a VRML97 representation"""
@@ -502,7 +509,7 @@ class _SFArray( object ):
 class _SFArray32( _SFArray ):
     """32-bit version of SFArrays
     """
-    acceptedTypes = ('f',FLOAT_TYPE)
+    acceptedTypes = ('f',FLOAT_TYPE,'V')
     targetType = FLOAT_TYPE
 
 class _MFVec( _SFArray ):
