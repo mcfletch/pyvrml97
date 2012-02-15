@@ -65,7 +65,7 @@ class FloatUniform( node.Node ):
     """
     name = field.newField( 'name', 'SFString', 1, '' )
     # type values, 1f, 2f, 3f, 4f, m2, m3, m4, m2x3,m3x2,m2x4,m4x2,m3x4,m4x3
-    value = field.newField( 'value',  'SFArray',  1,  list )
+    value = field.newField( 'value',  'SFArray32',  1,  list )
 
 class IntUniform( node.Node ):
     """Uniform (variable) binding for a shader (integer form)
@@ -105,6 +105,8 @@ class GLSLImport( node.Node ):
 class GLSLObject( node.Node ):
     """GLSL-based shader object (compiled set of shaders)"""
     PROTO = "GLSLObject"
+    # role values, VISIBLE, DEPTH, SELECT
+    role = field.newField( 'role', 'SFString', 1, 'VISIBLE' )
     uniforms = field.newField( 'uniforms',  'MFNode',  1,  list )
     shaders = field.newField( 'shaders',  'MFNode',  1,  list )
     # textures is a set of texture uniforms...
@@ -118,3 +120,4 @@ class Shader( node.Node ):
     objects = field.newField( 'objects',  'MFNode',  1,  list )
     
     implementation = field.newField( 'implementation','SFNode',1,node.NULL)
+
