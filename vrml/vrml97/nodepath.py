@@ -26,7 +26,7 @@ class _NodePath( object ):
         """Customization Point: determine whether a node is a Transform"""
         return isinstance(item, nodetypes.Transforming)
     
-    def transformMatrix( self, translate=True, scale=True, rotate=True, matrixHolder=False ):
+    def transformMatrix( self, translate=True, scale=True, rotate=True, matrixHolder=False, inverse=False ):
         """Calculate (and cache) a transform matrix for this path
         
         Calculates our transformMatrix from our parent's transform 
@@ -47,7 +47,7 @@ class _NodePath( object ):
         That is, you use the homogenous coordinate, and
         make it the first item in the dot'ing.
         """
-        key=('matrix',translate,scale,rotate)
+        key=(['matrix','inverse_matrix'][bool(inverse)],translate,scale,rotate)
         holder = CACHE.getHolder( self, key=key )
         if holder is None:
             doConnect = True 
@@ -56,91 +56,20 @@ class _NodePath( object ):
         else:
             doConnect = False
             mHolder = holder.data
-        if mHolder is None:
-            matrix = None
-            fields = []
-            if translate:
-                fields.append( 'translation' )
-            if scale or rotate:
-                fields.append( 'center' )
-            if scale:
-                fields.append( 'scale' )
-                fields.append( 'scaleOrientation' )
-            if rotate:
-                fields.append( 'rotation' )
-            start = 0
-            parent = self.parent 
-            if parent is not None:
-                mHolder = parent.transformMatrix(
-                    translate=translate,rotate=rotate,scale=scale,
-                    matrixHolder=True
-                )
-                # holder needs to depend on parentMatrix,
-                # as we're going to use it to calculate our 
-                # own matrix...
-                if doConnect and mHolder is not None:
-                    holder.depend( mHolder )
-                matrix = mHolder.matrix
-                start = len(parent)
-            if matrix is None:
-                matrix = identity(4, 'f')
-            # now calculate delta from parent to self...
-            # for each item, we determine our dependencies 
-            # based on *all* of the child's transform fields
-            # higher-level code will then make our very existence
-            # depend on the hierarchic relations between nodes...
-            t = nodetypes.Transforming
-            for item in super( NodePath,self).__getslice__( start, len(self)):
-                if isinstance( item, t ):
-                    d = item.__dict__
-                    args = dict([(k,d.get(k)) for k in fields] )
-                    matrix = transformmatrix.transformMatrix (
-                        parentMatrix = matrix,
-                        **args
-                    )
-                    if doConnect:
-                        for k in fields:
-                            holder.depend( item, k )
-            mHolder = _MatrixHolder(matrix)
-            holder.set( mHolder )
-        if matrixHolder:
-            return mHolder
-        return mHolder.matrix
-#		matrix = identity(4, 'f')
-#		for item in self.transformChildren():
-#			### this isn't quite right, it's Transform-specific,
-#			### won't work for billboards and the like.
-#			d = item.__dict__
-#			matrix = transformmatrix.transformMatrix (
-#				translation = d.get( "translation"),
-#				rotation = d.get( "rotation"),
-#				scale = d.get( "scale"),
-#				scaleOrientation = d.get( "scaleOrientation"),
-#				center = d.get( "center"),
-#				parentMatrix = matrix,
-#			)
-#		self.matrix = matrix
-#		return matrix
-          
-    def itransformMatrix( self ):
-        """Manually generate an inverse transform matrix for this path
-        
-        Note: this calculates the *whole* path each time, so it is rather 
-        expensive...
-
-        See transformMatrix for semantics
-        """
-        matrix = identity(4, 'f')
+            if mHolder is not None:
+                return mHolder
         def get_mat( item ):
-            d = item.__dict__
-            return transformmatrix.itransformMatrix (
-                translation = d.get( "translation"),
-                rotation = d.get( "rotation"),
-                scale = d.get( "scale"),
-                scaleOrientation = d.get( "scaleOrientation"),
-                center = d.get( "center"),
-            )
-        return transformmatrix.compressMatrices( matrix,*[get_mat(item) for item in self.transformChildren(reverse=1)])
+            child_holder = item.localMatrices(translate=translate,scale=scale,rotate=rotate)
+            if doConnect:
+                holder.depend( child_holder )
+            return child_holder.data[inverse]
+        matrix = transformmatrix.compressMatrices( 
+            *[get_mat(item) for item in self.transformChildren(reverse=inverse)]
+        )
+        if matrix is None:
+            matrix = identity(4, dtype='f')
+        holder.data = matrix
+        return holder.data
     def transformChildren( self, reverse=0 ):
         """Yield all transforming children"""
         t = nodetypes.Transforming

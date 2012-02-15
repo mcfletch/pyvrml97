@@ -586,7 +586,7 @@ class Transform( nodetypes.Children, nodetypes.Transforming, node.Node ):
         holder = cache.CACHE.getHolder( self, key=key )
         if holder is None:
             doConnect = True 
-            holder = CACHE.holder( self, None, key=key )
+            holder = cache.CACHE.holder( self, None, key=key )
             mHolder = None
         else:
             doConnect = False
@@ -609,7 +609,7 @@ class Transform( nodetypes.Children, nodetypes.Transforming, node.Node ):
             )
             if doConnect:
                 for k in fields:
-                    holder.depend( item, k )
+                    holder.depend( self, k )
             holder.data = (forward,inverse)
         return holder
 
