@@ -8,7 +8,7 @@ from vrml.arrays import *
 import weakref
 
 class _MatrixHolder( object ):
-    def __init__( self, matrix ):
+    def __init__( self, matrix):
         self.matrix = matrix
 
 class _NodePath( object ):
@@ -25,6 +25,7 @@ class _NodePath( object ):
     def isTransform( self, item ):
         """Customization Point: determine whether a node is a Transform"""
         return isinstance(item, nodetypes.Transforming)
+    
     def transformMatrix( self, translate=True, scale=True, rotate=True, matrixHolder=False ):
         """Calculate (and cache) a transform matrix for this path
         
@@ -123,21 +124,23 @@ class _NodePath( object ):
           
     def itransformMatrix( self ):
         """Manually generate an inverse transform matrix for this path
+        
+        Note: this calculates the *whole* path each time, so it is rather 
+        expensive...
 
         See transformMatrix for semantics
         """
         matrix = identity(4, 'f')
-        for item in self.transformChildren(reverse=1):
+        def get_mat( item ):
             d = item.__dict__
-            matrix = transformmatrix.itransformMatrix (
+            return transformmatrix.itransformMatrix (
                 translation = d.get( "translation"),
                 rotation = d.get( "rotation"),
                 scale = d.get( "scale"),
                 scaleOrientation = d.get( "scaleOrientation"),
                 center = d.get( "center"),
-                parentMatrix = matrix,
             )
-        return matrix
+        return transformmatrix.compressMatrices( matrix,*[get_mat(item) for item in self.transformChildren(reverse=1)])
     def transformChildren( self, reverse=0 ):
         """Yield all transforming children"""
         t = nodetypes.Transforming

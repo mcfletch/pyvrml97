@@ -1,6 +1,6 @@
 """Base VRML97 node prototypes"""
-from vrml.vrml97 import nodetypes
-from vrml import node, field, fieldtypes
+from vrml.vrml97 import nodetypes, transformmatrix
+from vrml import node, field, fieldtypes, cache
 class Anchor( nodetypes.Children, nodetypes.Grouping, node.Node ):
     PROTO = 'Anchor'
     #Fields
@@ -572,6 +572,46 @@ class Transform( nodetypes.Children, nodetypes.Transforming, node.Node ):
     #Events
     removeChildren = field.newEvent( 'removeChildren', 'MFNode', 0)
     addChildren = field.newEvent( 'addChildren', 'MFNode', 0)
+    def localMatrices( self, translate=True,scale=True,rotate=True ):
+        """Calculate/lookup our local matrices
+        
+        Certain operations want, e.g. just the rotation of an item,
+        so we actually can store 2**3 possible variations of the local 
+        matrices.  In practice we only see a very small number.
+        
+        returns holder, where holder.data == (forward,inverse) matrix 
+        for the local node, each of which can be None
+        """
+        key=('local_matrices',translate,scale,rotate)
+        holder = cache.CACHE.getHolder( self, key=key )
+        if holder is None:
+            doConnect = True 
+            holder = CACHE.holder( self, None, key=key )
+            mHolder = None
+        else:
+            doConnect = False
+            mHolder = holder.data
+        if mHolder is None:
+            matrix = None
+            fields = []
+            if translate:
+                fields.append( 'translation' )
+            if scale or rotate:
+                fields.append( 'center' )
+            if scale:
+                fields.append( 'scale' )
+                fields.append( 'scaleOrientation' )
+            if rotate:
+                fields.append( 'rotation' )
+            d = self.__dict__
+            forward,inverse = transformmatrix.localMatrices(
+                **dict([(k,d.get(k)) for k in fields] )
+            )
+            if doConnect:
+                for k in fields:
+                    holder.depend( item, k )
+            holder.data = (forward,inverse)
+        return holder
 
 class Viewpoint( nodetypes.Children, nodetypes.Viewpoint, node.Node ):
     PROTO = 'Viewpoint'
