@@ -58,12 +58,7 @@ def transformMatrix(
     R,R1 = rotMatrix( rotation )
     SO,SO1 = rotMatrix( scaleOrientation )
     S,S1 = scaleMatrix( scale )
-    if parentMatrix is None:
-        parentMatrix = identity(4)
-    for x in ( T,C,R,SO,S,SO1,C1 ):
-        if x is not None:
-            parentMatrix = dot( x, parentMatrix )
-    return parentMatrix
+    return compressMatrices( parentMatrix, T,C,R,SO,S,SO1,C1 )
     
 def itransformMatrix(
         translation = (0,0,0),
@@ -97,14 +92,63 @@ def itransformMatrix(
     R,R1 = rotMatrix( rotation )
     SO,SO1 = rotMatrix( scaleOrientation )
     S,S1 = scaleMatrix( scale )
-    if parentMatrix is None:
-        parentMatrix = identity(4)
-    for x in ( C,SO, S1, SO1, R1, C1, T1):
-        if x is not None:
-            parentMatrix = dot( x, parentMatrix )
-    return parentMatrix
+    return compressMatrices( parentMatrix, C,SO, S1, SO1, R1, C1, T1)
 
+def transformMatrices( 
+        translation = (0,0,0),
+        center = (0,0,0),
+        rotation = (0,1,0,0),
+        scale = (1,1,1),
+        scaleOrientation = (0,1,0,0),
+        parentMatrix = None,
+    ):
+    """Calculate both forward and backward matrices for these parameters"""
+    T,T1 = transMatrix( translation )
+    C,C1 = transMatrix( center )
+    R,R1 = rotMatrix( rotation )
+    SO,SO1 = rotMatrix( scaleOrientation )
+    S,S1 = scaleMatrix( scale )
+    return (
+        compressMatrices( parentMatrix, T,C,R,SO,S,SO1,C1 ),
+        compressMatrices( parentMatrix, C,SO, S1, SO1, R1, C1, T1)
+    )
 
+def localMatrices(
+        translation = (0,0,0),
+        center = (0,0,0),
+        rotation = (0,1,0,0),
+        scale = (1,1,1),
+        scaleOrientation = (0,1,0,0),
+        parentMatrix = None,
+    ):
+    """Calculate (forward,inverse) matrices for this transform element"""
+    T,T1 = transMatrix( translation )
+    C,C1 = transMatrix( center )
+    R,R1 = rotMatrix( rotation )
+    SO,SO1 = rotMatrix( scaleOrientation )
+    S,S1 = scaleMatrix( scale )
+    return (
+        compressMatrices( T,C,R,SO,S,SO1,C1 ),
+        compressMatrices( C,SO, S1, SO1, R1, C1, T1)
+    )
+
+def compressMatrices( first, *matrices ):
+    """Compress a set of matrices
+    
+    Any (or all) of the matrices may be None,
+    if *all* are None, then the result will be None,
+    otherwise will be the dot product of all of the 
+    matrices...
+    """
+    for item in matrices:
+        if item is not None:
+            if first is None:
+                first = item
+            else:
+                first = dot( item, first )
+    return first
+
+    
 def center(
     translation = (0,0,0),
     center = (0,0,0),
