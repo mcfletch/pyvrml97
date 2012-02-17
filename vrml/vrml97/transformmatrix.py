@@ -132,7 +132,7 @@ def localMatrices(
         compressMatrices( C,SO, S1, SO1, R1, C1, T1)
     )
 
-def compressMatrices( first, *matrices ):
+def compressMatrices( *matrices ):
     """Compress a set of matrices
     
     Any (or all) of the matrices may be None,
@@ -140,6 +140,11 @@ def compressMatrices( first, *matrices ):
     otherwise will be the dot product of all of the 
     matrices...
     """
+    if not matrices:
+        return None 
+    else:
+        first = matrices[0]
+        matrices = matrices[1:]
     for item in matrices:
         if item is not None:
             if first is None:
@@ -314,7 +319,7 @@ else:
         T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'f' )
         return T, T1
 
-    def perspectiveMatrix( fovy, aspect, zNear, zFar ):
+    def perspectiveMatrix( fovy, aspect, zNear, zFar, inverse=False ):
         """Create a perspective matrix from given parameters
         
         Note that this is the same matrix as for gluPerspective,
@@ -322,12 +327,20 @@ else:
         """
         f = 1.0/tan( (fovy/2.0) ) # cotangent( fovy/2.0 )
         zDelta = zNear-zFar
-        return array([
-            [f/aspect,0,0,0],
-            [0,f,0,0],
-            [0,0,(zFar+zNear)/zDelta,-1],
-            [0,0,(2*zFar*zNear)/zDelta,0]
-        ],'f')
+        if inverse:
+            return array([
+                [aspect/f,0,0,0],
+                [0,1/(f or VERY_SMALL),0,0],
+                [0,0,0,-1],
+                [0,0,zDelta/(2*zFar*zNear),(zFar+zNear)/(2*zFar*zNear)],
+            ],'f')
+        else:
+            return array([
+                [f/aspect,0,0,0],
+                [0,f,0,0],
+                [0,0,(zFar+zNear)/zDelta,-1],
+                [0,0,(2*zFar*zNear)/zDelta,0]
+            ],'f')
     def orthoMatrix( left=-1.0, right=1.0, bottom=-1.0, top=1.0, zNear=-1.0, zFar=1.0 ):
         """Calculate an orthographic projection matrix
         

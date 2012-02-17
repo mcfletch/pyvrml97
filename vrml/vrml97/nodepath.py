@@ -62,6 +62,15 @@ class _NodePath( object ):
             child_holder = item.localMatrices(translate=translate,scale=scale,rotate=rotate)
             if doConnect:
                 holder.depend( child_holder )
+                # TODO: assumes child is a Transform!
+                if translate:
+                    holder.depend( item, 'translation' )
+                if scale:
+                    holder.depend( item, 'scale' )
+                    holder.depend( item, 'scaleOrientation' )
+                if rotate:
+                    holder.depend( item, 'rotation' )
+                    holder.depend( item, 'center' )
             return child_holder.data[inverse]
         matrix = transformmatrix.compressMatrices( 
             *[get_mat(item) for item in self.transformChildren(reverse=inverse)]
