@@ -55,7 +55,7 @@ def rotMatrix( float x=0.0, float y=1.0, float z=0.0, float a=0.0 ):
     else:
         return None
 
-def perspectiveMatrix( float fovy=np.pi/2.0, float aspect=1.0, float zNear=0.1, float zFar=10000.0 ):
+def perspectiveMatrix( float fovy=np.pi/2.0, float aspect=1.0, float zNear=0.1, float zFar=10000.0, inverse=False ):
     """Create a perspective (frustum) matrix from given parameters
     
     Note that this is the same matrix as for gluPerspective,
@@ -64,12 +64,21 @@ def perspectiveMatrix( float fovy=np.pi/2.0, float aspect=1.0, float zNear=0.1, 
     cdef float f,zDelta
     f = 1.0/np.tan( (fovy/2.0) ) # cotangent( fovy/2.0 )
     zDelta = zNear-zFar
-    return np.array([
-        [f/aspect,0,0,0],
-        [0,f,0,0],
-        [0,0,(zFar+zNear)/zDelta,-1],
-        [0,0,(2*zFar*zNear)/zDelta,0]
-    ],dtype=np.float32)
+    if inverse:
+        return np.array([
+            [aspect/f,0,0,0],
+            [0,1/(f or VERY_SMALL),0,0],
+            [0,0,0,zDelta/(2*zFar*zNear)],
+            [0,0,-1,(zFar+zNear)/(2*zFar*zNear)],
+        ],dtype=np.float32)
+    else:
+        return np.array([
+            [f/aspect,0,0,0],
+            [0,f,0,0],
+            [0,0,(zFar+zNear)/zDelta,-1],
+            [0,0,(2*zFar*zNear)/zDelta,0]
+        ],dtype=np.float32)
+    
 def orthoMatrix( float left=-1.0, float right=1.0, float bottom=-1.0, float top=1.0, float zNear=-1.0, float zFar=1.0 ):
     tx = - ( right + left ) / ( (right-left) or VERY_SMALL )
     ty = - ( top + bottom ) / ( (top-bottom) or VERY_SMALL )

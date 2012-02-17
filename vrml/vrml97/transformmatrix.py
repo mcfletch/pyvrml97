@@ -331,8 +331,8 @@ else:
             return array([
                 [aspect/f,0,0,0],
                 [0,1/(f or VERY_SMALL),0,0],
-                [0,0,0,-1],
-                [0,0,zDelta/(2*zFar*zNear),(zFar+zNear)/(2*zFar*zNear)],
+                [0,0,0,zDelta/(2*zFar*zNear)],
+                [0,0,-1,(zFar+zNear)/(2*zFar*zNear)],
             ],'f')
         else:
             return array([

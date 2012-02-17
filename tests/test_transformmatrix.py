@@ -37,9 +37,20 @@ class TestTransformMatrix( unittest.TestCase ):
         result = perspectiveMatrix(
             59.999999999999993*DEGTORAD, 1.0, 0.29999999999999999, 50000
         )
+        inverse = perspectiveMatrix(
+            59.999999999999993*DEGTORAD, 1.0, 0.29999999999999999, 50000, inverse=True,
+        )
+        
         expected = array([
             [ 1.73205081,  0.,          0.,          0.,        ],
             [ 0.,          1.73205081,  0.,          0.,        ],
             [ 0.,          0.,         -1.000012, -1.,        ],
             [ 0.,          0.,         -0.6000036,   0.,        ],],'f')
         assert allclose(result,expected), result
+        
+        test = array([ 20,8,5,1.0 ],'f')
+        projected = dot( result, test )
+        print projected
+        unprojected = dot( inverse, projected )
+        assert allclose( unprojected, test ), (unprojected, test)
+    
