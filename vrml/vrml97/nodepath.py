@@ -83,7 +83,7 @@ class _NodePath( object ):
         """Yield all transforming children"""
         t = nodetypes.Transforming
         if reverse:
-            for i in xrange(-1, len(self)-1, -1):
+            for i in xrange(len(self)-1,-1, -1):
                 item = self[i]
                 if isinstance(item, t):
                     yield item
