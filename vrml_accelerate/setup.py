@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 """Builds accelleration functions for the VRML97 scenegraph
 """
-from distutils.core import setup,Extension
+try:
+    from setuptools import setup,Extension
+except ImportError, err:
+    from distutils.core import setup,Extension
 import sys, os
 sys.path.insert(0, '.' )
 try:

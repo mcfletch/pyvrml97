@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 """Installs vrml scenegraph modelling engine using setuptools (eggs)
 """
-from distutils.core import setup
+try:
+    from setuptools import setup
+except ImportError, err:
+    from distutils.core import setup
 import sys, os
 sys.path.insert(0, '.' )
 
