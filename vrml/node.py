@@ -365,7 +365,7 @@ class RootScenegraphNode( WeakSFNode ):
             if isinstance( field, SFNode ) and not isinstance( field, RootScenegraphNode ):
                 try:
                     child = field.__get__( client )
-                except ValueError, err:
+                except ValueError as err:
                     pass 
                 else:
                     self.fset( child, value, notify=False )
@@ -373,13 +373,13 @@ class RootScenegraphNode( WeakSFNode ):
                 try:
                     for child in field.__get__( client ):
                         self.fset( child, value, notify=False )
-                except AttributeError, err:
+                except AttributeError as err:
                     pass 
             elif field.name == ' DEF':
                 try:
                     DEF = field.__get__( client )
                     value.regDefName( DEF, client )
-                except AttributeError, err:
+                except AttributeError as err:
                     pass 
 field.register( WeakSFNode )
 field.register( RootScenegraphNode )

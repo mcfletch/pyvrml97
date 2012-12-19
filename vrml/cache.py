@@ -87,7 +87,7 @@ def cleaner( cache, id ):
     def clean_id( weak ):
         try:
             del cache[id]
-        except Exception, err:
+        except Exception as err:
             pass 
     return clean_id
 
@@ -239,6 +239,6 @@ class CacheHolder( object ):
                 return 1
             except KeyError:
                 return 0
-        except RuntimeError, err:
+        except RuntimeError as err:
             traceback.print_exc()
             

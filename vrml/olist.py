@@ -3,7 +3,7 @@ from pydispatch.dispatcher import send
 import weakref, types
 try:
     set 
-except NameError, err:
+except NameError as err:
     from sets import Set as set
 
 class OList( list ):
@@ -104,7 +104,7 @@ class OList( list ):
                 else:
                     try:
                         previous.remove( value )
-                    except ValueError, err:
+                    except ValueError as err:
                         pass
             for current in previous:
                 self._sendRemoved( current )

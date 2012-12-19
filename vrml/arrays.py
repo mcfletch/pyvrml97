@@ -7,7 +7,7 @@ from numpy import *
 try:
     from vrml_accelerate import tmatrixaccel
     from vrml_accelerate import frustcullaccel
-except ImportError, err:
+except ImportError as err:
     tmatrixaccel = frustcullaccel = None
 # why did this get taken out?  Is divide now safe?
 amin = amin 
@@ -28,7 +28,7 @@ if hasattr( a, '__array_typestr__' ):
         """
         try:
             return a.__array_typestr__
-        except AttributeError, err:
+        except AttributeError as err:
             return a.typecode()
 else:
     def typeCode( a ):
@@ -40,7 +40,7 @@ else:
         """
         try:
             return a.dtype.char
-        except AttributeError, err:
+        except AttributeError as err:
             return a.typecode()
 del a
 implementation_name = 'numpy'
@@ -50,14 +50,14 @@ try:
     # TODO: likely should rework the mesh processing to check manually and remove 
     # this sledge-hammer approach
     seterr(all='ignore')
-except Exception, err:
+except Exception as err:
     pass
     
 def safeCompare( first, second ):
     """Watch out for pointless numpy truth-value checks"""
     try:
         return bool(first == second )
-    except ValueError, err:
+    except ValueError as err:
         return bool( any( first == second ) )
 
 def contiguous( a ):

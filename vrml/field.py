@@ -6,7 +6,7 @@ from vrml import protonamespace
 # conditional import via package entry points
 try:
     from vrml_accelerate import fieldaccel2
-except Exception, err:
+except Exception as err:
     fieldaccel2 = None
 
 baseFieldTypes = protonamespace.ProtoNamespace({})
@@ -99,9 +99,9 @@ else:
         def _set(self, client, value ):
             try:
                 value = self.coerce( value )
-            except ValueError, x:
+            except ValueError as x:
                 raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
-            except TypeError, x:
+            except TypeError as x:
                 raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
             if isinstance( client, type ):
                 setattr( client, self.name, value )
@@ -133,7 +133,7 @@ else:
             """Delete our value from client's dictionary"""
             try:
                 client.__dict__[ self.name ]
-            except KeyError, err:
+            except KeyError as err:
                 raise AttributeError( self.name )
     
         def fdel( self, client, notify=True ):
@@ -352,7 +352,7 @@ class Event( object ):
             return self
         try:
             return client.__dict__[self.name]
-        except KeyError, err:
+        except KeyError as err:
             raise AttributeError(
                 """Event %s doesn't have a value for %s"""%(
                     self.name, client,

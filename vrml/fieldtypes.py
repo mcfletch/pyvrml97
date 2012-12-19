@@ -160,7 +160,7 @@ class _MFString( object ):
             value = [value]
         try:
             return [ SFString.coerce( item ) for item in value]
-        except ValueError, error:
+        except ValueError as error:
             raise ValueError( """Attempted to set value %r for an %s field which is not compatible: %s"""%( value, self.typeName(),  error))
     def check( self, value ):
         "Raise ValueError if isn't correct type"
@@ -184,7 +184,7 @@ class _SFBool( object ):
         if isinstance( value, (str,unicode)):
             try:
                 value = int(value)
-            except (ValueError,TypeError), err:
+            except (ValueError,TypeError) as err:
                 if value.lower() == 'true':
                     value = True 
                 elif value.lower() == 'false':
@@ -541,7 +541,7 @@ class _MFVec( _SFArray ):
         try:
             if not value:
                 return '[ ]'
-        except ValueError, err:
+        except ValueError as err:
             # numpy arrays can't be tested for null-ity, should be a typeerror, but whatever
             pass
         linvalues = _linvalues( lineariser )
@@ -651,7 +651,7 @@ class _MFColor( _Color, _MFVec3f ):
         """Adds string coercion for color data types"""
         try:
             return super(_MFColor,self).coerce( value )
-        except (ValueError, TypeError), err:
+        except (ValueError, TypeError) as err:
             # allow for string-based specifications...
             result = []
             current = []
