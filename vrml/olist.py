@@ -79,7 +79,7 @@ class OList( list ):
         return item
     def __delitem__( self, index ):
         """Delete a single item"""
-        if isinstance( index, types.SliceType ):
+        if isinstance( index, slice ):
             current = self.__getitem__( index )
             for value in current:
                 self._sendRemoved( value )
@@ -93,7 +93,7 @@ class OList( list ):
         return self.__delitem__( slice(i,j))
     def __setitem__( self, index, value ):
         """Set a value and send a message"""
-        if isinstance( index, types.SliceType ):
+        if isinstance( index, slice ):
             values = list(value)
             previous = self.__getitem__( index )
             currents = set( previous )

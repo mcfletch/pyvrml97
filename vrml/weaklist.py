@@ -63,7 +63,7 @@ class WeakList( list ):
 
     def __setitem__( self, index, item ):
         """Set the item at the given index"""
-        if isinstance( index, types.SliceType ):
+        if isinstance( index, slice ):
             item = [self.wrap(x) for x in item]
         else:
             item = self.wrap(x)

@@ -19,7 +19,7 @@ FLOAT_TYPE = arrays.typeCode( arrays.array( [0],'f') )
 INT_TYPE = arrays.typeCode( arrays.array( [0],'i') )
 UINT_TYPE = arrays.typeCode( arrays.array( [0],'I') )
 
-def _collapse(inlist, isinstance=isinstance, ltype=types.ListType, maxint= sys.maxint):
+def _collapse(inlist, isinstance=isinstance, ltype=list, maxint= sys.maxint):
     '''
     Destructively flatten a list hierarchy to a single level. 
     Non-recursive, and (as far as I can see, doesn't have any
