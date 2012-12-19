@@ -25,7 +25,7 @@ def register( cls ):
     else:
         dictionary = baseFieldTypes
     if name in dictionary:
-        print 'Warning: redefining field-type %s from %s to %s'%( name, dictionary.get(name), cls)
+        print('Warning: redefining field-type %s from %s to %s'%( name, dictionary.get(name), cls))
     dictionary[ name ] = cls
         
     

@@ -49,7 +49,7 @@ class ROUTE( node.Node ):
             try:
                 sf = protofunctions.getField( source, field )
             except (AttributeError, KeyError):
-                print """%s: field %s doesn't exist on %s"""%(protofunctions.protoName(self), field, source)
+                print("""%s: field %s doesn't exist on %s"""%(protofunctions.protoName(self), field, source))
             else:
                 for message in ('set','del','route'):
                     dispatcher.connect(
@@ -58,7 +58,7 @@ class ROUTE( node.Node ):
                         signal = (message,sf),
                     )
         else:
-            print """NULL ROUTE bound""", self
+            print("""NULL ROUTE bound""", self)
     def forward( 
         self, signal, sender, event=None, value=None, **arguments 
     ):
