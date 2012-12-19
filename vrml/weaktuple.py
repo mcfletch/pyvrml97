@@ -1,5 +1,5 @@
 """tuple sub-class which holds weak references to objects"""
-from __future__ import generators
+
 import weakref
 
 class WeakTuple( tuple ):
