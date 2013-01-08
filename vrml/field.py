@@ -9,6 +9,12 @@ try:
 except Exception as err:
     fieldaccel2 = None
 
+import sys
+if sys.version_info.major == 2:
+    bytes = str 
+else:
+    unicode = str
+
 baseFieldTypes = protonamespace.ProtoNamespace({})
 baseEventTypes = protonamespace.ProtoNamespace({})
 
@@ -44,7 +50,7 @@ def newField( name, dataType, exposure=1, default=_NULL ):
         exposure -- boolean (0/1) indicating whether this is an exposed field
         default -- default value for the field
     """
-    if isinstance( dataType, str ):
+    if isinstance( dataType, (bytes,unicode) ):
         dataType = baseFieldTypes[dataType]
     return dataType( name, exposure, default )
 def newEvent( name, dataType, direction=1 ):
@@ -53,7 +59,7 @@ def newEvent( name, dataType, direction=1 ):
         dataType -- 
         direction -- 0 == in, 1 == out
     """
-    if isinstance( dataType, str ):
+    if isinstance( dataType, (bytes,unicode) ):
         dataType = baseEventTypes[dataType]
     return dataType( name, direction )
 
