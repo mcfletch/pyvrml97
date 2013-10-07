@@ -3,7 +3,7 @@
 """
 try:
     from setuptools import setup
-except ImportError, err:
+except ImportError:
     from distutils.core import setup
 import sys, os
 sys.path.insert(0, '.' )
