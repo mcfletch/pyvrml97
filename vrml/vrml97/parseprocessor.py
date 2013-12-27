@@ -362,6 +362,8 @@ class ParseProcessor( DispatchProcessor ):
 
     def MFInt32( self, tuples, buffer ):
         # localisation
+        if not tuples:
+            return []
         return [
             int(buffer[start:stop],0) 
             for (tag, start, stop, children) in tuples
