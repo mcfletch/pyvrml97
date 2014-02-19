@@ -229,6 +229,7 @@ if tmatrixaccel:
             return None, None 
         return tmatrixaccel.transMatrix( x,y,z ),tmatrixaccel.transMatrix( -x, -y, -z )
     perspectiveMatrix = tmatrixaccel.perspectiveMatrix
+    orthoMatrix = tmatrixaccel.orthoMatrix
 else:
     def rotMatrix( source=None ):
         """Convert a VRML rotation to rotation matrices
