@@ -34,5 +34,5 @@ def planeCull( np.ndarray[DTYPE_T,ndim=2] planes, np.ndarray[DTYPE_T,ndim=2] poi
                 foundInFront = 1 
         if not foundInFront:
             # nothing was found in front, so this plane has entirely excluded the volume...
-            return True, plane 
+            return True, planes[planeIndex]
     return False,None 
