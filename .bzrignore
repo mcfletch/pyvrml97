@@ -9,3 +9,4 @@ vrml_accelerate/dist
 dist
 vrml_accelerate/*.so
 *.egg-info
+__pycache__
