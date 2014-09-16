@@ -170,6 +170,8 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
             newPrototypes = self.protoTypes.copy()
         newDefs = {}
         for key,value in self.defNames.items():
+            if (not key) or value is None:
+                continue
             newDefs[key] = value.copy( copier )
         node = super( SceneGraph, self).copy( copier )
         node.protoTypes = newPrototypes
