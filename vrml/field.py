@@ -14,6 +14,7 @@ if sys.version_info.major == 2:
     bytes = str 
 else:
     unicode = str
+    long = int
 
 baseFieldTypes = protonamespace.ProtoNamespace({})
 baseEventTypes = protonamespace.ProtoNamespace({})
