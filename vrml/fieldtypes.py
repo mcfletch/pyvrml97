@@ -9,10 +9,9 @@ the field values.
 We use Numeric Python arrays whereever possible.
 """
 import operator
-from vrml import protonamespace, field, csscolors, arrays
+from vrml import field, csscolors, arrays
 
-import types, sys
-from types import ListType, TupleType
+import sys
 
 DOUBLE_TYPE = arrays.typeCode( arrays.array( [0],'d') )
 FLOAT_TYPE = arrays.typeCode( arrays.array( [0],'f') )
@@ -184,7 +183,7 @@ class _SFBool( object ):
         if isinstance( value, (str,unicode)):
             try:
                 value = int(value)
-            except (ValueError,TypeError) as err:
+            except (ValueError,TypeError):
                 if value.lower() == 'true':
                     value = True 
                 elif value.lower() == 'false':
@@ -391,7 +390,7 @@ class _SFVec( object ):
     @property
     def length( self ):
         import operator
-        length = self.length = reduce( operator.mul, self.dimension )
+        self.length = reduce( operator.mul, self.dimension )
         return self.length
     def defaultDefault( self ):
         """Default default value for vectors/colours"""
@@ -524,7 +523,7 @@ class _MFVec( _SFArray ):
     @property
     def length( self ):
         import operator
-        length = self.length = reduce( operator.mul, self.dimension )
+        self.length = reduce( operator.mul, self.dimension )
         return self.length
     def reshape( self, value ):
         return arrays.reshape(value, (-1,)+self.dimension)
@@ -541,7 +540,7 @@ class _MFVec( _SFArray ):
         try:
             if not value:
                 return '[ ]'
-        except ValueError as err:
+        except ValueError:
             # numpy arrays can't be tested for null-ity, should be a typeerror, but whatever
             pass
         linvalues = _linvalues( lineariser )
