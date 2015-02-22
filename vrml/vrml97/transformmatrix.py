@@ -251,9 +251,9 @@ else:
             squared = x*x + y*y + z*z
             if squared != 1.0:
                 length = squared ** .5
-                x /= squared 
-                y /= squared 
-                z /= squared
+                x /= length 
+                y /= length 
+                z /= length
             c = cos( a )
             c1 = cos( -a )
             s = sin( a )
