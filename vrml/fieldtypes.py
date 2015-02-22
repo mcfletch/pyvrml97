@@ -10,15 +10,21 @@ We use Numeric Python arrays whereever possible.
 """
 import operator
 from vrml import field, csscolors, arrays
+from OpenGL._bytes import unicode, long
+try:
+    xrange 
+except NameError:
+    xrange = range
 
 import sys
+MAX_INT = getattr(sys, 'maxint', None) or getattr(sys, 'maxsize', None)
 
 DOUBLE_TYPE = arrays.typeCode( arrays.array( [0],'d') )
 FLOAT_TYPE = arrays.typeCode( arrays.array( [0],'f') )
 INT_TYPE = arrays.typeCode( arrays.array( [0],'i') )
 UINT_TYPE = arrays.typeCode( arrays.array( [0],'I') )
 
-def _collapse(inlist, isinstance=isinstance, ltype=list, maxint= sys.maxint):
+def _collapse(inlist, isinstance=isinstance, ltype=list, maxint=MAX_INT):
     '''
     Destructively flatten a list hierarchy to a single level. 
     Non-recursive, and (as far as I can see, doesn't have any
@@ -408,7 +414,7 @@ class _SFVec( object ):
             value = value.reshape( self.dimension )
         elif isinstance( value, field.SEQUENCE_TYPES):
             value = arrays.asarray(
-                map(float, collapse(value)),
+                list(map(float, collapse(value))),
                 self.targetType
             )
             value.reshape( self.dimension )

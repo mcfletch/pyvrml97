@@ -6,6 +6,11 @@ from vrml.cache import CACHE
 from vrml.vrml97 import transformmatrix, nodetypes
 from vrml.arrays import *
 import weakref
+try:
+    xrange 
+except NameError:
+    xrange = range
+
 
 class _MatrixHolder( object ):
     def __init__( self, matrix):

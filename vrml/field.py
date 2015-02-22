@@ -9,12 +9,7 @@ try:
 except Exception as err:
     fieldaccel2 = None
 
-import sys
-if sys.version_info.major == 2:
-    bytes = str 
-else:
-    unicode = str
-    long = int
+from OpenGL._bytes import bytes, unicode, long
 
 baseFieldTypes = protonamespace.ProtoNamespace({})
 baseEventTypes = protonamespace.ProtoNamespace({})
