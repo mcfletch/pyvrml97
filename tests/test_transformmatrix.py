@@ -7,7 +7,7 @@ class TestTransformMatrix( unittest.TestCase ):
         for (matrix,point, expected, name) in self.TEST_DATA:
             try:
                 result = dot( point,matrix)
-            except TypeError, err:
+            except TypeError as err:
                 sys.stderr.write("""\nF (TypeError):\n\tpoint=%(point)s\n\t%(matrix)s\n"""%(locals()))
             else:
                 assert allclose( result, expected, 0, 0.000001 ),(name,matrix,point,expected,result)
