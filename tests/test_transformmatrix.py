@@ -50,7 +50,7 @@ class TestTransformMatrix( unittest.TestCase ):
         
         test = array([ 20,8,5,1.0 ],'f')
         projected = dot( result, test )
-        print projected
+        print(projected)
         unprojected = dot( inverse, projected )
         assert allclose( unprojected, test ), (unprojected, test)
     
