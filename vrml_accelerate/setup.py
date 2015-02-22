@@ -3,13 +3,13 @@
 """
 try:
     from setuptools import setup,Extension
-except ImportError, err:
+except ImportError as err:
     from distutils.core import setup,Extension
 import sys, os
 sys.path.insert(0, '.' )
 try:
     from Cython.Distutils import build_ext
-except ImportError, err:
+except ImportError as err:
     have_cython = False 
 else:
     have_cython = True
@@ -31,7 +31,7 @@ extensions = [
 
 try:
     import numpy
-except ImportError, err:
+except ImportError as err:
     sys.stderr.write(
         """Unable to import numpy, skipping numpy extension building\n"""
     )
