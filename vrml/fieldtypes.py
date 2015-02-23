@@ -362,7 +362,7 @@ class _MFFloat( object ):
             return arrays.contiguous( arrays.ravel(value) )
         elif isinstance( value, field.SEQUENCE_TYPES):
             return arrays.array(
-                map( float, collapse( value) ),
+                [float(x) for x in collapse( value)],
                 self.targetType,
             )
         elif not value:
@@ -414,7 +414,7 @@ class _SFVec( object ):
             value = value.reshape( self.dimension )
         elif isinstance( value, field.SEQUENCE_TYPES):
             value = arrays.asarray(
-                list(map(float, collapse(value))),
+                [float(x) for x in collapse(value)],
                 self.targetType
             )
             value.reshape( self.dimension )
