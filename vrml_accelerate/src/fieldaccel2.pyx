@@ -15,7 +15,7 @@ cdef class BaseField( object ):
             self.call_default = False
     def __get__( self, client, cls ):
         """Retrieve value for given instance (or self for cls)"""
-        cdef dict idict
+        #cdef dict idict
         cdef object current 
         if client is None:
             return self 
