@@ -313,7 +313,8 @@ class WeakField( object ):
         if not value:
             # is already default value, since refs are always non-null
             return value
-        value = value()
+        if isinstance( value, weakref.ReferenceType ):
+            value = value()
         # value now really is the ref'd value, or None
         if value is None:
             if not isinstance( client, type):
