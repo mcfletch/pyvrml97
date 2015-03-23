@@ -264,7 +264,6 @@ class NullNode(Node):
     def __str__( self ):
         """Get a human-friendly representation of the NULL node"""
         return "NULL"
-    __repr__ = __str__
 
 NULL = NullNode()
 
@@ -365,7 +364,7 @@ class RootScenegraphNode( WeakSFNode ):
             if isinstance( field, SFNode ) and not isinstance( field, RootScenegraphNode ):
                 try:
                     child = field.__get__( client )
-                except ValueError as err:
+                except ValueError:
                     pass 
                 else:
                     self.fset( child, value, notify=False )
@@ -373,14 +372,15 @@ class RootScenegraphNode( WeakSFNode ):
                 try:
                     for child in field.__get__( client ):
                         self.fset( child, value, notify=False )
-                except AttributeError as err:
+                except AttributeError:
                     pass 
             elif field.name == ' DEF':
                 try:
                     DEF = field.__get__( client )
                     value.regDefName( DEF, client )
-                except AttributeError as err:
+                except AttributeError:
                     pass 
+        return result
 field.register( WeakSFNode )
 field.register( RootScenegraphNode )
 
