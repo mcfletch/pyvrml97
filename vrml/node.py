@@ -250,7 +250,8 @@ class NullNode(Node):
         return '<NULL vrml SFNode>'
     def __nonzero__(self ):
         """Make the NULL node evaluate to false"""
-        return 0
+        return False
+    __bool__ = __nonzero__
     def __eq__( self, other ):
         """Compare the NULL node to other objects"""
         try:
