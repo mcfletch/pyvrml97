@@ -10,7 +10,7 @@ We use Numeric Python arrays whereever possible.
 """
 import operator
 from vrml import field, csscolors, arrays
-from OpenGL._bytes import unicode, long
+from OpenGL._bytes import unicode, long, as_8_bit, as_str
 try:
     xrange 
 except NameError:
@@ -118,39 +118,73 @@ def MFSimple_vrmlstr( value, lineariser=None):
         del stringreps[:setLength]
     return '[ %s ]'%('\n'.join(stringsets))
 
+if str is bytes:
+    class _SFString( object):
+        """SFString field/event type base-class"""
+        defaultDefault = ""
+        def coerce( self, value ):
+            """Coerce the given value to our type
+            Allowable types:
+                simple string -> unchanged
+                unicode string -> utf-8 encoded
+                
+                sequence of length == 1 where first element is a string -> returns first element
+                sequence of length > 1 where all elements are strings -> returns string.join( value, '')
+            """
+            if isinstance( value, unicode ):
+                return value.encode( 'utf-8')
+            elif isinstance( value, field.SEQUENCE_TYPES):
+                if value and len(value) == 1:
+                    value = value[0]
+                elif not value:
+                    value = ""
+                else:
+                    value = "".join( value )
+            if not isinstance( value, bytes ):
+                value = bytes(value)
+            return value
+        def check( self, value ):
+            "Raise ValueError if isn't correct type"
+            if not isinstance( value, (bytes,unicode)):
+                return 0
+            return 1
+        coerce = classmethod( coerce )
+        check = classmethod( check )
+        vrmlstr = staticmethod( SFString_vrmlstr )
+else:
 
-class _SFString( object):
-    """SFString field/event type base-class"""
-    defaultDefault = ""
-    def coerce( self, value ):
-        """Coerce the given value to our type
-        Allowable types:
-            simple string -> unchanged
-            unicode string -> utf-8 encoded
-            
-            sequence of length == 1 where first element is a string -> returns first element
-            sequence of length > 1 where all elements are strings -> returns string.join( value, '')
-        """
-        if isinstance( value, unicode ):
-            return value.encode( 'utf-8')
-        elif isinstance( value, field.SEQUENCE_TYPES):
-            if value and len(value) == 1:
-                value = value[0]
-            elif not value:
-                value = ""
-            else:
-                value = "".join( value )
-        if not isinstance( value, str ):
-            value = str(value)
-        return value
-    def check( self, value ):
-        "Raise ValueError if isn't correct type"
-        if not isinstance( value, str):
-            return 0
-        return 1
-    coerce = classmethod( coerce )
-    check = classmethod( check )
-    vrmlstr = staticmethod( SFString_vrmlstr )
+    class _SFString( object):
+        """SFString field/event type base-class"""
+        defaultDefault = ""
+        def coerce( self, value ):
+            """Coerce the given value to our type
+            Allowable types:
+                simple string -> unchanged
+                unicode string -> utf-8 encoded
+                
+                sequence of length == 1 where first element is a string -> returns first element
+                sequence of length > 1 where all elements are strings -> returns string.join( value, '')
+            """
+            if isinstance( value, bytes ):
+                return value.decode( 'utf-8')
+            elif isinstance( value, field.SEQUENCE_TYPES):
+                if value and len(value) == 1:
+                    value = value[0]
+                elif not value:
+                    value = u""
+                else:
+                    value = u"".join( value )
+            if not isinstance( value, unicode ):
+                value = unicode(value)
+            return value
+        def check( self, value ):
+            "Raise ValueError if isn't correct type"
+            if not isinstance( value, unicode):
+                return 0
+            return 1
+        coerce = classmethod( coerce )
+        check = classmethod( check )
+        vrmlstr = staticmethod( SFString_vrmlstr )
 
 class _MFString( object ):
     """MFString field/event type base-class"""
