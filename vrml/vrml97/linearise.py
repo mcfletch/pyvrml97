@@ -1,6 +1,10 @@
 """object for linearizing a scene graph to VRML97
 """
-import types, cStringIO, operator, traceback, warnings
+import types
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 from vrml import arrays
 from vrml.protofunctions import *
 from vrml import node
@@ -71,29 +75,26 @@ class Lineariser:
         # used in the file.  By default is "off", that is, all protos are linearised
         self.skipUnusedProtos = skipUnusedProtos
         # protobuffer is a seperate buffer into which the prototype definitions are stored
-        self.protobuffer = cStringIO.StringIO()
+        self.protobuffer = StringIO()
         self.protobuffer.write( '#VRML V2.0 utf8\n' )
         # protoalreadydone is used in place of the scenegraph-specific
         # node alreadydone.  This allows us to push all protos up to the
         # top level of the hierarchy (thus making the process of linearisation much simpler)
         self.protoalreadydone = {}
         # main working algo...
-        from vrml.vrml97 import basenamespaces
         self.typecache = {
             'Script':self._Script,
-##			basenamespaces.basePrototypes['IS':self._fieldref,
-##			basenamespaces.basePrototypes['fieldRef':self._fieldref,
             'NULL': self._nullNode,
             'sceneGraph': self._sceneGraph,
         }
-        self.buffer = buffer or cStringIO.StringIO()
+        self.buffer = buffer or StringIO()
         self.alreadydone.clear()
         self.cursceneGraph = [] # used to look up whether we need to output a prototype...
         self.curproto = []
         self.indentationlevel = 0
         if type( clientNode ) in ( types.ListType, types.TupleType):
-            for node in clientNode:
-                self._linear( node )
+            for child in clientNode:
+                self._linear( child )
                 self.buffer.write( '\n')
         else:
             self._linear( clientNode )
@@ -180,7 +181,7 @@ class Lineariser:
         oldindent = self.indentationlevel
         self._indent( 0)
         oldbuffer = self.buffer
-        buffer = self.buffer = cStringIO.StringIO() # local buffer only for this particular proto
+        buffer = self.buffer = StringIO() # local buffer only for this particular proto
         
         # write header (PROTO x [, EXTERNPROTO x [ )
         if clientNode.externalURL:
@@ -235,7 +236,7 @@ class Lineariser:
         # root namespace, insert it there.  For now we don't allow
         # nested namespaces.  This is a serious limitation and should
         # be fixed at some point in time.
-        definedProto = self._proto(getPrototype(clientNode))
+        self._proto(getPrototype(clientNode))
         buffer = self.buffer
         startind = self._canUse( clientNode )
         if type( startind ) != int: # this node has already been declared
@@ -366,8 +367,6 @@ class Lineariser:
             # XXX do IS-mapping here!
     
     def _fieldDict(self, clientNode, requireDefault= 1, skipFields=('DEF',)):
-        proto = clientNode
-        linvalues = self.linvalues
         buffer = self.buffer
         fields = [
             field for field in getFields( clientNode)
@@ -394,15 +393,15 @@ class Lineariser:
 
     def _preroute( self, sceneGraph, clientNode ):
         """Pre-scans all routes, forces all routed nodes to have DEF names"""
-        for node in (clientNode.source, clientNode.destination):
-            DEF = defName( node )
+        for child in (clientNode.source, clientNode.destination):
+            DEF = defName( child )
             if not DEF:
                 count = 0
-                PROTO = protoName( node )
+                PROTO = protoName( child )
                 while 1:
                     name = "%s_%s"%(PROTO,count)
                     if sceneGraph.getDEF( name ) is None:
-                        sceneGraph.regDefName( name, node )
+                        sceneGraph.regDefName( name, child )
                         break
                     count +=1
     def _route( self, clientNode):
