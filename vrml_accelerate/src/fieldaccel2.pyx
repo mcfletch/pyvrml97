@@ -65,7 +65,7 @@ cdef class BaseField( object ):
         """Delete the value, with notifications"""
         try:
             value = client.__dict__.pop( self.name )
-        except KeyError, err:
+        except KeyError as err:
             raise AttributeError( self.name )
         if notify:
             send(
@@ -77,9 +77,9 @@ cdef class BaseField( object ):
         """Set value to give value, with coercion"""
         try:
             value = self.coerce( value )
-        except ValueError, x:
+        except ValueError as x:
             raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
-        except TypeError, x:
+        except TypeError as x:
             raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
         if isinstance( client, type ):
             setattr( client, self.name, value )
