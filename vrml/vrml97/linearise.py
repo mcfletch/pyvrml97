@@ -1,10 +1,10 @@
 """object for linearizing a scene graph to VRML97
 """
-import types
+from __future__ import unicode_literals
 try:
     from cStringIO import StringIO
 except ImportError:
-    from io import BytesIO as StringIO
+    from io import StringIO
 from vrml import arrays
 from vrml.protofunctions import *
 from vrml import node
@@ -92,7 +92,7 @@ class Lineariser:
         self.cursceneGraph = [] # used to look up whether we need to output a prototype...
         self.curproto = []
         self.indentationlevel = 0
-        if type( clientNode ) in ( types.ListType, types.TupleType):
+        if type( clientNode ) in ( list,tuple ):
             for child in clientNode:
                 self._linear( child )
                 self.buffer.write( '\n')
@@ -246,7 +246,10 @@ class Lineariser:
         defName = self._defName( clientNode)
         namedargs['linvalues']=linvalues = self.linvalues
         namedargs['alreadydone'] = self.alreadydone
-        buffer.write( '%%s%%s {'%linvalues% (defName,protoName(clientNode) ) )
+        buffer.write( '%s%s {'% (
+            defName,
+            protoName(clientNode),
+        ))
         position = buffer.tell()
         self._indent()
         self._attrDict( clientNode)
@@ -479,7 +482,7 @@ class Lineariser:
     def _defName( self, clientNode ):
         DEF = defName( clientNode )
         if DEF:
-            return 'DEF %s '%DEF
+            return 'DEF %s '%(DEF)
         else:
             return ''
     def _linear( self, clientNode):
@@ -488,11 +491,7 @@ class Lineariser:
         if type(clientNode) == type:
             method = self._proto
         else:
-            try:
-                name = protoName( clientNode )
-            except AttributeError:
-                import pdb
-                pdb.set_trace()
+            name = protoName( clientNode )
             method = self.typecache.get (
                 name,
                 self._Node

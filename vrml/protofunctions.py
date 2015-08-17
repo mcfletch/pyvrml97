@@ -11,6 +11,7 @@ at some point want to create a real "prototype" class,
 we could do so with most changes confined to this
 module.
 """
+from __future__ import unicode_literals
 def _getcls( cls ):
     """Utility function returns class when passed instance or class"""
     if type(cls) == type:
