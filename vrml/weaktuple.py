@@ -31,7 +31,7 @@ class WeakTuple( tuple ):
         The WeakTuple will store weak references to objects
         within the sequence.
         """
-        super( WeakTuple, self).__init__( map( self.wrap, sequence))
+        super( WeakTuple, self).__init__( [self.wrap(obj) for obj in sequence])
 
     def valid( self ):
         """Explicit validity check for the tuple
@@ -81,10 +81,10 @@ class WeakTuple( tuple ):
         return self.unwrap(super (WeakTuple,self).__getitem__( index ))
     def __getslice__( self, start, stop ):
         """Get the items in the range start to stop"""
-        return map(
-            self.unwrap,
-            super (WeakTuple,self).__getslice__( start, stop)
-        )
+        return [
+            self.unwrap(obj) 
+            for obj in super (WeakTuple,self).__getslice__( start, stop)
+        ]
     def __contains__( self, item ):
         """Return boolean indicating whether the item is in the tuple"""
         for node in self:
