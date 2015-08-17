@@ -50,10 +50,10 @@ class WeakList( list ):
     def get( self ):
         """Get all items as a list of strong references
         """
-        return map(
-            self.unwrap,
-            super( WeakList,self).__getslice__(0,len(self))
-        )
+        return [
+            self.unwrap(obj)
+            for obj in super( WeakList,self).__getslice__(0,len(self))
+        ]
     def __iter__( self ):
         """Iterate over the list, yielding strong references"""
         index = 0
@@ -81,7 +81,9 @@ class WeakList( list ):
         )
     def extend( self, sequence ):
         """Extend this list with another sequence"""
-        return super( WeakList, self).extend( map( self.wrap, sequence ))
+        return super( WeakList, self).extend([
+            self.wrap(obj) for obj in sequence 
+        ])
     __iadd__ = extend
 
     def __getitem__( self, index ):
