@@ -15,6 +15,10 @@ try:
     xrange 
 except NameError:
     xrange = range
+try:
+    reduce 
+except NameError:
+    from functools import reduce
 
 import sys
 MAX_INT = getattr(sys, 'maxint', None) or getattr(sys, 'maxsize', None)
@@ -565,8 +569,8 @@ class _MFVec( _SFArray ):
     @property
     def length( self ):
         import operator
-        self.length = reduce( operator.mul, self.dimension )
-        return self.length
+        self._length = reduce( operator.mul, self.dimension )
+        return self._length
     def reshape( self, value ):
         return arrays.reshape(value, (-1,)+self.dimension)
     def check( self, value ):
@@ -592,7 +596,7 @@ class _MFVec( _SFArray ):
             )
             for vector in value
         ]
-        setLength = 100/self.length # 100 is arbitrary
+        setLength = int(100/self.length) # 100 is arbitrary
         
         # now process the string chunk representations
         if len(sets) < setLength: # again, arbitrary
@@ -600,7 +604,9 @@ class _MFVec( _SFArray ):
         else: # greater than setLength elements...
             stringsets2 = []
             while sets:
-                stringsets2.append(linvalues['subelspacer'].join(sets[:setLength]))
+                stringsets2.append(
+                    linvalues['subelspacer'].join(sets[:setLength])
+                )
                 del sets[:setLength]
             return '[%s]'%('\n'.join(stringsets2))
     def copyValue( self, value, copier=None ):
