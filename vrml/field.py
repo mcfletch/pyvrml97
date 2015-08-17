@@ -147,7 +147,7 @@ else:
             """Delete our value from client's dictionary"""
             try:
                 client.__dict__[ self.name ]
-            except KeyError as err:
+            except KeyError:
                 raise AttributeError( self.name )
     
         def fdel( self, client, notify=True ):
@@ -299,6 +299,14 @@ class Field( BaseField ):
             sender = node,
             signal = signal,
         )
+    def __lt__(self,other):
+        if isinstance(other,Field):
+            return (
+                (self.__class__.__name__,self.name)
+                < 
+                (other.__class__.__name__,other.name)
+            )
+        return False
 
 class WeakField( object ):
     """A Mix-in for fields which stores weak-references to values"""
