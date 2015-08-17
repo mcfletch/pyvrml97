@@ -10,7 +10,7 @@ We use Numeric Python arrays whereever possible.
 """
 import operator
 from vrml import field, csscolors, arrays
-from OpenGL._bytes import unicode, long, as_8_bit, as_str
+from OpenGL._bytes import unicode, long
 try:
     xrange 
 except NameError:
@@ -74,7 +74,7 @@ def MFString_vrmlstr( value, lineariser=None):
         return "[ ]"
     anyobject = [ SFString_vrmlstr( v, lineariser) for v in value ]
     linvalues = _linvalues( lineariser)
-    length = reduce( operator.add, map(len, anyobject))
+    length = reduce( operator.add, [len(obj) for obj in anyobject])
     if length > 60:
         sep = '%(subelspacer)s\n%(curindent)s%(indent)s'%linvalues
         if len(anyobject) > 1:
@@ -108,7 +108,7 @@ def SFFloat_vrmlstr( value, lineariser=None):
 def MFSimple_vrmlstr( value, lineariser=None):
     """Convert value to a VRML97 representation"""
     linvalues = _linvalues( lineariser)
-    stringreps = map(str, value)
+    stringreps = [str(obj) for obj in value]
     stringsets = []
     setLength = 100 # 100 is arbitrary
     while stringreps:
@@ -346,7 +346,7 @@ class _MFInt32 ( object ):
             return arrays.contiguous( arrays.ravel(value) )
         elif isinstance( value, field.SEQUENCE_TYPES):
             return arrays.array(
-                map( int, collapse( value) ),
+                [int(obj) for obj in value],
                 self.arrayDataType,
             )
         elif not value:
@@ -503,6 +503,8 @@ class _SFArray( object ):
                 float(x) 
                 for x in value.replace( ',', ' ').replace('[',' ').replace(']').split()
             ]
+        if field.UNPACK_TYPES and isinstance(value,field.UNPACK_TYPES):
+            value = list(value)
         if isinstance( value, arrays.ArrayType ):
             if arrays.typeCode(value) not in self.acceptedTypes:
                 value = value.astype( self.targetType )
@@ -511,7 +513,7 @@ class _SFArray( object ):
                 value = arrays.array( value, self.targetType)
             except ValueError:
                 value = arrays.array(
-                    map( float, collapse( value) ),
+                    [float(obj) for obj in value],
                     self.targetType,
                 )
         elif isinstance( value, (int,long,float)):
@@ -586,7 +588,7 @@ class _MFVec( _SFArray ):
         linvalues = _linvalues( lineariser )
         sets = [
             linvalues['numsep'].join(
-                map(str, vector.ravel())
+                [str(obj) for obj in vector.ravel()]
             )
             for vector in value
         ]

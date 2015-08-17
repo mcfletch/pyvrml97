@@ -1,6 +1,7 @@
 """property sub-class providing VRML field semantics"""
 from pydispatch import dispatcher, robustapply
 import weakref
+import sys
 from vrml import protonamespace
 
 # conditional import via package entry points
@@ -17,6 +18,17 @@ baseEventTypes = protonamespace.ProtoNamespace({})
 ### stuff used by the various field sub-types
 NUMERIC_TYPES = (int,float,long)
 SEQUENCE_TYPES = (tuple, list)
+if sys.version_info.major >= 3:
+    MAP_TYPE = type(map(int,[0]))
+    ZIP_TYPE = type(zip([],[]))
+    RANGE_TYPE = type(range(3))
+    UNPACK_TYPES = (MAP_TYPE,ZIP_TYPE,RANGE_TYPE)
+    SEQUENCE_TYPES += UNPACK_TYPES
+else:
+    MAP_TYPE = None
+    ZIP_TYPE = None
+    RANGE_TYPE = type(xrange(3))
+    UNPACK_TYPES = ()
 _NULL = []
 
 def register( cls ):
