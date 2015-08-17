@@ -3,6 +3,7 @@ from vrml import node, protofunctions, protonamespace, fieldtypes, route
 from vrml import copier as copiermodule
 from vrml.vrml97 import nodetypes
 import weakref
+from OpenGL._bytes import unicode
 
 class SceneGraph( nodetypes.Traversable, node.Node ):
     ''' A VRML 97 sceneGraph
