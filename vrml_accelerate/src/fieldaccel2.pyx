@@ -27,7 +27,7 @@ cdef class BaseField( object ):
     def __set__( self, client, value ):
         """Set value for given instance (notifies)"""
         self._set( client, value, True )
-    def __del__( self, client=None ):
+    def __delete__( self, client ):
         """Delete our value from client's dictionary (notifies)"""
         if client is not None:
             self._del( client, True )

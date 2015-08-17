@@ -611,7 +611,7 @@ static PyObject *__pyx_builtin_TypeError;
 static int __pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField___init__(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_name, PyObject *__pyx_v_default); /* proto */
 static PyObject *__pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_2__get__(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_client, CYTHON_UNUSED PyObject *__pyx_v_cls); /* proto */
 static int __pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_4__set__(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_client, PyObject *__pyx_v_value); /* proto */
-static PyObject *__pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_6__del__(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_client); /* proto */
+static int __pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_client); /* proto */
 static PyObject *__pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_8fset(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_client, PyObject *__pyx_v_value, int __pyx_v_notify); /* proto */
 static PyObject *__pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_10fdel(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_client, int __pyx_v_notify); /* proto */
 static PyObject *__pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_12coerce(CYTHON_UNUSED struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
@@ -1101,7 +1101,7 @@ static int __pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_4__set__(struct _
  *     def __set__( self, client, value ):
  *         """Set value for given instance (notifies)"""
  *         self._set( client, value, True )             # <<<<<<<<<<<<<<
- *     def __del__( self, client=None ):
+ *     def __delete__( self, client ):
  *         """Delete our value from client's dictionary (notifies)"""
  */
   __pyx_t_1 = ((struct __pyx_vtabstruct_15vrml_accelerate_11fieldaccel2_BaseField *)__pyx_v_self->__pyx_vtab)->_set(__pyx_v_self, __pyx_v_client, __pyx_v_value, 1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -1131,71 +1131,30 @@ static int __pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_4__set__(struct _
 /* "src/fieldaccel2.pyx":30
  *         """Set value for given instance (notifies)"""
  *         self._set( client, value, True )
- *     def __del__( self, client=None ):             # <<<<<<<<<<<<<<
+ *     def __delete__( self, client ):             # <<<<<<<<<<<<<<
  *         """Delete our value from client's dictionary (notifies)"""
  *         if client is not None:
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_7__del__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_15vrml_accelerate_11fieldaccel2_9BaseField_6__del__[] = "Delete our value from client's dictionary (notifies)";
-static PyObject *__pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_7__del__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_client = 0;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
-  PyObject *__pyx_r = 0;
+static int __pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_7__delete__(PyObject *__pyx_v_self, PyObject *__pyx_v_client); /*proto*/
+static char __pyx_doc_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__[] = "Delete our value from client's dictionary (notifies)";
+#if CYTHON_COMPILING_IN_CPYTHON
+struct wrapperbase __pyx_wrapperbase_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__;
+#endif
+static int __pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_7__delete__(PyObject *__pyx_v_self, PyObject *__pyx_v_client) {
+  int __pyx_r;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
-  {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_client,0};
-    PyObject* values[1] = {0};
-    values[0] = ((PyObject *)Py_None);
-    if (unlikely(__pyx_kwds)) {
-      Py_ssize_t kw_args;
-      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
-      switch (pos_args) {
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-      kw_args = PyDict_Size(__pyx_kwds);
-      switch (pos_args) {
-        case  0:
-        if (kw_args > 0) {
-          PyObject* value = PyDict_GetItem(__pyx_kwds, __pyx_n_s_client);
-          if (value) { values[0] = value; kw_args--; }
-        }
-      }
-      if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__del__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-      }
-    } else {
-      switch (PyTuple_GET_SIZE(__pyx_args)) {
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-    }
-    __pyx_v_client = values[0];
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__del__", 0, 0, 1, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("vrml_accelerate.fieldaccel2.BaseField.__del__", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return NULL;
-  __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_6__del__(((struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *)__pyx_v_self), __pyx_v_client);
+  __Pyx_RefNannySetupContext("__delete__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__(((struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *)__pyx_v_self), ((PyObject *)__pyx_v_client));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_6__del__(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_client) {
-  PyObject *__pyx_r = NULL;
+static int __pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__(struct __pyx_obj_15vrml_accelerate_11fieldaccel2_BaseField *__pyx_v_self, PyObject *__pyx_v_client) {
+  int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
@@ -1203,10 +1162,10 @@ static PyObject *__pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_6__del__(st
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("__del__", 0);
+  __Pyx_RefNannySetupContext("__delete__", 0);
 
   /* "src/fieldaccel2.pyx":32
- *     def __del__( self, client=None ):
+ *     def __delete__( self, client ):
  *         """Delete our value from client's dictionary (notifies)"""
  *         if client is not None:             # <<<<<<<<<<<<<<
  *             self._del( client, True )
@@ -1233,20 +1192,19 @@ static PyObject *__pyx_pf_15vrml_accelerate_11fieldaccel2_9BaseField_6__del__(st
   /* "src/fieldaccel2.pyx":30
  *         """Set value for given instance (notifies)"""
  *         self._set( client, value, True )
- *     def __del__( self, client=None ):             # <<<<<<<<<<<<<<
+ *     def __delete__( self, client ):             # <<<<<<<<<<<<<<
  *         """Delete our value from client's dictionary (notifies)"""
  *         if client is not None:
  */
 
   /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("vrml_accelerate.fieldaccel2.BaseField.__del__", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
+  __Pyx_AddTraceback("vrml_accelerate.fieldaccel2.BaseField.__delete__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = -1;
   __pyx_L0:;
-  __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
@@ -1844,7 +1802,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__del(struct 
  *         """Delete the value, with notifications"""
  *         try:             # <<<<<<<<<<<<<<
  *             value = client.__dict__.pop( self.name )
- *         except KeyError, err:
+ *         except KeyError as err:
  */
   {
     __Pyx_ExceptionSave(&__pyx_t_1, &__pyx_t_2, &__pyx_t_3);
@@ -1857,7 +1815,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__del(struct 
  *         """Delete the value, with notifications"""
  *         try:
  *             value = client.__dict__.pop( self.name )             # <<<<<<<<<<<<<<
- *         except KeyError, err:
+ *         except KeyError as err:
  *             raise AttributeError( self.name )
  */
       __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_client, __pyx_n_s_dict); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 67; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
@@ -1906,7 +1864,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__del(struct 
     /* "src/fieldaccel2.pyx":68
  *         try:
  *             value = client.__dict__.pop( self.name )
- *         except KeyError, err:             # <<<<<<<<<<<<<<
+ *         except KeyError as err:             # <<<<<<<<<<<<<<
  *             raise AttributeError( self.name )
  *         if notify:
  */
@@ -1922,7 +1880,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__del(struct 
 
       /* "src/fieldaccel2.pyx":69
  *             value = client.__dict__.pop( self.name )
- *         except KeyError, err:
+ *         except KeyError as err:
  *             raise AttributeError( self.name )             # <<<<<<<<<<<<<<
  *         if notify:
  *             send(
@@ -1950,7 +1908,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__del(struct 
   }
 
   /* "src/fieldaccel2.pyx":70
- *         except KeyError, err:
+ *         except KeyError as err:
  *             raise AttributeError( self.name )
  *         if notify:             # <<<<<<<<<<<<<<
  *             send(
@@ -2096,7 +2054,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__set(struct 
  *         """Set value to give value, with coercion"""
  *         try:             # <<<<<<<<<<<<<<
  *             value = self.coerce( value )
- *         except ValueError, x:
+ *         except ValueError as x:
  */
   {
     __Pyx_ExceptionSave(&__pyx_t_1, &__pyx_t_2, &__pyx_t_3);
@@ -2109,7 +2067,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__set(struct 
  *         """Set value to give value, with coercion"""
  *         try:
  *             value = self.coerce( value )             # <<<<<<<<<<<<<<
- *         except ValueError, x:
+ *         except ValueError as x:
  *             raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
  */
       __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_coerce); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 79; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
@@ -2155,9 +2113,9 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__set(struct 
     /* "src/fieldaccel2.pyx":80
  *         try:
  *             value = self.coerce( value )
- *         except ValueError, x:             # <<<<<<<<<<<<<<
+ *         except ValueError as x:             # <<<<<<<<<<<<<<
  *             raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
- *         except TypeError, x:
+ *         except TypeError as x:
  */
     __pyx_t_8 = PyErr_ExceptionMatches(__pyx_builtin_ValueError);
     if (__pyx_t_8) {
@@ -2171,9 +2129,9 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__set(struct 
 
       /* "src/fieldaccel2.pyx":81
  *             value = self.coerce( value )
- *         except ValueError, x:
+ *         except ValueError as x:
  *             raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))             # <<<<<<<<<<<<<<
- *         except TypeError, x:
+ *         except TypeError as x:
  *             raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
  */
       __pyx_t_6 = PyTuple_New(3); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 81; __pyx_clineno = __LINE__; goto __pyx_L5_except_error;}
@@ -2204,9 +2162,9 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__set(struct 
     }
 
     /* "src/fieldaccel2.pyx":82
- *         except ValueError, x:
+ *         except ValueError as x:
  *             raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
- *         except TypeError, x:             # <<<<<<<<<<<<<<
+ *         except TypeError as x:             # <<<<<<<<<<<<<<
  *             raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
  *         if isinstance( client, type ):
  */
@@ -2222,7 +2180,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__set(struct 
 
       /* "src/fieldaccel2.pyx":83
  *             raise ValueError( """Field %s could not accept value %s (%s)"""%( self, value, x))
- *         except TypeError, x:
+ *         except TypeError as x:
  *             raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))             # <<<<<<<<<<<<<<
  *         if isinstance( client, type ):
  *             setattr( client, self.name, value )
@@ -2267,7 +2225,7 @@ static PyObject *__pyx_f_15vrml_accelerate_11fieldaccel2_9BaseField__set(struct 
   }
 
   /* "src/fieldaccel2.pyx":84
- *         except TypeError, x:
+ *         except TypeError as x:
  *             raise ValueError( """Field %s could not accept value %s of type %s (%s)"""%( self, value, type(value), x))
  *         if isinstance( client, type ):             # <<<<<<<<<<<<<<
  *             setattr( client, self.name, value )
@@ -2767,8 +2725,7 @@ static int __pyx_tp_descr_set_15vrml_accelerate_11fieldaccel2_BaseField(PyObject
     return __pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_5__set__(o, i, v);
   }
   else {
-    PyErr_SetString(PyExc_NotImplementedError, "__delete__");
-    return -1;
+    return __pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_7__delete__(o, i);
   }
 }
 
@@ -2813,7 +2770,6 @@ static int __pyx_setprop_15vrml_accelerate_11fieldaccel2_9BaseField_call_default
 }
 
 static PyMethodDef __pyx_methods_15vrml_accelerate_11fieldaccel2_BaseField[] = {
-  {"__del__", (PyCFunction)__pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_7__del__, METH_VARARGS|METH_KEYWORDS, __pyx_doc_15vrml_accelerate_11fieldaccel2_9BaseField_6__del__},
   {"fset", (PyCFunction)__pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_9fset, METH_VARARGS|METH_KEYWORDS, __pyx_doc_15vrml_accelerate_11fieldaccel2_9BaseField_8fset},
   {"fdel", (PyCFunction)__pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_11fdel, METH_VARARGS|METH_KEYWORDS, __pyx_doc_15vrml_accelerate_11fieldaccel2_9BaseField_10fdel},
   {"coerce", (PyCFunction)__pyx_pw_15vrml_accelerate_11fieldaccel2_9BaseField_13coerce, METH_O, __pyx_doc_15vrml_accelerate_11fieldaccel2_9BaseField_12coerce},
@@ -3078,6 +3034,16 @@ PyMODINIT_FUNC PyInit_fieldaccel2(void)
       __pyx_wrapperbase_15vrml_accelerate_11fieldaccel2_9BaseField_4__set__ = *((PyWrapperDescrObject *)wrapper)->d_base;
       __pyx_wrapperbase_15vrml_accelerate_11fieldaccel2_9BaseField_4__set__.doc = __pyx_doc_15vrml_accelerate_11fieldaccel2_9BaseField_4__set__;
       ((PyWrapperDescrObject *)wrapper)->d_base = &__pyx_wrapperbase_15vrml_accelerate_11fieldaccel2_9BaseField_4__set__;
+    }
+  }
+  #endif
+  #if CYTHON_COMPILING_IN_CPYTHON
+  {
+    PyObject *wrapper = PyObject_GetAttrString((PyObject *)&__pyx_type_15vrml_accelerate_11fieldaccel2_BaseField, "__delete__"); if (unlikely(!wrapper)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 4; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (Py_TYPE(wrapper) == &PyWrapperDescr_Type) {
+      __pyx_wrapperbase_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__ = *((PyWrapperDescrObject *)wrapper)->d_base;
+      __pyx_wrapperbase_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__.doc = __pyx_doc_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__;
+      ((PyWrapperDescrObject *)wrapper)->d_base = &__pyx_wrapperbase_15vrml_accelerate_11fieldaccel2_9BaseField_6__delete__;
     }
   }
   #endif

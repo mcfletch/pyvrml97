@@ -143,7 +143,7 @@ else:
                 defaultobj = self._set( client, defaultobj )
             return defaultobj
         
-        def __del__( self, client ):
+        def __delete__( self, client ):
             """Delete our value from client's dictionary"""
             try:
                 client.__dict__[ self.name ]
@@ -152,9 +152,9 @@ else:
     
         def fdel( self, client, notify=True ):
             """Delete with notify"""
-            self.__del__( client )
+            self.__delete__( client )
             if notify:
-                send(
+                dispatcher.send(
                     ('del',self), 
                     client, 
                 )
