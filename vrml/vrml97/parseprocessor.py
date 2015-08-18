@@ -1,9 +1,18 @@
 """SimpleParse post-processor builds node-graph from parse-tree
 """
 from simpleparse.dispatchprocessor import *
-from vrml import node, field, fieldtypes
+from vrml import node, field
 from vrml.protofunctions import *
 from vrml.arrays import array
+from OpenGL._bytes import as_str
+try:
+    long 
+except NameError:
+    long = int 
+_getString = getString 
+def getString( *args, **named ):
+    base = _getString(*args,**named)
+    return as_str(base)
 
 class ParseProcessor( DispatchProcessor ):
     """Builds in-memory node-graph from VRML97 parse-tree
@@ -43,11 +52,12 @@ class ParseProcessor( DispatchProcessor ):
         self.fieldTypeStack = []
 
     ### High-level constructs in the grammar
-    def header( self, (tag, left, right, children), buffer):
+    def header( self, table, buffer):
         """We ignore the header for now"""
     EOF = header
-    def rootItem( self, (tag, left, right, children), buffer):
+    def rootItem( self, table, buffer):
         """A scenegraph root-item"""
+        (tag, left, right, children) = table
         # ROUTE and proto are already taken care of, as would be is
         # so we only need to worry about USE, Script and Node types
         items  = dispatchList( self, children, buffer )
@@ -56,8 +66,9 @@ class ParseProcessor( DispatchProcessor ):
             if isinstance( item, node.Node )
         ]
         self.sceneGraphStack[-1].children.extend( result )
-    def vrmlScene( self, (tag, left, right, children), buffer):
+    def vrmlScene( self, table, buffer):
         """Instantiate a VRML scene object"""
+        (tag, left, right, children) = table
         if self.sceneGraphStack:
             root = self.sceneGraphStack[-1]
             protoTypes = None
@@ -75,8 +86,9 @@ class ParseProcessor( DispatchProcessor ):
         node = self.sceneGraphStack.pop()
         return node
     ### The two prototype sub-types
-    def Proto( self, (tag, left, right, children), buffer):
+    def Proto( self, table, buffer):
         """Process a regular Prototype declaration"""
+        (tag, left, right, children) = table
         proto = node.prototype(getString( children[0], buffer))
         self.prototypeStack.append(
             proto
@@ -87,8 +99,9 @@ class ParseProcessor( DispatchProcessor ):
             self.sceneGraphStack[-1].addProto( proto )
         finally:
             self.prototypeStack.pop( )
-    def ExternProto( self, (tag, left, right, children), buffer):
+    def ExternProto( self, table, buffer):
         """Process an external Prototype declaration"""
+        (tag, left, right, children) = table
         proto = node.prototype(getString( children[0], buffer))
         self.prototypeStack.append(
             proto
@@ -101,8 +114,9 @@ class ParseProcessor( DispatchProcessor ):
             self.prototypeStack.pop( )
             
     ### Node instances of the various types
-    def Node (self, (tag, start, stop, sublist), buffer):
+    def Node (self, table, buffer):
         ''' Create new node, returning the value to the caller'''
+        (tag, start, stop, sublist) = table
         if sublist[0][0] == 'name':
             name = getString ( sublist [0], buffer)
             GI = getString ( sublist [1], buffer)
@@ -128,8 +142,9 @@ class ParseProcessor( DispatchProcessor ):
         self.nodeStack.pop ()
         return newNode
 
-    def Script( self, (tag, start, stop, sublist), buffer):
+    def Script( self, table, buffer):
         ''' A script node (can be a root node)'''
+        (tag, start, stop, sublist) = table
         # what's the DEF name...
         if sublist and sublist[0][0] == 'name':
             name = getString ( sublist [0], buffer)
@@ -184,8 +199,9 @@ class ParseProcessor( DispatchProcessor ):
             )
         return node
 
-    def ROUTE(self, (tag, start, stop,  sublist), buffer):
+    def ROUTE(self, table, buffer):
         ''' Create a new route object/node, add the current sceneGraph '''
+        (tag, start, stop,  sublist) = table
         (s,sf,d,df)  = [getString(item, buffer) for item in sublist]
         (sn,dn) = [ self.sceneGraphStack[-1].getDEF( name ) for name in (s,d)]
         for (node,name) in ((sn,s),(dn,d)):
@@ -206,7 +222,8 @@ class ParseProcessor( DispatchProcessor ):
         )
 
     ### Field and event declarations
-    def fieldDecl( self, (tag, left, right, (exposure, datatype, name, value)), buffer):
+    def fieldDecl( self, table, buffer):
+        (tag, left, right, (exposure, datatype, name, value)) = table
         datatype = getString( datatype, buffer )
         self.fieldTypeStack.append(
             datatype
@@ -224,8 +241,9 @@ class ParseProcessor( DispatchProcessor ):
             )
         finally:
             self.fieldTypeStack.pop()
-    def extFieldDecl(self, (tag, start, stop, (exposure, datatype, name)), buffer):
+    def extFieldDecl(self, table, buffer):
         ''' An external field declaration, no default value '''
+        (tag, start, stop, (exposure, datatype, name)) = table
         datatype = getString( datatype, buffer )
         addField(
             self.prototypeStack[-1],
@@ -236,7 +254,8 @@ class ParseProcessor( DispatchProcessor ):
             )
         )
         
-    def eventDecl( self, (tag, left, right, (direction, datatype, name)), buffer):
+    def eventDecl( self, table, buffer):
+        (tag, left, right, (direction, datatype, name)) = table
         datatype = getString( datatype, buffer )
         addField(
             self.prototypeStack[-1],
@@ -246,7 +265,8 @@ class ParseProcessor( DispatchProcessor ):
                 getString( direction, buffer ) == 'eventOut',
             )
         )
-    def ScriptEventDecl( self,(tag, left, right, sublist), buffer):
+    def ScriptEventDecl( self, table, buffer):
+        (tag, left, right, sublist) = table
         direction, datatype, name = [getString( item,buffer) for item in sublist[:3]]
         if len(sublist) > 3:
             mapName = dispatch( self, sublist[3], buffer)
@@ -256,8 +276,9 @@ class ParseProcessor( DispatchProcessor ):
             field.newEvent(name, datatype, direction=='eventOut'),
             mapName,
         )
-    def ScriptFieldDecl( self, (tag, left, right, (exposure, datatype, name, value)), buffer):
+    def ScriptFieldDecl( self, table, buffer):
         """Field declaration for a script node"""
+        (tag, left, right, (exposure, datatype, name, value)) = table
         datatype = getString( datatype, buffer )
         self.fieldTypeStack.append(
             datatype
@@ -285,8 +306,9 @@ class ParseProcessor( DispatchProcessor ):
             self.fieldTypeStack.pop()
 
     ### Node attributes and field values
-    def Attr(self, (tag, start, stop, (name, value)), buffer):
+    def Attr(self, table, buffer):
         ''' An attribute of a node or script '''
+        (tag, start, stop, (name, value)) = table
         name = getString ( name, buffer )
         clientNode = self.nodeStack[-1]
         try:
@@ -317,8 +339,9 @@ class ParseProcessor( DispatchProcessor ):
             finally:
                 self.fieldTypeStack.pop()
 
-    def Field( self, (tag, start, stop, sublist), buffer):
+    def Field( self, table, buffer):
         ''' A field value (of any type) '''
+        (tag, start, stop, sublist) = table
         if sublist and sublist[0][0] in ('USE','Script','Node','SFNull'):
             if self.fieldTypeStack[-1] == 'SFNode':
                 return dispatch( self, sublist[0], buffer )
@@ -331,22 +354,25 @@ class ParseProcessor( DispatchProcessor ):
             function = getattr( self, self.fieldTypeStack[-1] )
             return function( sublist, buffer )
             
-    def SFBool( self, (tup,), buffer):
+    def SFBool( self, table, buffer):
         '''Boolean, in Python tradition is either 0 or 1'''
+        (tup,) = table
         return getString(tup, buffer) == 'TRUE'
 
-    def SFFloat( self, (tup,), buffer):
+    def SFFloat( self, table, buffer):
+        (tup,) = table
         return float( getString(tup, buffer) )
     SFTime = SFFloat
-    def SFInt32( self, (tup,), buffer ):
+    def SFInt32( self, table, buffer ):
+        (tup,) = table
         return int( getString(tup, buffer), 0 )
-    def SFVec3f( self, (x,y,z), buffer ):
-        return [ float( getString(item,buffer)) for item in (x,y,z) ]
-    def SFVec2f( self, (x,y), buffer ):
-        return [ float( getString(item,buffer)) for item in (x,y) ]
+    def SFVec3f( self, table, buffer ):
+        return [ float( getString(item,buffer)) for item in table ]
+    def SFVec2f( self, table, buffer ):
+        return [ float( getString(item,buffer)) for item in table ]
     SFColor = SFVec3f
-    def SFRotation( self, (x,y,z,a), buffer ):
-        return [ float( getString(item,buffer)) for item in (x,y,z,a) ]
+    def SFRotation( self, table, buffer ):
+        return [ float( getString(item,buffer)) for item in table ]
     
     def SFArray( self, values, buffer, final=True ):
         """Process a vector-of-values data-set"""
@@ -386,29 +412,32 @@ class ParseProcessor( DispatchProcessor ):
             result = []
             for element in sublist:
                 if element[0] == 'CHARNODBLQUOTE':
-                    result.append( buffer[element[1]:element[2]] )
+                    result.append( as_str(buffer[element[1]:element[2]]) )
                 elif element[0] == 'ESCAPEDCHAR':
-                    result.append( buffer[element[1]+1:element[2]] )
+                    result.append( as_str(buffer[element[1]+1:element[2]]) )
                 elif element[0] == 'SIMPLEBACKSLASH':
                     result.append( '\\' )
             bigresult.append( "".join( result) )
         return bigresult
-    def SFString( self, ((tag, start, stop, sublist),), buffer):
+    def SFString( self, table, buffer):
         '''Return the (escaped) string as a simple Python string'''
+        ((tag, start, stop, sublist),) = table
         result = []
         for element in sublist:
             if element[0] == 'CHARNODBLQUOTE':
-                result.append( buffer[element[1]:element[2]] )
+                result.append( as_str(buffer[element[1]:element[2]]) )
             elif element[0] == 'ESCAPEDCHAR':
-                result.append( buffer[element[1]+1:element[2]] )
+                result.append( as_str(buffer[element[1]+1:element[2]]) )
             elif element[0] == 'SIMPLEBACKSLASH':
-                result.append( '\\' )
+                result.append( as_str('\\') )
         return "".join( result )
 
     ### Low-level/trivial constructs which have their own processing functions
-    def IS(self, (tag, start, stop, (nametuple,)), buffer):
+    def IS(self, table, buffer):
         ''' Create a field reference '''
+        (tag, start, stop, (nametuple,)) = table
         return getString (nametuple, buffer)
-    def ExtProtoURL( self, (tag, start, stop, sublist), buffer):
+    def ExtProtoURL( self, table, buffer):
         ''' add the url to the external prototype '''
+        (tag, start, stop, sublist) = table
         return self.MFString( sublist, buffer )
