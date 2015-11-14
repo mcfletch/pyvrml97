@@ -12,3 +12,4 @@ vrml_accelerate/*.so
 __pycache__
 .eric*project
 .tox
+.coverage
