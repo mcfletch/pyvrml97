@@ -36,18 +36,9 @@ except ImportError as err:
         """Unable to import numpy, skipping numpy extension building\n"""
     )
 else:
-    if hasattr( numpy, 'get_include' ):
-        includeDirectories = [
-            numpy.get_include(),
-        ]
-    else:
-        includeDirectories = [
-            os.path.join(
-                os.path.dirname( numpy.__file__ ),
-                'core',
-                'include',
-            ),
-        ]
+    includeDirectories = [
+        numpy.get_include(),
+    ]
     definitions = [
         ('USE_NUMPY', True ),
     ]
@@ -61,6 +52,7 @@ else:
         Extension("vrml_accelerate.tmatrixaccel", [
                 os.path.join( SRC, ["tmatrixaccel.c","tmatrixaccel.pyx"][have_cython])
             ],
+            include_dirs = includeDirectories,
         ),
     ])
 
