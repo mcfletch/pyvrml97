@@ -5,10 +5,12 @@ Numeric tends to be a bit flaky...
 """
 from numpy import *
 try:
-    from vrml_accelerate import tmatrixaccel
+    # TODO: don't import this here, as it's not 
+    # actually *used* in pyvrml97, it's just used 
+    # in OpenGLContext...
     from vrml_accelerate import frustcullaccel
 except ImportError as err:
-    tmatrixaccel = frustcullaccel = None
+    frustcullaccel = None
 # why did this get taken out?  Is divide now safe?
 amin = amin 
 amax = amax
@@ -28,7 +30,7 @@ if hasattr( a, '__array_typestr__' ):
         """
         try:
             return a.__array_typestr__
-        except AttributeError as err:
+        except AttributeError:
             return a.typecode()
 else:
     def typeCode( a ):
@@ -40,7 +42,7 @@ else:
         """
         try:
             return a.dtype.char
-        except AttributeError as err:
+        except AttributeError:
             return a.typecode()
 del a
 implementation_name = 'numpy'
@@ -57,7 +59,7 @@ def safeCompare( first, second ):
     """Watch out for pointless numpy truth-value checks"""
     try:
         return bool(first == second )
-    except ValueError as err:
+    except ValueError:
         return bool( any( first == second ) )
 
 def contiguous( a ):

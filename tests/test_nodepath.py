@@ -23,7 +23,6 @@ class TestNodePath( unittest.TestCase ):
             array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[2,0,0,1]],'f')
         ), m
     def test_change_translation( self ):
-        m = self.second_child.transformMatrix()
         self.first_child[-1].translation = (-1,0,0)
         m2 = self.second_child.transformMatrix()
         assert allclose( 
@@ -56,7 +55,26 @@ class TestNodePath( unittest.TestCase ):
         test = array( [0,0,10,1], 'f' )
         matrix = self.fourth_child.transformMatrix( )
         #inverse = self.fourth_child.transformMatrix( inverse=True )
-        projected = dot( matrix, test )
-        # should be shifted 5 to the right, and scaled up from 10 to 20 (to -15)
-        assert allclose( projected, array([-15,0,0,1],'f')), (matrix,projected)
+        projected = dot( test, matrix )
+        # projecting out of the screen, then rotated 
+        # counter-clockwise 90deg (to go right), then scaled up 2x (to 20)
+        # then translated 5 to the right...
+        target = array([25,0,0,1],'f')
+        assert allclose( projected, target, atol=0.0001), projected
         
+    def test_nest_simple( self ):
+        path = self.empty + [ 
+            Transform( translation=(0,0,1), DEF='translate', ),
+            Transform( scale=(1,1,.5),DEF='scale'),
+        ]
+        matrix = path.transformMatrix()
+        projected = dot( array([0,0,10,1],'f'), matrix )
+        assert allclose( projected, array([0,0,6,1]),atol=.0001), projected
+   
+    def test_rotation_array( self ):
+        path = self.empty + [
+            Transform( rotation = (0,1,0,pi/2 )),
+        ]
+        matrix = path.transformMatrix()
+        projected = dot( array([ 0,0,1,1],'f'),matrix )
+        assert allclose( projected, array([1,0,0,1],'f'),atol=.0001), projected
