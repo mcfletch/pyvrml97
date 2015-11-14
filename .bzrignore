@@ -10,3 +10,5 @@ dist
 vrml_accelerate/*.so
 *.egg-info
 __pycache__
+.eric*project
+.tox
