@@ -6,7 +6,7 @@ try:
 except ImportError as err:
     from distutils.core import setup,Extension
 import sys, os
-sys.path.insert(0, '.' )
+SRC = 'src' 
 try:
     from Cython.Distutils import build_ext
 except ImportError as err:
@@ -15,7 +15,7 @@ else:
     have_cython = True
 
 def find_version( ):
-    for line in open( '__init__.py'):
+    for line in open( os.path.join('vrml_accelerate','__init__.py')):
         if line.strip().startswith( '__version__' ):
             return eval(line.strip().split('=')[1].strip())
     raise RuntimeError( """No __version__ = 'string' in __init__.py""" )
@@ -23,7 +23,7 @@ version = find_version()
 
 extensions = [
     Extension("vrml_accelerate.fieldaccel2", [
-            os.path.join( 'src', ["fieldaccel2.c","fieldaccel2.pyx"][have_cython])
+            os.path.join( SRC, ["fieldaccel2.c","fieldaccel2.pyx"][have_cython])
         ],
     ),
 ]
@@ -53,13 +53,13 @@ else:
     ]
     extensions.extend( [
         Extension("vrml_accelerate.frustcullaccel", [
-                os.path.join( 'src', ["frustcullaccel.c","frustcullaccel.pyx"][have_cython])
+                os.path.join( SRC, ["frustcullaccel.c","frustcullaccel.pyx"][have_cython])
             ],
             include_dirs = includeDirectories,
             define_macros = definitions,
         ),
         Extension("vrml_accelerate.tmatrixaccel", [
-                os.path.join( 'src', ["tmatrixaccel.c","tmatrixaccel.pyx"][have_cython])
+                os.path.join( SRC, ["tmatrixaccel.c","tmatrixaccel.pyx"][have_cython])
             ],
         ),
     ])
@@ -106,7 +106,7 @@ within the PyVRML97 and OpenGLContext rendering engine.
             },
         },
         package_dir = {
-            'vrml_accelerate':'.',
+            'vrml_accelerate':'vrml_accelerate',
         },
         **extraArguments
     )
