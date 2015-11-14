@@ -18,7 +18,7 @@ baseEventTypes = protonamespace.ProtoNamespace({})
 ### stuff used by the various field sub-types
 NUMERIC_TYPES = (int,float,long)
 SEQUENCE_TYPES = (tuple, list)
-if sys.version_info.major >= 3:
+if sys.version_info[0] >= 3:
     MAP_TYPE = type(map(int,[0]))
     ZIP_TYPE = type(zip([],[]))
     RANGE_TYPE = type(range(3))
@@ -375,7 +375,7 @@ class Event( object ):
             return self
         try:
             return client.__dict__[self.name]
-        except KeyError as err:
+        except KeyError:
             raise AttributeError(
                 """Event %s doesn't have a value for %s"""%(
                     self.name, client,

@@ -33,14 +33,14 @@ Note:
     with the Python 2.2.2 weakref and weakkeydictionary
     mechanisms.
 """
-from vrml import field, protofunctions
+from vrml import protofunctions
 import weakref
 #from vrml.weakkeydictfix import WeakKeyDictionary
 from pydispatch import dispatcher
-import weakref, traceback
+import traceback
 
 import sys
-if sys.version_info.major == 2:
+if sys.version_info[0] == 2:
     bytes = str 
 else:
     unicode = str
@@ -93,7 +93,7 @@ def cleaner( cache, id ):
     def clean_id( weak ):
         try:
             del cache[id]
-        except Exception as err:
+        except Exception:
             pass 
     return clean_id
 
@@ -245,6 +245,6 @@ class CacheHolder( object ):
                 return 1
             except KeyError:
                 return 0
-        except RuntimeError as err:
+        except RuntimeError:
             traceback.print_exc()
             
