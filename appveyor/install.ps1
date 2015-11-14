@@ -81,6 +81,7 @@ function main () {
     InstallPip $env:PYTHON
     InstallPackage $env:PYTHON wheel
     $python_path = $env:PYTHON + "\\python.exe"
+    & $python_path .\\appveyor\\install_cached_package.py pydispatcher 
     & $python_path .\\appveyor\\install_cached_package.py numpy
 }
 
