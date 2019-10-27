@@ -1,4 +1,5 @@
 build
+.vscode
 pyvrml97.e4p
 pyvrml97.e4q
 pyvrml97.e4t
@@ -9,6 +10,7 @@ vrml_accelerate/dist
 dist
 vrml_accelerate/*.so
 *.egg-info
+*.pyc
 __pycache__
 .eric*project
 .tox
