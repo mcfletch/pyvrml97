@@ -26,3 +26,6 @@ can install via::
 
 The PyVRML97_accelerate module requires that you have a working compiler
 (or, if you are on Windows, prebuilt wheels likely are available).
+
+.. image:: https://ci.appveyor.com/api/projects/status/MikeCFletcher/pyvrml97
+    :target: https://ci.appveyor.com/project/MikeCFletcher/pyvrml97
