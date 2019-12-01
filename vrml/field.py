@@ -10,7 +10,7 @@ try:
 except Exception as err:
     fieldaccel2 = None
 
-from OpenGL._bytes import bytes, unicode, long
+from ._bytes import bytes, unicode, long
 
 baseFieldTypes = protonamespace.ProtoNamespace({})
 baseEventTypes = protonamespace.ProtoNamespace({})

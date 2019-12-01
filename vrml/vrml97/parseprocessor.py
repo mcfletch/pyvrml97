@@ -4,7 +4,7 @@ from simpleparse.dispatchprocessor import *
 from vrml import node, field
 from vrml.protofunctions import *
 from vrml.arrays import array
-from OpenGL._bytes import as_str
+from .._bytes import as_str
 try:
     long 
 except NameError:

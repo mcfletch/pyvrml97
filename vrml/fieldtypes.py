@@ -10,7 +10,7 @@ We use Numeric Python arrays whereever possible.
 """
 import operator
 from vrml import field, csscolors, arrays
-from OpenGL._bytes import unicode, long
+from ._bytes import unicode, long
 try:
     xrange 
 except NameError:
