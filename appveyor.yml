@@ -78,10 +78,10 @@ init:
 
 install:
   - "powershell appveyor\\install.ps1"
-  - "%CMD_IN_ENV% python -m pip install -r test-requirements.txt"
-  - "%CMD_IN_ENV% python setup.py install"
+  - "%CMD_IN_ENV% %PYTHON%/python.exe -m pip install -r test-requirements.txt"
+  - "%CMD_IN_ENV% %PYTHON%/python.exe setup.py install"
   - cd accelerate
-  - "%CMD_IN_ENV% python setup.py install"
+  - "%CMD_IN_ENV% %PYTHON%/python.exe setup.py install"
   - cd ..
 
 build_script:
@@ -91,7 +91,7 @@ build_script:
   - cd ..
 
 test_script:
-  - "%CMD_IN_ENV% pytest -sv"
+  - "%CMD_IN_ENV% %PYTHON%/python.exe -m pytest -sv"
 
 artifacts:
   - path: accelerate\dist\*.whl
