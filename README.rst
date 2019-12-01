@@ -22,10 +22,19 @@ It isn't common to directly install PyVRML97 itself (normally you want to
 install it as part of installing OpenGLContext), but should you wish to, you
 can install via::
 
-    $ pip install numpy PyDispatcher SimpleParse PyVRML97
+    $ pip install PyVRML97
 
 The PyVRML97_accelerate module requires that you have a working compiler
 (or, if you are on Windows, prebuilt wheels likely are available).
 
-.. image:: https://ci.appveyor.com/api/projects/status/MikeCFletcher/pyvrml97
+.. image:: https://ci.appveyor.com/api/projects/status/MikeCFletcher/pyvrml97/branch/master
     :target: https://ci.appveyor.com/project/MikeCFletcher/pyvrml97
+    :alt: Appveyor Build
+
+.. image:: https://img.shields.io/pypi/v/pyvrml97.svg
+    :target: https://pypi.python.org/pypi/pyvrml97
+    :alt: Latest PyPI Version
+
+.. image:: https://img.shields.io/pypi/dm/pyvrml97.svg
+    :target: https://pypi.python.org/pypi/pyvrml97
+    :alt: Monthly download counter
