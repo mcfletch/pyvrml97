@@ -91,7 +91,7 @@ build_script:
   - cd ..
 
 test_script:
-  - "%CMD_IN_ENV% pytest -sv tests/test_core.py"
+  - "%CMD_IN_ENV% pytest -sv"
 
 artifacts:
   - path: accelerate\dist\*.whl
