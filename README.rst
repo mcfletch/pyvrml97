@@ -22,7 +22,7 @@ It isn't common to directly install PyVRML97 itself (normally you want to
 install it as part of installing OpenGLContext), but should you wish to, you
 can install via::
 
-    $ pip install PyVRML97
+    $ pip install PyVRML97 PyVRML97_accelerate
 
 The PyVRML97_accelerate module requires that you have a working compiler
 (or, if you are on Windows, prebuilt wheels likely are available).
