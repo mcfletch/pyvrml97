@@ -11,7 +11,7 @@ environment:
     # Pre-installed Python versions, which Appveyor may upgrade to
     # a later point release.
     # See: http://www.appveyor.com/docs/installed-software#python
-
+    
     - PYTHON: "C:\\Python27"
       PYTHON_VERSION: "2.7.14"
       PYTHON_ARCH: "32"
@@ -59,31 +59,45 @@ environment:
     - PYTHON: "C:\\Python37-x64"
       PYTHON_VERSION: "3.7.0"
       PYTHON_ARCH: "64"    
+    
+    - PYTHON: "C:\\Python38"
+      PYTHON_VERSION: "3.8.0"
+      PYTHON_ARCH: "32"
 
+    - PYTHON: "C:\\Python38-x64"
+      PYTHON_VERSION: "3.8.0"
+      PYTHON_ARCH: "64"
+
+branches:
+
+    only:
+        - master
+    
 init:
   - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
 
 install:
   - "powershell appveyor\\install.ps1"
+  - "%CMD_IN_ENV% python -m pip install -r test-requirements.txt"
+  - "%CMD_IN_ENV% python setup.py install"
+  - cd accelerate
+  - "%CMD_IN_ENV% python setup.py install"
+  - cd ..
 
-build: off
-
-cache:
-
-  - c:\\tmp\\wheelhouse -> appveyor\\dependencyversions.txt
-
-test_script:
-    #- "%WITH_COMPILER% %PYTHON%/python setup.py test"
-  - echo "Skipped"
-
-after_test:
+build_script:
   - cd accelerate
   - "ECHO %WITH_COMPILER% %PYTHON%/python.exe setup.py bdist_wheel"
   - "%WITH_COMPILER% %PYTHON%/python.exe setup.py bdist_wheel"
   - cd ..
 
-artifacts:
-  - path: accelerate\dist\*
+test_script:
+  - "%CMD_IN_ENV% pytest -sv tests/test_core.py"
 
+artifacts:
+  - path: accelerate\dist\*.whl
+    name: dist-accel
+  - path: dist\*.whl
+    name: dist
+  
 #on_success:
 #  - TODO: upload the content of dist/*.whl to a public wheelhouse

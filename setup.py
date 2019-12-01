@@ -63,6 +63,11 @@ scenegraphs.
         },
         url = "http://pyopengl.sourceforge.net/context/",
         license = "BSD",
+        install_requires=[
+            'numpy',
+            'PyDispatcher',
+            'simpleparse',
+        ],
         packages = list(find_packages( 'vrml' )),
         zip_safe = False,
         **extraArguments
