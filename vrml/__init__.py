@@ -17,6 +17,6 @@ standard.  For instance, the vrml.vrml97.basenodes
 file contains the "prototypes" for most of the
 built-in nodes in the official specification.
 """
-__version__ = "2.3.1"
+__version__ = "2.3.2"
 __author__ = "Michael Colin Fletcher"
 __license__ = "BSD-style, see license.txt for details"
