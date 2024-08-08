@@ -3,6 +3,7 @@
 Requires Python 2.2.x, as it makes
 extensive use of properties
 """
+
 from vrml import field, fieldtypes, weaklist, weakkeydictfix
 from vrml import copier as copiermodule
 from vrml import olist
@@ -10,7 +11,8 @@ from vrml.protofunctions import *
 from pydispatch import dispatcher
 import weakref
 
-class Node( object ):
+
+class Node(object):
     """A generic scene graph node
 
     Unlike earlier versions of the library,
@@ -42,12 +44,14 @@ class Node( object ):
             to give VRML97-formatted representation of
             the node
     """
-    DEF = fieldtypes.SFString(' DEF',1, '')
-    #scenegraph = None # will be created below...
-    #rootSceneGraph = None # will be created below
-    externalURL = fieldtypes.MFString( 'externalURL', 1)
+
+    DEF = fieldtypes.SFString(' DEF', 1, '')
+    # scenegraph = None # will be created below...
+    # rootSceneGraph = None # will be created below
+    externalURL = fieldtypes.MFString('externalURL', 1)
     PROTO = ""
-    def __init__( self, **namedarguments ):
+
+    def __init__(self, **namedarguments):
         """Initialise the node with appropriate named args
 
         All properties/attributes must be specified with
@@ -62,79 +66,91 @@ class Node( object ):
         defined.  You may therefore specify a DEF name by
         passing it as a named argument.
         """
-        for key,value in namedarguments.items():
+        for key, value in namedarguments.items():
             try:
                 f = getField(self, key)
             except AttributeError:
-                raise AttributeError( """Unrecognised attribute %r for node type %r"""%(key, self.__class__.__name__))
+                raise AttributeError(
+                    """Unrecognised attribute %r for node type %r"""
+                    % (key, self.__class__.__name__)
+                )
             else:
-                if not (hasattr( f, '__get__') and hasattr( f, '__set__')):
-                    raise TypeError ("""Attempt to set a non-field attribute %s to %s for node type %s"""%(key, value, self.__class__.__name__))
-                f.fset( self, value )
-    def __str__( self ):
+                if not (hasattr(f, '__get__') and hasattr(f, '__set__')):
+                    raise TypeError(
+                        """Attempt to set a non-field attribute %s to %s for node type %s"""
+                        % (key, value, self.__class__.__name__)
+                    )
+                f.fset(self, value)
+
+    def __str__(self):
         """Get a friendly representation of the Node"""
         if 'DEF' in self.__dict__ and defName(self):
-            return """%s( DEF=%r @0x%X )"""%(
+            return """%s( DEF=%r @0x%X )""" % (
                 self.__class__.__name__,
-                defName( self ),
+                defName(self),
                 id(self),
             )
         else:
-            return """%s( @0x%X )"""%(
+            return """%s( @0x%X )""" % (
                 self.__class__.__name__,
                 id(self),
             )
-    def __repr__( self ):
+
+    def __repr__(self):
         """Get a code-like representation of the Node
 
         Basically every attribute except for sub-nodes values
         are returned as a full representation.
         """
         attributes = []
-        for field in getFields( self ):
+        for field in getFields(self):
             if field.name in self.__dict__:
-                value = getattr( self, field.name)
-                if isinstance( value, Node ):
+                value = getattr(self, field.name)
+                if isinstance(value, Node):
                     representation = str(value)
                 else:
-                    representation = repr( value)
-                attributes.append (
-                    """%s = %s"""%(
+                    representation = repr(value)
+                attributes.append(
+                    """%s = %s"""
+                    % (
                         field.name,
                         representation,
                     )
                 )
-                
-        return """%s(\n\t%s\n)"""%(
+
+        return """%s(\n\t%s\n)""" % (
             self.__class__.__name__,
             ",\n\t".join(attributes),
         )
-    def copy( self, copier=None ):
+
+    def copy(self, copier=None):
         """Copy this node for copier"""
         if copier is None:
             copier = copiermodule.Copier()
-        previous = copier.use( self )
+        previous = copier.use(self)
         if previous is not None:
             return previous
         dictionary = {}
-        for field in getFields( self ):
-            if field.fhas( self ):
-                dictionary[field.name] = field.copy( self, copier )
-        newNode = type(self).__new__( type(self))
-        newNode.__dict__.update( dictionary )
-        copier.use( self, newNode )
+        for field in getFields(self):
+            if field.fhas(self):
+                dictionary[field.name] = field.copy(self, copier)
+        newNode = type(self).__new__(type(self))
+        newNode.__dict__.update(dictionary)
+        copier.use(self, newNode)
         return newNode
 
-    def toString( self, **namedargs ):
+    def toString(self, **namedargs):
         '''Generate a VRML 97-syntax string representing this Prototype
         **namedargs -- key:value
             passed arguments for the linearisation object
         see lineariser4.Lineariser
         '''
         from vrml.vrml97 import linearise
-        return linearise.linearise( self, **namedargs )
 
-class PrototypedNode( object ):
+        return linearise.linearise(self, **namedargs)
+
+
+class PrototypedNode(object):
     """Prototyped node mix-in
 
     Note the presence of a " scenegraph" property
@@ -142,15 +158,17 @@ class PrototypedNode( object ):
     This is filled by the instantiate method to provide the
     actual implementation of the node.
     """
-    def __init__( self, *arguments, **namedarguments ):
+
+    def __init__(self, *arguments, **namedarguments):
         """Initialise the node with appropriate named args
 
         Also attempts to instantiate the sub-node scenegraph
         for the PrototypedNode
         """
         PrototypedNode.instantiate(self)
-        super( PrototypedNode, self).__init__( *arguments, **namedarguments )
-    def instantiate( self ):
+        super(PrototypedNode, self).__init__(*arguments, **namedarguments)
+
+    def instantiate(self):
         """Make a copy of the class scenegraph-template for this node
 
         Also needs to bind IS mappings/routes for the template,
@@ -158,61 +176,65 @@ class PrototypedNode( object ):
         the like.
         """
         from vrml import route
+
         isMappings = None
         for cls in self.__class__.__mro__[:-1]:
-            template = PrototypedNode.scenegraph.fget( cls )
+            template = PrototypedNode.scenegraph.fget(cls)
             if template:
                 # use ismaps for the instantiated scenegraph
-                isMappings = ismaps(cls).items()
+                isMappings = list(ismaps(cls).items())
                 break
         if isMappings is None:
             # no scenegraph defined...
             from vrml.vrml97 import scenegraph
+
             template = scenegraph.SceneGraph()
-            PrototypedNode.scenegraph.fset( cls, template )
+            PrototypedNode.scenegraph.fset(cls, template)
             isMappings = []
-#			raise ValueError( """Attempting to instantiate a prototyped node with no scenegraph defined: %s"""%( self,))
+        # 			raise ValueError( """Attempting to instantiate a prototyped node with no scenegraph defined: %s"""%( self,))
 
         copier = copiermodule.Copier()
-        sg = template.copy( copier )
+        sg = template.copy(copier)
         for fieldName, mappings in isMappings:
-            sourceField = getField( self, fieldName )
-            for (destination, destinationField) in mappings:
+            sourceField = getField(self, fieldName)
+            for destination, destinationField in mappings:
                 r = route.IS(
-                    source = self,
-                    sourceField = fieldName,
-                    destination = destination,
-                    destinationField = destinationField,
+                    source=self,
+                    sourceField=fieldName,
+                    destination=destination,
+                    destinationField=destinationField,
                 )
-                sg.routes.append( r )
-            if hasattr( sourceField, 'getDefault' ):
+                sg.routes.append(r)
+            if hasattr(sourceField, 'getDefault'):
                 default = sourceField.getDefault()
                 try:
-                    getField( destination, destinationField ).fset(
+                    getField(destination, destinationField).fset(
                         destination,
                         default,
-                        notify = 0,
+                        notify=0,
                     )
                 except AttributeError:
                     pass
-        PrototypedNode.scenegraph.fset( self, sg )
-    def renderedChildren( self, types = None ):
+        PrototypedNode.scenegraph.fset(self, sg)
+
+    def renderedChildren(self, types=None):
         """Get the rendered children of the scenegraph"""
         if types:
             return [
-                node for node in PrototypedNode.scenegraph.fget( self ).children
-                if isinstance(node, types )
+                node
+                for node in PrototypedNode.scenegraph.fget(self).children
+                if isinstance(node, types)
             ]
         else:
-            return PrototypedNode.scenegraph.fget( self ).children
-            
+            return PrototypedNode.scenegraph.fget(self).children
+
 
 def prototype(
     name,
     fields=(),
     sceneGraph=None,
-    externalURL= None,
-    baseClasses = (PrototypedNode, Node),
+    externalURL=None,
+    baseClasses=(PrototypedNode, Node),
 ):
     """Build a new prototype class
 
@@ -223,7 +245,7 @@ def prototype(
     baseClasses -- base classes for the new class
     """
     environment = {
-        'PROTO':name,
+        'PROTO': name,
     }
     for field in fields:
         environment[field.name] = field
@@ -233,10 +255,11 @@ def prototype(
         environment,
     )
     if sceneGraph is not None:
-        setSceneGraph( returnValue, sceneGraph )
+        setSceneGraph(returnValue, sceneGraph)
     if externalURL is not None:
-        setExternalURL( returnValue, externalURL )
+        setExternalURL(returnValue, externalURL)
     return returnValue
+
 
 class NullNode(Node):
     '''NULL SFNode value
@@ -244,31 +267,40 @@ class NullNode(Node):
     any particular system.  It should, for all intents and
     purposes just sit there inertly
     '''
+
     PROTO = 'NULL'
+
     def __repr__(self):
         """Get code-like representation of NULL node"""
         return '<NULL vrml SFNode>'
-    def __nonzero__(self ):
+
+    def __nonzero__(self):
         """Make the NULL node evaluate to false"""
         return False
+
     __bool__ = __nonzero__
-    def __eq__( self, other ):
+
+    def __eq__(self, other):
         """Compare the NULL node to other objects"""
         try:
-            if protoName( self ) == protoName( other ):
+            if protoName(self) == protoName(other):
                 return 0
-        except (AttributeError,TypeError,ValueError):
-            return -1 # could be 1, doesn't really matter
-    def clone( self ):
+        except (AttributeError, TypeError, ValueError):
+            return -1  # could be 1, doesn't really matter
+
+    def clone(self):
         """Replicate the null object (return another pointer to it)"""
         return self
-    def __str__( self ):
+
+    def __str__(self):
         """Get a human-friendly representation of the NULL node"""
         return "NULL"
 
+
 NULL = NullNode()
 
-class _SFNode( object ):
+
+class _SFNode(object):
     """Base-class for SFNode-type fields
 
     The optionally restricted SFNode field type
@@ -287,7 +319,7 @@ class _SFNode( object ):
     requiredTypes = ()
     allowNULL = 1
 
-    def fset( self, client, value, notify = 1 ):
+    def fset(self, client, value, notify=1):
         """Set the client's value for this property
 
         notify -- if true send a notification event
@@ -299,118 +331,147 @@ class _SFNode( object ):
         if there is no current root).  This is done
         without sending notify events.
         """
-        value = super( _SFNode, self).fset( client, value, notify )
+        value = super(_SFNode, self).fset(client, value, notify)
         if value:
-            clientRoot = Node.rootSceneGraph.fget( client )
+            clientRoot = Node.rootSceneGraph.fget(client)
             if clientRoot:
-                valueRoot = Node.rootSceneGraph.fget( value )
+                valueRoot = Node.rootSceneGraph.fget(value)
                 if not valueRoot:
-                    Node.rootSceneGraph.fset( value, clientRoot, notify=0)
+                    Node.rootSceneGraph.fset(value, clientRoot, notify=0)
         return value
 
-    def defaultDefault( self ):
+    def defaultDefault(self):
         """Default SFNode value"""
         return NULL
-    def coerce( self, value ):
+
+    def coerce(self, value):
         """Coerce value to an SFNode reference"""
-        if self.requiredTypes and isinstance( value, self.requiredTypes ):
+        if self.requiredTypes and isinstance(value, self.requiredTypes):
             return value
         elif value is None and self.allowNULL:
             return NULL
-        elif isinstance( value, str ):
+        elif isinstance(value, str):
             raise ValueError(
-                """SFNode field %s was set to a string, not currently supported: %s"""%(
-                    self, value[:30]
-                )
+                """SFNode field %s was set to a string, not currently supported: %s"""
+                % (self, value[:30])
             )
-        elif isinstance( value, field.SEQUENCE_TYPES ) and len(value) == 1:
-            return self.coerce( value[0])
+        elif isinstance(value, field.SEQUENCE_TYPES) and len(value) == 1:
+            return self.coerce(value[0])
         elif not self.requiredTypes:
             return value
         else:
-            raise ValueError( """Attempted to set value for an %s field which is not compatible: %s, needed instance of %s"""%( self.name, repr(value), self.requiredTypes ))
-    def vrmlstr( self, value, lineariser):
-        """Convert the given value to a VRML97 representation"""
-        return lineariser._linear( value )
+            raise ValueError(
+                """Attempted to set value for an %s field which is not compatible: %s, needed instance of %s"""
+                % (self.name, repr(value), self.requiredTypes)
+            )
 
-class SFNode( _SFNode, field.Field ):
+    def vrmlstr(self, value, lineariser):
+        """Convert the given value to a VRML97 representation"""
+        return lineariser._linear(value)
+
+
+class SFNode(_SFNode, field.Field):
     """(Restricted) SFNode type
 
     This is the publically available SFNode type,
     a sub-class of _SFNode and field.Field
     """
+
+
 SFNode.requiredTypes = (Node,)
 
-class SFNodeEvt( _SFNode, field.Event ):
+
+class SFNodeEvt(_SFNode, field.Event):
     fieldType = 'SFNode'
 
-field.register( SFNode )
-field.register( SFNodeEvt )
 
-class WeakSFNode( _SFNode, field.WeakField, field.Field):
+field.register(SFNode)
+field.register(SFNodeEvt)
+
+
+class WeakSFNode(_SFNode, field.WeakField, field.Field):
     """Weak-referenced SFNode field-type"""
+
     fieldType = 'WeakSFNode'
 
-class RootScenegraphNode( WeakSFNode ):
+
+class RootScenegraphNode(WeakSFNode):
     fieldType = 'RootScenegraphNode'
-    def fset( self, client, value, notify = 1 ):
+
+    def fset(self, client, value, notify=1):
         """Set the root scenegraph node (recursively)
-        
+
         TODO: this will blow up on cyclic graphs!
         """
-        result = super( RootScenegraphNode, self ).fset( 
-            client, value, notify 
-        )
-        for field in getFields( client.__class__ ):
-            if isinstance( field, SFNode ) and not isinstance( field, RootScenegraphNode ):
+        result = super(RootScenegraphNode, self).fset(client, value, notify)
+        for field in getFields(client.__class__):
+            if (
+                isinstance(field, SFNode)
+                and not isinstance(field, RootScenegraphNode)
+                and not field is PrototypedNode.scenegraph
+            ):
                 try:
-                    child = field.__get__( client )
+                    child = field.__get__(client)
                 except ValueError:
-                    pass 
+                    pass
                 else:
-                    self.fset( child, value, notify=False )
-            elif isinstance( field, MFNode ):
+                    # print(
+                    #     'rootSceneGraph',
+                    #     self is Node.rootSceneGraph,
+                    #     'value',
+                    #     value.toString(),
+                    # )
+                    self.fset(child, value, notify=False)
+            elif isinstance(field, MFNode):
                 try:
-                    for child in field.__get__( client ):
-                        self.fset( child, value, notify=False )
+                    for child in field.__get__(client):
+                        self.fset(child, value, notify=False)
                 except AttributeError:
-                    pass 
+                    pass
             elif field.name == ' DEF':
                 try:
-                    DEF = field.__get__( client )
-                    value.regDefName( DEF, client )
+                    DEF = field.__get__(client)
+                    value.regDefName(DEF, client)
                 except AttributeError:
-                    pass 
+                    pass
         return result
-field.register( WeakSFNode )
-field.register( RootScenegraphNode )
+
+
+field.register(WeakSFNode)
+field.register(RootScenegraphNode)
 
 PrototypedNode.scenegraph = SFNode(' scenegraph', 1, NULL)
 Node.rootSceneGraph = RootScenegraphNode(' root', 1, NULL)
 assert PrototypedNode.scenegraph.name == " scenegraph", PrototypedNode.scenegraph.name
 assert Node.rootSceneGraph.name == " root", Node.rootSceneGraph.name
 
-def _changeSender( nodeRef, field ):
+
+def _changeSender(nodeRef, field):
     """Utility function to send node-change messages on olist updates"""
-    def onOListChange( sender, signal, value ):
+
+    def onOListChange(sender, signal, value):
         client = nodeRef()
         if client:
-            dispatcher.send( 
-                ('set',field), 
-                client, 
-                value=sender, 
-                subsignal=signal, 
+            dispatcher.send(
+                ('set', field),
+                client,
+                value=sender,
+                subsignal=signal,
                 subvalue=value,
             )
+
     return onOListChange
 
-class _MFNode( object ):
+
+class _MFNode(object):
     """(Restricted) MFNode field-type-definition"""
+
     nodes = 1
     defaultDefault = olist.OList
     baseSFNode = SFNode('GeneralSFNode')
     baseObjectType = olist.OList
-    def fset( self, client, value, notify = 1 ):
+
+    def fset(self, client, value, notify=1):
         """Set the client's value for this property
 
         notify -- if true send a notification event
@@ -422,79 +483,89 @@ class _MFNode( object ):
         if there is no current root).  This is done
         without sending notify events.
         """
-        previous = client.__dict__.get( self.name )
+        previous = client.__dict__.get(self.name)
         if previous is not None:
             previous[:] = self.coerce(value)
-            value = previous 
+            value = previous
         else:
-            value = super( _MFNode, self).fset( client, value, notify )
+            value = super(_MFNode, self).fset(client, value, notify)
             # register for updates to the list...
-            # we just send "changed" events for the field whenever 
-            # there's an update to the list... a bit wasteful, as 
-            # our clients might want to know about just the changed 
+            # we just send "changed" events for the field whenever
+            # there's an update to the list... a bit wasteful, as
+            # our clients might want to know about just the changed
             # values, but for now...
-            value.setSender( client, field=self )
-            cs = _changeSender( weakref.ref( client ), self )
-            dispatcher.connect( 
-                cs, 
-                sender = client,
-                signal = olist.OList.DEL_CHILD_EVT,
-                weak=False, # don't weakref receiver so it will hang around...
+            value.setSender(client, field=self)
+            cs = _changeSender(weakref.ref(client), self)
+            dispatcher.connect(
+                cs,
+                sender=client,
+                signal=olist.OList.DEL_CHILD_EVT,
+                weak=False,  # don't weakref receiver so it will hang around...
             )
-            dispatcher.connect( 
-                cs, 
-                sender = client,
-                signal = olist.OList.NEW_CHILD_EVT,
-                weak=False, # don't weakref receiver so it will hang around...
+            dispatcher.connect(
+                cs,
+                sender=client,
+                signal=olist.OList.NEW_CHILD_EVT,
+                weak=False,  # don't weakref receiver so it will hang around...
             )
         if value:
-            clientRoot = Node.rootSceneGraph.fget( client )
+            clientRoot = Node.rootSceneGraph.fget(client)
             if clientRoot:
                 for val in value:
-                    valueRoot = Node.rootSceneGraph.fget( val )
+                    valueRoot = Node.rootSceneGraph.fget(val)
                     if not valueRoot:
-                        Node.rootSceneGraph.fset( val, clientRoot, notify=0)
+                        Node.rootSceneGraph.fset(val, clientRoot, notify=0)
         return value
-        
-    def coerce( self, value ):
+
+    def coerce(self, value):
         """Coerce value to an MFNode list-of-objects"""
         SF = self.__class__.baseSFNode
-        if SF.requiredTypes and isinstance( value, SF.requiredTypes ):
+        if SF.requiredTypes and isinstance(value, SF.requiredTypes):
             return self.baseObjectType([value])
         elif not value:
             return self.baseObjectType([])
-        elif isinstance( value, field.SEQUENCE_TYPES ):
-            return self.baseObjectType([
-                SF.coerce( item)
-                for item in value
-            ])
+        elif isinstance(value, field.SEQUENCE_TYPES):
+            return self.baseObjectType([SF.coerce(item) for item in value])
         else:
-            raise ValueError( """Attempted to set value for an %s field which is not compatible: %s"""%( self.name, repr(value)))
-    def vrmlstr( self, value, lineariser):
+            raise ValueError(
+                """Attempted to set value for an %s field which is not compatible: %s"""
+                % (self.name, repr(value))
+            )
+
+    def vrmlstr(self, value, lineariser):
         """Convert the given value to a VRML97 representation"""
-        return lineariser._mfnode( value )
-    def copyValue( self, value, copier=None ):
+        return lineariser._mfnode(value)
+
+    def copyValue(self, value, copier=None):
         """Copy a value for copier"""
         SF = self.__class__.baseSFNode
-        return [ SF.copyValue( node, copier ) for node in value ]
+        return [SF.copyValue(node, copier) for node in value]
+
 
 ##class WeakMFNode( MFNode ):
 ##	"""Weak-referencing version of an MFNode field-type"""
 ##	baseObjectType = weaklist.WeakList
 ##	fieldType = 'WeakMFNode'
 
-class MFNode( _MFNode, field.Field ):
+
+class MFNode(_MFNode, field.Field):
     """MFNode Field class"""
-class MFNodeEvt( _MFNode, field.Event ):
+
+
+class MFNodeEvt(_MFNode, field.Event):
     """MFNode Event class"""
+
     fieldType = 'MFNode'
 
-field.register( MFNode )
+
+field.register(MFNode)
 ##field.register( WeakMFNode )
-field.register( MFNodeEvt )
+field.register(MFNodeEvt)
 
 ISMAPS = weakkeydictfix.WeakKeyDictionary()
-def ismaps( node ):
+
+
+def ismaps(node):
     """Get the isMaps for the given node
 
     Returns a field-name:(sub-node,field) mapping
