@@ -282,7 +282,7 @@ class _SFNode( object ):
         allowNULL -- whether to allow the NULL node as
             a value for the field
     """
-    name = "SFNode"
+
     nodes = 1
     requiredTypes = ()
     allowNULL = 1
@@ -386,11 +386,9 @@ field.register( WeakSFNode )
 field.register( RootScenegraphNode )
 
 PrototypedNode.scenegraph = SFNode(' scenegraph', 1, NULL)
-Node.rootSceneGraph = RootScenegraphNode(
-    ' root',
-    1,
-    NULL
-)
+Node.rootSceneGraph = RootScenegraphNode(' root', 1, NULL)
+assert PrototypedNode.scenegraph.name == " scenegraph", PrototypedNode.scenegraph.name
+assert Node.rootSceneGraph.name == " root", Node.rootSceneGraph.name
 
 def _changeSender( nodeRef, field ):
     """Utility function to send node-change messages on olist updates"""
