@@ -415,12 +415,6 @@ class RootScenegraphNode(WeakSFNode):
                 except ValueError:
                     pass
                 else:
-                    # print(
-                    #     'rootSceneGraph',
-                    #     self is Node.rootSceneGraph,
-                    #     'value',
-                    #     value.toString(),
-                    # )
                     self.fset(child, value, notify=False)
             elif isinstance(field, MFNode):
                 try:
