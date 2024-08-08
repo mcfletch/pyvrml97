@@ -11,80 +11,103 @@ at some point want to create a real "prototype" class,
 we could do so with most changes confined to this
 module.
 """
+
 from __future__ import unicode_literals
-def _getcls( cls ):
+
+
+def _getcls(cls):
     """Utility function returns class when passed instance or class"""
     if type(cls) == type:
         return cls
     else:
         return cls.__class__
-def getPrototype( cls ):
+
+
+def getPrototype(cls):
     """Return the prototype for the node or class
     returns either the argument (if it is a proto)
     or the prototype of the argument
     """
-    return _getcls( cls )
+    return _getcls(cls)
 
-def protoName( obj, value=None, *args, **named ):
+
+def protoName(obj, value=None, *args, **named):
     """Get/set the prototype name for the object"""
-    obj = _getcls( obj )
+    obj = _getcls(obj)
     if value is not None:
-        return setattr( obj, "PROTO", value)
+        return setattr(obj, "PROTO", value)
+    elif issubclass(obj, list):
+        return '__MFNode__'
     else:
-        possible = getattr( obj, "PROTO")
+        possible = getattr(obj, "PROTO")
         if not possible:
             return obj.__name__.split(".")[-1]
         return possible
-def defName( obj, value=None, *args, **named ):
+
+
+def defName(obj, value=None, *args, **named):
     """Get/set the VRML97 defName for the object"""
     from vrml import node
+
     if value is not None:
-        return node.Node.DEF.fset( obj, value, *args, **named )
+        return node.Node.DEF.fset(obj, value, *args, **named)
     else:
-        return node.Node.DEF.fget( obj, *args, **named )
-def name( obj, value=None, *args, **named ):
+        return node.Node.DEF.fget(obj, *args, **named)
+
+
+def name(obj, value=None, *args, **named):
     """Get/set prototype name for prototypes, DEF name for nodes"""
     if type(obj) == type:
         return protoName(obj, value, *args, **named)
     else:
-        return defName( obj, value, *args, **named )
+        return defName(obj, value, *args, **named)
 
-def root( obj, value=None, *args, **named ):
+
+def root(obj, value=None, *args, **named):
     """Get/set root-node reference for nodes/protos"""
     from vrml import node
-    if value is not None:
-        return node.Node.rootSceneGraph.fset( obj, value, *args, **named )
-    else:
-        return node.Node.rootSceneGraph.fget( obj, *args, **named )
 
-def builtin( cls ):
+    if value is not None:
+        return node.Node.rootSceneGraph.fset(obj, value, *args, **named)
+    else:
+        return node.Node.rootSceneGraph.fget(obj, *args, **named)
+
+
+def builtin(cls):
     """Return whether the class is "built-in" to the system"""
     from vrml import node
-    return not issubclass( _getcls(cls), node.PrototypedNode)
-def addField( cls, field ):
+
+    return not issubclass(_getcls(cls), node.PrototypedNode)
+
+
+def addField(cls, field):
     """Add a particular field/event to the class/prototype definition
 
     At present this just calls setattr(cls,field.name,field)
     """
-    setattr(_getcls(cls), field.name, field )
-def removeField( cls, field ):
+    setattr(_getcls(cls), field.name, field)
+
+
+def removeField(cls, field):
     """Remove a particular field/event to the class/prototype definition
 
     If field is a string, calls delattr(cls,field) for the class
     otherwise calls delattr( cls, field.name )
     """
-    if isinstance( field, str ):
+    if isinstance(field, str):
         delattr(_getcls(cls), field)
     else:
         delattr(_getcls(cls), field.name)
-def getField( cls, field ):
+
+
+def getField(cls, field):
     """Get a field/event object for the given name
 
     field -- a field-name specifier, which may be any of
         the following, (with the various options checked in
         order, so that earlier options will take
         precedence over later options):
-        
+
         * the exact name of the field/demand as specified
             in the class's namespace (fastest and first
             checked)
@@ -101,28 +124,29 @@ def getField( cls, field ):
     """
     cls = _getcls(cls)
     try:
-        return getattr(cls, field )
+        return getattr(cls, field)
     except (AttributeError, KeyError):
         # OK, may be a space-prefixed name...
-        for fieldObject in getFields ( cls ):
+        for fieldObject in getFields(cls):
             if fieldObject.name == field:
                 return field
         # OK, may be an event with space-prefixed name
-        for fieldObject in getFields ( cls, 1 ):
+        for fieldObject in getFields(cls, 1):
             if fieldObject.name == field:
                 return field
         # OK, may be one of the "component" events
         # of a field...
-        if field.startswith( "set_" ):
-            return getField( cls, field[4:] )
-        elif field.endswith( "_changed" ):
-            return getField( cls, field[:-8] )
-    raise AttributeError("""The prototype %s does not define a field named %s"""%(
-        protoName(cls),
-        field
-    ))
-            
-def getFields( cls, events=0 ):
+        if field.startswith("set_"):
+            return getField(cls, field[4:])
+        elif field.endswith("_changed"):
+            return getField(cls, field[:-8])
+    raise AttributeError(
+        """The prototype %s does not define a field named %s"""
+        % (protoName(cls), field)
+    )
+
+
+def getFields(cls, events=0):
     """Get all fields of the definition/prototype
 
     if events is true, then return events
@@ -130,6 +154,7 @@ def getFields( cls, events=0 ):
     """
     cls = _getcls(cls)
     from vrml import field
+
     if events:
         wanted = field.Event
     else:
@@ -137,13 +162,18 @@ def getFields( cls, events=0 ):
     items = {}
     mro = cls.__mro__[:]
     while mro:
-        items.update( dict([
-            (key,value)
-            for key,value in mro[-1].__dict__.items()
-            if isinstance (value, wanted)
-        ]))
+        items.update(
+            dict(
+                [
+                    (key, value)
+                    for key, value in mro[-1].__dict__.items()
+                    if isinstance(value, wanted)
+                ]
+            )
+        )
         mro = mro[:-1]
-    return items.values()
+    return list(items.values())
+
 
 ##def clonePROTO( cls ):
 ##	"""Clone the prototype/class
@@ -160,28 +190,44 @@ def getFields( cls, events=0 ):
 ##		cls.sceneGraph.clone(),
 ##	)
 
-def setSceneGraph( cls, sg ):
+
+def setSceneGraph(cls, sg):
     """Set the scenegraph associated with a prototype"""
     from vrml import node
-    return node.PrototypedNode.scenegraph.fset( cls, sg )
-def getSceneGraph( cls ):
+
+    return node.PrototypedNode.scenegraph.fset(cls, sg)
+
+
+def getSceneGraph(cls):
     """Get the scenegraph associated with a prototype (or None)"""
     from vrml import node
-    return node.PrototypedNode.scenegraph.fget( cls )
-def delSceneGraph( cls ):
+
+    return node.PrototypedNode.scenegraph.fget(cls)
+
+
+def delSceneGraph(cls):
     """Delete the scenegraph associated with a prototype"""
     from vrml import node
-    return node.PrototypedNode.scenegraph.fdel( cls )
 
-def setExternalURL( cls, url ):
+    return node.PrototypedNode.scenegraph.fdel(cls)
+
+
+def setExternalURL(cls, url):
     """Set the externproto URL associated with a prototype"""
     from vrml import node
-    return node.Node.externalURL.fset( cls, url )
-def getExternalURL( cls ):
+
+    return node.Node.externalURL.fset(cls, url)
+
+
+def getExternalURL(cls):
     """Get the externproto URL associated with a prototype (or [])"""
     from vrml import node
-    return node.Node.externalURL.fget( cls )
-def delExternalURL( cls ):
+
+    return node.Node.externalURL.fget(cls)
+
+
+def delExternalURL(cls):
     """Delete the externproto URL associated with a prototype"""
     from vrml import node
-    return node.Node.externalURL.fdel( cls )
+
+    return node.Node.externalURL.fdel(cls)
