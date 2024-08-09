@@ -44,7 +44,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-sdist
+          name: cibw-sdist-root
           path: dist/*.tar.gz
 
   build_sdist_accel:
@@ -62,7 +62,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-sdist
+          name: cibw-sdist-accel
           path: dist/*.tar.gz
 
   upload_pypi_test:
