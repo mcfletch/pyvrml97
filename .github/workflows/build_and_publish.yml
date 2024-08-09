@@ -21,6 +21,7 @@ jobs:
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.20.0
+        working-directory: ./accelerate/
 
       - uses: actions/upload-artifact@v4
         with:
@@ -35,6 +36,10 @@ jobs:
 
       - name: Build sdist
         run: pipx run build --sdist
+
+      - name: Build accelerate sdist
+        run: pipx run build --sdist
+        working-directory: ./accelerate/
 
       - uses: actions/upload-artifact@v4
         with:
