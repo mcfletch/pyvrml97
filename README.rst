@@ -38,3 +38,8 @@ The PyVRML97_accelerate module requires that you have a working compiler
 .. image:: https://img.shields.io/pypi/dm/pyvrml97.svg
     :target: https://pypi.python.org/pypi/pyvrml97
     :alt: Monthly download counter
+
+Build/Release Process 
+----------------------
+
+* Push an annotated tag with `version` prefix (github workflow `build_and_publish.yml`)
