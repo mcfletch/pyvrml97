@@ -51,9 +51,10 @@ def fixup_vrml(file: str):
 
 
 class TestToString(unittest.TestCase):
-    def test_to_string_simple(self):
-        source = open(os.path.join(HERE, 'fixtures', 'proto_is_simple.wrl')).read()
-        result = VRMLPARSER.parse(source)
+
+    def parsed_content(self, source):
+        parser = buildParser()
+        result = parser.parse(source)
         success, result, parsed = result
         if not success:
             raise RuntimeError("Did not finish parse")
@@ -61,7 +62,18 @@ class TestToString(unittest.TestCase):
             raise RuntimeError("Partial parse %d/%d characters" % (parsed, len(source)))
         scene = result[1]
         assert isinstance(scene, SceneGraph), scene
+        return scene
+
+    def test_to_string_simple(self):
+        source = open(os.path.join(HERE, 'fixtures', 'proto_is_simple.wrl')).read()
+        scene = self.parsed_content(source)
         assert len(scene.children) == 1, scene.children
         content = scene.toString()
         assert 'PROTO' in content, content
         assert 'X {' in content, content  # TODO: relies on default formatting...
+
+    def test_to_string_spec_file(self):
+        source = open(os.path.join(HERE, 'fixtures', 'exampleD.2.wrl')).read()
+        scene = self.parsed_content(source)
+        content = scene.toString()
+        assert 'Material' in content, content
