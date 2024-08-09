@@ -6,25 +6,35 @@ try:
 except ImportError:
     from distutils.core import setup
 import sys, os
-sys.path.insert(0, '.' )
 
-def find_version( ):
-    for line in open( os.path.join(
-        'vrml','__init__.py',
-    )):
-        if line.strip().startswith( '__version__' ):
+sys.path.insert(0, '.')
+
+
+def find_version():
+    for line in open(
+        os.path.join(
+            'vrml',
+            '__init__.py',
+        )
+    ):
+        if line.strip().startswith('__version__'):
             return eval(line.strip().split('=')[1].strip())
-    raise RuntimeError( """No __version__ = 'string' in __init__.py""" )
+    raise RuntimeError("""No __version__ = 'string' in __init__.py""")
+
+
 version = find_version()
 
 
-def is_package( path ):
-    return os.path.isfile( os.path.join( path, '__init__.py' ))
-def find_packages( root ):
+def is_package(path):
+    return os.path.isfile(os.path.join(path, '__init__.py'))
+
+
+def find_packages(root):
     """Find all packages under this directory"""
-    for path, directories, files in os.walk( root ):
-        if is_package( path ):
-            yield path.replace( '/','.' )
+    for path, directories, files in os.walk(root):
+        if is_package(path):
+            yield path.replace('/', '.')
+
 
 if __name__ == "__main__":
     extraArguments = {
@@ -38,7 +48,7 @@ if __name__ == "__main__":
         ],
         #'download_url': "https://sourceforge.net/projects/pyvrml97/files/PyVRML97/",
         'keywords': 'VRML,VRML97,scenegraph',
-        'long_description' : """VRML97 Scenegraph modelling objects for Python 
+        'long_description': """VRML97 Scenegraph modelling objects for Python 
 
 This project provides a core semantic model for VRML97 objects which
 is close to (but not identical to) that specified in the VRML97 spec.
@@ -46,29 +56,30 @@ It is primarily used for the OpenGLContext project's VRML97 rendering
 engine, but can also be used for generating, parsing or processing VRML97 
 scenegraphs.
 """,
-        'platforms': ['Win32','Linux','OS-X','Posix'],
+        'long_description_content_type': 'text/plain',
+        'platforms': ['Win32', 'Linux', 'OS-X', 'Posix'],
     }
     ### Now the actual set up call
 
-    setup (
-        name = "PyVRML97",
-        version = version,
-        description = "VRML97 Scenegraph model for Python",
-        author = "Mike C. Fletcher",
-        author_email = "mcfletch@vrplumber.com",
-        options = {
+    setup(
+        name="PyVRML97",
+        version=version,
+        description="VRML97 Scenegraph model for Python",
+        author="Mike C. Fletcher",
+        author_email="mcfletch@vrplumber.com",
+        options={
             'sdist': {
-                'formats':['gztar','zip'],
+                'formats': ['gztar'],
             },
         },
-        url = "http://pyopengl.sourceforge.net/context/",
-        license = "BSD",
+        url="http://pyopengl.sourceforge.net/context/",
+        license="BSD",
         install_requires=[
             'numpy',
             'PyDispatcher',
             'simpleparse',
         ],
-        packages = list(find_packages( 'vrml' )),
-        zip_safe = False,
+        packages=list(find_packages('vrml')),
+        zip_safe=False,
         **extraArguments
     )
