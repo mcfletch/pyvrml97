@@ -1,2 +1,4 @@
 -r ./requirements.txt
 pytest
+# pip crashing due to missing dataclasses, sigh
+dataclasses; python_version < '3.7'
