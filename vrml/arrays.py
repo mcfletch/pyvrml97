@@ -74,10 +74,11 @@ def safeCompare(first, second):
         return False
     if isinstance(first, (int, float, str)):
         return first == second
-    try:
-        return bool(first == second)
-    except ValueError:
+    if isinstance(first, ArrayType) and isinstance(second, ArrayType):
         return bool(any(first == second))
+    elif type(first) != type(second):
+        return False
+    return bool(first == second)
 
 
 def contiguous(a):
