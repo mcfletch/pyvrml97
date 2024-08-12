@@ -21,35 +21,6 @@ VRMLPARSER = buildParser()
 depth = 0
 
 
-def fixup_vrml(file: str):
-    global depth
-    depth += 1
-    file_display = os.path.basename(file)
-    depth_indicator = "-" * depth
-    print(depth_indicator, "Opening", file_display, "...")
-    with open(file, 'rb') as f:
-        cn = charset_normalizer.from_fp(f)
-        cs = cn.best()
-        print(
-            depth_indicator,
-            "Charset detected as",
-            cs.encoding,
-            f"(aka {'/'.join(cs.encoding_aliases)})",
-        )
-        wrldata = str(cs)
-    print(depth_indicator, "Parsing", file_display, "...")
-    wrl = VRMLPARSER.parse(wrldata)[1][1]  # type: SceneGraph
-    print(depth_indicator, "Scanning", file_display, "...")
-    fixup_node(wrl)
-    print(depth_indicator, "Fixed", fixed_verts_stack[-1], "verts")
-    if fixed_verts_stack[-1] > 0:
-        print(depth_indicator, "Saving", file_display, "...")
-        wrldata = wrl.toString()
-        with open(file, 'w') as f:
-            f.write(wrldata)
-    depth -= 1
-
-
 class TestToString(unittest.TestCase):
 
     def parsed_content(self, source):
