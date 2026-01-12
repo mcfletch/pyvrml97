@@ -52,7 +52,7 @@ class _NodePath( object ):
         That is, you use the homogenous coordinate, and
         make it the first item in the dot'ing.
         """
-        key=(['matrix','inverse_matrix'][bool(inverse)],translate,scale,rotate)
+        key=(['matrix','inverse_matrix'][int(bool(inverse))],translate,scale,rotate)
         holder = CACHE.getHolder( self, key=key )
         if holder is None:
             doConnect = True 
