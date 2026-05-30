@@ -10,9 +10,11 @@ vrml_accelerate/MANIFEST
 vrml_accelerate/dist
 dist
 vrml_accelerate/*.so
+accelerate/vrml_accelerate/*.so
 *.egg-info
 *.pyc
 __pycache__
 .eric*project
 .tox
 .coverage
+
