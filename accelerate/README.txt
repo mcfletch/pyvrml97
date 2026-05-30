@@ -6,9 +6,11 @@ Scenegraph acceleration code for PyVRML97
 This set of C extensions provides acceleration of common operations
 within the PyVRML97 and OpenGLContext rendering engine.
 
-The extensions build as standard Python extensions. Cython is used to
-regenerate the C sources from the ``.pyx`` files when it is available;
-otherwise the prebuilt ``.c`` sources are compiled directly. The numpy
+The extensions build as standard Python extensions. The C wrappers are
+regenerated from the ``.pyx`` sources by Cython at build time; the generated
+``.c`` files are not committed or shipped. Cython and numpy are declared as
+build dependencies in ``pyproject.toml``, so a PEP 517 build (e.g. ``pip
+install`` or ``python -m build``) installs them automatically. The numpy
 headers are required to build the ``frustcullaccel`` and ``tmatrixaccel``
 modules.
 

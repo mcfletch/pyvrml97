@@ -2,54 +2,36 @@
 """Builds acceleration functions for the VRML97 scenegraph
 
 All project metadata lives in pyproject.toml; this file only declares the
-C/Cython extension modules, which cannot be expressed as static metadata.
+Cython extension modules, which cannot be expressed as static metadata.
+
+Cython and numpy are declared as build dependencies in pyproject.toml, so the
+C wrappers are regenerated from the .pyx sources at build time rather than
+being committed or shipped in the source distribution.
 """
-import os
-import sys
+import numpy
 from setuptools import setup, Extension
+from Cython.Build import cythonize
 
 SRC = "src"
 
-try:
-    from Cython.Build import cythonize
-except ImportError:
-    cythonize = None
-
-
-def source(name):
-    """Return the .pyx source when Cython is available, else the prebuilt .c."""
-    suffix = ".pyx" if cythonize else ".c"
-    return os.path.join(SRC, name + suffix)
-
+include_dirs = [numpy.get_include()]
 
 extensions = [
-    Extension("vrml_accelerate.fieldaccel2", [source("fieldaccel2")]),
+    Extension("vrml_accelerate.fieldaccel2", [f"{SRC}/fieldaccel2.pyx"]),
+    Extension(
+        "vrml_accelerate.frustcullaccel",
+        [f"{SRC}/frustcullaccel.pyx"],
+        include_dirs=include_dirs,
+        define_macros=[("USE_NUMPY", "1")],
+    ),
+    Extension(
+        "vrml_accelerate.tmatrixaccel",
+        [f"{SRC}/tmatrixaccel.pyx"],
+        include_dirs=include_dirs,
+    ),
 ]
 
-try:
-    import numpy
-except ImportError:
-    sys.stderr.write(
-        "Unable to import numpy, skipping numpy extension building\n"
-    )
-else:
-    include_dirs = [numpy.get_include()]
-    extensions.extend([
-        Extension(
-            "vrml_accelerate.frustcullaccel",
-            [source("frustcullaccel")],
-            include_dirs=include_dirs,
-            define_macros=[("USE_NUMPY", "1")],
-        ),
-        Extension(
-            "vrml_accelerate.tmatrixaccel",
-            [source("tmatrixaccel")],
-            include_dirs=include_dirs,
-        ),
-    ])
-
-if cythonize:
-    extensions = cythonize(extensions)
-
 if __name__ == "__main__":
-    setup(ext_modules=extensions)
+    # build_dir keeps the generated .c out of the source tree (and thus out of
+    # the sdist), so only the .pyx sources are tracked and distributed.
+    setup(ext_modules=cythonize(extensions, language_level="3", build_dir="build"))
