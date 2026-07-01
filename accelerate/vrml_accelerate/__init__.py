@@ -1,2 +1,2 @@
 """PyVRML97 Accelerator module"""
-__version__ = "2.3.3b1"
+__version__ = "2.3.4b1"
