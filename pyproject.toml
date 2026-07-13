@@ -1,7 +1,6 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "Cython",
-    "numpy>2",
-]
+# PyVRML97 (the root package) is pure Python - no C extensions - so it needs
+# nothing but setuptools to build. Cython/numpy build-deps live only in
+# accelerate/pyproject.toml, where the extensions actually are.
+requires = ["setuptools>=42"]
 build-backend = "setuptools.build_meta"

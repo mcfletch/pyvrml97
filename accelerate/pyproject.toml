@@ -2,7 +2,10 @@
 requires = [
     "setuptools>=61.0",
     "Cython",
-    "numpy",
+    # Build against the numpy 2.x headers only. numpy 2.0-built extensions are
+    # backward-compatible with numpy >=1.19 at runtime, so the runtime dep below
+    # stays unpinned. Never source-build numpy here (see PIP_ONLY_BINARY below).
+    "numpy>=2",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -10,7 +13,7 @@ build-backend = "setuptools.build_meta"
 name = "PyVRML97-accelerate"
 dynamic = ["version"]
 description = "Scenegraph acceleration code for PyVRML97"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 readme = "README.txt"
 license = { text = "BSD-style, see license.txt for details" }
 authors = [
@@ -38,11 +41,17 @@ classifiers = [
 [project.urls]
 Homepage = "http://pyopengl.sourceforge.net/context/"
 
-# Python 3.6 cannot build this package: cibuildwheel pins setuptools==59.6.0
-# on 3.6 (the last release that runs there), but the PEP 621 [project] table
-# above requires setuptools>=61.0. 3.6 has been EOL since 2021-12; skip it.
 [tool.cibuildwheel]
-skip = "cp36-*"
+# Only build targets that have a numpy 2.x binary wheel available, so numpy is
+# never compiled from source (which needs meson and fails in CI):
+#   * cp36-cp38  - below the numpy 2.x floor (numpy 2.0 requires Python >=3.9);
+#                  cp36 also can't be built at all (setuptools 59.6 vs the
+#                  PEP 621 [project] table above needing setuptools>=61).
+#   * *-win32 / *_i686 - numpy no longer ships 32-bit wheels.
+skip = "cp36-* cp37-* cp38-* *-win32 *_i686"
+# Belt-and-suspenders: if a target ever slips through, make pip fail fast with a
+# clear "no binary wheel" error instead of trying to source-build numpy.
+environment = { PIP_ONLY_BINARY = "numpy" }
 
 [tool.setuptools]
 packages = ["vrml_accelerate"]
