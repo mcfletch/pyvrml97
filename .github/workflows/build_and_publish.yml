@@ -13,8 +13,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        # macos-latest is Apple Silicon (arm64); the old Intel runner
+        # (macos-13) is retired. One arm64 runner is enough - a second would
+        # just rebuild the identical macosx_*_arm64 wheel.
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
