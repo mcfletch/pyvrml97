@@ -86,6 +86,10 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+          # Skip files already on PyPI so a re-run doesn't 400 the whole job on a
+          # single conflicting file. (Does not bypass PyPI's ">14 days" rule for
+          # genuinely new files added to an old release.)
+          skip-existing: true
 
   upload_pypi:
     needs: [build_wheels, build_sdist, build_sdist_accel]
@@ -104,5 +108,9 @@ jobs:
           merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@release/v1
-        # with:
-        #   repository-url: https://test.pypi.org/legacy/
+        with:
+          # Skip files already on PyPI so a re-run doesn't 400 the whole job on a
+          # single conflicting file. (Does not bypass PyPI's ">14 days" rule for
+          # genuinely new files added to an old release.)
+          skip-existing: true
+        # repository-url: https://test.pypi.org/legacy/
