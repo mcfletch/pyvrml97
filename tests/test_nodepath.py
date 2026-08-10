@@ -41,7 +41,10 @@ class TestNodePath( unittest.TestCase ):
         assert l == [ self.second_child ]
     def test_iterdescendents( self ):
         l = list( self.empty.iterdescendents())
-        assert l == [ self.first_child, self.second_child ]
+        assert l == [
+            self.first_child, self.second_child,
+            self.third_child, self.fourth_child,
+        ]
     
     def test_forward_back( self ):
         for child in (self.second_child,self.third_child,self.fourth_child):

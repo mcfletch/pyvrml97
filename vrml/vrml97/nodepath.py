@@ -120,9 +120,9 @@ class _NodePath( object ):
     def iterdescendents( self ):
         """Iterate over all descendent paths"""
         for child in self.iterchildren():
-            yield child 
-            for desc in child.iterchildren():
-                yield desc 
+            yield child
+            for desc in child.iterdescendents():
+                yield desc
     def invalidate( self ):
         """Set this path to be invalid (and all children paths)"""
         self.broken = True 
