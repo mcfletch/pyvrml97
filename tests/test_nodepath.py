@@ -40,11 +40,34 @@ class TestNodePath( unittest.TestCase ):
         l = list( self.first_child.iterchildren())
         assert l == [ self.second_child ]
     def test_iterdescendents( self ):
+        """Every descendent, however deep, not just children and grandchildren.
+
+        `invalidate` is the caller that makes this matter: a path it cannot
+        reach stays live, and a renderer that keeps its draw set by pruning
+        invalidated paths goes on drawing a subtree that has been detached.
+        """
         l = list( self.empty.iterdescendents())
         assert l == [
             self.first_child, self.second_child,
             self.third_child, self.fourth_child,
-        ]
+        ], l
+
+    def test_iterdescendents_yields_each_path_once( self ):
+        l = list( self.empty.iterdescendents())
+        assert len( l ) == len( set( id(x) for x in l ) ), l
+
+    def test_invalidate_breaks_the_whole_subtree( self ):
+        """A detached subtree is broken all the way down, not two levels down."""
+        self.first_child.invalidate()
+        for path in (self.first_child, self.second_child,
+                     self.third_child, self.fourth_child):
+            assert path.broken, path
+
+    def test_invalidate_leaves_paths_outside_the_subtree_alone( self ):
+        other = self.empty + [ Transform( DEF='other' ) ]
+        self.first_child.invalidate()
+        assert not other.broken
+        assert not self.empty.broken
     
     def test_forward_back( self ):
         for child in (self.second_child,self.third_child,self.fourth_child):

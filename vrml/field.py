@@ -203,6 +203,25 @@ class Field(BaseField):
     nodes = 0
     defaultDefault = None
 
+    def __set__(self, client, value):
+        """Assignment goes through ``fset``, so subclasses are heard.
+
+        The C accelerator supplies a ``__set__`` that calls a ``cdef`` setter
+        directly, and a ``cdef`` method cannot be overridden from Python. On an
+        accelerated build that silently skipped every field class that does real
+        work when it is set -- an MFNode keeping its observable list in place so
+        the scenegraph's change notifications keep flowing, an SFNode passing
+        the scene root down, a weak field storing a reference. Routing
+        assignment back through ``fset`` costs one Python call per *write*,
+        which is the price of the two behaving the same way; reads, which
+        dominate, keep the accelerated path.
+        """
+        self.fset(client, value, True)
+
+    def __delete__(self, client):
+        """Deletion likewise, so a field that cleans up on delete still does."""
+        self.fdel(client, True)
+
     def __init__(
         self,
         name,

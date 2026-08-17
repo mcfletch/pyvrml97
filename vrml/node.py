@@ -511,6 +511,26 @@ class _MFNode(object):
                         Node.rootSceneGraph.fset(val, clientRoot, notify=0)
         return value
 
+    def getDefault(self, client=None):
+        """The empty child list a node starts with, wired to that node.
+
+        A field read before it is ever written materialises its default here,
+        and for an MFNode that default *is* the observable list its node's
+        children live in. Installed the quick way it arrives with no idea which
+        node it belongs to, and everything that list does afterwards -- every
+        child added or removed -- is announced by a bare list that no listener
+        recognises. So the default goes in through ``fset`` like any other
+        value, quietly: arriving at a default is not a change anyone asked to
+        be told about.
+        """
+        if self.call_default:
+            defaultobj = self.defaultobj()
+        else:
+            defaultobj = self.defaultobj
+        if client is not None and not isinstance(client, type):
+            defaultobj = self.fset(client, defaultobj, notify=0)
+        return defaultobj
+
     def coerce(self, value):
         """Coerce value to an MFNode list-of-objects"""
         SF = self.__class__.baseSFNode

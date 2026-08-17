@@ -118,16 +118,28 @@ class _NodePath( object ):
                 else:
                     self.children.remove( childref )
     def iterdescendents( self ):
-        """Iterate over all descendent paths"""
-        for child in self.iterchildren():
+        """Iterate over all descendent paths, depth-first
+
+        Every generation, not merely children and grandchildren.
+        :meth:`invalidate` is what makes the difference load-bearing: a
+        descendent it cannot reach keeps ``broken`` False, and a renderer
+        that maintains its draw set by dropping invalidated paths goes on
+        drawing a subtree that has been detached from the scenegraph.
+
+        Iterative rather than recursive because a path is as deep as the
+        scenegraph under it, which is content and not something this can
+        bound.
+        """
+        todo = list( self.iterchildren() )
+        while todo:
+            child = todo.pop( 0 )
             yield child
-            for desc in child.iterdescendents():
-                yield desc
+            todo[:0] = list( child.iterchildren() )
     def invalidate( self ):
-        """Set this path to be invalid (and all children paths)"""
-        self.broken = True 
+        """Set this path to be invalid (and every path below it)"""
+        self.broken = True
         for desc in self.iterdescendents( ):
-            desc.broken = True 
+            desc.broken = True
 
 class NodePath( _NodePath, nodepath.NodePath ):
     """Strong-reference version of VRML97 NodePath"""
