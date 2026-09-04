@@ -10,7 +10,9 @@ vrml_accelerate/MANIFEST
 vrml_accelerate/dist
 dist
 vrml_accelerate/*.so
+vrml_accelerate/*.pyd
 accelerate/vrml_accelerate/*.so
+accelerate/vrml_accelerate/*.pyd
 *.egg-info
 *.pyc
 __pycache__
