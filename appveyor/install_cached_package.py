@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 from __future__ import print_function
-import os,sys,subprocess
+import os
+import sys
+import subprocess
 HERE = os.path.dirname(__file__)
 
 def run_pip_command( *args ):
@@ -41,6 +43,6 @@ def main():
                 '--only-binary',':all:',
                 package,
         )
-        
+
 if __name__ == "__main__":
     main()

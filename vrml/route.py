@@ -59,13 +59,13 @@ class ROUTE( node.Node ):
                     )
         else:
             print("""NULL ROUTE bound""", self)
-    def forward( 
-        self, signal, sender, event=None, value=None, **arguments 
+    def forward(
+        self, signal, sender, event=None, value=None, **arguments
     ):
         """Forward a value update to our destination
         """
         return self._forward(
-            sender, signal, 
+            sender, signal,
             self.destination, self.destinationField,
             event, value, **arguments
         )
@@ -124,7 +124,7 @@ class ROUTE( node.Node ):
             self.destination,
             self.destinationField,
         )
-        
+
 
 ### Field-type for multi-field route objects...
 class SFRoute( node.SFNode ):
@@ -154,14 +154,13 @@ class IS( ROUTE ):
         """
         if sender is self.source:
             return self._forward(
-                sender, signal, 
+                sender, signal,
                 self.destination, self.destinationField,
                 event, value, **arguments
             )
         elif sender is self.destination:
             return self._forward(
-                sender, signal, 
+                sender, signal,
                 self.source, self.sourceField,
                 event, value, **arguments
             )
-        

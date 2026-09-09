@@ -57,7 +57,7 @@ def transMatrix( source=None ):
     else:
         (x,y,z) = source[:3]
     if x == y == z == 0.0:
-        return None, None 
+        return None, None
     return tmatrixaccel.transMatrix( x,y,z ),tmatrixaccel.transMatrix( -x, -y, -z )
 perspectiveMatrix = tmatrixaccel.perspectiveMatrix
 orthoMatrix = tmatrixaccel.orthoMatrix

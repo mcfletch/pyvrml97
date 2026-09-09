@@ -2,7 +2,6 @@
 
 from pydispatch import dispatcher, robustapply
 import weakref
-import sys
 from vrml import protonamespace
 
 # conditional import via package entry points
@@ -19,17 +18,12 @@ baseEventTypes = protonamespace.ProtoNamespace({})
 ### stuff used by the various field sub-types
 NUMERIC_TYPES = (int, float, long)
 SEQUENCE_TYPES = (tuple, list)
-if sys.version_info[0] >= 3:
-    MAP_TYPE = type(map(int, [0]))
-    ZIP_TYPE = type(zip([], []))
-    RANGE_TYPE = type(range(3))
-    UNPACK_TYPES = (MAP_TYPE, ZIP_TYPE, RANGE_TYPE)
-    SEQUENCE_TYPES += UNPACK_TYPES
-else:
-    MAP_TYPE = None
-    ZIP_TYPE = None
-    RANGE_TYPE = type(xrange(3))
-    UNPACK_TYPES = ()
+MAP_TYPE = type(map(int, [0]))
+ZIP_TYPE = type(zip([], []))
+RANGE_TYPE = type(range(3))
+#: The lazy iterables a field coerces to a sequence before storing.
+UNPACK_TYPES = (MAP_TYPE, ZIP_TYPE, RANGE_TYPE)
+SEQUENCE_TYPES += UNPACK_TYPES
 _NULL = []
 
 
@@ -88,7 +82,7 @@ else:
         def __init__(self, name, default):
             self.name = name
             self.defaultobj = default
-            if hasattr(default, '__call__'):
+            if callable(default):
                 self.call_default = True
             else:
                 self.call_default = False
@@ -131,12 +125,12 @@ else:
             except ValueError as x:
                 raise ValueError(
                     """Field %s could not accept value %s (%s)""" % (self, value, x)
-                )
+                ) from x
             except TypeError as x:
                 raise ValueError(
                     """Field %s could not accept value %s of type %s (%s)"""
                     % (self, value, type(value), x)
-                )
+                ) from x
             if isinstance(client, type):
                 setattr(client, self.name, value)
             else:
@@ -170,7 +164,7 @@ else:
             try:
                 client.__dict__[self.name]
             except KeyError:
-                raise AttributeError(self.name)
+                raise AttributeError(self.name) from None
 
         def fdel(self, client, notify=True):
             """Delete with notify"""
@@ -238,7 +232,7 @@ class Field(BaseField):
         if default is _NULL:
             default = self.defaultDefault
         super(Field, self).__init__(name, default)
-        setattr(self, "__doc__", str(self))
+        self.__doc__ = str(self)
 
     def fhas(self, client):
         """Determine whether the client currently has a non-default value"""
@@ -438,7 +432,7 @@ class Event(object):
                     self.name,
                     client,
                 )
-            )
+            ) from None
 
     def clone(self, name=None, direction=None):
         """Clone this property"""

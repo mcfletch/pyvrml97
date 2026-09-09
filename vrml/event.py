@@ -21,4 +21,3 @@ class Event( object ):
             previousValue = self.visitedNodes.get(key)
             self.visitedNodes[key] = value
             return previousValue
-    

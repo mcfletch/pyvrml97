@@ -11,18 +11,12 @@ We use Numeric Python arrays whereever possible.
 
 import operator
 from vrml import field, csscolors, arrays
+import sys
+from functools import reduce
+
 from ._bytes import unicode, long
 
-try:
-    xrange
-except NameError:
-    xrange = range
-try:
-    reduce
-except NameError:
-    from functools import reduce
-
-import sys
+xrange = range
 
 MAX_INT = getattr(sys, 'maxint', None) or getattr(sys, 'maxsize', None)
 
@@ -225,7 +219,7 @@ class _MFString(object):
             raise ValueError(
                 """Attempted to set value %r for an %s field which is not compatible: %s"""
                 % (value, self.typeName(), error)
-            )
+            ) from error
 
     def check(self, value):
         "Raise ValueError if isn't correct type"
@@ -294,7 +288,7 @@ class _SFInt32(object):
             raise ValueError(
                 """Attempted to set value for an %s field which is not compatible: %s"""
                 % (self.typeName(), repr(value))
-            )
+            ) from None
 
     def check(self, value):
         """Check that the given value is of exactly expected type"""
@@ -327,7 +321,7 @@ class _SFUInt32(_SFInt32):
             raise ValueError(
                 """Attempted to set value for an %s field which is not compatible: %s"""
                 % (self.typeName(), repr(value))
-            )
+            ) from None
 
     def check(self, value):
         """Check that the given value is of exactly expected type"""
@@ -359,7 +353,7 @@ class _SFFloat(object):
             raise ValueError(
                 """Attempted to set value for an %s field which is not compatible: %s"""
                 % (self.typeName(), repr(value))
-            )
+            ) from None
 
     def check(self, value):
         """Check that value is of precisely the expected data type"""
@@ -535,7 +529,7 @@ class _SFVec(object):
                 raise ValueError(
                     """Attempted to set value for an %s field which is not compatible: %s"""
                     % (self.typeName(), repr(value))
-                )
+                ) from None
             else:
                 value.reshape(self.dimension)
         if value.shape != self.dimension:
@@ -614,7 +608,7 @@ class _SFArray(object):
                 raise ValueError(
                     """Attempted to set value for an %s field which is not compatible: %s"""
                     % (self.typeName(), repr(value))
-                )
+                ) from None
         # special casing, again, for explicitly structured arrays
         if not arrays.typeCode(value) == 'V':
             value = arrays.contiguous(self.reshape(value))
@@ -867,7 +861,7 @@ class _MFColor(_Color, _MFVec3f):
                                 item,
                                 len(result),
                             )
-                        )
+                        ) from err
                     result.append(_SFCOLOR_TOOL.coerce(item))
                 else:
                     current.append(item)
@@ -878,7 +872,7 @@ class _MFColor(_Color, _MFVec3f):
                 raise ValueError(
                     """Incorrect number of float values at end of MFColor: %(current)r"""
                     % locals()
-                )
+                ) from err
             return super(_MFColor, self).coerce(result)
 
 

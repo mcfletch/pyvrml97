@@ -1,15 +1,7 @@
-import unittest, os
+import unittest
+import os
 from vrml.vrml97.parser import buildParser
-from vrml.vrml97.basenodes import Transform
-from vrml.vrml97.shaders import (
-    ShaderGeometry,
-    Shader,
-    ShaderAttribute,
-    GLSLObject,
-    FloatUniform,  # not functional, but ok
-)
 from vrml.vrml97.scenegraph import SceneGraph
-import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 

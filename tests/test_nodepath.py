@@ -12,20 +12,20 @@ class TestNodePath( unittest.TestCase ):
         self.fourth_child = self.third_child + [ Transform( DEF='fourth',) ]
     def test_empty_matrix( self ):
         m = self.empty.transformMatrix()
-        assert allclose( 
+        assert allclose(
             m,
             array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],'f')
         ), m
     def test_second_child( self ):
         m = self.second_child.transformMatrix()
-        assert allclose( 
+        assert allclose(
             m,
             array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[2,0,0,1]],'f')
         ), m
     def test_change_translation( self ):
         self.first_child[-1].translation = (-1,0,0)
         m2 = self.second_child.transformMatrix()
-        assert allclose( 
+        assert allclose(
             m2,
             array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],'f')
         ), m2
@@ -35,10 +35,10 @@ class TestNodePath( unittest.TestCase ):
         self.first_child[-1].rotation = (0,1,0,0.0)
         m2 = self.second_child.transformMatrix( translate=False, scale=False)
         assert not allclose( m,m2 ), (m,m2)
-    
+
     def test_iterchildren( self ):
-        l = list( self.first_child.iterchildren())
-        assert l == [ self.second_child ]
+        paths = list( self.first_child.iterchildren())
+        assert paths == [ self.second_child ]
     def test_iterdescendents( self ):
         """Every descendent, however deep, not just children and grandchildren.
 
@@ -46,15 +46,15 @@ class TestNodePath( unittest.TestCase ):
         reach stays live, and a renderer that keeps its draw set by pruning
         invalidated paths goes on drawing a subtree that has been detached.
         """
-        l = list( self.empty.iterdescendents())
-        assert l == [
+        paths = list( self.empty.iterdescendents())
+        assert paths == [
             self.first_child, self.second_child,
             self.third_child, self.fourth_child,
-        ], l
+        ], paths
 
     def test_iterdescendents_yields_each_path_once( self ):
-        l = list( self.empty.iterdescendents())
-        assert len( l ) == len( set( id(x) for x in l ) ), l
+        paths = list( self.empty.iterdescendents())
+        assert len( paths ) == len( set( id(x) for x in paths ) ), paths
 
     def test_invalidate_breaks_the_whole_subtree( self ):
         """A detached subtree is broken all the way down, not two levels down."""
@@ -68,7 +68,7 @@ class TestNodePath( unittest.TestCase ):
         self.first_child.invalidate()
         assert not other.broken
         assert not self.empty.broken
-    
+
     def test_forward_back( self ):
         for child in (self.second_child,self.third_child,self.fourth_child):
             matrix = child.transformMatrix( )
@@ -82,21 +82,21 @@ class TestNodePath( unittest.TestCase ):
         matrix = self.fourth_child.transformMatrix( )
         #inverse = self.fourth_child.transformMatrix( inverse=True )
         projected = dot( test, matrix )
-        # projecting out of the screen, then rotated 
+        # projecting out of the screen, then rotated
         # counter-clockwise 90deg (to go right), then scaled up 2x (to 20)
         # then translated 5 to the right...
         target = array([25,0,0,1],'f')
         assert allclose( projected, target, atol=0.0001), projected
-        
+
     def test_nest_simple( self ):
-        path = self.empty + [ 
+        path = self.empty + [
             Transform( translation=(0,0,1), DEF='translate', ),
             Transform( scale=(1,1,.5),DEF='scale'),
         ]
         matrix = path.transformMatrix()
         projected = dot( array([0,0,10,1],'f'), matrix )
         assert allclose( projected, array([0,0,6,1]),atol=.0001), projected
-   
+
     def test_rotation_array( self ):
         path = self.empty + [
             Transform( rotation = (0,1,0,pi/2 )),

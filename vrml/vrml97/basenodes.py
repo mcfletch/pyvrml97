@@ -1,6 +1,6 @@
 """Base VRML97 node prototypes"""
 from vrml.vrml97 import nodetypes, transformmatrix
-from vrml import node, field, fieldtypes, cache
+from vrml import node, field, cache
 class Anchor( nodetypes.Children, nodetypes.Grouping, node.Node ):
     PROTO = 'Anchor'
     #Fields
@@ -21,7 +21,7 @@ class Appearance( node.Node ):
     texture = field.newField( 'texture', 'SFNode', 1, node.NULL)
     textureTransform = field.newField( 'textureTransform', 'SFNode', 1, node.NULL)
     #Events
-    
+
 
 class AudioClip( nodetypes.Auditory, nodetypes.TimeDependent, node.Node ):
     PROTO = 'AudioClip'
@@ -69,7 +69,7 @@ class Box( nodetypes.Geometry, node.Node ):
     #Fields
     size = field.newField( 'size', 'SFVec3f', 0, [2.0, 2.0, 2.0])
     #Events
-    
+
 
 class Collision( nodetypes.Children, nodetypes.Grouping, node.Node ):
     PROTO = 'Collision'
@@ -89,7 +89,7 @@ class Color( node.Node ):
     #Fields
     color = field.newField( 'color', 'MFColor', 1, list)
     #Events
-    
+
 
 class ColorInterpolator( nodetypes.Children, nodetypes.Interpolator, node.Node ):
     PROTO = 'ColorInterpolator'
@@ -108,14 +108,14 @@ class Cone( nodetypes.Geometry, node.Node ):
     bottomRadius = field.newField( 'bottomRadius', 'SFFloat', 0, 1.0)
     height = field.newField( 'height', 'SFFloat', 0, 2.0)
     #Events
-    
+
 
 class Coordinate( node.Node ):
     PROTO = 'Coordinate'
     #Fields
     point = field.newField( 'point', 'MFVec3f', 1, list)
     #Events
-    
+
 
 class CoordinateInterpolator( nodetypes.Children, nodetypes.Interpolator, node.Node ):
     PROTO = 'CoordinateInterpolator'
@@ -135,7 +135,7 @@ class Cylinder( nodetypes.Geometry, node.Node ):
     side = field.newField( 'side', 'SFBool', 0, 1)
     height = field.newField( 'height', 'SFFloat', 0, 2.0)
     #Events
-    
+
 
 class CylinderSensor( nodetypes.Children, nodetypes.PointingSensor, node.Node ):
     PROTO = 'CylinderSensor'
@@ -160,7 +160,7 @@ class DirectionalLight( nodetypes.Children, nodetypes.Light, node.Node ):
     ambientIntensity = field.newField( 'ambientIntensity', 'SFFloat', 1, 0.0)
     direction = field.newField( 'direction', 'SFVec3f', 1, [0.0, 0.0, -1.0])
     #Events
-    
+
 
 class ElevationGrid( nodetypes.Geometry, node.Node ):
     PROTO = 'ElevationGrid'
@@ -222,9 +222,9 @@ class FontStyle( node.Node ):
     spacing = field.newField( 'spacing', 'SFFloat', 0, 1.0)
     leftToRight = field.newField( 'leftToRight', 'SFBool', 0, 1)
     size = field.newField( 'size', 'SFFloat', 0, 1.0)
-    
+
     #Events
-    
+
 
 class Group( nodetypes.Children, nodetypes.Grouping, node.Node ):
     PROTO = 'Group'
@@ -243,7 +243,7 @@ class ImageTexture( nodetypes.Texture, node.Node ):
     repeatS = field.newField( 'repeatS', 'SFBool', 0, 1)
     repeatT = field.newField( 'repeatT', 'SFBool', 0, 1)
     #Events
-    
+
 
 class IndexedFaceSet( nodetypes.Geometry, node.Node ):
     PROTO = 'IndexedFaceSet'
@@ -287,7 +287,7 @@ class Inline( nodetypes.Children, nodetypes.Traversable, node.Node ):
     bboxCenter = field.newField( 'bboxCenter', 'SFVec3f', 0, [0.0, 0.0, 0.0])
     bboxSize = field.newField( 'bboxSize', 'SFVec3f', 0, [-1.0, -1.0, -1.0])
     #Events
-    
+
 
 class LOD( nodetypes.Children, nodetypes.Traversable, node.Node ):
     PROTO = 'LOD'
@@ -296,7 +296,7 @@ class LOD( nodetypes.Children, nodetypes.Traversable, node.Node ):
     center = field.newField( 'center', 'SFVec3f', 0, [0.0, 0.0, 0.0])
     level = field.newField( 'level', 'MFNode', 1, list)
     #Events
-    
+
 
 class Material( node.Node ):
     PROTO = 'Material'
@@ -308,7 +308,7 @@ class Material( node.Node ):
     ambientIntensity = field.newField( 'ambientIntensity', 'SFFloat', 1, 0.20000000000000001)
     shininess = field.newField( 'shininess', 'SFFloat', 1, 0.20000000000000001)
     #Events
-    
+
 
 class MovieTexture( nodetypes.Auditory, nodetypes.Texture, nodetypes.TimeDependent, node.Node ):
     PROTO = 'MovieTexture'
@@ -341,7 +341,7 @@ class Normal( node.Node ):
     #Fields
     vector = field.newField( 'vector', 'MFVec3f', 1, list)
     #Events
-    
+
 
 class NormalInterpolator( nodetypes.Children, nodetypes.Interpolator, node.Node ):
     PROTO = 'NormalInterpolator'
@@ -368,7 +368,7 @@ class PixelTexture( nodetypes.Texture, node.Node ):
     repeatS = field.newField( 'repeatS', 'SFBool', 0, 1)
     repeatT = field.newField( 'repeatT', 'SFBool', 0, 1)
     #Events
-    
+
 
 class PlaneSensor( nodetypes.Children, nodetypes.PointingSensor, node.Node ):
     PROTO = 'PlaneSensor'
@@ -394,19 +394,19 @@ class PointLight( nodetypes.Children, nodetypes.Light, node.Node ):
     color = field.newField( 'color', 'SFColor', 1, [1.0, 1.0, 1.0])
     ambientIntensity = field.newField( 'ambientIntensity', 'SFFloat', 1, 0.0)
     #Events
-    
+
 
 class PointSet( nodetypes.Geometry, node.Node ):
     PROTO = 'PointSet'
     #Fields
     color = field.newField( 'color', 'SFNode', 1, node.NULL)
     coord = field.newField( 'coord', 'SFNode', 1, node.NULL)
-    
+
     size = field.newField( 'size','SFFloat',1, 1.0 )
     minSize = field.newField( 'minSize','SFFloat',1, 0.0 )
     maxSize = field.newField( 'maxSize','SFFloat',1, 1.0 )
     attenuation = field.newField( 'attenuation','SFVec3f',1,[1.0,0.0,0.0])
-    
+
 
 class PositionInterpolator( nodetypes.Children, nodetypes.Interpolator, node.Node ):
     PROTO = 'PositionInterpolator'
@@ -445,7 +445,7 @@ class Shape( nodetypes.Children, nodetypes.Rendering, node.Node ):
     geometry = field.newField( 'geometry', 'SFNode', 1, node.NULL)
     appearance = field.newField( 'appearance', 'SFNode', 1, node.NULL)
     #Events
-    
+
 
 class Sound( nodetypes.Auditory, nodetypes.Children, node.Node ):
     PROTO = 'Sound'
@@ -461,14 +461,14 @@ class Sound( nodetypes.Auditory, nodetypes.Children, node.Node ):
     spatialize = field.newField( 'spatialize', 'SFBool', 0, 1)
     direction = field.newField( 'direction', 'SFVec3f', 1, [0.0, 0.0, 1.0])
     #Events
-    
+
 
 class Sphere( nodetypes.Geometry, node.Node ):
     PROTO = 'Sphere'
     #Fields
     radius = field.newField( 'radius', 'SFFloat', 0, 1.0)
     #Events
-    
+
 
 class SphereSensor( nodetypes.Children, nodetypes.PointingSensor, node.Node ):
     PROTO = 'SphereSensor'
@@ -495,7 +495,7 @@ class SpotLight( nodetypes.Children, nodetypes.Light, node.Node ):
     beamWidth = field.newField( 'beamWidth', 'SFFloat', 1, 1.5707960000000001)
     cutOffAngle = field.newField( 'cutOffAngle', 'SFFloat', 1, 0.78539800000000004)
     #Events
-    
+
 
 class Switch( nodetypes.Children, nodetypes.Traversable, node.Node ):
     PROTO = 'Switch'
@@ -503,7 +503,7 @@ class Switch( nodetypes.Children, nodetypes.Traversable, node.Node ):
     whichChoice = field.newField( 'whichChoice', 'SFInt32', 1, -1)
     choice = field.newField( 'choice', 'MFNode', 1, list)
     #Events
-    
+
 
 class Text( nodetypes.Geometry, node.Node ):
     PROTO = 'Text'
@@ -513,14 +513,14 @@ class Text( nodetypes.Geometry, node.Node ):
     string = field.newField( 'string', 'MFString', 1, list)
     maxExtent = field.newField( 'maxExtent', 'SFFloat', 1, 0.0)
     #Events
-    
+
 
 class TextureCoordinate( node.Node ):
     PROTO = 'TextureCoordinate'
     #Fields
     point = field.newField( 'point', 'MFVec2f', 1, list)
     #Events
-    
+
 
 class TextureTransform( node.Node ):
     PROTO = 'TextureTransform'
@@ -530,7 +530,7 @@ class TextureTransform( node.Node ):
     translation = field.newField( 'translation', 'SFVec2f', 1, [0.0, 0.0])
     center = field.newField( 'center', 'SFVec2f', 1, [0.0, 0.0])
     #Events
-    
+
 
 class TimeSensor( nodetypes.Sensor, nodetypes.Children, nodetypes.TimeDependent, node.Node ):
     PROTO = 'TimeSensor'
@@ -574,25 +574,24 @@ class Transform( nodetypes.Children, nodetypes.Transforming, node.Node ):
     addChildren = field.newEvent( 'addChildren', 'MFNode', 0)
     def localMatrices( self, translate=True,scale=True,rotate=True ):
         """Calculate/lookup our local matrices
-        
+
         Certain operations want, e.g. just the rotation of an item,
-        so we actually can store 2**3 possible variations of the local 
+        so we actually can store 2**3 possible variations of the local
         matrices.  In practice we only see a very small number.
-        
-        returns holder, where holder.data == (forward,inverse) matrix 
+
+        returns holder, where holder.data == (forward,inverse) matrix
         for the local node, each of which can be None
         """
         key=('local_matrices',translate,scale,rotate)
         holder = cache.CACHE.getHolder( self, key=key )
         if holder is None:
-            doConnect = True 
+            doConnect = True
             holder = cache.CACHE.holder( self, None, key=key )
             mHolder = None
         else:
             doConnect = False
             mHolder = holder.data
         if mHolder is None:
-            matrix = None
             fields = []
             if translate:
                 fields.append( 'translation' )
@@ -643,6 +642,6 @@ class WorldInfo( nodetypes.Children, node.Node ):
     info = field.newField( 'info', 'MFString', 0, list)
     title = field.newField( 'title', 'SFString', 0, '')
     #Events
-    
+
 # clean up namespace
 del field, node, nodetypes

@@ -5,8 +5,11 @@ with almost all of the changes being the more involved header,
 and a few new field-types that are already accepted by the
 VRML97 grammar.
 """
+# Imported for its effect, not for a name: importing it registers EOF and
+# the other character-type productions into simpleparse's shared
+# definitions, which the grammar below refers to by name.
+from simpleparse.common import chartypes  # noqa: F401
 from simpleparse.parser import Parser
-from simpleparse.common import chartypes
 
 #print file
 grammar = r'''
@@ -61,7 +64,7 @@ SFNull         := 'NULL', ts
 # should really have an optimised way of declaring a different reporting name for the same production...
 USE            := name
 IS             := name
-nodegi         := name 
+nodegi         := name
 Attr           := name, ts, (('IS', ts,IS,ts)/Field), ts
 Field          := ( '[',ts,((SFNumber/SFBool/SFString/('USE',ts,USE,ts)/Script/Node),ts)*, ']'!, ts )/((SFNumber/SFBool/SFNull/SFString/('USE',ts,USE,ts)/Script/Node),ts)+
 

@@ -1,5 +1,4 @@
 """VRML97 semantic node-types"""
-from vrml import node
 
 class Traversable( object ):
     """Traversable nodes (Nodes which have node attributes)
@@ -21,15 +20,15 @@ class Transforming( Grouping ):
     """
     def localMatrices( self, translate=True,scale=True,rotate=True ):
         """Calculate/lookup our local matrices
-        
+
         Certain operations want, e.g. just the rotation of an item,
-        so we actually can store 2**3 possible variations of the local 
+        so we actually can store 2**3 possible variations of the local
         matrices.  In practice we only see a very small number.
-        
-        returns holder, where holder.data == (forward,inverse) matrix 
+
+        returns holder, where holder.data == (forward,inverse) matrix
         for the local node, each of which can be None
         """
-        raise NotImplemented
+        raise NotImplementedError
 
 class Children( object ):
     """Children nodes (Nodes which can belong to a Grouping)
@@ -92,4 +91,4 @@ class TimeDependent( object ):
 class Auditory( object ):
     """Auditory nodes (nodes with produce sound)
     """
-    
+

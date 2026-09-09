@@ -45,7 +45,7 @@ class WeakTuple( tuple ):
             return 1
         except weakref.ReferenceError:
             return 0
-        
+
     def wrap( self, item ):
         """Wrap an individual item in a weak-reference
 
@@ -82,7 +82,7 @@ class WeakTuple( tuple ):
     def __getslice__( self, start, stop ):
         """Get the items in the range start to stop"""
         return [
-            self.unwrap(obj) 
+            self.unwrap(obj)
             for obj in super (WeakTuple,self).__getslice__( start, stop)
         ]
     def __contains__( self, item ):
@@ -110,7 +110,7 @@ class WeakTuple( tuple ):
     def __add__(self, other):
         """Return a new path with other as tail"""
         return tuple(self) + other
-    
+
     def __eq__( self, sequence ):
         """Compare the tuple to another (==)"""
         return list(self) == sequence
@@ -120,7 +120,7 @@ class WeakTuple( tuple ):
     def __gt__( self, sequence ):
         """Compare the tuple to another (>)"""
         return list(self) > sequence
-        
+
     def __le__( self, sequence ):
         """Compare the tuple to another (<=)"""
         return list(self) <= sequence
@@ -135,4 +135,4 @@ class WeakTuple( tuple ):
     def __repr__( self ):
         """Return a code-like representation of the weak tuple"""
         return """%s( %s )"""%( self.__class__.__name__, super(WeakTuple,self).__repr__())
-        
+

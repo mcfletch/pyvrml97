@@ -26,8 +26,8 @@ def rotMatrix( source=None ):
         squared = x*x + y*y + z*z
         if squared != 1.0:
             length = squared ** .5
-            x /= length 
-            y /= length 
+            x /= length
+            y /= length
             z /= length
         c = cos( a )
         c1 = cos( -a )
@@ -67,11 +67,11 @@ def scaleMatrix( source=None ):
     if x == y == z == 1.0:
         return None, None
     S = array( [ [x,0,0,0], [0,y,0,0], [0,0,z,0], [0,0,0,1] ], 'f' )
-    S1 = array( [ 
-        [1./(x or VERY_SMALL),0,0,0], 
-        [0,1./(y or VERY_SMALL),0,0], 
-        [0,0,1./(z or VERY_SMALL),0], 
-        [0,0,0,1] ], 'f' 
+    S1 = array( [
+        [1./(x or VERY_SMALL),0,0,0],
+        [0,1./(y or VERY_SMALL),0,0],
+        [0,0,1./(z or VERY_SMALL),0],
+        [0,0,0,1] ], 'f'
     )
     return S, S1
 
@@ -97,7 +97,7 @@ def transMatrix( source=None ):
 
 def perspectiveMatrix( fovy, aspect, zNear, zFar, inverse=False ):
     """Create a perspective matrix from given parameters
-    
+
     Note that this is the same matrix as for gluPerspective,
     save that we are using radians...
     """
@@ -119,8 +119,8 @@ def perspectiveMatrix( fovy, aspect, zNear, zFar, inverse=False ):
         ],'f')
 def orthoMatrix( left=-1.0, right=1.0, bottom=-1.0, top=1.0, zNear=-1.0, zFar=1.0 ):
     """Calculate an orthographic projection matrix
-    
-    Similar to glOrtho 
+
+    Similar to glOrtho
     """
     tx = - ( right + left ) / float( right-left )
     ty = - ( top + bottom ) / float( top-bottom )
@@ -130,4 +130,4 @@ def orthoMatrix( left=-1.0, right=1.0, bottom=-1.0, top=1.0, zNear=-1.0, zFar=1.
         [0,	 2/(top-bottom),	0,	 ty],
         [0,	0,	 -2/(zFar-zNear),	 tz],
         [0,	0,	0,	1],
-    ], dtype='f')    
+    ], dtype='f')

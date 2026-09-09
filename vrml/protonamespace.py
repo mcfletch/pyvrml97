@@ -10,4 +10,4 @@ class ProtoNamespace( dict ):
     def __copy__( self ):
         """Produce a ProtoNamespace copy of self"""
         return self.__class__( super(ProtoNamespace,self).__copy__())
-    
+

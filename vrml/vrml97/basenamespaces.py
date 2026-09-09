@@ -7,7 +7,7 @@ node representation.
 See vrml.vrml97.basenodes for most of the actual
 node definitions.
 """
-from vrml import node, protonamespace, fieldtypes, route
+from vrml import node, protonamespace, route
 from vrml.vrml97 import script, basenodes, scenegraph
 
 basePrototypes = protonamespace.ProtoNamespace(
@@ -23,6 +23,5 @@ for key,value in basenodes.__dict__.items():
     try:
         if issubclass( value, node.Node ):
             basePrototypes[key] = value
-    except:
+    except Exception:
         pass
-    

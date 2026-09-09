@@ -7,7 +7,7 @@ provided the more funky of the nodes, such as the interpolators
 and the deformation matrices.
 """
 from vrml.vrml97 import nodetypes
-from vrml import field, node, fieldtypes
+from vrml import field, node
 
 ### Trimming curves
 class Contour2D( node.Node ):
@@ -18,7 +18,7 @@ class Contour2D( node.Node ):
     """
     PROTO = "Contour2D"
     children = field.newField( 'children', 'MFNode', 1, list)
-    
+
 class Polyline2D( node.Node ):
     """A 2D piece-wise-linear polyline"""
     PROTO = "Polyline2D"
@@ -76,4 +76,4 @@ class NurbsGroup( node.Node ):
     tessellationScale = field.newField( 'tessellationScale', 'SFFloat', 1, 1.0)
     bboxSize = field.newField( 'bboxSize', 'SFVec3f', 0, [-1.0, -1.0, -1.0])
     bboxCenter = field.newField( 'bboxCenter', 'SFVec3f', 0, [0.0, 0.0, 0.0])
-    
+

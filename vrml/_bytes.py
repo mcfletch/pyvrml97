@@ -4,18 +4,18 @@ Defines the following which allow for dealing with Python 3 breakages:
 
     STR_IS_BYTES
     STR_IS_UNICODE
-    
+
         Easily checked booleans for type identities
-    
+
     _NULL_8_BYTE
-    
-        An 8-bit byte with NULL (0) value 
-    
+
+        An 8-bit byte with NULL (0) value
+
     as_8_bit( x, encoding='utf-8')
-    
+
         Returns the value as the 8-bit version
-    
-    unicode -- always pointing to the unicode type 
+
+    unicode -- always pointing to the unicode type
     bytes -- always pointing to the 8-bit bytes type
 """
 import sys
@@ -24,7 +24,6 @@ _NULL_8_BYTE = b'\000'
 try:
     STR_IS_BYTES = True
     STR_IS_UNICODE = False
-    unicode 
     bytes = str
     unicode = unicode
     long = long
@@ -53,10 +52,10 @@ except NameError:
             return x.encode(encoding)
         elif isinstance( x, bytes ):
             # Note: this can create an 8-bit string that is *not* in encoding,
-            # but that is potentially exactly what we wanted, as these can 
+            # but that is potentially exactly what we wanted, as these can
             # be arbitrary byte-streams being passed to C functions
             return x
-        return str(x).encode( encoding )    
+        return str(x).encode( encoding )
     def as_str( x, encoding='utf-8'):
         """Produce a native string (i.e. different on python 2 and 3)"""
         if isinstance(x,unicode):
@@ -67,7 +66,7 @@ except NameError:
             return str(x)
 
 if hasattr( sys, 'maxsize' ):
-    maxsize = sys.maxsize 
+    maxsize = sys.maxsize
 else:
     maxsize = sys.maxint
 

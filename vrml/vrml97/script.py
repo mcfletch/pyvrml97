@@ -18,7 +18,7 @@ class _Script( nodetypes.Children, node.Node ):
     mustEvaluate = fieldtypes.SFBool(
         'mustEvaluate', default = 0,
     )
-    
+
 def Script( fields, **namedarguments ):
     """Create a new script prototype and an instance of that prototype"""
     proto = node.prototype( 'Script', fields, baseClasses = (_Script,) )

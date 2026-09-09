@@ -4,7 +4,7 @@ Requires Python 2.2.x, as it makes
 extensive use of properties
 """
 
-from vrml import field, fieldtypes, weaklist, weakkeydictfix
+from vrml import field, fieldtypes, weakkeydictfix
 from vrml import copier as copiermodule
 from vrml import olist
 from vrml.protofunctions import *
@@ -73,7 +73,7 @@ class Node(object):
                 raise AttributeError(
                     """Unrecognised attribute %r for node type %r"""
                     % (key, self.__class__.__name__)
-                )
+                ) from None
             else:
                 if not (hasattr(f, '__get__') and hasattr(f, '__set__')):
                     raise TypeError(
@@ -103,9 +103,9 @@ class Node(object):
         are returned as a full representation.
         """
         attributes = []
-        for field in getFields(self):
-            if field.name in self.__dict__:
-                value = getattr(self, field.name)
+        for each_field in getFields(self):
+            if each_field.name in self.__dict__:
+                value = getattr(self, each_field.name)
                 if isinstance(value, Node):
                     representation = str(value)
                 else:
@@ -113,7 +113,7 @@ class Node(object):
                 attributes.append(
                     """%s = %s"""
                     % (
-                        field.name,
+                        each_field.name,
                         representation,
                     )
                 )
@@ -131,9 +131,9 @@ class Node(object):
         if previous is not None:
             return previous
         dictionary = {}
-        for field in getFields(self):
-            if field.fhas(self):
-                dictionary[field.name] = field.copy(self, copier)
+        for each_field in getFields(self):
+            if each_field.fhas(self):
+                dictionary[each_field.name] = each_field.copy(self, copier)
         newNode = type(self).__new__(type(self))
         newNode.__dict__.update(dictionary)
         copier.use(self, newNode)
@@ -247,8 +247,8 @@ def prototype(
     environment = {
         'PROTO': name,
     }
-    for field in fields:
-        environment[field.name] = field
+    for each_field in fields:
+        environment[each_field.name] = each_field
     returnValue = type(
         name,
         baseClasses,
@@ -404,27 +404,27 @@ class RootScenegraphNode(WeakSFNode):
         TODO: this will blow up on cyclic graphs!
         """
         result = super(RootScenegraphNode, self).fset(client, value, notify)
-        for field in getFields(client.__class__):
+        for each_field in getFields(client.__class__):
             if (
-                isinstance(field, SFNode)
-                and not isinstance(field, RootScenegraphNode)
-                and not field is PrototypedNode.scenegraph
+                isinstance(each_field, SFNode)
+                and not isinstance(each_field, RootScenegraphNode)
+                and each_field is not PrototypedNode.scenegraph
             ):
                 try:
-                    child = field.__get__(client)
+                    child = each_field.__get__(client)
                 except ValueError:
                     pass
                 else:
                     self.fset(child, value, notify=False)
-            elif isinstance(field, MFNode):
+            elif isinstance(each_field, MFNode):
                 try:
-                    for child in field.__get__(client):
+                    for child in each_field.__get__(client):
                         self.fset(child, value, notify=False)
                 except AttributeError:
                     pass
-            elif field.name == ' DEF':
+            elif each_field.name == ' DEF':
                 try:
-                    DEF = field.__get__(client)
+                    DEF = each_field.__get__(client)
                     value.regDefName(DEF, client)
                 except AttributeError:
                     pass

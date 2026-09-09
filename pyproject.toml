@@ -54,3 +54,21 @@ version = { attr = "vrml.__version__" }
 # new one resolves against PyPI rather than this checkout.
 [tool.uv]
 cache-keys = [{ file = "pyproject.toml" }, { file = "vrml/__init__.py" }]
+
+# Named explicitly rather than left to ruff's default, which has widened
+# between releases: a gate whose meaning moves when a tool is upgraded is not a
+# gate. `E,W,F,B` is what the other pre-2010 projects here hold to.
+[tool.ruff.lint]
+select = ["E", "W", "F", "B"]
+# `_name` as well as `_`: an underscore prefix is how Python says a name is
+# bound but deliberately unused.
+dummy-variable-rgx = "^(_[a-zA-Z0-9_]*|err)$"
+ignore = [
+    'E501', # long lines, kept readable by hand
+    # The scenegraph's namespaces are assembled with `from x import *`, which
+    # is how the VRML97 node types are gathered; the names are there at run
+    # time. What holds the modules to importing is the suite, which imports
+    # them.
+    'F403',
+    'F405',
+]

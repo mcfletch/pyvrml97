@@ -1,21 +1,21 @@
 """Node definitions for a non-standard Programable Shaders extension
 """
 from vrml.vrml97 import nodetypes
-from vrml import field, node, fieldtypes
+from vrml import field, node
 
 class ShaderGeometry( nodetypes.Children, nodetypes.Rendering, node.Node ):
     """Generic geometry definition for a shader-based renderer
-    
-    attributes -- define the attribute pointers which feed the 
-        shader, the individual attributes may share a buffer or 
-        define one per attribute 
-    indices -- if present, node defining index array to be used 
-        to index into buffers, will be uploaded to an element 
+
+    attributes -- define the attribute pointers which feed the
+        shader, the individual attributes may share a buffer or
+        define one per attribute
+    indices -- if present, node defining index array to be used
+        to index into buffers, will be uploaded to an element
         buffer
-    uniforms -- Uniform nodes which are bound/updated on the 
-        shader before rendering this geometry, binds to the 
+    uniforms -- Uniform nodes which are bound/updated on the
+        shader before rendering this geometry, binds to the
         shader's location == to the uniform's name.
-    slices -- slices of the array to render, if not specified 
+    slices -- slices of the array to render, if not specified
         then we'll render the whole data-set
     """
     PROTO = "ShaderGeometry"
@@ -43,7 +43,7 @@ class ShaderAttribute( node.Node ):
     buffer = field.newField( 'buffer','SFNode',1,node.NULL )
     isCoord = field.newField( 'isCoord','SFBool',1,False)
     bufferKey = field.newField( 'bufferKey', 'SFString', 1,'')
-    
+
 class ShaderBuffer( node.Node ):
     """Buffer of data into which pointers can be generated"""
     type = field.newField( 'type','SFString', 1, 'ARRAY' )
@@ -57,7 +57,7 @@ class ShaderIndexBuffer( ShaderBuffer ):
 
 class FloatUniform( node.Node ):
     """Uniform (variable) binding for a shader
-    
+
     The FloatUniform is the base class for FloatUniforms,
     that is, there are FloatUniform1f, FloatUniform2f,
     FloatUniformm3x2, etceteras Node-types, but not a
@@ -94,7 +94,7 @@ class GLSLShader( node.Node ):
     source = field.newField( 'source','MFString',1, list)
     imports = field.newField( 'imports', 'MFNode', 1, list )
     # type values, VERTEX or FRAGMENT
-    type = field.newField( 'type',  'SFString', 1,  'VERTEX' ) 
+    type = field.newField( 'type',  'SFString', 1,  'VERTEX' )
 
 class GLSLImport( node.Node ):
     """GLSL-base shader source-code import"""
@@ -118,6 +118,6 @@ class Shader( node.Node ):
     #Fields
     material = field.newField( 'material', 'SFNode', 1, node.NULL)
     objects = field.newField( 'objects',  'MFNode',  1,  list )
-    
+
     implementation = field.newField( 'implementation','SFNode',1,node.NULL)
 

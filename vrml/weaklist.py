@@ -1,7 +1,6 @@
 """list sub-class which holds weak references to objects"""
 
 import weakref
-import types
 
 class WeakList( list ):
     """list sub-class holding weakrefs to items
@@ -64,13 +63,13 @@ class WeakList( list ):
     def __setitem__( self, index, item ):
         """Set the item at the given index"""
         if isinstance( index, slice ):
-            item = [self.wrap(x) for x in item]
+            item = [self.wrap(each) for each in item]
         else:
-            item = self.wrap(x)
+            item = self.wrap(item)
         return super( WeakList,self).__setitem__(
             index, item
         )
-    
+
     def append( self, item ):
         """Append a single item to the list"""
         return super( WeakList,self).append( self.wrap(item))
@@ -82,7 +81,7 @@ class WeakList( list ):
     def extend( self, sequence ):
         """Extend this list with another sequence"""
         return super( WeakList, self).extend([
-            self.wrap(obj) for obj in sequence 
+            self.wrap(obj) for obj in sequence
         ])
     __iadd__ = extend
 
@@ -130,7 +129,7 @@ class WeakList( list ):
     def __gt__( self, sequence ):
         """Compare the list to another (>)"""
         return self.get() > sequence
-        
+
     def __le__( self, sequence ):
         """Compare the list to another (<=)"""
         return self.get() <= sequence
@@ -148,7 +147,7 @@ class WeakList( list ):
 
     def __remover(self):
         """Construct a function callback for eliminating a particular reference"""
-        def remove(reference, selfref=weakref.ref(self)):
+        def remove(reference, selfref=weakref.ref(self)):  # noqa: B008 - the default is the weak ref
             """Removes passed reference from the referenced self (selfref)
             Note that the callback does not keep the list alive.
             This approach is taken directly from the WeakKeyDictionary.
@@ -160,4 +159,4 @@ class WeakList( list ):
                 except (ValueError, TypeError, NameError):
                     pass
         return remove
-        
+

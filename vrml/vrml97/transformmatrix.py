@@ -39,7 +39,7 @@ except ImportError:
         orthoMatrix,
     )
 
-assert perspectiveMatrix 
+assert perspectiveMatrix
 assert orthoMatrix
 
 # used to determine whether angles are non-null
@@ -78,7 +78,7 @@ def transformMatrix(
     SO,SO1 = rotMatrix( scaleOrientation )
     S,S1 = scaleMatrix( scale )
     return compressMatrices( parentMatrix, T,C,R,SO,S,SO1,C1 )
-    
+
 def itransformMatrix(
         translation = (0,0,0),
         center = (0,0,0),
@@ -101,7 +101,7 @@ def itransformMatrix(
     though it seems to be properly constructed as far
     as I can see.  Whether to use dot(x, parentMatrix)
     or the reverse is not immediately clear to me.
-    
+
     parentMatrix if provided, should be the child's
     transformation matrix, a 4x4 matrix of such as
     returned by this function.
@@ -113,7 +113,7 @@ def itransformMatrix(
     S,S1 = scaleMatrix( scale )
     return compressMatrices( parentMatrix, C,SO, S1, SO1, R1, C1, T1)
 
-def transformMatrices( 
+def transformMatrices(
         translation = (0,0,0),
         center = (0,0,0),
         rotation = (0,1,0,0),
@@ -153,14 +153,14 @@ def localMatrices(
 
 def compressMatrices( *matrices ):
     """Compress a set of matrices
-    
+
     Any (or all) of the matrices may be None,
     if *all* are None, then the result will be None,
-    otherwise will be the dot product of all of the 
+    otherwise will be the dot product of all of the
     matrices...
     """
     if not matrices:
-        return None 
+        return None
     else:
         first = matrices[0]
         matrices = matrices[1:]
@@ -172,7 +172,7 @@ def compressMatrices( *matrices ):
                 first = dot( item, first )
     return first
 
-    
+
 def center(
     translation = (0,0,0),
     center = (0,0,0),

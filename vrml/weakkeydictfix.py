@@ -17,20 +17,21 @@ class WeakKeyDictionary( weakref.WeakKeyDictionary ):
             None to create a new dictionary
         """
         self.data = {}
-        def remove(k, selfref=ref(self)):
+        def remove(k, selfref=ref(self)):  # noqa: B008 - the default is the weak ref
             self = selfref()
             if self is not None and self.data:
                 try:
-                    v = self.data.get( k )
+                    self.data.get( k )
                     del self.data[k]
                 except (KeyError,RuntimeError):
                     pass
             # now v goes out of scope and is deleted...
         self._remove = remove
-        if dict is not None: self.update(dict)
+        if dict is not None:
+            self.update(dict)
     def __delitem__(self, key):
         """Overridden delitem to avoid scanning"""
         try:
             del self.data[weakref.ref(key)]
         except KeyError:
-            raise KeyError( """Item %r does not appear as a key"""%( key,))
+            raise KeyError( """Item %r does not appear as a key"""%( key,)) from None

@@ -1,28 +1,24 @@
 """Observable list class"""
 from pydispatch.dispatcher import send
-import weakref, types
-try:
-    set 
-except NameError as err:
-    from sets import Set as set
+import weakref
 
 class OList( list ):
     """List sub-class which generates pydispatch events on changes
-    
+
     Generates 4 types of events:
-    
+
         * NEW_CHILD_EVT, from self, with value=child, for each added child
-        * NEW_PARENT_EVT, from child, with parent=self, for each added child 
-        * DEL_CHILD_EVT, from self, with value=child, for each removed child 
+        * NEW_PARENT_EVT, from child, with parent=self, for each added child
+        * DEL_CHILD_EVT, from self, with value=child, for each removed child
         * DEL_PARENT_EVT, from child, with parent=self, for each removed child
-        
-    Note that the OList semantics are a little loose currently, as 
-    it sometimes acts as though adding a new duplicate child is not 
-    an event and sometimes acts as though it is.  This doesn't cause 
+
+    Note that the OList semantics are a little loose currently, as
+    it sometimes acts as though adding a new duplicate child is not
+    an event and sometimes acts as though it is.  This doesn't cause
     problems for the OpenGLContext scenegraph.
-    
-    The OList is intended for situations where slow-write-fast-read 
-    is the primary requirement, it allows you to hook writing events 
+
+    The OList is intended for situations where slow-write-fast-read
+    is the primary requirement, it allows you to hook writing events
     in order to recalculate/cache values.
     """
     NEW_CHILD_EVT = 'new'
@@ -54,17 +50,17 @@ class OList( list ):
         sender = self._sender()
         send( self.DEL_CHILD_EVT, sender, value=value,**(self.extraArgs or {}))
         send( self.DEL_PARENT_EVT, value, parent=sender,**(self.extraArgs or {}))
-    
+
     def append( self, value ):
         """Append a value and send a message"""
         super( OList,self ).append( value )
         self._sendAdded( value )
-        return value 
+        return value
     def insert( self, index, value ):
         """Insert a new item at index"""
         super( OList,self ).insert( index, value )
         self._sendAdded( value )
-        return value 
+        return value
     def pop( self, index=None ):
         """Pop a single item out of the list"""
         if index is None:
@@ -84,7 +80,7 @@ class OList( list ):
             for value in current:
                 self._sendRemoved( value )
             super( OList,self ).__delitem__( index )
-            return current 
+            return current
         else:
             value = self[index]
             self._sendRemoved( value )
@@ -108,7 +104,7 @@ class OList( list ):
                         pass
             for current in previous:
                 self._sendRemoved( current )
-            return values 
+            return values
         else:
             current = self[index]
             if current is not value:
@@ -116,11 +112,11 @@ class OList( list ):
             super( OList,self ).__setitem__( index, value )
             if current is not value:
                 self._sendAdded( value )
-            return value 
+            return value
     def __setslice__( self, i,j, iterable ):
         return self.__setitem__( slice(i,j), iterable)
     def __iadd__( self, iterable ):
         """Do an in-place add"""
         return self.__setitem__( slice(len(self),len(self)), iterable )
     extend = __iadd__
-    
+

@@ -33,7 +33,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
     def __init__(
         self, root=None, protoTypes=None,
         routes=None, defNames=None,
-        children=None, 
+        children=None,
         *args, **namedargs
     ):
         '''
@@ -83,11 +83,11 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
                 if root:
                     return root.getProto( name )
         return None
-        
+
     def getDEF( self, name ):
         """Get a node by DEF name"""
         return self.defNames.get(name)
-    
+
     def regDefName(self, defName, object):
         ''' Register a DEF name for a particular object
 
@@ -110,15 +110,15 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         self.protoTypes[protofunctions.name( proto ) ] = proto
     def addRoute(self, route, *args):
         '''Add a route to the scenegraph
-        
+
         route,args -- Possible forms:
-        
+
             ROUTE object -- added to routes
             ((source)node,field,(destination)node,field) -- ROUTE
-                created, nodes may be strings, in which case 
+                created, nodes may be strings, in which case
                 getDEF( node ) is called for each
-            ((source)node,field,target( signal, sender, value )) -- 
-                field.watch( target ) is called for the source 
+            ((source)node,field,target( signal, sender, value )) --
+                field.watch( target ) is called for the source
                 node (which can be a DEF name).
         '''
         if args:
@@ -127,12 +127,12 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
             if len(route) == 4:
                 # 4-element route definition, e.g. from strings...
                 from vrml.route import ROUTE
-                source,sourceField,destination,destinationField = route 
+                source,sourceField,destination,destinationField = route
                 if isinstance( source, (str,unicode)):
                     source = self.getDEF( source )
                 if isinstance( destination, (str,unicode)):
                     destination = self.getDEF( destination )
-                route = ROUTE( 
+                route = ROUTE(
                     source = source,
                     sourceField = sourceField,
                     destination = destination,
@@ -140,7 +140,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
                 )
             elif len(route) == 3:
                 # 2-element source plus a function to receive...
-                source,sourceField,target = route 
+                source,sourceField,target = route
                 if not callable( target ):
                     raise TypeError(
                         """Need a callable target object!"""
@@ -155,7 +155,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
 ##	def addIsMap( self, name, node, field ):
 ##		"""Add an isMap for the given name to the given node+field"""
 ##		self.isMaps.setdefault( name, []).append( (node,field) )
-        
+
     def copy( self, copier=None ):
         """Copy this node for copier"""
         if copier is None:
@@ -178,4 +178,4 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         node.protoTypes = newPrototypes
         node.defNames = newDefs
         return node
-    
+

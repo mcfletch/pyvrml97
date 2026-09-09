@@ -6,10 +6,7 @@ from vrml.cache import CACHE
 from vrml.vrml97 import transformmatrix, nodetypes
 from vrml.arrays import *
 import weakref
-try:
-    xrange 
-except NameError:
-    xrange = range
+xrange = range
 
 
 class _MatrixHolder( object ):
@@ -30,16 +27,16 @@ class _NodePath( object ):
     def isTransform( self, item ):
         """Customization Point: determine whether a node is a Transform"""
         return isinstance(item, nodetypes.Transforming)
-    
+
     def transformMatrix( self, translate=True, scale=True, rotate=True, matrixHolder=False, inverse=False ):
         """Calculate (and cache) a transform matrix for this path
-        
-        Calculates our transformMatrix from our parent's transform 
+
+        Calculates our transformMatrix from our parent's transform
         and the set of nodes between our parent and ourself.  Normally
         that should be a *single* node or *none* in most cases.
-        
-        translate -- if true, include translations in the matrix 
-        scale -- if true, include scales in the matrix 
+
+        translate -- if true, include translations in the matrix
+        scale -- if true, include scales in the matrix
         rotate -- if true, include rotations in the matrix
 
         Note: to apply these matrices to a particular coordinate,
@@ -55,7 +52,7 @@ class _NodePath( object ):
         key=(['matrix','inverse_matrix'][int(bool(inverse))],translate,scale,rotate)
         holder = CACHE.getHolder( self, key=key )
         if holder is None:
-            doConnect = True 
+            doConnect = True
             holder = CACHE.holder( self, None, key=key )
             mHolder = None
         else:
@@ -77,7 +74,7 @@ class _NodePath( object ):
                     holder.depend( item, 'rotation' )
                     holder.depend( item, 'center' )
             return child_holder.data[inverse]
-        matrix = transformmatrix.compressMatrices( 
+        matrix = transformmatrix.compressMatrices(
             *[get_mat(item) for item in self.transformChildren(reverse=inverse)]
         )
         if matrix is None:
@@ -92,7 +89,7 @@ class _NodePath( object ):
                 item = self[i]
                 if isinstance(item, t):
                     yield item
-                
+
         else: # forward...
             for item in self:
                 if isinstance(item, t):
@@ -105,7 +102,7 @@ class _NodePath( object ):
         if self.children is None:
             self.children = []
         self.children.append( weakref.ref( base ))
-        # watch for other sending events which say that 
+        # watch for other sending events which say that
         # this relationship is no longer active...
         return base
     def iterchildren( self ):
@@ -114,7 +111,7 @@ class _NodePath( object ):
             for childref in self.children[:]:
                 child = childref()
                 if child is not None:
-                    yield child 
+                    yield child
                 else:
                     self.children.remove( childref )
     def iterdescendents( self ):

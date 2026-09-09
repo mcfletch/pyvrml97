@@ -41,8 +41,8 @@ def namekey(node):
 
 def linearise(value, linvalues=defaults, **namedargs):
     """Linearise the given (node) value to a string"""
-    l = Lineariser(linvalues, **namedargs)
-    return l.linear(value)
+    lineariser = Lineariser(linvalues, **namedargs)
+    return lineariser.linear(value)
 
 
 class Lineariser:
@@ -134,7 +134,7 @@ class Lineariser:
             )  # register this scenegraph's extents
             return None
         startind = self._canUse(clientNode)
-        if type(startind) != int:  # this node has already been declared
+        if type(startind) is not int:  # this node has already been declared
             self.buffer.write(startind)
             return None
         # use a seperate Node alreadydone for each sceneGraph
@@ -154,7 +154,7 @@ class Lineariser:
             not self.skipUnusedProtos
         ):  # are supposed to linearise all prototypes currently in the sceneGraph, regardless of whether they are used
             for proto in clientNode.protoTypes.values():
-                if not id(proto) in self.protoalreadydone:
+                if id(proto) not in self.protoalreadydone:
                     self._proto(proto)
         # linearise the node/script children, they will include their prototypes if they are not already done
         for child in clientNode.children:
@@ -178,7 +178,7 @@ class Lineariser:
     def _proto(self, clientNode):
         """Linearise a prototype, return whether the prototype is actually linearised"""
         # check that we haven't yet done this prototype, register the fact that we've already started it
-        if type(clientNode) != type:
+        if type(clientNode) is not type:
             return
 
         clientName = protoName(clientNode)
@@ -267,7 +267,7 @@ class Lineariser:
         self._proto(getPrototype(clientNode))
         buffer = self.buffer
         startind = self._canUse(clientNode)
-        if type(startind) != int:  # this node has already been declared
+        if type(startind) is not int:  # this node has already been declared
             buffer.write(startind)
             return None
         # now calculate the representation of this node...
@@ -317,7 +317,7 @@ class Lineariser:
         '''
         buffer = self.buffer
         startind = self._canUse(clientNode)
-        if type(startind) != int:  # this node has already been declared
+        if type(startind) is not int:  # this node has already been declared
             buffer.write(startind)
             return None
         # Note: we assume that defNames are being stored in the Node as well as the sceneGraph, if not, will need to do a reverse lookup there
@@ -481,7 +481,7 @@ class Lineariser:
             return self._Node(anyobj)
         except AttributeError:
             if hasattr(field, 'vrmlstr'):
-                result = getattr(field, 'vrmlstr')(anyobj, self)
+                result = field.vrmlstr(anyobj, self)
                 if result is not None:
                     self.buffer.write(result)
             elif hasattr(self, field.typeName()):
@@ -491,7 +491,7 @@ class Lineariser:
             else:
                 raise TypeError(
                     '''Unknown fieldType %s, cannot convert to string''' % field
-                )
+                ) from None
 
     ### Utility functions...
     def _dedent(self):
@@ -542,7 +542,7 @@ class Lineariser:
     def _linear(self, clientNode):
         '''Linearise a particular client node of whatever type by dispatching to
         appropriate method...'''
-        if type(clientNode) == type:
+        if type(clientNode) is type:
             method = self._proto
         else:
             name = protoName(clientNode)

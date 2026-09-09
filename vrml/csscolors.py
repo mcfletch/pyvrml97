@@ -17,7 +17,7 @@ def toInt( value ):
 def toFloat( value, shift=0 ):
     """Take single-byte integer value return floating point equivalent"""
     return ((value&(255<<shift))>>shift)/255.0
-    
+
 
 cssColors = {
     'black' : (0.0,0.0,0.0),
@@ -170,7 +170,7 @@ if __name__ == "__main__":
             for name, value in cssColors.items():
                 assert stringToColor( name ) == value
         def testForwardHexidecimal (self):
-            for name, value in cssColors.items ():
+            for _name, value in cssColors.items ():
                 representation = '#%02x%02x%02x'%tuple(map(toInt,value))
                 result = stringToColor( representation )
                 assert arrays.allclose( result, value, 0.001), """Expected %r, got %r"""%(value, result)

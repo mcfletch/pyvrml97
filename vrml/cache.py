@@ -41,7 +41,7 @@ import traceback
 
 import sys
 if sys.version_info[0] == 2:
-    bytes = str 
+    bytes = str
 else:
     unicode = str
 
@@ -72,7 +72,7 @@ class Cache (dict):
                 return current.data
         return default
     def holder(
-        self, 
+        self,
         client,
         data,
         key="",
@@ -94,7 +94,7 @@ def cleaner( cache, id ):
         try:
             del cache[id]
         except Exception:
-            pass 
+            pass
     return clean_id
 
 
@@ -128,7 +128,7 @@ class CacheHolder( object ):
         cache = CACHE,
     ):
         """Initialise the cache-deletion callable
-        
+
         client -- the node doing the caching, if gc'd,
             then the entire cache for the node is deleted
         key -- opaque key into the cache's per-node storage
@@ -150,7 +150,7 @@ class CacheHolder( object ):
     def set( self, data ):
         """Set data after instantiation"""
         self.data = data
-    
+
     def depend( self, node, field=None ):
         """Add a dependency on given node's field value
 
@@ -206,7 +206,7 @@ class CacheHolder( object ):
         if not self.client():
             self( signal=signal, sender=sender )
         else:
-            self.data = None 
+            self.data = None
     def __call__( self, signal=None, sender=None ):
         """Delete the cached value (this object)
 
@@ -240,11 +240,11 @@ class CacheHolder( object ):
                         pass
                 try:
                     del self.nodeDependencies[:]
-                except:
+                except Exception:
                     pass
                 return 1
             except KeyError:
                 return 0
         except RuntimeError:
             traceback.print_exc()
-            
+

@@ -1,10 +1,6 @@
-import unittest,sys
+import unittest
 from vrml import fieldtypes
-from vrml.arrays import allclose,dot,array
-try:
-    xrange 
-except NameError:
-    xrange = range
+xrange = range
 
 class TestFieldTypes( unittest.TestCase ):
     def test_mfvec3f(self):
@@ -15,6 +11,6 @@ class TestFieldTypes( unittest.TestCase ):
         ]
         field = fieldtypes.MFVec3f(name="moo")
         for value in should_work:
-            result = field.coerce(value),value 
-            
-        
+            field.coerce(value),value
+
+

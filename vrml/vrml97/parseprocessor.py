@@ -7,10 +7,7 @@ from vrml.protofunctions import *
 from vrml.arrays import array
 from .._bytes import as_str
 
-try:
-    long
-except NameError:
-    long = int
+long = int
 _getString = getString
 
 
@@ -167,7 +164,7 @@ class ParseProcessor(DispatchProcessor):
             self.sceneGraphStack[-1].regDefName(name, newNode)
         self.nodeStack.append(newNode)
         # now get the field-declarations...
-        fields, attributes, isMaps = [], [], []
+        _fields, attributes, isMaps = [], [], []
         for item in rest:
             if item[0] in ("ScriptEventDecl", "ScriptFieldDecl"):
                 f, mapName = dispatch(self, item, buffer)
@@ -209,8 +206,8 @@ class ParseProcessor(DispatchProcessor):
         (tag, start, stop, sublist) = table
         (s, sf, d, df) = [getString(item, buffer) for item in sublist]
         (sn, dn) = [self.sceneGraphStack[-1].getDEF(name) for name in (s, d)]
-        for node, name in ((sn, s), (dn, d)):
-            if node is None:
+        for each_node, name in ((sn, s), (dn, d)):
+            if each_node is None:
                 raise NameError(
                     """ROUTE of un-DEF'd name %s on line %s"""
                     % (
@@ -326,7 +323,7 @@ class ParseProcessor(DispatchProcessor):
                     protoName(clientNode),
                     lines(end=start, buffer=buffer),
                 )
-            )
+            ) from None
         if value[0] == 'IS':
             mapName = dispatch(self, value, buffer)
             set = node.ismaps(self.prototypeStack[-1])
@@ -415,7 +412,7 @@ class ParseProcessor(DispatchProcessor):
 
     def MFString(self, tuples, buffer):
         bigresult = []
-        for tag, start, stop, sublist in tuples:
+        for _tag, _start, _stop, sublist in tuples:
             result = []
             for element in sublist:
                 if element[0] == 'CHARNODBLQUOTE':

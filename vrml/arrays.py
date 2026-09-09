@@ -76,7 +76,7 @@ def safeCompare(first, second):
         return first == second
     if isinstance(first, ArrayType) and isinstance(second, ArrayType):
         return bool(any(first == second))
-    elif type(first) != type(second):
+    elif type(first) is not type(second):
         return False
     return bool(first == second)
 

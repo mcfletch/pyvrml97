@@ -17,7 +17,7 @@ from __future__ import unicode_literals
 
 def _getcls(cls):
     """Utility function returns class when passed instance or class"""
-    if type(cls) == type:
+    if type(cls) is type:
         return cls
     else:
         return cls.__class__
@@ -39,7 +39,7 @@ def protoName(obj, value=None, *args, **named):
     elif issubclass(obj, list):
         return '__MFNode__'
     else:
-        possible = getattr(obj, "PROTO")
+        possible = obj.PROTO
         if not possible:
             return obj.__name__.split(".")[-1]
         return possible
@@ -57,7 +57,7 @@ def defName(obj, value=None, *args, **named):
 
 def name(obj, value=None, *args, **named):
     """Get/set prototype name for prototypes, DEF name for nodes"""
-    if type(obj) == type:
+    if type(obj) is type:
         return protoName(obj, value, *args, **named)
     else:
         return defName(obj, value, *args, **named)
