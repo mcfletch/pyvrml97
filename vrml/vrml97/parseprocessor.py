@@ -1,14 +1,25 @@
 """SimpleParse post-processor builds node-graph from parse-tree
 """
 
-from simpleparse.dispatchprocessor import *
+# Named rather than starred, and `getString` is aliased on the way in: the
+# module defines its own `getString` below, and this read `_getString =
+# getString` *before* that definition, relying on the star import still
+# holding the name at that point. Importing it under the name it is kept
+# under says what is meant and does not depend on the order.
+from simpleparse.dispatchprocessor import (
+    DispatchProcessor,
+    dispatch,
+    dispatchList,
+    lines,
+)
+from simpleparse.dispatchprocessor import getString as _getString
+
 from vrml import node, field
 from vrml.protofunctions import *
 from vrml.arrays import array
 from .._bytes import as_str
 
 long = int
-_getString = getString
 
 
 def getString(*args, **named):

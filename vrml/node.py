@@ -4,6 +4,7 @@ Requires Python 2.2.x, as it makes
 extensive use of properties
 """
 
+from typing import Any, Tuple
 from vrml import field, fieldtypes, weakkeydictfix
 from vrml import copier as copiermodule
 from vrml import olist
@@ -13,6 +14,8 @@ import weakref
 
 
 class Node(object):
+    #: Bound after `RootScenegraphNode` exists; see the foot of this module.
+    rootSceneGraph: Any
     """A generic scene graph node
 
     Unlike earlier versions of the library,
@@ -151,6 +154,8 @@ class Node(object):
 
 
 class PrototypedNode(object):
+    #: Bound after `SFNode` exists; see the foot of this module.
+    scenegraph: Any
     """Prototyped node mix-in
 
     Note the presence of a " scenegraph" property
@@ -316,7 +321,10 @@ class _SFNode(object):
     """
 
     nodes = 1
-    requiredTypes = ()
+    #: The types a value must be one of, or empty for no constraint.
+    #: Set per field -- `SFNode.requiredTypes = (Node,)` below -- so the
+    #: empty tuple here must not fix the element type.
+    requiredTypes: Tuple[type, ...] = ()
     allowNULL = 1
 
     def fset(self, client, value, notify=1):
@@ -389,7 +397,10 @@ field.register(SFNode)
 field.register(SFNodeEvt)
 
 
-class WeakSFNode(_SFNode, field.WeakField, field.Field):
+# `WeakField` and `Field` each carry an `fget`, and this takes the weak one
+# by putting it first. A checker reports the pair as a clash rather than as
+# a resolution, which is what the ordering is for.
+class WeakSFNode(_SFNode, field.WeakField, field.Field):  # type: ignore[misc]
     """Weak-referenced SFNode field-type"""
 
     fieldType = 'WeakSFNode'
@@ -434,6 +445,10 @@ class RootScenegraphNode(WeakSFNode):
 field.register(WeakSFNode)
 field.register(RootScenegraphNode)
 
+# Attached here rather than in the class bodies: `SFNode` needs `Node`,
+# and these two fields need `SFNode`, so the cycle is broken by binding
+# them once both exist. The annotations above say they belong to the
+# classes all the same.
 PrototypedNode.scenegraph = SFNode(' scenegraph', 1, NULL)
 Node.rootSceneGraph = RootScenegraphNode(' root', 1, NULL)
 assert PrototypedNode.scenegraph.name == " scenegraph", PrototypedNode.scenegraph.name

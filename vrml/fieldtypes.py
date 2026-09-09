@@ -9,6 +9,7 @@ the field values.
 We use Numeric Python arrays whereever possible.
 """
 
+from typing import Any, Tuple
 import operator
 from vrml import field, csscolors, arrays
 import sys
@@ -121,83 +122,45 @@ def MFSimple_vrmlstr(value, lineariser=None):
     return '[ %s ]' % ('\n'.join(stringsets))
 
 
-if str is bytes:
+# `str is bytes` is the Python 2 test, and it is False on every
+# interpreter this package supports, so only the branch below it ran.
 
-    class _SFString(object):
-        """SFString field/event type base-class"""
+class _SFString(object):
+    """SFString field/event type base-class"""
 
-        defaultDefault = ""
+    defaultDefault = ""
 
-        def coerce(self, value):
-            """Coerce the given value to our type
-            Allowable types:
-                simple string -> unchanged
-                unicode string -> utf-8 encoded
+    @classmethod
+    def coerce(self, value):
+        """Coerce the given value to our type
+        Allowable types:
+            simple string -> unchanged
+            unicode string -> utf-8 encoded
 
-                sequence of length == 1 where first element is a string -> returns first element
-                sequence of length > 1 where all elements are strings -> returns string.join( value, '')
-            """
-            if isinstance(value, unicode):
-                return value.encode('utf-8')
-            elif isinstance(value, field.SEQUENCE_TYPES):
-                if value and len(value) == 1:
-                    value = value[0]
-                elif not value:
-                    value = ""
-                else:
-                    value = "".join(value)
-            if not isinstance(value, bytes):
-                value = bytes(value)
-            return value
+            sequence of length == 1 where first element is a string -> returns first element
+            sequence of length > 1 where all elements are strings -> returns string.join( value, '')
+        """
+        if isinstance(value, bytes):
+            return value.decode('utf-8')
+        elif isinstance(value, field.SEQUENCE_TYPES):
+            if value and len(value) == 1:
+                value = value[0]
+            elif not value:
+                value = u""
+            else:
+                value = u"".join(value)
+        if not isinstance(value, unicode):
+            value = unicode(value)
+        return value
 
-        def check(self, value):
-            "Raise ValueError if isn't correct type"
-            if not isinstance(value, (bytes, unicode)):
-                return 0
-            return 1
+    @classmethod
+    def check(self, value):
+        "Raise ValueError if isn't correct type"
+        if not isinstance(value, unicode):
+            return 0
+        return 1
 
-        coerce = classmethod(coerce)
-        check = classmethod(check)
-        vrmlstr = staticmethod(SFString_vrmlstr)
-
-else:
-
-    class _SFString(object):
-        """SFString field/event type base-class"""
-
-        defaultDefault = ""
-
-        def coerce(self, value):
-            """Coerce the given value to our type
-            Allowable types:
-                simple string -> unchanged
-                unicode string -> utf-8 encoded
-
-                sequence of length == 1 where first element is a string -> returns first element
-                sequence of length > 1 where all elements are strings -> returns string.join( value, '')
-            """
-            if isinstance(value, bytes):
-                return value.decode('utf-8')
-            elif isinstance(value, field.SEQUENCE_TYPES):
-                if value and len(value) == 1:
-                    value = value[0]
-                elif not value:
-                    value = u""
-                else:
-                    value = u"".join(value)
-            if not isinstance(value, unicode):
-                value = unicode(value)
-            return value
-
-        def check(self, value):
-            "Raise ValueError if isn't correct type"
-            if not isinstance(value, unicode):
-                return 0
-            return 1
-
-        coerce = classmethod(coerce)
-        check = classmethod(check)
-        vrmlstr = staticmethod(SFString_vrmlstr)
+    vrmlstr = staticmethod(SFString_vrmlstr)
 
 
 class _MFString(object):
@@ -495,7 +458,10 @@ class _SFVec(object):
 
     acceptedTypes = ('d', DOUBLE_TYPE)
     targetType = DOUBLE_TYPE
-    dimension = (3,)  # our dimension...
+    #: The shape a value of this field has. Each field type gives its own
+    #: -- (4,) for a rotation, (4,4) for a matrix -- so this says "some
+    #: number of ints" rather than fixing the length at the base.
+    dimension: Tuple[int, ...] = (3,)  # our dimension...
 
     @property
     def length(self):
@@ -573,7 +539,9 @@ class _SFArray(object):
     """Base class which holds a single array-type value (can be arbitrarily spec'd numpy array)"""
 
     defaultDefault = list
-    acceptedTypes = ('d', DOUBLE_TYPE, 'V')
+    #: The array type codes a value may already be in. Subclasses give
+    #: their own and there are not always three, so the length is open.
+    acceptedTypes: Tuple[Any, ...] = ('d', DOUBLE_TYPE, 'V')
     targetType = DOUBLE_TYPE
 
     def reshape(self, value):
@@ -653,7 +621,8 @@ class _MFVec(_SFArray):
     defaultDefault = list
     acceptedTypes = ('d', DOUBLE_TYPE)
     targetType = DOUBLE_TYPE
-    dimension = (3,)  # our dimension...
+    #: As `_SFVec.dimension`: each field type gives its own shape.
+    dimension: Tuple[int, ...] = (3,)  # our dimension...
 
     @property
     def length(self):

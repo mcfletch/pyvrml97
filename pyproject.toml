@@ -44,6 +44,13 @@ zip-safe = false
 [tool.setuptools.packages.find]
 include = ["vrml*"]
 
+[tool.setuptools.package-data]
+# `py.typed` is what tells a checker this package's exports are real. Without
+# it `vrml.arrays` -- the abstraction OpenGLContext and its kin reach numpy
+# through -- resolves to nothing, and every `arrays.dot`, `arrays.zeros` and
+# their fellows becomes an error in code that is correct.
+vrml = ["py.typed"]
+
 [tool.setuptools.dynamic]
 version = { attr = "vrml.__version__" }
 
@@ -72,3 +79,13 @@ ignore = [
     'F403',
     'F405',
 ]
+
+[tool.mypy]
+# This package ships `py.typed`, so what it declares is what every consumer's
+# checker believes -- `vrml.arrays` is the abstraction OpenGLContext and its
+# kin reach numpy through. Publishing types that nothing holds the package to
+# is worse than publishing none.
+python_version = "3.12"
+files = ["vrml"]
+ignore_missing_imports = true
+warn_unused_ignores = true

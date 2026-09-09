@@ -115,8 +115,18 @@ class OList( list ):
             return value
     def __setslice__( self, i,j, iterable ):
         return self.__setitem__( slice(i,j), iterable)
-    def __iadd__( self, iterable ):
-        """Do an in-place add"""
-        return self.__setitem__( slice(len(self),len(self)), iterable )
+    # `list.__add__` answers a plain list while this answers an OList, which
+    # a checker reads as the two disagreeing. They do, and deliberately: an
+    # in-place add keeps the observable list, a copy does not.
+    def __iadd__( self, iterable ):  # type: ignore[misc]
+        """Do an in-place add
+
+        Returns self, as `__iadd__` must: `items += [x]` binds the name to
+        whatever comes back, and this returned `__setitem__`'s value -- the
+        entries just inserted -- so the name ended up on a plain list of those
+        and the observable list was dropped on the floor.
+        """
+        self.__setitem__( slice(len(self),len(self)), iterable )
+        return self
     extend = __iadd__
 

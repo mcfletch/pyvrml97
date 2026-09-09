@@ -15,13 +15,16 @@ you would do the following:
 
     p = ones( 4 )
     p[:3] = coordinate
-    return dot( p, matrix)
+    return ar.dot( p, matrix)
 
 That is, you use the homogenous coordinate, and
 make it the first item in the dot'ing.
 """
-from math import *
-from vrml.arrays import *
+# `from math import *` stood here too and supplied nothing: every free name in
+# this module -- array, dot, identity, pi -- comes from the array
+# implementation. Having both meant a checker saw numpy's `cos` land on
+# `math.cos` and so on, for names nothing here even uses.
+from vrml import arrays as ar
 try:
     from vrml.vrml97._transformmatrix_accel import (
         rotMatrix,
@@ -43,11 +46,11 @@ assert perspectiveMatrix
 assert orthoMatrix
 
 # used to determine whether angles are non-null
-TWOPI = pi * 2.0
+TWOPI = ar.pi * 2.0
 RADTODEG = 360./TWOPI
 DEGTORAD = TWOPI/360.
 # used to determine the center point of a transform
-ORIGINPOINT = array([0,0,0,1],'f')
+ORIGINPOINT = ar.array([0,0,0,1],'f')
 VERY_SMALL = 1e-300
 
 def transformMatrix(
@@ -169,7 +172,7 @@ def compressMatrices( *matrices ):
             if first is None:
                 first = item
             else:
-                first = dot( item, first )
+                first = ar.dot( item, first )
     return first
 
 
@@ -184,10 +187,10 @@ def center(
     node's center of rotation.
     """
     if parentMatrix is None:
-        parentMatrix = identity(4)
+        parentMatrix = ar.identity(4)
     T,T1 = transMatrix( translation )
     C,C1 = transMatrix( center )
     for x in (T,C):
         if x:
-            parentMatrix = dot( x, parentMatrix)
-    return dot( ORIGINPOINT, parentMatrix )
+            parentMatrix = ar.dot( x, parentMatrix)
+    return ar.dot( ORIGINPOINT, parentMatrix )

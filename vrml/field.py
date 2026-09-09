@@ -1,5 +1,6 @@
 """property sub-class providing VRML field semantics"""
 
+from typing import Any, List, Tuple
 from pydispatch import dispatcher, robustapply
 import weakref
 from vrml import protonamespace
@@ -17,14 +18,14 @@ baseEventTypes = protonamespace.ProtoNamespace({})
 
 ### stuff used by the various field sub-types
 NUMERIC_TYPES = (int, float, long)
-SEQUENCE_TYPES = (tuple, list)
+SEQUENCE_TYPES: Tuple[type, ...] = (tuple, list)
 MAP_TYPE = type(map(int, [0]))
-ZIP_TYPE = type(zip([], []))
+ZIP_TYPE: type = type(zip([], []))
 RANGE_TYPE = type(range(3))
 #: The lazy iterables a field coerces to a sequence before storing.
 UNPACK_TYPES = (MAP_TYPE, ZIP_TYPE, RANGE_TYPE)
 SEQUENCE_TYPES += UNPACK_TYPES
-_NULL = []
+_NULL: List[Any] = []
 
 
 def register(cls):
@@ -74,108 +75,111 @@ def newEvent(name, dataType, direction=1):
     return dataType(name, direction)
 
 
-if fieldaccel2:
-    BaseField = fieldaccel2.BaseField
-else:
+class BaseField(object):
+    def __init__(self, name, default):
+        self.name = name
+        self.defaultobj = default
+        if callable(default):
+            self.call_default = True
+        else:
+            self.call_default = False
 
-    class BaseField(object):
-        def __init__(self, name, default):
-            self.name = name
-            self.defaultobj = default
-            if callable(default):
-                self.call_default = True
-            else:
-                self.call_default = False
+    def __get__(self, client, cls=None):
+        """Retrieve value for given instance (or self for cls)"""
+        if client is None:
+            return self
+        idict = client.__dict__
+        current = idict.get(self.name, _NULL)
+        if current is _NULL:
+            return self.getDefault(client)
+        return current
 
-        def __get__(self, client, cls=None):
-            """Retrieve value for given instance (or self for cls)"""
-            if client is None:
-                return self
-            idict = client.__dict__
-            current = idict.get(self.name, _NULL)
-            if current is _NULL:
-                return self.getDefault(client)
-            return current
+    fget = __get__
 
-        fget = __get__
+    def __set__(self, client, value):
+        """Set value for given instance"""
+        value = self._set(client, value)
+        dispatcher.send(
+            ('set', self),
+            client,
+            value=value,
+        )
+        # return value
 
-        def __set__(self, client, value):
-            """Set value for given instance"""
-            value = self._set(client, value)
+    def fset(self, client, value, notify=True):
+        value = self._set(client, value)
+        if notify:
             dispatcher.send(
                 ('set', self),
                 client,
                 value=value,
             )
-            # return value
+        return value
 
-        def fset(self, client, value, notify=True):
-            value = self._set(client, value)
-            if notify:
-                dispatcher.send(
-                    ('set', self),
-                    client,
-                    value=value,
-                )
-            return value
+    def _set(self, client, value):
+        try:
+            value = self.coerce(value)
+        except ValueError as x:
+            raise ValueError(
+                """Field %s could not accept value %s (%s)""" % (self, value, x)
+            ) from x
+        except TypeError as x:
+            raise ValueError(
+                """Field %s could not accept value %s of type %s (%s)"""
+                % (self, value, type(value), x)
+            ) from x
+        if isinstance(client, type):
+            setattr(client, self.name, value)
+        else:
+            client.__dict__[self.name] = value
+        return value
 
-        def _set(self, client, value):
-            try:
-                value = self.coerce(value)
-            except ValueError as x:
-                raise ValueError(
-                    """Field %s could not accept value %s (%s)""" % (self, value, x)
-                ) from x
-            except TypeError as x:
-                raise ValueError(
-                    """Field %s could not accept value %s of type %s (%s)"""
-                    % (self, value, type(value), x)
-                ) from x
-            if isinstance(client, type):
-                setattr(client, self.name, value)
-            else:
-                client.__dict__[self.name] = value
-            return value
+    def coerce(self, value):
+        """Coerce the given value to our type"""
+        return value
 
-        def coerce(self, value):
-            """Coerce the given value to our type"""
-            return value
+    def check(self, value):
+        "Raise ValueError if isn't correct type"
+        return value
 
-        def check(self, value):
-            "Raise ValueError if isn't correct type"
-            return value
+    def getDefault(self, client=None):
+        """Get the default value of this field
 
-        def getDefault(self, client=None):
-            """Get the default value of this field
+        if client, set client's attribute to default
+        without sending a notification event.
+        """
+        if self.call_default:
+            defaultobj = self.defaultobj()
+        else:
+            defaultobj = self.defaultobj
+        if client is not None:
+            defaultobj = self._set(client, defaultobj)
+        return defaultobj
 
-            if client, set client's attribute to default
-            without sending a notification event.
-            """
-            if self.call_default:
-                defaultobj = self.defaultobj()
-            else:
-                defaultobj = self.defaultobj
-            if client is not None:
-                defaultobj = self._set(client, defaultobj)
-            return defaultobj
+    def __delete__(self, client):
+        """Delete our value from client's dictionary"""
+        try:
+            client.__dict__[self.name]
+        except KeyError:
+            raise AttributeError(self.name) from None
 
-        def __delete__(self, client):
-            """Delete our value from client's dictionary"""
-            try:
-                client.__dict__[self.name]
-            except KeyError:
-                raise AttributeError(self.name) from None
-
-        def fdel(self, client, notify=True):
-            """Delete with notify"""
-            self.__delete__(client)
-            if notify:
-                dispatcher.send(
-                    ('del', self),
-                    client,
-                )
+    def fdel(self, client, notify=True):
+        """Delete with notify"""
+        self.__delete__(client)
+        if notify:
+            dispatcher.send(
+                ('del', self),
+                client,
+            )
 
 
+
+
+if fieldaccel2:
+    # The compiled accelerator answers the same calls and replaces it where
+    # it is installed. A checker reads the Python class above, which is the
+    # implementation that is always here.
+    BaseField = fieldaccel2.BaseField  # type: ignore[misc]
 class Field(BaseField):
     """Property sub-class with VRML field semantics
 
@@ -195,7 +199,11 @@ class Field(BaseField):
     """
 
     nodes = 0
-    defaultDefault = None
+    #: What `default` becomes when a field is declared without one. Each field
+    #: type supplies its own -- `0` for an SFInt32, `""` for an SFString, the
+    #: `list` constructor for a multi-valued one -- so the base says `Any`
+    #: rather than letting `None` here make every one of those a narrowing.
+    defaultDefault: Any = None
 
     def __set__(self, client, value):
         """Assignment goes through ``fset``, so subclasses are heard.
