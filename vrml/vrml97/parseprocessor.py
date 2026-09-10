@@ -394,6 +394,8 @@ class ParseProcessor(DispatchProcessor):
         (tup,) = table
         return int(getString(tup, buffer), 0)
 
+    SFUInt32 = SFInt32
+
     def SFVec3f(self, table: Any, buffer: Any) -> Any:
         return [float(getString(item, buffer)) for item in table]
 
@@ -404,6 +406,10 @@ class ParseProcessor(DispatchProcessor):
 
     def SFRotation(self, table: Any, buffer: Any) -> Any:
         return [float(getString(item, buffer)) for item in table]
+
+    #: Every single vector is a run of numbers in the file, whatever its
+    #: length and precision; the field is what knows how many to expect.
+    SFVec4f = SFVec2d = SFVec3d = SFVec4d = SFRotation
 
     def SFArray(self, values: Any, buffer: Any, final: bool=True) -> Any:
         """Process a vector-of-values data-set"""
@@ -416,6 +422,11 @@ class ParseProcessor(DispatchProcessor):
         if final:
             return array(result, 'f')
         return result
+
+    #: A matrix is written as rows, so it is read as a nested run of numbers
+    #: and the field reshapes it. A list of them is the same, one row deeper.
+    SFArray32 = SFMatrix3f = SFMatrix4f = SFMatrix3d = SFMatrix4d = SFArray
+    MFMatrix3f = MFMatrix4f = MFMatrix3d = MFMatrix4d = SFArray
 
     def MFInt32(self, tuples: Any, buffer: Any) -> Any:
         # localisation
@@ -432,7 +443,10 @@ class ParseProcessor(DispatchProcessor):
     def MFFloat(self, tuples: Any, buffer: Any) -> Any:
         return [float(buffer[start:stop]) for (tag, start, stop, children) in tuples]
 
+    #: Every list of vectors is a flat run of numbers in the file; the field
+    #: is what knows how wide each row is.
     MFColor = MFRotation = MFVec2f = MFVec3f = MFTime = MFFloat32 = MFFloat
+    MFVec4f = MFVec2d = MFVec3d = MFVec4d = MFFloat
 
     def MFString(self, tuples: Any, buffer: Any) -> Any:
         bigresult = []

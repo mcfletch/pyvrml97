@@ -510,14 +510,18 @@ class Lineariser:
             try:
                 pName = protoName(anyobj)
             except AttributeError:
-                pass                # NULL, or a value that is not a node
-            else:
-                handler = self.typecache.get(pName)
-                if handler:
-                    return handler(anyobj)
-                if isinstance(anyobj, list):
-                    return self._mfnode(anyobj)
-                return self._Node(anyobj)
+                # A field with no required types will hold anything a program
+                # puts in it, and VRML97 has a spelling only for nodes.
+                raise TypeError(
+                    '''%s holds %r, which is not a node and has no VRML97'''
+                    ''' representation''' % (field, anyobj)
+                ) from None
+            handler = self.typecache.get(pName)
+            if handler:
+                return handler(anyobj)
+            if isinstance(anyobj, list):
+                return self._mfnode(anyobj)
+            return self._Node(anyobj)
         if hasattr(field, 'vrmlstr'):
             result = field.vrmlstr(anyobj, self)
             if result is not None:

@@ -14,6 +14,7 @@ big for one line, a colour named rather than numbered, and what each type
 refuses.
 """
 
+import array
 import unittest
 
 import numpy as np
@@ -197,6 +198,13 @@ class TestAVectorFromAScalar(unittest.TestCase):
             fieldtypes.SFVec3f(name='scale').coerce(object())
         self.assertIn('SFVec3f', str(caught.exception))
 
+    def test_anything_numpy_can_read_is_read(self):
+        """A buffer of numbers is neither a list nor an array, and numpy
+        makes an array of it all the same."""
+        got = fieldtypes.SFVec3f(name='scale').coerce(
+            array.array('f', [1.0, 2.0, 3.0]))
+        self.assertEqual(list(got), [1.0, 2.0, 3.0])
+
 
 class TestAMatrixDefault(unittest.TestCase):
     """A matrix field left alone is the identity, so that a node that
@@ -245,6 +253,14 @@ class TestABareArray(unittest.TestCase):
     def test_it_checks_for_an_array_of_the_right_kind(self):
         declared = self.field()
         self.assertFalse(declared.check([1.0, 2.0]))
+        self.assertFalse(declared.check(np.array([1, 2], 'i')))
+        self.assertTrue(declared.check(declared.coerce([1.0, 2.0])))
+
+    def test_any_shape_is_of_the_right_kind(self):
+        """An SFArray holds whatever shape it was given, so there is no
+        shape for `check` to insist on."""
+        declared = self.field()
+        self.assertTrue(declared.check(np.zeros((2, 3, 4), 'd')))
 
 
 class TestWritingAListOfVectors(unittest.TestCase):

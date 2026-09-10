@@ -1,7 +1,9 @@
-"""Abstraction point allowing use with numpy or Numeric
+"""The array operations the scenegraph is built on
 
-Chooses numpy if available because when it's installed
-Numeric tends to be a bit flaky...
+One place for them, so that a consumer writes ``from vrml.arrays import
+dot`` rather than reaching for numpy itself, and so that the few
+scenegraph-shaped helpers -- :func:`safeCompare`, :func:`contiguous` -- sit
+beside the numpy names they wrap.
 """
 from typing import Any
 
@@ -33,50 +35,22 @@ except ImportError as err:
     frustcullaccel = None
 # why did this get taken out?  Is divide now safe?
 divide_safe = divide
-# Now deal with differing numpy APIs...
-a = array([1, 2, 3], 'i')
-ArrayType = ndarray  # alias removed in later versions
-# Take's API changed from Numeric, we've updated to
-# always provide axis now...
-if hasattr(a, '__array_typestr__'):
-
-    def typeCode(a: Any) -> str:
-        """Retrieve the typecode for the given array
-
-        Depending on whether you access the classic or new API
-        you have different access methods, so we have to use
-        the typecode() method if __array_typestr__ isn't there.
-        """
-        try:
-            return a.__array_typestr__
-        except AttributeError:
-            return a.typecode()
-
-else:
-
-    def typeCode(a: Any) -> str:
-        """Retrieve the typecode for the given array
-
-        Depending on whether you access the classic or new API
-        you have different access methods, so we have to use
-        the typecode() method if .dtype.char isn't there.
-        """
-        try:
-            return a.dtype.char
-        except AttributeError:
-            return a.typecode()
+#: numpy dropped the name; a field type asks for it by this one.
+ArrayType = ndarray
 
 
-del a
+def typeCode(a: Any) -> str:
+    """The array's element type, as the one-character code a field names"""
+    return a.dtype.char
+
+
 implementation_name = 'numpy'
-try:
-    # PyVRML97 is from before numpy printed errors, we explicitly do not care
-    # about the divide-by-zero, which commonly happens in mesh data processing
-    # TODO: likely should rework the mesh processing to check manually and remove
-    # this sledge-hammer approach
-    seterr(all='ignore')
-except Exception as err:
-    pass
+# A divide by zero is ordinary in mesh processing here -- a degenerate face,
+# a zero-length normal -- and each place that can produce one answers for the
+# result it wants. Printing a warning per occurrence would say nothing a
+# caller can act on.
+# TODO: check for these where they arise and take the setting off again.
+seterr(all='ignore')
 
 
 def safeCompare(first: Any, second: Any) -> bool:

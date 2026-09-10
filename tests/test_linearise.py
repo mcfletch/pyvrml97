@@ -11,6 +11,7 @@ name.
 construct on its own.
 """
 
+import io
 import unittest
 
 from vrml import node, protofunctions
@@ -272,6 +273,99 @@ class TestAScript(unittest.TestCase):
         text = written(read('#VRML V2.0 utf8\nScript { url "js:x" }\n'))
         self.assertIn('Script {', text)
         self.assertIn('}#Script', text)
+
+    def test_one_in_two_places_is_written_once_and_used(self):
+        script = read(self.SOURCE).children[0]
+        text = written(SceneGraph(children=[
+            basenodes.Group(children=[script, script])]))
+        self.assertIn('DEF Watcher Script', text)
+        self.assertIn('USE Watcher', text)
+
+    def test_one_held_in_a_node_field_is_written_there(self):
+        """An SFNode holds a whole node, and a Script is one."""
+        script = read(self.SOURCE).children[0]
+        text = written(SceneGraph(children=[
+            basenodes.Collision(proxy=script)]))
+        self.assertIn('proxy', text)
+        self.assertIn('Script {', text)
+
+
+class TestWritingOneSceneTwice(unittest.TestCase):
+    """`linear` takes a sequence, and a graph that turns up twice in one is
+    recognised as the graph already written.
+
+    A scene graph has no DEF name to write a USE against, so the second
+    turn is written out again with a comment saying so -- the same answer a
+    node in two places without a name gets."""
+
+    def written(self):
+        scene = SceneGraph(children=[basenodes.Transform(DEF='Shared')])
+        return linearise.Lineariser().linear([scene, scene])
+
+    def test_it_says_what_it_did(self):
+        self.assertIn('WARNING', self.written())
+
+    def test_the_scene_is_there_both_times(self):
+        self.assertEqual(self.written().count('DEF Shared'), 2)
+
+
+class TestANodeFieldHoldingSomethingElse(unittest.TestCase):
+    """A field that names no required types holds whatever a program puts
+    in it, and the file format has a spelling only for nodes."""
+
+    def test_it_says_which_field_and_what_it_held(self):
+        held = node.SFNode('geometry', 1, node.NULL)
+        held.requiredTypes = ()
+        lineariser = linearise.Lineariser()
+        lineariser.linear(SceneGraph())
+        with self.assertRaises(TypeError) as caught:
+            lineariser._sffield('not a node', held)
+        self.assertIn('geometry', str(caught.exception))
+        self.assertIn('not a node', str(caught.exception))
+
+
+class TestAWeakNodeField(unittest.TestCase):
+    """A weak node field points at a node it does not own, and is written
+    like any other node field -- the field's own `vrmlstr` writes it."""
+
+    class Holder(node.Node):
+        PROTO = 'Holder'
+        held = node.WeakSFNode('held', 1, node.NULL)
+
+    def test_the_node_it_points_at_is_written(self):
+        pointed = basenodes.Sphere(radius=2.0)
+        holder = self.Holder(held=pointed)
+        text = written(SceneGraph(children=[holder]))
+        self.assertIn('held', text)
+        self.assertIn('Sphere', text)
+
+    def test_one_pointing_at_nothing_is_left_out(self):
+        text = written(SceneGraph(children=[self.Holder()]))
+        self.assertNotIn('held', text)
+
+
+class TestALineariserThatKnowsAFieldType(unittest.TestCase):
+    """A field type the lineariser has a method for is written by that
+    method, which is how a subclass adds a spelling of its own."""
+
+    class Knowing(linearise.Lineariser):
+        def Silent(self, value):
+            return '"%s"' % (value,)
+
+    class Silent:
+        """As little of a field as `_sffield` reads."""
+
+        name = 'thing'
+
+        def typeName(self):
+            return 'Silent'
+
+    def test_the_method_writes_the_value(self):
+        lineariser = self.Knowing()
+        lineariser.linear(SceneGraph())
+        lineariser.buffer = io.StringIO()
+        lineariser._sffield('a value', self.Silent())
+        self.assertEqual(lineariser.buffer.getvalue(), '"a value"')
 
 
 class TestARoute(unittest.TestCase):

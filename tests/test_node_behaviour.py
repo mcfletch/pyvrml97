@@ -95,6 +95,21 @@ class TestTheNullNode(unittest.TestCase):
     def test_comparing_it_to_something_that_is_not_a_node_says_so(self):
         self.assertNotEqual(node.NULL, 42)
 
+    def test_it_can_be_a_key(self):
+        """A copier keeps the nodes it has copied in a dictionary, and NULL
+        turns up in one wherever a node field is empty."""
+        self.assertEqual({node.NULL: 'kept'}[node.NullNode()], 'kept')
+
+    def test_copying_a_field_that_holds_it_answers_it_again(self):
+        self.assertIs(node.SFNode('geometry', 1, node.NULL)
+                      .copyValue(node.NULL), node.NULL)
+
+    def test_copying_a_node_without_a_copier_makes_one(self):
+        held = basenodes.Sphere(radius=2.0)
+        copied = node.SFNode('geometry', 1, node.NULL).copyValue(held)
+        self.assertIsNot(copied, held)
+        self.assertAlmostEqual(copied.radius, 2.0, places=5)
+
 
 class TestASingleNodeField(unittest.TestCase):
     def field(self):
@@ -171,6 +186,36 @@ class TestAListOfNodesField(unittest.TestCase):
         child = basenodes.Shape()
         group.children = [child]
         self.assertIs(protofunctions.root(child), scene)
+
+
+class TestPassingTheSceneRootDown(unittest.TestCase):
+    """Setting a node's scene root walks what it holds, so that a subtree
+    attached in one go all learns which file it is in. What it walks is a
+    scene as a program may have left it, so each step answers for what it
+    finds rather than for what it expects."""
+
+    def test_a_field_that_cannot_answer_is_passed_over(self):
+        """A node field can refuse its own default -- a restricted one that
+        does not allow NULL has nothing to answer with."""
+
+        class Restricted(node.Node):
+            PROTO = 'Restricted'
+            held = node.SFNode('held', 1, None)
+
+        Restricted.held.allowNULL = 0
+        Restricted.held.requiredTypes = (basenodes.Group,)
+        scene = SceneGraph()
+        held = Restricted()
+        scene.children.append(held)
+        self.assertIs(protofunctions.root(held), scene)
+
+    def test_a_root_that_is_not_a_scene_graph_registers_no_names(self):
+        """`root` takes whatever it is given, and only a scene graph has a
+        namespace to put a DEF name in."""
+        held = basenodes.Transform(DEF='Shared')
+        other = basenodes.Group()
+        protofunctions.root(held, other)
+        self.assertIs(protofunctions.root(held), other)
 
 
 class TestDeclaringAPrototype(unittest.TestCase):

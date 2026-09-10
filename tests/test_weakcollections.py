@@ -262,6 +262,19 @@ class TestComparingAWeakTuple(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.weak.index(Thing(9))
 
+    def test_it_orders_below_a_longer_list(self):
+        longer = self.items + [Thing(3)]
+        self.assertTrue(self.weak < longer)
+        self.assertFalse(self.weak < self.items)
+
     def test_wrapping_a_reference_stores_what_it_points_at(self):
         held = Thing(1)
         self.assertEqual(list(WeakTuple([weakref.ref(held)])), [held])
+
+    def test_wrapping_an_object_answers_a_reference_to_it(self):
+        held = Thing(1)
+        self.assertIs(self.weak.wrap(held)(), held)
+
+    def test_wrapping_a_reference_answers_one_to_the_same_object(self):
+        held = Thing(1)
+        self.assertIs(self.weak.wrap(weakref.ref(held))(), held)

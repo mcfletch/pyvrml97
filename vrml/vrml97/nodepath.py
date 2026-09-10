@@ -18,10 +18,6 @@ else:
     _PathHost = object
 
 
-class _MatrixHolder( object ):
-    def __init__( self, matrix: Any) -> None:
-        self.matrix = matrix
-
 class _NodePath( _PathHost ):
     """Path within a VRML97 scenegraph from root to particular node
 
@@ -35,9 +31,6 @@ class _NodePath( _PathHost ):
     children: Optional[List[Any]] = None
     active = True
     broken = False
-    def isTransform( self, item: Any ) -> bool:
-        """Customization Point: determine whether a node is a Transform"""
-        return isinstance(item, nodetypes.Transforming)
 
     def transformMatrix( self, translate: bool=True, scale: bool=True, rotate: bool=True, matrixHolder: bool=False, inverse: bool=False ) -> Any:
         """Calculate (and cache) a transform matrix for this path

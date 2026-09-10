@@ -139,3 +139,63 @@ class TestSlicingAPath(unittest.TestCase):
     def test_one_element_is_still_the_node(self):
         self.assertIs(self.path[0], self.path[0])
         self.assertEqual(self.path[0].DEF, 'first')
+
+
+class TestKeepingTheMatrixItWorkedOut(unittest.TestCase):
+    """A path's transform is cached beside it, so a renderer asking for it
+    once per node per frame does the multiplication once."""
+
+    def setUp(self):
+        self.path = nodepath.NodePath() + [
+            Transform(translation=(1, 0, 0), DEF='first'),
+        ]
+
+    def test_asking_twice_answers_the_same_matrix(self):
+        self.assertIs(self.path.transformMatrix(),
+                      self.path.transformMatrix())
+
+    def test_the_inverse_is_kept_separately(self):
+        forward = self.path.transformMatrix()
+        backward = self.path.transformMatrix(inverse=True)
+        self.assertIsNot(forward, backward)
+        self.assertIs(backward, self.path.transformMatrix(inverse=True))
+
+    def test_a_change_to_the_node_is_worked_out_again(self):
+        first = self.path.transformMatrix()
+        self.path[0].translation = (2, 0, 0)
+        self.assertIsNot(self.path.transformMatrix(), first)
+
+
+class TestWhichChildPathsAreStillThere(unittest.TestCase):
+    """The paths extending one are held weakly, so a subtree a program has
+    let go of does not keep the path alive."""
+
+    def setUp(self):
+        self.root = nodepath.NodePath()
+        self.child = self.root + [Transform(DEF='first')]
+
+    def test_a_live_child_is_yielded(self):
+        self.assertEqual(list(self.root.iterchildren()), [self.child])
+
+    def test_one_that_has_gone_is_dropped_rather_than_yielded(self):
+        import gc
+
+        going = self.root + [Transform(DEF='second')]
+        del going
+        gc.collect()
+        self.assertEqual(list(self.root.iterchildren()), [self.child])
+        self.assertEqual(len(self.root.children), 1)
+
+
+class TestWhatATransformingNodeHasToAnswer(unittest.TestCase):
+    """`localMatrices` is the one thing the path asks of a node it walks
+    through, so the base says so rather than answering something wrong."""
+
+    def test_a_type_that_has_not_said_is_asked_and_says_so(self):
+        from vrml.vrml97 import nodetypes
+
+        class Untransformed(nodetypes.Transforming):
+            pass
+
+        with self.assertRaises(NotImplementedError):
+            Untransformed().localMatrices()

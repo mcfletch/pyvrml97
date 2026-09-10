@@ -326,10 +326,7 @@ class _SFUInt32(_SFInt32):
 
     def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
-        base = str(int(value))
-        if base[-1] in ('l', 'L'):
-            base = base[:-1]
-        return base
+        return str(int(value))
 
 
 class _SFFloat(_FieldHost):
@@ -632,18 +629,16 @@ class _SFArray(_FieldHost):
         return value
 
     def check(self, value: Any) -> int:
-        """Check that the given value is of exactly the expected type"""
-        if isinstance(value, arrays.ArrayType):
-            typeCode = arrays.typeCode(value)
-            if typeCode in self.acceptedTypes:
-                if typeCode == 'V':
-                    # special vector type
-                    return 1
-                else:
-                    s = arrays.shape(value)
-                    if len(s) == len(self.dimension) + 1 and s[1:] == self.dimension:
-                        return 1
-        return 0
+        """Whether the value is already an array of a type this field takes
+
+        There is no shape to satisfy: an SFArray holds whatever shape it was
+        given, which is what a shader's uniform value or a vertex buffer
+        needs of it.
+        """
+        return int(
+            isinstance(value, arrays.ArrayType)
+            and arrays.typeCode(value) in self.acceptedTypes
+        )
 
     def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
@@ -703,12 +698,8 @@ class _MFVec(_SFArray):
 
     def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
-        try:
-            if not len(value):
-                return '[ ]'
-        except ValueError:
-            # numpy arrays can't be tested for null-ity, should be a typeerror, but whatever
-            pass
+        if not len(value):
+            return '[ ]'
         linvalues = _linvalues(lineariser)
         sets = [
             linvalues['numsep'].join([str(obj) for obj in vector.ravel()])
@@ -1437,6 +1428,8 @@ field.register(SFArray32)
 field.register(MFVec2f)
 field.register(MFVec3f)
 field.register(MFVec4f)
+field.register(SFMatrix3f)
+field.register(SFMatrix4f)
 field.register(MFMatrix3f)
 field.register(MFMatrix4f)
 field.register(SFVec2d)
@@ -1445,6 +1438,8 @@ field.register(SFVec4d)
 field.register(MFVec2d)
 field.register(MFVec3d)
 field.register(MFVec4d)
+field.register(SFMatrix3d)
+field.register(SFMatrix4d)
 field.register(MFMatrix3d)
 field.register(MFMatrix4d)
 
