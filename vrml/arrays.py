@@ -54,19 +54,34 @@ seterr(all='ignore')
 
 
 def safeCompare(first: Any, second: Any) -> bool:
-    """Watch out for pointless numpy truth-value checks"""
-    if first is None:
-        if second is None:
-            return True
-        else:
-            return False
-    elif second is None:
-        return False
+    """Whether two field values are the same, without a numpy truth test
+
+    Comparing two arrays answers an array, and `bool()` of that raises rather
+    than answering -- which is what makes a plain `==` unusable here.
+
+    A sequence is read as an array first, because the two sides are often the
+    same value in two shapes: a node declares its default as a list of numbers
+    and stores its value as an array, and the lineariser asks this to decide
+    whether a field is still at its default and so need not be written.
+    """
+    if first is None or second is None:
+        return first is None and second is None
     if isinstance(first, (int, float, str)):
-        return first == second
-    if isinstance(first, ArrayType) and isinstance(second, ArrayType):
-        return bool(any(first == second))
-    elif type(first) is not type(second):
+        return bool(first == second)
+    if isinstance(first, (ArrayType, list, tuple)) and isinstance(
+        second, (ArrayType, list, tuple)
+    ):
+        try:
+            first, second = asarray(first), asarray(second)
+        except Exception:
+            pass                # ragged, or holding something numpy refuses
+        else:
+            if first.shape != second.shape:
+                return False
+            # `all`, because every element has to match: a translation of
+            # (1,0,0) shares two of three with the (0,0,0) it defaults to.
+            return bool((first == second).all())
+    if type(first) is not type(second):
         return False
     return bool(first == second)
 

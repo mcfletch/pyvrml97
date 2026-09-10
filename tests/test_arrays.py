@@ -70,6 +70,51 @@ class TestSafeCompare(unittest.TestCase):
         second = arrays.array([9.0, 9.0, 9.0], 'f')
         self.assertFalse(arrays.safeCompare(first, second))
 
+    def test_arrays_alike_in_one_place_are_not_equal(self):
+        """Every element has to match, not merely one of them: the
+        lineariser asks this to decide whether a field is still at its
+        default, and a translation of (1,0,0) shares two with (0,0,0)."""
+        first = arrays.array([0.0, 0.0, 0.0], 'f')
+        second = arrays.array([1.0, 0.0, 0.0], 'f')
+        self.assertFalse(arrays.safeCompare(first, second))
+
+    def test_arrays_of_different_lengths_are_not_equal(self):
+        self.assertFalse(arrays.safeCompare(arrays.array([1.0, 2.0], 'f'),
+                                            arrays.array([1.0], 'f')))
+
+    def test_a_sequence_equals_the_array_of_the_same_numbers(self):
+        """A node declares its default as a list and stores its value as an
+        array, and the two are the same value."""
+        self.assertTrue(arrays.safeCompare([0.0, 0.0, 0.0],
+                                           arrays.array([0.0, 0.0, 0.0], 'f')))
+
+    def test_a_sequence_of_other_numbers_does_not(self):
+        self.assertFalse(arrays.safeCompare([0.0, 0.0, 0.0],
+                                            arrays.array([1.0, 0.0, 0.0], 'f')))
+
+    def test_two_equal_sequences_compare_equal(self):
+        self.assertTrue(arrays.safeCompare([1.0, 2.0], (1.0, 2.0)))
+
+    def test_two_empty_sequences_compare_equal(self):
+        self.assertTrue(arrays.safeCompare([], arrays.array([], 'f')))
+
+    def test_a_list_of_objects_compares_by_identity(self):
+        """Which is what an MFNode's value is: the same nodes or not."""
+        held = [object(), object()]
+        self.assertTrue(arrays.safeCompare(held, list(held)))
+        self.assertFalse(arrays.safeCompare(held, [held[0], object()]))
+
+    def test_a_ragged_sequence_falls_back_to_comparing_it(self):
+        """numpy refuses to make an array of rows of different lengths, and
+        the two lists still have an answer."""
+        ragged = [[1, 2], [3]]
+        self.assertTrue(arrays.safeCompare(ragged, [[1, 2], [3]]))
+        self.assertFalse(arrays.safeCompare(ragged, [[1, 2], [4]]))
+
+    def test_something_neither_kind_falls_back_to_comparing_it(self):
+        self.assertTrue(arrays.safeCompare({'a': 1}, {'a': 1}))
+        self.assertFalse(arrays.safeCompare({'a': 1}, {'a': 2}))
+
     def test_it_answers_a_real_bool(self):
         """A caller writing `if x is True` or storing the answer wants one."""
         first = arrays.array([1.0], 'f')

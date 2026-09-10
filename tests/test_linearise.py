@@ -368,6 +368,39 @@ class TestALineariserThatKnowsAFieldType(unittest.TestCase):
         self.assertEqual(lineariser.buffer.getvalue(), '"a value"')
 
 
+class TestSayingWhatABraceCloses(unittest.TestCase):
+    """Where a node or a prototype runs on for many lines, the closing
+    brace carries a comment naming what it closes, so that a reader
+    scrolling to the end of one knows where they are."""
+
+    def long_body(self):
+        """A prototype with more in it than a screen holds."""
+        return ('#VRML V2.0 utf8\n'
+                'PROTO Wall [ field SFFloat height 1.0 ]\n'
+                '{\n' + ''.join(
+                    '  Shape { geometry Box { size %d %d %d } }\n' % (n, n, n)
+                    for n in range(1, 20)) + '}\n'
+                'Wall { }\n')
+
+    def test_a_prototype_that_runs_on_says_what_it_closes(self):
+        self.assertIn('#End PROTO Wall', written(read(self.long_body())))
+
+    def test_a_short_one_does_not(self):
+        scene = SceneGraph()
+        scene.addProto(node.prototype('Wheel'))
+        self.assertNotIn('#End PROTO', written(scene))
+
+    def test_a_node_that_runs_on_says_what_it_closes(self):
+        heights = [float(n) for n in range(400)]
+        scene = SceneGraph(children=[basenodes.Shape(
+            DEF='Ground',
+            geometry=basenodes.ElevationGrid(height=heights))])
+        self.assertIn('#EndNode', written(scene))
+
+    def test_what_it_wrote_still_reads_back(self):
+        self.assertIn('Wall', read(written(read(self.long_body()))).protoTypes)
+
+
 class TestARoute(unittest.TestCase):
     SOURCE = ('#VRML V2.0 utf8\n'
               'DEF Clock TimeSensor { }\n'
