@@ -1,6 +1,6 @@
 """Module to allow using strings to specify colors"""
-from typing import Any
-def stringToColor( value: Any ):
+from typing import Any, Tuple
+def stringToColor( value: Any ) -> "Tuple[float, float, float]":
     """Given a string value, determine appropriate color"""
     value = value.lower()
     possible = cssColors.get( value )
@@ -12,10 +12,10 @@ def stringToColor( value: Any ):
         return toFloat(packed,16),toFloat(packed,8), toFloat(packed,0)
     else:
         raise ValueError( """String %(value)r couldn't be recognised as a color name, or #FFFFFF style encoding"""%locals())
-def toInt( value: Any ):
+def toInt( value: Any ) -> int:
     """Take float value and give single-byte integer equivalent"""
     return int(round(value*255,0))
-def toFloat( value: Any, shift: int=0 ):
+def toFloat( value: Any, shift: int=0 ) -> float:
     """Take single-byte integer value return floating point equivalent"""
     return ((value&(255<<shift))>>shift)/255.0
 

@@ -1,4 +1,5 @@
 """transformmatrix forward/backward calculation without accelerate support"""
+from typing import Any
 from math import pi
 from vrml.arrays import array, cos, sin, tan
 # used to determine whether angles are non-null
@@ -6,7 +7,7 @@ TWOPI = pi * 2.0
 # used to determine the center point of a transform
 VERY_SMALL = 1e-300
 
-def rotMatrix( source=None ):
+def rotMatrix( source: Any=None ) -> Any:
     """Convert a VRML rotation to rotation matrices
 
     Returns (R, R') (R and the inverse of R), with both
@@ -50,7 +51,7 @@ def rotMatrix( source=None ):
     else:
         return None, None
 
-def scaleMatrix( source=None ):
+def scaleMatrix( source: Any=None ) -> Any:
     """Convert a VRML scale to scale matrices
 
     Returns (S, S') (S and the inverse of S), with both
@@ -75,7 +76,7 @@ def scaleMatrix( source=None ):
     )
     return S, S1
 
-def transMatrix( source=None ):
+def transMatrix( source: Any=None ) -> Any:
     """Convert a VRML translation to translation matrices
 
     Returns (T, T') (T and the inverse of T), with both
@@ -95,7 +96,7 @@ def transMatrix( source=None ):
     T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'f' )
     return T, T1
 
-def perspectiveMatrix( fovy, aspect, zNear, zFar, inverse: bool=False ):
+def perspectiveMatrix( fovy: float, aspect: float, zNear: float, zFar: float, inverse: bool=False ) -> Any:
     """Create a perspective matrix from given parameters
 
     Note that this is the same matrix as for gluPerspective,
@@ -117,7 +118,7 @@ def perspectiveMatrix( fovy, aspect, zNear, zFar, inverse: bool=False ):
             [0,0,(zFar+zNear)/zDelta,-1],
             [0,0,(2*zFar*zNear)/zDelta,0]
         ],'f')
-def orthoMatrix( left=-1.0, right: float=1.0, bottom=-1.0, top: float=1.0, zNear=-1.0, zFar: float=1.0 ):
+def orthoMatrix( left: float=-1.0, right: float=1.0, bottom: float=-1.0, top: float=1.0, zNear: float=-1.0, zFar: float=1.0 ) -> Any:
     """Calculate an orthographic projection matrix
 
     Similar to glOrtho

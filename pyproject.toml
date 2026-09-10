@@ -105,3 +105,8 @@ warn_unused_ignores = true
 # `WeakList.get` called a method Python 2 had, and where a property assigned to
 # itself. A gate that cannot see inside a function is not checking the package.
 check_untyped_defs = true
+# Every one of the 331 definitions carries its types now, so a new one that does
+# not is a gap the gate reports rather than a body it quietly stops checking.
+# This is what keeps the setting above a floor rather than the whole of it.
+disallow_untyped_defs = true
+disallow_incomplete_defs = true

@@ -33,11 +33,11 @@ minimal1 = {
 }
 
 
-def namekey(node: Any):
+def namekey(node: Any) -> Any:
     return node.name
 
 
-def linearise(value: Any, linvalues=defaults, **namedargs):
+def linearise(value: Any, linvalues: Any=defaults, **namedargs: Any) -> str:
     """Linearise the given (node) value to a string"""
     lineariser = Lineariser(linvalues, **namedargs)
     return lineariser.linear(value)
@@ -51,7 +51,7 @@ class Lineariser:
     cleared after the initial linearisation.
     '''
 
-    def __init__(self, linvalues=None, alreadydone=None, *args, **namedargs) -> None:
+    def __init__(self, linvalues: Any=None, alreadydone: Any=None, *args: Any, **namedargs: Any) -> None:
         if linvalues is None:
             linvalues = defaults
         if namedargs:
@@ -65,13 +65,13 @@ class Lineariser:
 
     def linear(
         self,
-        clientNode,
+        clientNode: Any,
         buffer: Any=None,
-        skipProtos=None,
-        skipUnusedProtos=None,
-        *args,
-        **namedargs
-    ):
+        skipProtos: Any=None,
+        skipUnusedProtos: Any=None,
+        *args: Any,
+        **namedargs: Any
+    ) -> str:
         '''
         Linearise a node, script, or scenegraph
         '''
@@ -116,7 +116,7 @@ class Lineariser:
         return rval
 
     ### High-level constructs...
-    def _sceneGraph(self, clientNode):
+    def _sceneGraph(self, clientNode: Any) -> Any:
         '''
         A little niave, the sceneGraph just outputs everything
         in its prototypes, then everything in its childlist, then all its ROUTES
@@ -174,7 +174,7 @@ class Lineariser:
         del self.cursceneGraph[-1]
         return None
 
-    def _proto(self, clientNode):
+    def _proto(self, clientNode: Any) -> Any:
         """Linearise a prototype, return whether the prototype is actually linearised"""
         # check that we haven't yet done this prototype, register the fact that we've already started it
         if type(clientNode) is not type:
@@ -256,7 +256,7 @@ class Lineariser:
         self.curproto.pop()
         return None
 
-    def _Node(self, clientNode, *args, **namedargs):
+    def _Node(self, clientNode: Any, *args: Any, **namedargs: Any) -> Any:
         '''Linearise an individual node'''
         # if we don't already have this nodes prototype in the
         # root namespace, insert it there.  For now we don't allow
@@ -302,7 +302,7 @@ class Lineariser:
         self.alreadydone[id(clientNode)] = startind, buffer.tell()
         return None
 
-    def _Script(self, clientNode):
+    def _Script(self, clientNode: Any) -> Any:
         '''
         Scripts should be output in the following format:
         DEF defName Script {
@@ -341,7 +341,7 @@ class Lineariser:
         self.alreadydone[id(clientNode)] = startind, buffer.tell()
         return None
 
-    def _attrDict(self, object) -> None:
+    def _attrDict(self, object: Any) -> None:
         """Write out the attribute dictionary for an object"""
         buffer = self.buffer
         linvalues = self.linvalues
@@ -387,7 +387,7 @@ class Lineariser:
                 )
                 self._sffield(val, field)
 
-    def _eventDict(self, clientNode) -> None:
+    def _eventDict(self, clientNode: Any) -> None:
         '''
         Event Dictionaries have two possible sources of information,
         the eventDict and the isNames dictionary.  The first provides
@@ -404,7 +404,7 @@ class Lineariser:
             field.eventVrmlstr(self)
             # XXX do IS-mapping here!
 
-    def _fieldDict(self, clientNode, requireDefault: int=1, skipFields=('DEF',)) -> None:
+    def _fieldDict(self, clientNode: Any, requireDefault: int=1, skipFields: Any=('DEF',)) -> None:
         buffer = self.buffer
         fields = [
             field
@@ -418,11 +418,11 @@ class Lineariser:
             buffer.write('%(full_element_separator)s%(curindent)s' % (self.linvalues))
             field.fieldVrmlstr(self)
 
-    def _fieldref(self, clientNode, *args, **namedargs):
+    def _fieldref(self, clientNode: Any, *args: Any, **namedargs: Any) -> Any:
         self.buffer.write('IS %s' % clientNode.declaredName)
         return None
 
-    def _preroute(self, sceneGraph, clientNode) -> None:
+    def _preroute(self, sceneGraph: Any, clientNode: Any) -> None:
         """Pre-scans all routes, forces all routed nodes to have DEF names"""
         for child in (clientNode.source, clientNode.destination):
             DEF = defName(child)
@@ -436,7 +436,7 @@ class Lineariser:
                         break
                     count += 1
 
-    def _route(self, clientNode) -> None:
+    def _route(self, clientNode: Any) -> None:
         '''Linearise a route'''
         # should check here to make sure the ROUTEs are valid
         buffer = self.buffer
@@ -455,7 +455,7 @@ class Lineariser:
             % values
         )
 
-    def _sffield(self, anyobj, field, *args, **namedargs):
+    def _sffield(self, anyobj: Any, field: Any, *args: Any, **namedargs: Any) -> Any:
         '''
         Any to String takes an object and checks how it should
         be linearised given that it is supposed to become a fieldType
@@ -496,14 +496,14 @@ class Lineariser:
         self.indentationlevel = self.indentationlevel - 1
         self.linvalues['curindent'] = self.linvalues['indent'] * self.indentationlevel
 
-    def _indent(self, exact=None) -> None:
+    def _indent(self, exact: Any=None) -> None:
         if exact is not None:
             self.indentationlevel = exact
         else:
             self.indentationlevel = self.indentationlevel + 1
         self.linvalues['curindent'] = self.linvalues['indent'] * self.indentationlevel
 
-    def _canUse(self, clientNode):
+    def _canUse(self, clientNode: Any) -> Any:
         if id(clientNode) in self.alreadydone:
             DEF = defName(clientNode)
             if DEF:
@@ -527,17 +527,17 @@ class Lineariser:
             ind = self.alreadydone[id(clientNode)] = self.buffer.tell()
             return ind
 
-    def _nullNode(self, clientNode) -> None:
+    def _nullNode(self, clientNode: Any) -> None:
         self.buffer.write('NULL')
 
-    def _defName(self, clientNode):
+    def _defName(self, clientNode: Any) -> Any:
         DEF = defName(clientNode)
         if DEF:
             return 'DEF %s ' % (DEF)
         else:
             return ''
 
-    def _linear(self, clientNode):
+    def _linear(self, clientNode: Any) -> Any:
         '''Linearise a particular client node of whatever type by dispatching to
         appropriate method...'''
         if type(clientNode) is type:
@@ -548,7 +548,7 @@ class Lineariser:
         return method(clientNode)
 
     ### Field-type handlers...
-    def _mfnode(self, anyobj, *args, **namedargs) -> None:
+    def _mfnode(self, anyobj: Any, *args: Any, **namedargs: Any) -> None:
         '''
         Really, this will handle any list of elements where all elements
         have a __vrmlStr__ method, but since most of those are nodes, we'll

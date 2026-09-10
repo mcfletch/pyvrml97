@@ -3,6 +3,7 @@
 Chooses numpy if available because when it's installed
 Numeric tends to be a bit flaky...
 """
+from typing import Any
 
 # Named rather than starred. `from numpy import *` puts 500 names in this
 # module so that consumers can reach about sixty of them, and every one of
@@ -39,7 +40,7 @@ ArrayType = ndarray  # alias removed in later versions
 # always provide axis now...
 if hasattr(a, '__array_typestr__'):
 
-    def typeCode(a):
+    def typeCode(a: Any) -> str:
         """Retrieve the typecode for the given array
 
         Depending on whether you access the classic or new API
@@ -53,7 +54,7 @@ if hasattr(a, '__array_typestr__'):
 
 else:
 
-    def typeCode(a):
+    def typeCode(a: Any) -> str:
         """Retrieve the typecode for the given array
 
         Depending on whether you access the classic or new API
@@ -78,7 +79,7 @@ except Exception as err:
     pass
 
 
-def safeCompare(first, second):
+def safeCompare(first: Any, second: Any) -> bool:
     """Watch out for pointless numpy truth-value checks"""
     if first is None:
         if second is None:
@@ -96,7 +97,7 @@ def safeCompare(first, second):
     return bool(first == second)
 
 
-def contiguous(a):
+def contiguous(a: Any) -> Any:
     """Force to a contiguous array"""
     return array(a, typeCode(a))
 

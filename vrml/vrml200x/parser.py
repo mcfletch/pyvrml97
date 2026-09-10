@@ -5,6 +5,7 @@ with almost all of the changes being the more involved header,
 and a few new field-types that are already accepted by the
 VRML97 grammar.
 """
+from typing import Any
 # Imported for its effect, not for a name: importing it registers EOF and
 # the other character-type productions into simpleparse's shared
 # definitions, which the grammar below refers to by name.
@@ -80,11 +81,11 @@ ESCAPEDCHAR    := '\\"'/'\134\134'
 
 class VRMLParser( Parser ):
     """Simple subclassing of Parser to create proper ParseProcessor"""
-    def buildProcessor( self ):
+    def buildProcessor( self ) -> Any:
         """Build and return a vrml.vrml97.parseprocessor.ParseProcessor"""
         from vrml.vrml97 import parseprocessor
         return parseprocessor.ParseProcessor()
 
-def buildParser( declaration = grammar ):
+def buildParser( declaration: Any = grammar ) -> Any:
     """Build a new VRMLParser object"""
     return VRMLParser( declaration, "vrmlFile" )

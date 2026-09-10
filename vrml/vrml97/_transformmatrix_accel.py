@@ -1,11 +1,12 @@
 """transformmatrix forward/backward calculation with accelerate support"""
+from typing import Any
 from vrml_accelerate import tmatrixaccel
 from math import pi
 # used to determine whether angles are non-null
 TWOPI = pi * 2.0
 VERY_SMALL = 1e-300
 
-def rotMatrix( source = None ):
+def rotMatrix( source: Any = None ) -> Any:
     """Convert a VRML rotation to rotation matrices
 
     Returns (R, R') (R and the inverse of R), with both
@@ -23,7 +24,7 @@ def rotMatrix( source = None ):
     if a % TWOPI:
         return tmatrixaccel.rotMatrix( x,y,z,a ),tmatrixaccel.rotMatrix( x,y,z,-a )
     return None,None
-def scaleMatrix( source=None ):
+def scaleMatrix( source: Any=None ) -> Any:
     """Convert a VRML scale to scale matrices
 
     Returns (S, S') (S and the inverse of S), with both
@@ -42,7 +43,7 @@ def scaleMatrix( source=None ):
     forward = tmatrixaccel.scaleMatrix( x,y,z )
     backward = tmatrixaccel.scaleMatrix( 1.0/(x or VERY_SMALL),1.0/(y or VERY_SMALL), 1.0/(z or VERY_SMALL) )
     return forward, backward
-def transMatrix( source=None ):
+def transMatrix( source: Any=None ) -> Any:
     """Convert a VRML translation to translation matrices
 
     Returns (T, T') (T and the inverse of T), with both

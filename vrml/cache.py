@@ -33,7 +33,7 @@ Note:
     with the Python 2.2.2 weakref and weakkeydictionary
     mechanisms.
 """
-from typing import Any, List
+from typing import Any, Callable, List, Optional
 from vrml import protofunctions
 import weakref
 #from vrml.weakkeydictfix import WeakKeyDictionary
@@ -52,13 +52,13 @@ class Cache (dict):
     instances.  The CacheHolder is responsible for
     most of the implementation of the cache.
     """
-    def getHolder( self, client: Any, key: Any = ""):
+    def getHolder( self, client: Any, key: Any = "") -> "Optional[CacheHolder]":
         """Return the cache holder for the given client and key"""
         current = self.get(id(client))
         if current is not None:
             return current.get( key)
         return None
-    def getData( self, client: Any, key: Any="", default: Any=None):
+    def getData( self, client: Any, key: Any="", default: Any=None) -> Any:
         """Return the data for given client and key, default otherwise"""
         current = self.get( id(client) )
         if current is not None:
@@ -69,9 +69,9 @@ class Cache (dict):
     def holder(
         self,
         client: Any,
-        data,
+        data: Any,
         key: Any="",
-    ):
+    ) -> "CacheHolder":
         """Create a new CacheHolder in this cache"""
         return CacheHolder(
             client,
@@ -83,9 +83,9 @@ class Cache (dict):
 CACHE = Cache()
 getData = CACHE.getData
 
-def cleaner( cache, id ):
+def cleaner( cache: Any, id: Any ) -> "Callable[[Any], None]":
     """Return callback function that cleans the given id from cache"""
-    def clean_id( weak ) -> None:
+    def clean_id( weak: Any ) -> None:
         try:
             del cache[id]
         except Exception:
@@ -118,9 +118,9 @@ class CacheHolder( object ):
     #__slots__ = ('client','data','key','cache','nodeDependencies','__weakref__','notifier')
     def __init__(
         self,
-        client: Any, data,
+        client: Any, data: Any,
         key: Any="",
-        cache = CACHE,
+        cache: Any = CACHE,
     ) -> None:
         """Initialise the cache-deletion callable
 
@@ -142,11 +142,11 @@ class CacheHolder( object ):
         if set is None:
             cache[ client_id ] = set = {}
         set[key] = self
-    def set( self, data ) -> None:
+    def set( self, data: Any ) -> None:
         """Set data after instantiation"""
         self.data = data
 
-    def depend( self, node: Any, field=None ) -> None:
+    def depend( self, node: Any, field: Any=None ) -> None:
         """Add a dependency on given node's field value
 
         source -- the node being watched
@@ -164,7 +164,9 @@ class CacheHolder( object ):
             for our client node.
         """
         if field is not None:
-            if isinstance( field, (bytes, str)):
+            if isinstance( field, bytes ):
+                field = field.decode( 'utf-8' )
+            if isinstance( field, str ):
                 field = protofunctions.getField(node, field)
             self.depend_signal(
                 ('set', field),#signal
@@ -181,7 +183,7 @@ class CacheHolder( object ):
         else:
             # dependency on the mere existence of the node
             self.depend_object( node )
-    def depend_signal( self, signal: Any, sender=dispatcher.Any ) -> None:
+    def depend_signal( self, signal: Any, sender: Any=dispatcher.Any ) -> None:
         """Depend on signal from sender"""
         dispatcher.connect(
             self.clear,#receiver
@@ -196,14 +198,19 @@ class CacheHolder( object ):
                 self,
             )
         )
-    def clear( self, signal: Any=None, sender=None ) -> None:
+    def clear( self, signal: Any=None, sender: Any=None ) -> None:
         """Clear this object's held value (only)"""
         if not self.client():
             self( signal=signal, sender=sender )
         else:
             self.data = None
-    def __call__( self, signal: Any=None, sender=None ):
+    def __call__( self, signal: Any=None, sender: Any=None ) -> "Optional[int]":
         """Delete the cached value (this object)
+
+        Answers 1 where an entry was found and removed and 0 where there was
+        none to remove, and None where the cache raised while being read --
+        which is reported rather than passed on, since this runs as a weak
+        reference's callback and has nobody to raise to.
 
         This de-registers ourselves from our cache object,
         with suitable checks for whether our cache is still
@@ -242,4 +249,5 @@ class CacheHolder( object ):
                 return 0
         except RuntimeError:
             traceback.print_exc()
+            return None
 

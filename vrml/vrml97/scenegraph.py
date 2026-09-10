@@ -1,6 +1,5 @@
 """Scenegraph node-like "prototype" for VRML97"""
-from typing import Any
-from typing import Optional
+from typing import Any, Optional
 
 from vrml import node, protofunctions, protonamespace, fieldtypes, route
 from vrml import copier as copiermodule
@@ -33,10 +32,10 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         "",
     )
     def __init__(
-        self, root=None, protoTypes=None,
-        routes=None, defNames=None,
-        children=None,
-        *args, **namedargs
+        self, root: Any=None, protoTypes: Any=None,
+        routes: Any=None, defNames: Any=None,
+        children: Any=None,
+        *args: Any, **namedargs: Any
     ) -> None:
         '''
         root -- sceneGraph root or Dictionary root or Module root or None
@@ -72,7 +71,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         if routes:
             for route in routes:
                 self.addRoute( route )
-    def getProto( self, name: str ):
+    def getProto( self, name: str ) -> Any:
         """Get a prototype by name
 
         go up the scenegraph chain to try to resolve
@@ -88,11 +87,11 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
                     return root.getProto( name )
         return None
 
-    def getDEF( self, name: str ):
+    def getDEF( self, name: str ) -> Any:
         """Get a node by DEF name"""
         return self.defNames.get(name)
 
-    def regDefName(self, defName, object) -> None:
+    def regDefName(self, defName: str, object: Any) -> None:
         ''' Register a DEF name for a particular object
 
             defName -- string DEFName
@@ -107,12 +106,12 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
             del self.defNames[current]
         protofunctions.defName( object, defName )
         self.defNames[defName] = object
-    def addProto(self, proto) -> None:
+    def addProto(self, proto: Any) -> None:
         '''Register a Prototype for this sceneGraph
         proto -- Prototype PROTO
         '''
         self.protoTypes[protofunctions.name( proto ) ] = proto
-    def addRoute(self, route, *args):
+    def addRoute(self, route: Any, *args: Any) -> Any:
         '''Add a route to the scenegraph
 
         route,args -- Possible forms:
@@ -160,7 +159,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
 ##		"""Add an isMap for the given name to the given node+field"""
 ##		self.isMaps.setdefault( name, []).append( (node,field) )
 
-    def copy( self, copier: Any=None ):
+    def copy( self, copier: Any=None ) -> Any:
         """Copy this node for copier"""
         if copier is None:
             copier = copiermodule.Copier()

@@ -95,3 +95,50 @@ class TestCoercingALazyIterable(unittest.TestCase):
     def test_a_longer_map_joins(self):
         field = fieldtypes.SFString(name="s")
         self.assertEqual(field.coerce(map(str, [1, 2])), '12')
+
+
+class TestCheckingAValue(unittest.TestCase):
+    """`check` answers whether a value is already of the field's type.
+
+    Each field type answers 1 for a value it would store as-is and 0 for one
+    it would have to coerce. Nothing in the package calls it; it is offered to
+    a caller that wants to ask before setting.
+    """
+
+    def test_a_string_field_accepts_a_string(self):
+        self.assertEqual(fieldtypes.SFString(name="s").check('text'), 1)
+
+    def test_a_string_field_rejects_a_number(self):
+        self.assertEqual(fieldtypes.SFString(name="s").check(3), 0)
+
+    def test_a_string_list_field_accepts_a_list_of_strings(self):
+        self.assertEqual(fieldtypes.MFString(name="s").check(['a', 'b']), 1)
+
+    def test_a_string_list_field_rejects_a_list_of_numbers(self):
+        self.assertEqual(fieldtypes.MFString(name="s").check([1, 2]), 0)
+
+    def test_a_string_list_field_rejects_a_mixed_list(self):
+        self.assertEqual(fieldtypes.MFString(name="s").check(['a', 2]), 0)
+
+    def test_a_string_list_field_accepts_an_empty_list(self):
+        """Nothing in it is the wrong type."""
+        self.assertEqual(fieldtypes.MFString(name="s").check([]), 1)
+
+    def test_a_string_list_field_rejects_a_bare_string(self):
+        self.assertEqual(fieldtypes.MFString(name="s").check('a'), 0)
+
+    def test_a_bool_field_accepts_zero_and_one(self):
+        field = fieldtypes.SFBool(name="b")
+        self.assertEqual(field.check(0), 1)
+        self.assertEqual(field.check(1), 1)
+
+    def test_a_bool_field_rejects_anything_else(self):
+        self.assertEqual(fieldtypes.SFBool(name="b").check(7), 0)
+
+    def test_an_int_field_accepts_an_int(self):
+        self.assertEqual(fieldtypes.SFInt32(name="i").check(3), 1)
+        self.assertEqual(fieldtypes.SFInt32(name="i").check(3.5), 0)
+
+    def test_a_float_field_accepts_a_float(self):
+        self.assertEqual(fieldtypes.SFFloat(name="f").check(3.5), 1)
+        self.assertEqual(fieldtypes.SFFloat(name="f").check('x'), 0)

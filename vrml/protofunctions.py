@@ -14,8 +14,8 @@ module.
 
 
 
-from typing import Any
-def _getcls(cls):
+from typing import Any, List
+def _getcls(cls: Any) -> type:
     """Utility function returns class when passed instance or class"""
     if type(cls) is type:
         return cls
@@ -23,7 +23,7 @@ def _getcls(cls):
         return cls.__class__
 
 
-def getPrototype(cls):
+def getPrototype(cls: Any) -> Any:
     """Return the prototype for the node or class
     returns either the argument (if it is a proto)
     or the prototype of the argument
@@ -31,7 +31,7 @@ def getPrototype(cls):
     return _getcls(cls)
 
 
-def protoName(obj: Any, value: Any=None, *args, **named):
+def protoName(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
     """Get/set the prototype name for the object"""
     obj = _getcls(obj)
     if value is not None:
@@ -45,7 +45,7 @@ def protoName(obj: Any, value: Any=None, *args, **named):
         return possible
 
 
-def defName(obj: Any, value: Any=None, *args, **named):
+def defName(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
     """Get/set the VRML97 defName for the object"""
     from vrml import node
 
@@ -55,7 +55,7 @@ def defName(obj: Any, value: Any=None, *args, **named):
         return node.Node.DEF.fget(obj, *args, **named)
 
 
-def name(obj: Any, value: Any=None, *args, **named):
+def name(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
     """Get/set prototype name for prototypes, DEF name for nodes"""
     if type(obj) is type:
         return protoName(obj, value, *args, **named)
@@ -63,7 +63,7 @@ def name(obj: Any, value: Any=None, *args, **named):
         return defName(obj, value, *args, **named)
 
 
-def root(obj: Any, value: Any=None, *args, **named):
+def root(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
     """Get/set root-node reference for nodes/protos"""
     from vrml import node
 
@@ -73,14 +73,14 @@ def root(obj: Any, value: Any=None, *args, **named):
         return node.Node.rootSceneGraph.fget(obj, *args, **named)
 
 
-def builtin(cls):
+def builtin(cls: Any) -> Any:
     """Return whether the class is "built-in" to the system"""
     from vrml import node
 
     return not issubclass(_getcls(cls), node.PrototypedNode)
 
 
-def addField(cls, field) -> None:
+def addField(cls: Any, field: Any) -> None:
     """Add a particular field/event to the class/prototype definition
 
     At present this just calls setattr(cls,field.name,field)
@@ -88,7 +88,7 @@ def addField(cls, field) -> None:
     setattr(_getcls(cls), field.name, field)
 
 
-def removeField(cls, field) -> None:
+def removeField(cls: Any, field: Any) -> None:
     """Remove a particular field/event to the class/prototype definition
 
     If field is a string, calls delattr(cls,field) for the class
@@ -100,7 +100,7 @@ def removeField(cls, field) -> None:
         delattr(_getcls(cls), field.name)
 
 
-def getField(cls, field):
+def getField(cls: Any, field: str) -> Any:
     """Get a field/event object for the given name
 
     field -- a field-name specifier, which may be any of
@@ -146,7 +146,7 @@ def getField(cls, field):
     )
 
 
-def getFields(cls, events: int=0):
+def getFields(cls: Any, events: int=0) -> "List[Any]":
     """Get all fields of the definition/prototype
 
     if events is true, then return events
@@ -192,42 +192,42 @@ def getFields(cls, events: int=0):
 ##	)
 
 
-def setSceneGraph(cls, sg):
+def setSceneGraph(cls: Any, sg: Any) -> Any:
     """Set the scenegraph associated with a prototype"""
     from vrml import node
 
     return node.PrototypedNode.scenegraph.fset(cls, sg)
 
 
-def getSceneGraph(cls):
+def getSceneGraph(cls: Any) -> Any:
     """Get the scenegraph associated with a prototype (or None)"""
     from vrml import node
 
     return node.PrototypedNode.scenegraph.fget(cls)
 
 
-def delSceneGraph(cls):
+def delSceneGraph(cls: Any) -> Any:
     """Delete the scenegraph associated with a prototype"""
     from vrml import node
 
     return node.PrototypedNode.scenegraph.fdel(cls)
 
 
-def setExternalURL(cls, url):
+def setExternalURL(cls: Any, url: Any) -> Any:
     """Set the externproto URL associated with a prototype"""
     from vrml import node
 
     return node.Node.externalURL.fset(cls, url)
 
 
-def getExternalURL(cls):
+def getExternalURL(cls: Any) -> Any:
     """Get the externproto URL associated with a prototype (or [])"""
     from vrml import node
 
     return node.Node.externalURL.fget(cls)
 
 
-def delExternalURL(cls):
+def delExternalURL(cls: Any) -> Any:
     """Delete the externproto URL associated with a prototype"""
     from vrml import node
 

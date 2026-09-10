@@ -1,6 +1,6 @@
 """Node-paths for VRML97 incl. transform-matrix calculation
 """
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import Any, Iterator, List, Optional, TYPE_CHECKING
 from vrml import nodepath
 from vrml.cache import CACHE
 from vrml.vrml97 import transformmatrix, nodetypes
@@ -19,7 +19,7 @@ else:
 
 
 class _MatrixHolder( object ):
-    def __init__( self, matrix) -> None:
+    def __init__( self, matrix: Any) -> None:
         self.matrix = matrix
 
 class _NodePath( _PathHost ):
@@ -35,11 +35,11 @@ class _NodePath( _PathHost ):
     children: Optional[List[Any]] = None
     active = True
     broken = False
-    def isTransform( self, item: Any ):
+    def isTransform( self, item: Any ) -> bool:
         """Customization Point: determine whether a node is a Transform"""
         return isinstance(item, nodetypes.Transforming)
 
-    def transformMatrix( self, translate: bool=True, scale: bool=True, rotate: bool=True, matrixHolder: bool=False, inverse: bool=False ):
+    def transformMatrix( self, translate: bool=True, scale: bool=True, rotate: bool=True, matrixHolder: bool=False, inverse: bool=False ) -> Any:
         """Calculate (and cache) a transform matrix for this path
 
         Calculates our transformMatrix from our parent's transform
@@ -71,7 +71,7 @@ class _NodePath( _PathHost ):
             mHolder = holder.data
             if mHolder is not None:
                 return mHolder
-        def get_mat( item: Any ):
+        def get_mat( item: Any ) -> Any:
             child_holder = item.localMatrices(translate=translate,scale=scale,rotate=rotate)
             if doConnect:
                 holder.depend( child_holder )
@@ -92,7 +92,7 @@ class _NodePath( _PathHost ):
             matrix = identity(4, dtype='f')
         holder.data = matrix
         return holder.data
-    def transformChildren( self, reverse: int=0 ):
+    def transformChildren( self, reverse: int=0 ) -> "Iterator[Any]":
         """Yield all transforming children"""
         t = nodetypes.Transforming
         if reverse:
@@ -106,7 +106,7 @@ class _NodePath( _PathHost ):
                 if isinstance(item, t):
                     yield item
 
-    def __add__(self, other: Any):
+    def __add__(self, other: Any) -> Any:
         """Add parent-matrix pre-caching support to nodepaths"""
         base = super( _NodePath, self).__add__( other )
         base.parent = self       # type: ignore[attr-defined]
@@ -116,7 +116,7 @@ class _NodePath( _PathHost ):
         # watch for other sending events which say that
         # this relationship is no longer active...
         return base
-    def iterchildren( self ):
+    def iterchildren( self ) -> "Iterator[Any]":
         """Iterate over child paths which are still live"""
         if self.children is not None:
             for childref in self.children[:]:
@@ -125,7 +125,7 @@ class _NodePath( _PathHost ):
                     yield child
                 else:
                     self.children.remove( childref )
-    def iterdescendents( self ):
+    def iterdescendents( self ) -> "Iterator[Any]":
         """Iterate over all descendent paths, depth-first
 
         Every generation, not merely children and grandchildren.

@@ -30,7 +30,7 @@ SEQUENCE_TYPES = (tuple, list) + UNPACK_TYPES
 _NULL: List[Any] = []
 
 
-def register(cls) -> None:
+def register(cls: Any) -> None:
     """Register a new Field or Event class"""
     name = typeName(cls)
     if issubclass(cls, Event):
@@ -45,7 +45,7 @@ def register(cls) -> None:
     dictionary[name] = cls
 
 
-def typeName(cls):
+def typeName(cls: Any) -> str:
     """Get the name of a field/event"""
     if hasattr(cls, 'fieldType'):
         return cls.fieldType
@@ -53,7 +53,7 @@ def typeName(cls):
         return cls.__name__.split('.')[-1]
 
 
-def newField(name: str, dataType, exposure: int=1, default: Any=_NULL):
+def newField(name: str, dataType: Any, exposure: int=1, default: Any=_NULL) -> Any:
     """Create a new field with support for using strings to specify type
 
     name -- string name
@@ -66,7 +66,7 @@ def newField(name: str, dataType, exposure: int=1, default: Any=_NULL):
     return dataType(name, exposure, default)
 
 
-def newEvent(name: str, dataType, direction: int=1):
+def newEvent(name: str, dataType: Any, direction: int=1) -> Any:
     """Create a new event object (a specialised Field)
     name -- string name
     dataType --
@@ -86,7 +86,7 @@ class BaseField(object):
         else:
             self.call_default = False
 
-    def __get__(self, client: Any, cls=None):
+    def __get__(self, client: Any, cls: Any=None) -> Any:
         """Retrieve value for given instance (or self for cls)"""
         if client is None:
             return self
@@ -108,7 +108,7 @@ class BaseField(object):
         )
         # return value
 
-    def fset(self, client: Any, value: Any, notify: bool=True):
+    def fset(self, client: Any, value: Any, notify: bool=True) -> Any:
         value = self._set(client, value)
         if notify:
             dispatcher.send(
@@ -118,7 +118,7 @@ class BaseField(object):
             )
         return value
 
-    def _set(self, client: Any, value: Any):
+    def _set(self, client: Any, value: Any) -> Any:
         try:
             value = self.coerce(value)
         except ValueError as x:
@@ -136,15 +136,15 @@ class BaseField(object):
             client.__dict__[self.name] = value
         return value
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Coerce the given value to our type"""
         return value
 
-    def check(self, value: Any):
-        "Raise ValueError if isn't correct type"
+    def check(self, value: Any) -> Any:
+        "Whether the value is already of this field's type"
         return value
 
-    def getDefault(self, client: Any=None):
+    def getDefault(self, client: Any=None) -> Any:
         """Get the default value of this field
 
         if client, set client's attribute to default
@@ -158,7 +158,7 @@ class BaseField(object):
             defaultobj = self._set(client, defaultobj)
         return defaultobj
 
-    def _del(self, client: Any):
+    def _del(self, client: Any) -> None:
         """Remove the client's own value, so a read answers the default again
 
         The counterpart of :meth:`_set`, and the primitive both the descriptor
@@ -260,16 +260,13 @@ class Field(BaseField):
         super(Field, self).__init__(name, default)
         self.__doc__ = str(self)
 
-    def fhas(self, client: Any):
+    def fhas(self, client: Any) -> bool:
         """Determine whether the client currently has a non-default value"""
         if isinstance(client, type):
             return hasattr(client, self.name)
-        elif self.name in client.__dict__:
-            return 1
-        else:
-            return 0
+        return self.name in client.__dict__
 
-    def copy(self, client: Any=None, copier: Any=None):
+    def copy(self, client: Any=None, copier: Any=None) -> Any:
         """Copy this property's value/definition for client node/proto
 
         if client is a prototype, copy this field definition
@@ -293,15 +290,15 @@ class Field(BaseField):
         else:
             return _NULL
 
-    def copyValue(self, value: Any, copier: Any=None):
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""
         return value
 
-    def typeName(self):
+    def typeName(self) -> str:
         """Get the typeName of this field"""
         return typeName(self.__class__)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Get a human-friendly representation of the field"""
         if self.exposure:
             exposed = "exposedField"
@@ -318,7 +315,7 @@ class Field(BaseField):
             default,
         )
 
-    def vrmlstr(self, value: Any, lineariser: Any):
+    def vrmlstr(self, value: Any, lineariser: Any) -> Any:
         """Convert the given value to a VRML97 representation"""
         return ""
 
@@ -352,7 +349,7 @@ class Field(BaseField):
             lineariser.buffer.write(result)
         return
 
-    def watch(self, node: Any, receiver: Any, signal: Any=dispatcher.Any):
+    def watch(self, node: Any, receiver: Any, signal: Any=dispatcher.Any) -> Any:
         """Make receiver receive all update events for this field+node
 
         receiver( signal, sender, value=None )
@@ -367,7 +364,7 @@ class Field(BaseField):
             signal=signal,
         )
 
-    def __lt__(self, other: Any):
+    def __lt__(self, other: Any) -> Any:
         if isinstance(other, Field):
             return (self.__class__.__name__, self.name) < (
                 other.__class__.__name__,
@@ -399,7 +396,7 @@ else:
 class WeakField(_WeakFieldHost):
     """A Mix-in for fields which stores weak-references to values"""
 
-    def fset(self, client: Any, value: Any, notify: int=1):
+    def fset(self, client: Any, value: Any, notify: int=1) -> Any:
         """Set the client's value for this property
 
         if notify is true send a notification event.
@@ -414,7 +411,7 @@ class WeakField(_WeakFieldHost):
         value = super(WeakField, self).fset(client, value, notify=notify)
         return value()
 
-    def fget(self, client: Any, cls=None):
+    def fget(self, client: Any, cls: Any=None) -> Any:
         """Get the client's value for this property, resolving the reference
 
         Takes `cls` because `BaseField` aliases `fget` to `__get__`, and the
@@ -467,7 +464,7 @@ class Event(object):
         if notify:
             dispatcher.send(('set', self), client, value=value)
 
-    def __get__(self, client: Any=None, cls=None):
+    def __get__(self, client: Any=None, cls: Any=None) -> Any:
         """Get an event's last value"""
         if client is None:
             return self
@@ -490,11 +487,11 @@ class Event(object):
             direction = self.direction
         return self.__class__(name, direction)
 
-    def typeName(self):
+    def typeName(self) -> str:
         """Get the typeName of this field"""
         return typeName(self.__class__)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Get a human-friendly representation of the event"""
         if self.direction:
             exposed = "eventOut"
@@ -502,7 +499,7 @@ class Event(object):
             exposed = "eventIn"
         return '%s %s %s' % (exposed, self.typeName(), self.name)
 
-    def eventVrmlstr(self, lineariser: Any):
+    def eventVrmlstr(self, lineariser: Any) -> Any:
         """Write the event's definition to the lineariser
 
         Basically this gives you a VRML97 fragment
@@ -521,7 +518,7 @@ class Event(object):
         lineariser.buffer.write(base)
         return base
 
-    def watch(self, node: Any, receiver: Any, signal: Any=dispatcher.Any):
+    def watch(self, node: Any, receiver: Any, signal: Any=dispatcher.Any) -> Any:
         """Make receiver receive all update events for this field+node
 
         receiver( signal, sender, value=None )

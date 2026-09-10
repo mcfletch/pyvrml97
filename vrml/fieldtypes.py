@@ -9,7 +9,7 @@ the field values.
 We use Numeric Python arrays whereever possible.
 """
 
-from typing import TYPE_CHECKING, Any, Optional, Tuple
+from typing import Any, Optional, TYPE_CHECKING, Tuple
 import operator
 from vrml import field, csscolors, arrays
 import sys
@@ -54,7 +54,7 @@ INT_TYPE = arrays.typeCode(arrays.array([0], 'i'))
 UINT_TYPE = arrays.typeCode(arrays.array([0], 'I'))
 
 
-def _collapse(inlist, isinstance=isinstance, ltype=list, maxint=MAX_INT):
+def _collapse(inlist: Any, isinstance: Any=isinstance, ltype: Any=list, maxint: int=MAX_INT) -> Any:
     '''
     Destructively flatten a list hierarchy to a single level.
     Non-recursive, and (as far as I can see, doesn't have any
@@ -74,14 +74,14 @@ def _collapse(inlist, isinstance=isinstance, ltype=list, maxint=MAX_INT):
     return inlist
 
 
-def collapse(inlist):
+def collapse(inlist: Any) -> Any:
     '''
     As _collapse, but works on a copy of the inlist
     '''
     return _collapse(list(inlist))
 
 
-def _linvalues(lineariser: Any):
+def _linvalues(lineariser: Any) -> Any:
     """Get the linearisation values for a lineariser"""
     if lineariser is None:
         from vrml.vrml97 import linearise
@@ -91,12 +91,12 @@ def _linvalues(lineariser: Any):
         return lineariser.linvalues
 
 
-def SFString_vrmlstr(value: Any, lineariser: Any=None):
+def SFString_vrmlstr(value: Any, lineariser: Any=None) -> str:
     """Convert the given value to a VRML97 representation"""
     return '"%s"' % ('\\"'.join('\\\\'.join(value.split('\\')).split('"')))
 
 
-def MFString_vrmlstr(value: Any, lineariser: Any=None):
+def MFString_vrmlstr(value: Any, lineariser: Any=None) -> str:
     """Convert the given value to a VRML97 representation"""
     if not value:
         return "[ ]"
@@ -122,7 +122,7 @@ def MFString_vrmlstr(value: Any, lineariser: Any=None):
         return linvalues['subelspacer'].join(anyobject)
 
 
-def SFFloat_vrmlstr(value: Any, lineariser: Any=None):
+def SFFloat_vrmlstr(value: Any, lineariser: Any=None) -> str:
     """Convert floats to (compact) VRML97 representation"""
     rpr = str(value)
     if rpr == '0.0':
@@ -137,7 +137,7 @@ def SFFloat_vrmlstr(value: Any, lineariser: Any=None):
         return rpr
 
 
-def MFSimple_vrmlstr(value: Any, lineariser: Any=None):
+def MFSimple_vrmlstr(value: Any, lineariser: Any=None) -> str:
     """Convert value to a VRML97 representation"""
     linvalues = _linvalues(lineariser)
     stringreps = [str(obj) for obj in value]
@@ -158,7 +158,7 @@ class _SFString(_FieldHost):
     defaultDefault = ""
 
     @classmethod
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Coerce the given value to our type
         Allowable types:
             simple string -> unchanged
@@ -187,7 +187,7 @@ class _SFString(_FieldHost):
         return value
 
     @classmethod
-    def check(self, value: Any):
+    def check(self, value: Any) -> int:
         "Raise ValueError if isn't correct type"
         if not isinstance(value, str):
             return 0
@@ -201,7 +201,7 @@ class _MFString(_FieldHost):
 
     defaultDefault = list
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Coerce the given value to our type
         Allowable types:
             simple string -> wrapped in a list
@@ -217,14 +217,13 @@ class _MFString(_FieldHost):
                 % (value, self.typeName(), error)
             ) from error
 
-    def check(self, value: Any):
-        "Raise ValueError if isn't correct type"
+    def check(self, value: Any) -> int:
+        "Whether the value is already a list of strings"
         if isinstance(value, list):
-            if not filter(None, [isinstance(item, str) for item in value]):
-                return 1
+            return int(all(isinstance(item, str) for item in value))
         return 0
 
-    def copyValue(self, value: Any, copier: Any=None):
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""
         return value[:]
 
@@ -236,7 +235,7 @@ class _SFBool(_FieldHost):
 
     defaultDefault = 0
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Coerce the given value to our type
         Allowable types:
             any object with true/false protocol
@@ -254,13 +253,13 @@ class _SFBool(_FieldHost):
         else:
             return 0
 
-    def check(self, value: Any):
+    def check(self, value: Any) -> int:
         """Check that the given value is of exactly expected type"""
         if value in (0, 1):
             return 1
         return 0
 
-    def vrmlstr(self, value: Any, lineariser: Any=None):
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
         if value:
             return 'TRUE'
@@ -273,7 +272,7 @@ class _SFInt32(_FieldHost):
 
     defaultDefault = 0
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Coerce the given value to our type
         Allowable types:
             any object with true/false protocol
@@ -286,13 +285,13 @@ class _SFInt32(_FieldHost):
                 % (self.typeName(), repr(value))
             ) from None
 
-    def check(self, value: Any):
+    def check(self, value: Any) -> int:
         """Check that the given value is of exactly expected type"""
         if isinstance(value, int):
             return 1
         return 0
 
-    def vrmlstr(self, value: Any, lineariser: Any=None):
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
         try:
             return str(int(value))
@@ -306,7 +305,7 @@ class _SFInt32(_FieldHost):
 class _SFUInt32(_SFInt32):
     """SFUInt32 base-class"""
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Coerce the given value to our type
         Allowable types:
             any object with true/false protocol
@@ -319,13 +318,13 @@ class _SFUInt32(_SFInt32):
                 % (self.typeName(), repr(value))
             ) from None
 
-    def check(self, value: Any):
+    def check(self, value: Any) -> int:
         """Check that the given value is of exactly expected type"""
         if isinstance(value, int):
             return 1
         return 0
 
-    def vrmlstr(self, value: Any, lineariser: Any=None):
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
         base = str(int(value))
         if base[-1] in ('l', 'L'):
@@ -338,7 +337,7 @@ class _SFFloat(_FieldHost):
 
     defaultDefault = 0.0
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Coerce the given value to our type
         Allowable types:
             any object with true/false protocol
@@ -351,7 +350,7 @@ class _SFFloat(_FieldHost):
                 % (self.typeName(), repr(value))
             ) from None
 
-    def check(self, value: Any):
+    def check(self, value: Any) -> int:
         """Check that value is of precisely the expected data type"""
         if isinstance(value, float):
             return 1
@@ -377,7 +376,7 @@ class _MFInt32(_FieldHost):
     acceptedTypes = ('i', INT_TYPE)
     base_converter = int
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Base coercion mechanism for multiple-value integer fields"""
         if isinstance(value, str):
             value = [self.base_converter(x) for x in value.replace(',', ' ').split()]
@@ -401,7 +400,7 @@ class _MFInt32(_FieldHost):
 
     vrmlstr = staticmethod(MFSimple_vrmlstr)
 
-    def copyValue(self, value: Any, copier: Any=None):
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -439,7 +438,7 @@ class _MFFloat(_FieldHost):
     acceptedTypes = ('d', DOUBLE_TYPE)
     targetType = DOUBLE_TYPE
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Base coercion mechanism for floating point field types"""
         if isinstance(value, str):
             value = [float(x) for x in value.replace(',', ' ').split()]
@@ -463,7 +462,7 @@ class _MFFloat(_FieldHost):
 
     vrmlstr = staticmethod(MFSimple_vrmlstr)
 
-    def copyValue(self, value: Any, copier: Any=None):
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -501,7 +500,7 @@ class _SFVec(_FieldHost):
     _length: "Optional[int]" = None
 
     @property
-    def length(self):
+    def length(self) -> int:
         """How many numbers one value of this field holds
 
         The product of :attr:`dimension`: three for an SFVec3f, four for an
@@ -512,11 +511,11 @@ class _SFVec(_FieldHost):
             self._length = reduce(operator.mul, self.dimension)
         return self._length
 
-    def defaultDefault(self):
+    def defaultDefault(self) -> Any:
         """Default default value for vectors/colours"""
         return arrays.zeros(self.dimension, self.targetType)
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Base coercion mechanism for vector-like field types"""
         if isinstance(value, str):
             value = [float(x) for x in value.replace(',', ' ').split()]
@@ -552,13 +551,13 @@ class _SFVec(_FieldHost):
         value = arrays.contiguous(value)
         return value
 
-    def vrmlstr(self, value: Any, lineariser: Any=None):
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
         return _linvalues(lineariser)['numsep'].join(
             [SFFloat_vrmlstr(obj, lineariser) for obj in value]
         )
 
-    def copyValue(self, value: Any, copier: Any=None):
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -566,13 +565,13 @@ class _SFVec(_FieldHost):
 class _Color(_FieldHost):
     """Mix-in for colour-value clamping and string coercion"""
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Adds clipping of values to 0.0 through 1.0 range"""
         value = super(_Color, self).coerce(value)
         value = arrays.clip(value, 0.0, 1.0)
         return value
 
-    def copyValue(self, value: Any, copier: Any=None):
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -586,11 +585,11 @@ class _SFArray(_FieldHost):
     acceptedTypes: Tuple[Any, ...] = ('d', DOUBLE_TYPE, 'V')
     targetType = DOUBLE_TYPE
 
-    def reshape(self, value: Any):
+    def reshape(self, value: Any) -> Any:
         """Do reshape of value to our target dimensions"""
         return value
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         if isinstance(value, str):
             value = [
                 float(x)
@@ -625,7 +624,7 @@ class _SFArray(_FieldHost):
             value = arrays.contiguous(self.reshape(value))
         return value
 
-    def check(self, value: Any):
+    def check(self, value: Any) -> int:
         """Check that the given value is of exactly the expected type"""
         if isinstance(value, arrays.ArrayType):
             typeCode = arrays.typeCode(value)
@@ -639,11 +638,11 @@ class _SFArray(_FieldHost):
                         return 1
         return 0
 
-    def vrmlstr(self, value: Any, lineariser: Any=None):
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
         return str(value)
 
-    def copyValue(self, value: Any, copier: Any=None):
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -672,7 +671,7 @@ class _MFVec(_SFArray):
     _length: "Optional[int]" = None
 
     @property
-    def length(self):
+    def length(self) -> int:
         """How many numbers one value of this field holds
 
         The product of :attr:`dimension`: three for an SFVec3f, four for an
@@ -683,10 +682,10 @@ class _MFVec(_SFArray):
             self._length = reduce(operator.mul, self.dimension)
         return self._length
 
-    def reshape(self, value: Any):
+    def reshape(self, value: Any) -> Any:
         return arrays.reshape(value, (-1,) + self.dimension)
 
-    def check(self, value: Any):
+    def check(self, value: Any) -> int:
         """Check that the given value is of exactly the expected type"""
         if isinstance(value, arrays.ArrayType):
             if arrays.typeCode(value) in self.acceptedTypes:
@@ -695,7 +694,7 @@ class _MFVec(_SFArray):
                     return 1
         return 0
 
-    def vrmlstr(self, value: Any, lineariser: Any=None):
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
         """Convert the given value to a VRML97 representation"""
         try:
             if not len(value):
@@ -720,7 +719,7 @@ class _MFVec(_SFArray):
                 del sets[:setLength]
             return '[%s]' % ('\n'.join(stringsets2))
 
-    def copyValue(self, value: Any, copier: Any=None):
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -764,7 +763,7 @@ class _SFMatrix3f(_SFVec32):
 
     dimension = (3, 3)
 
-    def defaultDefault(self):
+    def defaultDefault(self) -> Any:
         """Default default value for vectors/colours"""
         return arrays.identity(self.dimension[0], self.targetType)
 
@@ -774,7 +773,7 @@ class _SFMatrix4f(_SFVec32):
 
     dimension = (4, 4)
 
-    def defaultDefault(self):
+    def defaultDefault(self) -> Any:
         """Default default value for vectors/colours"""
         return arrays.identity(self.dimension[0], self.targetType)
 
@@ -812,7 +811,7 @@ class _SFMatrix4d(_SFVec):
 class _SFColor(_Color, _SFVec3f):
     """SFColor field/event type base-class"""
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Adds string-coercion for color data types"""
         if isinstance(value, str):
             value = csscolors.stringToColor(value)
@@ -864,7 +863,7 @@ class _MFVec4d(_MFVec):
 class _MFColor(_Color, _MFVec3f):
     """MFColor field/event type base-class"""
 
-    def coerce(self, value: Any):
+    def coerce(self, value: Any) -> Any:
         """Adds string coercion for color data types"""
         try:
             return super(_MFColor, self).coerce(value)

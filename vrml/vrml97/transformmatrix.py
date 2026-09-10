@@ -20,6 +20,7 @@ you would do the following:
 That is, you use the homogenous coordinate, and
 make it the first item in the dot'ing.
 """
+from typing import Any
 # `from math import *` stood here too and supplied nothing: every free name in
 # this module -- array, dot, identity, pi -- comes from the array
 # implementation. Having both meant a checker saw numpy's `cos` land on
@@ -54,13 +55,13 @@ ORIGINPOINT = ar.array([0,0,0,1],'f')
 VERY_SMALL = 1e-300
 
 def transformMatrix(
-        translation = (0,0,0),
-        center = (0,0,0),
-        rotation = (0,1,0,0),
-        scale = (1,1,1),
-        scaleOrientation = (0,1,0,0),
-        parentMatrix = None,
-    ):
+        translation: Any = (0,0,0),
+        center: Any = (0,0,0),
+        rotation: Any = (0,1,0,0),
+        scale: Any = (1,1,1),
+        scaleOrientation: Any = (0,1,0,0),
+        parentMatrix: Any = None,
+    ) -> Any:
     """Convert VRML transform values to an overall matrix
 
     Returns 4x4 transformation matrix
@@ -83,13 +84,13 @@ def transformMatrix(
     return compressMatrices( parentMatrix, T,C,R,SO,S,SO1,C1 )
 
 def itransformMatrix(
-        translation = (0,0,0),
-        center = (0,0,0),
-        rotation = (0,1,0,0),
-        scale = (1,1,1),
-        scaleOrientation = (0,1,0,0),
-        parentMatrix = None,
-    ):
+        translation: Any = (0,0,0),
+        center: Any = (0,0,0),
+        rotation: Any = (0,1,0,0),
+        scale: Any = (1,1,1),
+        scaleOrientation: Any = (0,1,0,0),
+        parentMatrix: Any = None,
+    ) -> Any:
     """Convert VRML transform values to an inverse transform matrix
 
     Returns 4x4 transformation matrix
@@ -117,13 +118,13 @@ def itransformMatrix(
     return compressMatrices( parentMatrix, C,SO, S1, SO1, R1, C1, T1)
 
 def transformMatrices(
-        translation = (0,0,0),
-        center = (0,0,0),
-        rotation = (0,1,0,0),
-        scale = (1,1,1),
-        scaleOrientation = (0,1,0,0),
-        parentMatrix = None,
-    ):
+        translation: Any = (0,0,0),
+        center: Any = (0,0,0),
+        rotation: Any = (0,1,0,0),
+        scale: Any = (1,1,1),
+        scaleOrientation: Any = (0,1,0,0),
+        parentMatrix: Any = None,
+    ) -> Any:
     """Calculate both forward and backward matrices for these parameters"""
     T,T1 = transMatrix( translation )
     C,C1 = transMatrix( center )
@@ -136,13 +137,13 @@ def transformMatrices(
     )
 
 def localMatrices(
-        translation = (0,0,0),
-        center = (0,0,0),
-        rotation = (0,1,0,0),
-        scale = (1,1,1),
-        scaleOrientation = (0,1,0,0),
-        parentMatrix = None,
-    ):
+        translation: Any = (0,0,0),
+        center: Any = (0,0,0),
+        rotation: Any = (0,1,0,0),
+        scale: Any = (1,1,1),
+        scaleOrientation: Any = (0,1,0,0),
+        parentMatrix: Any = None,
+    ) -> Any:
     """Calculate (forward,inverse) matrices for this transform element"""
     T,T1 = transMatrix( translation )
     C,C1 = transMatrix( center )
@@ -154,7 +155,7 @@ def localMatrices(
         compressMatrices( C,SO, S1, SO1, R1, C1, T1)
     )
 
-def compressMatrices( *matrices ):
+def compressMatrices( *matrices: Any ) -> Any:
     """Compress a set of matrices
 
     Any (or all) of the matrices may be None,
@@ -177,10 +178,10 @@ def compressMatrices( *matrices ):
 
 
 def center(
-    translation = (0,0,0),
-    center = (0,0,0),
-    parentMatrix = None,
-):
+    translation: Any = (0,0,0),
+    center: Any = (0,0,0),
+    parentMatrix: Any = None,
+) -> Any:
     """Determine the center of rotation for a transform node
 
     Returns the parent-space coordinate of the

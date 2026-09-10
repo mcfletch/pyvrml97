@@ -17,7 +17,7 @@ class ROUTE( node.Node ):
     sourceField = fieldtypes.SFString('sourceField',)
     destination = node.SFNode('destination',)
     destinationField = fieldtypes.SFString( 'destinationField',)
-    def __init__( self, *arguments, **named ) -> None:
+    def __init__( self, *arguments: Any, **named: Any ) -> None:
         """Initialize the route object
 
         Calls self.bind() after normal node.Node
@@ -32,7 +32,7 @@ class ROUTE( node.Node ):
                 arguments = ()
         super( ROUTE, self ).__init__( *arguments, **named )
         self.bind()
-    def bind( self ):
+    def bind( self ) -> Any:
         """Bind this ROUTE node's source to destination
 
         Should also setup notification for changes to our
@@ -40,7 +40,7 @@ class ROUTE( node.Node ):
         dispatcher.
         """
         return self._bind( self.source, self.sourceField )
-    def _bind( self, source, field ) -> None:
+    def _bind( self, source: Any, field: Any ) -> None:
         """Low-level binding of the source,field key
 
         This method allows sub-classes to do multiple
@@ -61,8 +61,8 @@ class ROUTE( node.Node ):
         else:
             print("""NULL ROUTE bound""", self)
     def forward(
-        self, signal: Any, sender, event: Any=None, value: Any=None, **arguments
-    ):
+        self, signal: Any, sender: Any, event: Any=None, value: Any=None, **arguments: Any
+    ) -> Any:
         """Forward a value update to our destination
         """
         return self._forward(
@@ -72,9 +72,9 @@ class ROUTE( node.Node ):
         )
     def _forward(
         self,
-        sender, signal: Any,
-        destination, destinationField,
-        event: Any=None, value: Any=None, **arguments
+        sender: Any, signal: Any,
+        destination: Any, destinationField: Any,
+        event: Any=None, value: Any=None, **arguments: Any
     ) -> None:
         """Do the low-level forwarding of the value to a target field"""
         if event is None:
@@ -106,7 +106,7 @@ class ROUTE( node.Node ):
                 value = value,
                 event = event,
             )
-    def copy( self, copier: Any = None ):
+    def copy( self, copier: Any = None ) -> Any:
         """Copy the route for the copier object
 
         A route copies only as part of a scene graph copy, since both of the
@@ -126,7 +126,7 @@ class ROUTE( node.Node ):
             sourceField = self.sourceField,
             destinationField = self.destinationField,
         )
-    def __str__( self ):
+    def __str__( self ) -> str:
         """Get a friendly representation of the Node"""
         return """%s %r.%s TO %r.%s"""%(
             self.__class__.__name__,
@@ -160,7 +160,7 @@ class IS( ROUTE ):
         """
         self._bind( self.source, self.sourceField )
         self._bind( self.destination, self.destinationField )
-    def forward( self, signal: Any, sender, event: Any=None, value: Any=None, **arguments ):
+    def forward( self, signal: Any, sender: Any, event: Any=None, value: Any=None, **arguments: Any ) -> Any:
         """Forward a value update to our destination (or source)
         """
         if sender is self.source:

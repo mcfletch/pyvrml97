@@ -1,4 +1,5 @@
 """Base VRML97 node prototypes"""
+from typing import Any
 from vrml.vrml97 import nodetypes, transformmatrix
 from vrml import node, field, cache
 class Anchor( nodetypes.Children, nodetypes.Grouping, node.Node ):
@@ -572,7 +573,7 @@ class Transform( nodetypes.Children, nodetypes.Transforming, node.Node ):
     #Events
     removeChildren = field.newEvent( 'removeChildren', 'MFNode', 0)
     addChildren = field.newEvent( 'addChildren', 'MFNode', 0)
-    def localMatrices( self, translate: bool=True,scale: bool=True,rotate: bool=True ):
+    def localMatrices( self, translate: bool=True,scale: bool=True,rotate: bool=True ) -> Any:
         """Calculate/lookup our local matrices
 
         Certain operations want, e.g. just the rotation of an item,

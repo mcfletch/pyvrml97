@@ -20,7 +20,7 @@ from vrml.protofunctions import *
 from vrml.arrays import array
 
 
-def as_str(value: Any, encoding: str='utf-8'):
+def as_str(value: Any, encoding: str='utf-8') -> str:
     """A slice of the parse buffer as text
 
     simpleparse hands back whichever of bytes and text the source was read as,
@@ -33,7 +33,7 @@ def as_str(value: Any, encoding: str='utf-8'):
     return str(value)
 
 
-def getString(*args, **named):
+def getString(*args: Any, **named: Any) -> str:
     base = _getString(*args, **named)
     return as_str(base)
 
@@ -41,7 +41,7 @@ def getString(*args, **named):
 class ParseProcessor(DispatchProcessor):
     """Builds in-memory node-graph from VRML97 parse-tree"""
 
-    def __init__(self, basePrototypes=None, baseURI: str="") -> None:
+    def __init__(self, basePrototypes: Any=None, baseURI: str="") -> None:
         """Initialise the ParseProcessor
 
         basePrototypes -- name: constructor mapping for all
@@ -90,7 +90,7 @@ class ParseProcessor(DispatchProcessor):
         result = [item for item in items if isinstance(item, node.Node)]
         self.sceneGraphStack[-1].children.extend(result)
 
-    def vrmlScene(self, table: Any, buffer: Any):
+    def vrmlScene(self, table: Any, buffer: Any) -> Any:
         """Instantiate a VRML scene object"""
         (tag, left, right, children) = table
         if self.sceneGraphStack:
@@ -136,7 +136,7 @@ class ParseProcessor(DispatchProcessor):
             self.prototypeStack.pop()
 
     ### Node instances of the various types
-    def Node(self, table: Any, buffer: Any):
+    def Node(self, table: Any, buffer: Any) -> Any:
         '''Create new node, returning the value to the caller'''
         (tag, start, stop, sublist) = table
         if sublist[0][0] == 'name':
@@ -165,7 +165,7 @@ class ParseProcessor(DispatchProcessor):
         self.nodeStack.pop()
         return newNode
 
-    def Script(self, table: Any, buffer: Any):
+    def Script(self, table: Any, buffer: Any) -> Any:
         '''A script node (can be a root node)'''
         (tag, start, stop, sublist) = table
         # what's the DEF name...
@@ -207,11 +207,11 @@ class ParseProcessor(DispatchProcessor):
         self.nodeStack.pop()
         return newNode
 
-    def SFNull(self, tup, buffer: Any):
+    def SFNull(self, tup: Any, buffer: Any) -> Any:
         '''Create a reference to the SFNull node'''
         return self.sceneGraphStack[-1].getProto("NULL")
 
-    def USE(self, tup, buffer: Any):
+    def USE(self, tup: Any, buffer: Any) -> Any:
         """Create a reference to an existing named node"""
         name = getString(tup, buffer)
         node = self.sceneGraphStack[-1].getDEF(name)
@@ -225,7 +225,7 @@ class ParseProcessor(DispatchProcessor):
             )
         return node
 
-    def ROUTE(self, table: Any, buffer: Any):
+    def ROUTE(self, table: Any, buffer: Any) -> Any:
         '''Create a new route object/node, add the current sceneGraph'''
         (tag, start, stop, sublist) = table
         (s, sf, d, df) = [getString(item, buffer) for item in sublist]
@@ -292,7 +292,7 @@ class ParseProcessor(DispatchProcessor):
             ),
         )
 
-    def ScriptEventDecl(self, table: Any, buffer: Any):
+    def ScriptEventDecl(self, table: Any, buffer: Any) -> Any:
         (tag, left, right, sublist) = table
         direction, datatype, name = [getString(item, buffer) for item in sublist[:3]]
         if len(sublist) > 3:
@@ -304,7 +304,7 @@ class ParseProcessor(DispatchProcessor):
             mapName,
         )
 
-    def ScriptFieldDecl(self, table: Any, buffer: Any):
+    def ScriptFieldDecl(self, table: Any, buffer: Any) -> Any:
         """Field declaration for a script node"""
         (tag, left, right, (exposure, datatype, name, value)) = table
         datatype = getString(datatype, buffer)
@@ -332,7 +332,7 @@ class ParseProcessor(DispatchProcessor):
             self.fieldTypeStack.pop()
 
     ### Node attributes and field values
-    def Attr(self, table: Any, buffer: Any):
+    def Attr(self, table: Any, buffer: Any) -> Any:
         '''An attribute of a node or script'''
         (tag, start, stop, (name, value)) = table
         name = getString(name, buffer)
@@ -364,7 +364,7 @@ class ParseProcessor(DispatchProcessor):
             finally:
                 self.fieldTypeStack.pop()
 
-    def Field(self, table: Any, buffer: Any):
+    def Field(self, table: Any, buffer: Any) -> Any:
         '''A field value (of any type)'''
         (tag, start, stop, sublist) = table
         if sublist and sublist[0][0] in ('USE', 'Script', 'Node', 'SFNull'):
@@ -379,33 +379,33 @@ class ParseProcessor(DispatchProcessor):
             function = getattr(self, self.fieldTypeStack[-1])
             return function(sublist, buffer)
 
-    def SFBool(self, table: Any, buffer: Any):
+    def SFBool(self, table: Any, buffer: Any) -> Any:
         '''Boolean, in Python tradition is either 0 or 1'''
         (tup,) = table
         return getString(tup, buffer) == 'TRUE'
 
-    def SFFloat(self, table: Any, buffer: Any):
+    def SFFloat(self, table: Any, buffer: Any) -> Any:
         (tup,) = table
         return float(getString(tup, buffer))
 
     SFTime = SFFloat
 
-    def SFInt32(self, table: Any, buffer: Any):
+    def SFInt32(self, table: Any, buffer: Any) -> Any:
         (tup,) = table
         return int(getString(tup, buffer), 0)
 
-    def SFVec3f(self, table: Any, buffer: Any):
+    def SFVec3f(self, table: Any, buffer: Any) -> Any:
         return [float(getString(item, buffer)) for item in table]
 
-    def SFVec2f(self, table: Any, buffer: Any):
+    def SFVec2f(self, table: Any, buffer: Any) -> Any:
         return [float(getString(item, buffer)) for item in table]
 
     SFColor = SFVec3f
 
-    def SFRotation(self, table: Any, buffer: Any):
+    def SFRotation(self, table: Any, buffer: Any) -> Any:
         return [float(getString(item, buffer)) for item in table]
 
-    def SFArray(self, values: Any, buffer: Any, final: bool=True):
+    def SFArray(self, values: Any, buffer: Any, final: bool=True) -> Any:
         """Process a vector-of-values data-set"""
         result = []
         for tag, start, stop, children in values:
@@ -417,7 +417,7 @@ class ParseProcessor(DispatchProcessor):
             return array(result, 'f')
         return result
 
-    def MFInt32(self, tuples: Any, buffer: Any):
+    def MFInt32(self, tuples: Any, buffer: Any) -> Any:
         # localisation
         if not tuples:
             return []
@@ -425,16 +425,16 @@ class ParseProcessor(DispatchProcessor):
 
     SFImage = MFInt32
 
-    def MFUInt32(self, tuples: Any, buffer: Any):
+    def MFUInt32(self, tuples: Any, buffer: Any) -> Any:
         # localisation
         return [int(buffer[start:stop], 0) for (tag, start, stop, children) in tuples]
 
-    def MFFloat(self, tuples: Any, buffer: Any):
+    def MFFloat(self, tuples: Any, buffer: Any) -> Any:
         return [float(buffer[start:stop]) for (tag, start, stop, children) in tuples]
 
     MFColor = MFRotation = MFVec2f = MFVec3f = MFTime = MFFloat32 = MFFloat
 
-    def MFString(self, tuples: Any, buffer: Any):
+    def MFString(self, tuples: Any, buffer: Any) -> Any:
         bigresult = []
         for _tag, _start, _stop, sublist in tuples:
             result = []
@@ -448,7 +448,7 @@ class ParseProcessor(DispatchProcessor):
             bigresult.append("".join(result))
         return bigresult
 
-    def SFString(self, table: Any, buffer: Any):
+    def SFString(self, table: Any, buffer: Any) -> Any:
         '''Return the (escaped) string as a simple Python string'''
         ((tag, start, stop, sublist),) = table
         result = []
@@ -462,12 +462,12 @@ class ParseProcessor(DispatchProcessor):
         return "".join(result)
 
     ### Low-level/trivial constructs which have their own processing functions
-    def IS(self, table: Any, buffer: Any):
+    def IS(self, table: Any, buffer: Any) -> Any:
         '''Create a field reference'''
         (tag, start, stop, (nametuple,)) = table
         return getString(nametuple, buffer)
 
-    def ExtProtoURL(self, table: Any, buffer: Any):
+    def ExtProtoURL(self, table: Any, buffer: Any) -> Any:
         '''add the url to the external prototype'''
         (tag, start, stop, sublist) = table
         return self.MFString(sublist, buffer)

@@ -1,4 +1,5 @@
 """VRML97 Script-node stub"""
+from typing import Any
 from vrml import node, fieldtypes
 from vrml.vrml97 import nodetypes
 
@@ -19,7 +20,7 @@ class _Script( nodetypes.Children, node.Node ):
         'mustEvaluate', default = 0,
     )
 
-def Script( fields, **namedarguments ):
+def Script( fields: Any, **namedarguments: Any ) -> Any:
     """Create a new script prototype and an instance of that prototype"""
     proto = node.prototype( 'Script', fields, baseClasses = (_Script,) )
     return proto( **namedarguments )
