@@ -528,7 +528,11 @@ class _SFVec(_FieldHost):
             value = value.reshape(self.dimension)
         elif isinstance(value, field.SEQUENCE_TYPES):
             value = arrays.asarray([float(x) for x in collapse(value)], self.targetType)
-            value.reshape(self.dimension)
+            # Assigned, because `reshape` answers a new array rather than
+            # changing this one: unassigned, a flat sequence of the right
+            # length stayed flat and was then refused for its shape, so a
+            # matrix could be set from an array and not from a list of numbers.
+            value = value.reshape(self.dimension)
         else:
             try:
                 value = arrays.asarray(value, self.targetType)
@@ -538,7 +542,7 @@ class _SFVec(_FieldHost):
                     % (self.typeName(), repr(value))
                 ) from None
             else:
-                value.reshape(self.dimension)
+                value = value.reshape(self.dimension)
         if value.shape != self.dimension:
             raise ValueError(
                 """%s value of incorrect shape (is %s, should be %s)"""
