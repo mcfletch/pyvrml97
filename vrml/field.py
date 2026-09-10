@@ -158,46 +158,56 @@ class BaseField(object):
             defaultobj = self._set(client, defaultobj)
         return defaultobj
 
-    def _del(self, client: Any) -> None:
-        """Remove the client's own value, so a read answers the default again
+    def _del(self, client: Any) -> Any:
+        """Remove the client's own value and answer it
 
-        The counterpart of :meth:`_set`, and the primitive both the descriptor
-        protocol and :meth:`fdel` go through -- each of those is the other's
-        caller in one direction or the other, so neither can be the one that
-        does the work.
+        A read answers the default again afterwards.  The counterpart of
+        :meth:`_set`, and the primitive both the descriptor protocol and
+        :meth:`fdel` go through -- each of those is the other's caller in one
+        direction or the other, so neither can be the one that does the work.
         """
         if isinstance(client, type):
             try:
+                value = getattr(client, self.name)
                 delattr(client, self.name)
             except AttributeError:
                 raise AttributeError(self.name) from None
         else:
             try:
-                del client.__dict__[self.name]
+                value = client.__dict__.pop(self.name)
             except KeyError:
                 raise AttributeError(self.name) from None
+        return value
 
     def __delete__(self, client: Any) -> None:
-        """Delete our value from client's dictionary"""
-        self._del(client)
+        """Delete our value from client's dictionary, and say so"""
+        self.fdel(client, True)
 
-    def fdel(self, client: Any, notify: bool=True) -> None:
-        """Delete with notify"""
-        self._del(client)
+    def fdel(self, client: Any, notify: bool=True) -> Any:
+        """Delete with notify, answering the value that was there"""
+        value = self._del(client)
         if notify:
             dispatcher.send(
                 ('del', self),
                 client,
             )
+        return value
 
 
 
+#: The Python implementation of the field primitives, under a name that always
+#: reaches it.  `BaseField` is this class where the accelerator is not
+#: installed and the compiled one where it is; both answer the same calls, and
+#: `tests/test_basefield.py` holds the two to that.
+PyBaseField = BaseField
 
 if fieldaccel2:
     # The compiled accelerator answers the same calls and replaces it where
     # it is installed. A checker reads the Python class above, which is the
     # implementation that is always here.
     BaseField = fieldaccel2.BaseField  # type: ignore[misc]
+
+
 class Field(BaseField):
     """Property sub-class with VRML field semantics
 
