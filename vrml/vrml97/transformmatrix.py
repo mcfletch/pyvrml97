@@ -192,6 +192,11 @@ def center(
     T,T1 = transMatrix( translation )
     C,C1 = transMatrix( center )
     for x in (T,C):
-        if x:
+        # `is not None`, as compressMatrices above tests it: `transMatrix`
+        # answers None for a zero vector and a matrix otherwise, and asking a
+        # matrix for its truth value raises rather than answering -- so this
+        # raised for every Transform that had a translation or a centre, which
+        # is every one anybody asks this about.
+        if x is not None:
             parentMatrix = ar.dot( x, parentMatrix)
     return ar.dot( ORIGINPOINT, parentMatrix )
