@@ -69,3 +69,46 @@ class TestInPlaceAdd:
         items = OList([1])
         items.extend([2, 3])
         assert list(items) == [1, 2, 3]
+
+
+class TestExtendAndInPlaceAdd(unittest.TestCase):
+    """The two answer different things, as `list`'s do.
+
+    `items += [x]` binds the name to whatever `__iadd__` answers, so that one
+    has to answer the list itself. `extend` answers nothing, which is what
+    `list.extend` does and what a caller writing `x = items.extend(...)`
+    would otherwise get a list from.
+    """
+
+    def setUp(self):
+        self.messages = []
+
+        class Watched(olist.OList):
+            def _sendAdded(inner, value):
+                self.messages.append(('added', value))
+
+            def _sendRemoved(inner, value):
+                self.messages.append(('removed', value))
+
+        self.list = Watched([1, 2])
+
+    def test_extend_answers_nothing(self):
+        self.assertIsNone(self.list.extend([3, 4]))
+
+    def test_extend_adds_the_items(self):
+        self.list.extend([3, 4])
+        self.assertEqual(list(self.list), [1, 2, 3, 4])
+
+    def test_extend_announces_each_item(self):
+        self.list.extend([3, 4])
+        self.assertEqual(self.messages, [('added', 3), ('added', 4)])
+
+    def test_in_place_add_answers_the_list_itself(self):
+        original = self.list
+        self.list += [3]
+        self.assertIs(self.list, original)
+        self.assertEqual(list(self.list), [1, 2, 3])
+
+    def test_in_place_add_announces_the_item(self):
+        self.list += [3]
+        self.assertEqual(self.messages, [('added', 3)])

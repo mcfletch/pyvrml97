@@ -28,13 +28,13 @@ class OList( list ):
     DEL_PARENT_EVT = 'removed'
     sender = None
     extraArgs = None
-    def setSender( self, sender, **named ) -> None:
+    def setSender( self, sender: Any, **named: Any ) -> None:
         """Set the (node) from which messages should be sent"""
         if sender is not None:
             sender = weakref.ref(sender)
         self.sender = sender
         self.extraArgs = named
-    def _sender( self ):
+    def _sender( self ) -> Any:
         sender = self
         if self.sender is not None:
             sender = self.sender()
@@ -52,7 +52,7 @@ class OList( list ):
         send( self.DEL_CHILD_EVT, sender, value=value,**(self.extraArgs or {}))
         send( self.DEL_PARENT_EVT, value, parent=sender,**(self.extraArgs or {}))
 
-    def append( self, value: Any ):
+    def append( self, value: Any ) -> Any:
         """Append a value and send a message"""
         super( OList,self ).append( value )
         self._sendAdded( value )
@@ -69,7 +69,7 @@ class OList( list ):
         value = super( OList,self ).pop( index )
         self._sendRemoved( value )
         return value
-    def remove( self, item: Any ):
+    def remove( self, item: Any ) -> Any:
         """Remove this instance from the list"""
         super(OList,self).remove( item )
         self._sendRemoved( item )
@@ -115,7 +115,7 @@ class OList( list ):
     # `list.__add__` answers a plain list while this answers an OList, which
     # a checker reads as the two disagreeing. They do, and deliberately: an
     # in-place add keeps the observable list, a copy does not.
-    def __iadd__( self, iterable: Any ):  # type: ignore[misc]
+    def __iadd__( self, iterable: Any ) -> "OList":  # type: ignore[misc]
         """Do an in-place add
 
         Returns self, as `__iadd__` must: `items += [x]` binds the name to
@@ -123,7 +123,14 @@ class OList( list ):
         entries just inserted -- so the name ended up on a plain list of those
         and the observable list was dropped on the floor.
         """
-        self.__setitem__( slice(len(self),len(self)), iterable )
+        self.extend( iterable )
         return self
-    extend = __iadd__
+
+    def extend( self, iterable: Any ) -> None:
+        """Add every item of `iterable`, announcing each
+
+        Answers nothing, as `list.extend` does; :meth:`__iadd__` is the one
+        that has to answer the list.
+        """
+        self.__setitem__( slice(len(self),len(self)), iterable )
 

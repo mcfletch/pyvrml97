@@ -2,9 +2,9 @@
 
 import operator
 import weakref
-from typing import Any, Optional, SupportsIndex, Union
+from typing import Any, Iterator, Optional, SupportsIndex, Union
 
-def _reference( item: Any ):
+def _reference( item: Any ) -> "weakref.ReferenceType":
     """A weak reference to `item`, whether or not it is one already.
 
     A free function rather than a method because :meth:`WeakTuple.__new__`
@@ -38,7 +38,7 @@ class WeakTuple( tuple ):
     missing items as does the WeakList.  This can
     occur for basically _any_ use of the tuple.
     """
-    def __new__( cls, sequence: Any=() ):
+    def __new__( cls, sequence: Any=() ) -> "WeakTuple":
         """Build the tuple, holding a weak reference to each item
 
         In ``__new__`` rather than ``__init__`` because a tuple is immutable:
@@ -49,7 +49,7 @@ class WeakTuple( tuple ):
             cls, [_reference( obj ) for obj in sequence]
         )
 
-    def valid( self ):
+    def valid( self ) -> int:
         """Explicit validity check for the tuple
 
         Checks whether all references can be resolved,
@@ -62,14 +62,14 @@ class WeakTuple( tuple ):
         except ReferenceError:
             return 0
 
-    def wrap( self, item: Any ):
+    def wrap( self, item: Any ) -> "weakref.ReferenceType":
         """Wrap an individual item in a weak-reference
 
         If the item is already a weak reference, we store
         a reference to the original item.
         """
         return _reference( item )
-    def unwrap( self, item: Any ):
+    def unwrap( self, item: Any ) -> Any:
         """Unwrap an individual item
 
         This is a fairly trivial operation at the moment,
@@ -84,7 +84,7 @@ class WeakTuple( tuple ):
             )
         return ref
 
-    def __iter__( self ):
+    def __iter__( self ) -> "Iterator[Any]":
         """Iterate over the tuple, yielding strong references"""
         index = 0
         while index < len(self):
@@ -97,13 +97,18 @@ class WeakTuple( tuple ):
         if isinstance( index, slice ):
             return [self.unwrap(obj) for obj in held]
         return self.unwrap(held)
-    def __contains__( self, item: Any ):
-        """Return boolean indicating whether the item is in the tuple"""
+    def __contains__( self, item: Any ) -> bool:
+        """Whether the item is in the tuple, by identity
+
+        By identity, as :meth:`count` and :meth:`index` are: a node is the node
+        it is, and asking a scenegraph node whether it equals another can mean
+        comparing every field on it.
+        """
         for node in self:
             if item is node:
-                return 1
-        return 0
-    def count( self, item: Any ):
+                return True
+        return False
+    def count( self, item: Any ) -> int:
         """Return integer count of instances of item in tuple"""
         count = 0
         for node in self:
@@ -131,32 +136,32 @@ class WeakTuple( tuple ):
             """%r is not in this %s"""%( item, self.__class__.__name__ )
         )
 
-    def __add__(self, other: Any):
+    def __add__(self, other: Any) -> Any:
         """Return a new path with other as tail"""
         return tuple(self) + other
 
-    def __eq__( self, sequence: Any ):
+    def __eq__( self, sequence: Any ) -> Any:
         """Compare the tuple to another (==)"""
         return list(self) == sequence
-    def __ge__( self, sequence: Any ):
+    def __ge__( self, sequence: Any ) -> Any:
         """Compare the tuple to another (>=)"""
         return list(self) >= sequence
-    def __gt__( self, sequence: Any ):
+    def __gt__( self, sequence: Any ) -> Any:
         """Compare the tuple to another (>)"""
         return list(self) > sequence
 
-    def __le__( self, sequence: Any ):
+    def __le__( self, sequence: Any ) -> Any:
         """Compare the tuple to another (<=)"""
         return list(self) <= sequence
-    def __lt__( self, sequence: Any ):
+    def __lt__( self, sequence: Any ) -> Any:
         """Compare the tuple to another (<)"""
         return list(self) < sequence
 
-    def __ne__( self, sequence: Any ):
+    def __ne__( self, sequence: Any ) -> Any:
         """Compare the tuple to another (!=)"""
         return list(self) != sequence
 
-    def __repr__( self ):
+    def __repr__( self ) -> str:
         """Return a code-like representation of the weak tuple"""
         return """%s( %s )"""%( self.__class__.__name__, super(WeakTuple,self).__repr__())
 

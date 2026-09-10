@@ -10,7 +10,7 @@ class NodePath( list ):
     provided by sub-classes such as vrml.vrml97.nodepath and
     OpenGLContext.scenegraph.nodepath
     """
-    def __repr__( self ):
+    def __repr__( self ) -> str:
         """Code-like representation of the node path
 
         Note: this doesn't use super for determining
@@ -19,7 +19,7 @@ class NodePath( list ):
             WeakNodePath( WeakTuple( Node, Node,...))
         """
         return '%s(%s)'%(self.__class__.__name__, list.__repr__( self ))
-    def __str__( self ):
+    def __str__( self ) -> str:
         """Simple representation of a node-path for human consumption"""
         return "%s(%s)"%(
             self.__class__.__name__,
@@ -27,7 +27,7 @@ class NodePath( list ):
                 str( N )
                 for N in self
             ]))
-    def common (self, other: Any):
+    def common (self, other: Any) -> Any:
         """Return the common root sub-path between ourselves and other
 
         If there is no common sub-root, returns an empty path
@@ -39,7 +39,7 @@ class NodePath( list ):
             else:
                 break
         return self.__class__(result)
-    def __add__(self, other: Any):
+    def __add__(self, other: Any) -> Any:
         """Return a new path with other as tail"""
         if isinstance( other, node.Node ):
             other = [other]
@@ -56,7 +56,7 @@ class NodePath( list ):
         if isinstance(index, slice):
             return self.__class__(held)
         return held
-    def __eq__( self, other: Any ):
+    def __eq__( self, other: Any ) -> Any:
         """Check whether we are equal to another path"""
         if len(self) != len(other):
             return 0
