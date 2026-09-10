@@ -44,9 +44,18 @@ class NodePath( list ):
         if isinstance( other, node.Node ):
             other = [other]
         return self.__class__( super(NodePath, self).__add__( other))
-    def __getslice__(self, start, stop):
-        """Return a new path with our items from start to stop"""
-        return self.__class__(super (NodePath, self).__getslice__(start, stop))
+    def __getitem__(self, index):
+        """Return the node at an index, or a new path for a slice
+
+        A slice of a path is a path: the event system hands a handler the tail
+        of one -- the part of the new path a pointer entered that the old did
+        not cover -- and a handler asking where that is in the world calls
+        `transformMatrix` on it.
+        """
+        held = super(NodePath, self).__getitem__(index)
+        if isinstance(index, slice):
+            return self.__class__(held)
+        return held
     def __eq__( self, other ):
         """Check whether we are equal to another path"""
         if len(self) != len(other):

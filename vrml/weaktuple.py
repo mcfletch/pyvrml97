@@ -2,6 +2,17 @@
 
 import weakref
 
+def _reference( item ):
+    """A weak reference to `item`, whether or not it is one already.
+
+    A free function rather than a method because :meth:`WeakTuple.__new__`
+    needs it before there is an instance to call a method on.
+    """
+    if isinstance( item, weakref.ReferenceType ):
+        item = item()
+    return weakref.ref( item )
+
+
 class WeakTuple( tuple ):
     """tuple sub-class holding weakrefs to items
 
@@ -25,13 +36,16 @@ class WeakTuple( tuple ):
     missing items as does the WeakList.  This can
     occur for basically _any_ use of the tuple.
     """
-    def __init__( self, sequence=() ):
-        """Initialize the tuple
+    def __new__( cls, sequence=() ):
+        """Build the tuple, holding a weak reference to each item
 
-        The WeakTuple will store weak references to objects
-        within the sequence.
+        In ``__new__`` rather than ``__init__`` because a tuple is immutable:
+        its contents are settled as it is created, and ``tuple.__init__`` is
+        ``object.__init__``, which takes nothing.
         """
-        super( WeakTuple, self).__init__( [self.wrap(obj) for obj in sequence])
+        return super( WeakTuple, cls).__new__(
+            cls, [_reference( obj ) for obj in sequence]
+        )
 
     def valid( self ):
         """Explicit validity check for the tuple
@@ -43,20 +57,16 @@ class WeakTuple( tuple ):
         try:
             list( self )
             return 1
-        except weakref.ReferenceError:
+        except ReferenceError:
             return 0
 
     def wrap( self, item ):
         """Wrap an individual item in a weak-reference
 
         If the item is already a weak reference, we store
-        a reference to the original item.  We use approximately
-        the same weak reference callback mechanism as the
-        standard weakref.WeakKeyDictionary object.
+        a reference to the original item.
         """
-        if isinstance( item, weakref.ReferenceType ):
-            item = item()
-        return weakref.ref( item )
+        return _reference( item )
     def unwrap( self, item ):
         """Unwrap an individual item
 
@@ -66,7 +76,10 @@ class WeakTuple( tuple ):
         """
         ref = item()
         if ref is None:
-            raise weakref.ReferenceError( """%s instance no longer valid (item %s has been collected)"""%( self.__class__.__name__, item))
+            raise ReferenceError(
+                """%s instance no longer valid (item %s has been collected)"""
+                % ( self.__class__.__name__, item)
+            )
         return ref
 
     def __iter__( self ):
@@ -77,14 +90,11 @@ class WeakTuple( tuple ):
             index += 1
 
     def __getitem__( self, index ):
-        """Get the item at the given index"""
-        return self.unwrap(super (WeakTuple,self).__getitem__( index ))
-    def __getslice__( self, start, stop ):
-        """Get the items in the range start to stop"""
-        return [
-            self.unwrap(obj)
-            for obj in super (WeakTuple,self).__getslice__( start, stop)
-        ]
+        """Get the item, or the items of the slice, at the given index"""
+        held = super (WeakTuple,self).__getitem__( index )
+        if isinstance( index, slice ):
+            return [self.unwrap(obj) for obj in held]
+        return self.unwrap(held)
     def __contains__( self, item ):
         """Return boolean indicating whether the item is in the tuple"""
         for node in self:
@@ -98,14 +108,24 @@ class WeakTuple( tuple ):
             if item is node:
                 count += 1
         return count
-    def index( self, item ):
-        """Return integer index of item in tuple"""
-        count = 0
-        for node in self:
+    def index( self, item, start = 0, stop = None ):
+        """Return integer index of item in tuple
+
+        By identity, as ``__contains__`` and :meth:`count` are: a node is the
+        node it is, and asking a scenegraph node whether it equals another can
+        mean comparing every field on it.
+
+        Raises ValueError where there is no such item, which is what a tuple
+        does and what a caller writing ``try: index(...) except ValueError``
+        expects.
+        """
+        held = list(self)
+        for offset, node in enumerate( held[start:stop] ):
             if item is node:
-                return count
-            count += 1
-        return -1
+                return start + offset
+        raise ValueError(
+            """%r is not in this %s"""%( item, self.__class__.__name__ )
+        )
 
     def __add__(self, other):
         """Return a new path with other as tail"""

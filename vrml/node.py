@@ -6,6 +6,10 @@ extensive use of properties
 
 from typing import Any, Tuple
 from vrml import field, fieldtypes, weakkeydictfix
+#: The two node field types here are halves of a field type in the same way
+#: the ones in `fieldtypes` are, and need the same thing of the `field.Field`
+#: they are combined with.
+from vrml.fieldtypes import _FieldHost
 from vrml import copier as copiermodule
 from vrml import olist
 from vrml.protofunctions import *
@@ -305,7 +309,7 @@ class NullNode(Node):
 NULL = NullNode()
 
 
-class _SFNode(object):
+class _SFNode(_FieldHost):
     """Base-class for SFNode-type fields
 
     The optionally restricted SFNode field type
@@ -363,7 +367,10 @@ class _SFNode(object):
                 """SFNode field %s was set to a string, not currently supported: %s"""
                 % (self, value[:30])
             )
-        elif isinstance(value, field.SEQUENCE_TYPES) and len(value) == 1:
+        elif isinstance(value, field.UNPACK_TYPES):
+            # No length to measure until the values are drawn out.
+            return self.coerce(list(value))
+        elif isinstance(value, (tuple, list)) and len(value) == 1:
             return self.coerce(value[0])
         elif not self.requiredTypes:
             return value
@@ -397,10 +404,10 @@ field.register(SFNode)
 field.register(SFNodeEvt)
 
 
-# `WeakField` and `Field` each carry an `fget`, and this takes the weak one
-# by putting it first. A checker reports the pair as a clash rather than as
-# a resolution, which is what the ordering is for.
-class WeakSFNode(_SFNode, field.WeakField, field.Field):  # type: ignore[misc]
+# `WeakField` and `Field` each carry an `fget`, and this takes the weak one by
+# putting it first: reading the field resolves the reference rather than
+# answering it.
+class WeakSFNode(_SFNode, field.WeakField, field.Field):
     """Weak-referenced SFNode field-type"""
 
     fieldType = 'WeakSFNode'
@@ -472,7 +479,7 @@ def _changeSender(nodeRef, field):
     return onOListChange
 
 
-class _MFNode(object):
+class _MFNode(_FieldHost):
     """(Restricted) MFNode field-type-definition"""
 
     nodes = 1

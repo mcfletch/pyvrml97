@@ -19,7 +19,11 @@ authors = [
 dependencies = [
     "numpy",
     "PyDispatcher",
-    "simpleparse",
+    # 3.0.0a3 or newer: the first release with wheels for a current Python.
+    # 2.2.4 has none past 3.11 and its mxTextTools C extension does not compile
+    # against a current GCC, so an install that resolves to it fails to build.
+    # Named as a pre-release so an installer does not skip it.
+    "simpleparse >= 3.0.0a3",
 ]
 keywords = [
     "VRML",
@@ -89,3 +93,9 @@ python_version = "3.12"
 files = ["vrml"]
 ignore_missing_imports = true
 warn_unused_ignores = true
+# Every function body, not only the annotated ones. Nothing here was annotated,
+# so without this the gate read the module-level declarations and skipped all
+# 326 bodies -- which is where `str.replace` was called with one argument, where
+# `WeakList.get` called a method Python 2 had, and where a property assigned to
+# itself. A gate that cannot see inside a function is not checking the package.
+check_untyped_defs = true

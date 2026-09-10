@@ -8,6 +8,9 @@ class ProtoNamespace( dict ):
                 return self[ key ]
         raise AttributeError( '%r object has no %r attribute'%( self.__class__.__name__, key))
     def __copy__( self ):
-        """Produce a ProtoNamespace copy of self"""
-        return self.__class__( super(ProtoNamespace,self).__copy__())
+        """Produce a ProtoNamespace copy of self
+
+        A dict copies through `copy`; there is no `dict.__copy__` to defer to.
+        """
+        return self.__class__( self )
 

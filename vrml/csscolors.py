@@ -6,9 +6,9 @@ def stringToColor( value ):
     if possible:
         return possible
     if value and value[0] == '#':
-        # HTML-style #hex encoding
-        possible = int( value[1:],16)
-        return toFloat(possible,16),toFloat(possible,8), toFloat(possible,0)
+        # HTML-style #hex encoding: one integer, read a byte at a time
+        packed = int( value[1:],16)
+        return toFloat(packed,16),toFloat(packed,8), toFloat(packed,0)
     else:
         raise ValueError( """String %(value)r couldn't be recognised as a color name, or #FFFFFF style encoding"""%locals())
 def toInt( value ):

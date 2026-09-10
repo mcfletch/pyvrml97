@@ -8,6 +8,7 @@ try:
 except ImportError:
     from io import StringIO
 from vrml import arrays
+from vrml import protofunctions
 from vrml.protofunctions import *
 from vrml import node
 
@@ -203,11 +204,10 @@ class Lineariser:
         buffer = self.buffer = StringIO()  # local buffer only for this particular proto
 
         # write header (PROTO x [, EXTERNPROTO x [ )
-        # TODO: the externalURL descriptor no longer works, likely because the proto node
-        # is now a type, so it is trying to access an instance variable
-        externalURL = clientNode.externalURL
-        if hasattr(externalURL, '__get__'):
-            externalURL = clientNode.externalURL.__get__(clientNode)
+        # A prototype is a class, and reading the field off a class answers the
+        # field object rather than its value; `getExternalURL` is the accessor
+        # that asks the field for the class's own value.
+        externalURL = protofunctions.getExternalURL(clientNode)
         if externalURL:
             buffer.write('EXTERNPROTO %s [' % (clientName,))
         else:

@@ -1,6 +1,7 @@
 """Node-paths for VRML97 incl. transform-matrix calculation
 """
 from __future__ import generators
+from typing import TYPE_CHECKING, Any, List, Optional
 from vrml import nodepath
 from vrml.cache import CACHE
 from vrml.vrml97 import transformmatrix, nodetypes
@@ -8,20 +9,32 @@ from vrml.arrays import *
 import weakref
 xrange = range
 
+if TYPE_CHECKING:
+    #: What `_NodePath` needs of the path beside it.  It is one half of a path
+    #: type -- it adds transform-matrix caching, and `nodepath.NodePath` or
+    #: `nodepath.WeakNodePath` is the list the nodes themselves live in --
+    #: so the caching code indexes and iterates its own host.  `object` at run
+    #: time, leaving the mix-in the base it always had.
+    _PathHost = List[Any]
+else:
+    _PathHost = object
+
 
 class _MatrixHolder( object ):
     def __init__( self, matrix):
         self.matrix = matrix
 
-class _NodePath( object ):
+class _NodePath( _PathHost ):
     """Path within a VRML97 scenegraph from root to particular node
 
     Adds transformation-matrix calculation functions
     based on the nodetypes.Transforming node's
     attributes.
     """
-    parent = None
-    children = None
+    parent: Optional[Any] = None
+    #: Weak references to the paths extending this one, so invalidating a
+    #: transform can reach the whole subtree.  None until there is one.
+    children: Optional[List[Any]] = None
     active = True
     broken = False
     def isTransform( self, item ):
@@ -98,7 +111,7 @@ class _NodePath( object ):
     def __add__(self, other):
         """Add parent-matrix pre-caching support to nodepaths"""
         base = super( _NodePath, self).__add__( other )
-        base.parent = self
+        base.parent = self       # type: ignore[attr-defined]
         if self.children is None:
             self.children = []
         self.children.append( weakref.ref( base ))

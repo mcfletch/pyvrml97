@@ -48,11 +48,18 @@ class WeakList( list ):
 
     def get( self ):
         """Get all items as a list of strong references
+
+        An item whose referent has been collected is left out: a list's
+        membership is not fixed, so a shorter list is a sensible answer where
+        :class:`~vrml.weaktuple.WeakTuple` has none and raises instead.
         """
-        return [
-            self.unwrap(obj)
-            for obj in super( WeakList,self).__getslice__(0,len(self))
-        ]
+        held = super( WeakList,self).__getitem__( slice( None ) )
+        found = []
+        for reference in held:
+            item = reference()
+            if item is not None:
+                found.append( item )
+        return found
     def __iter__( self ):
         """Iterate over the list, yielding strong references"""
         index = 0
@@ -86,8 +93,11 @@ class WeakList( list ):
     __iadd__ = extend
 
     def __getitem__( self, index ):
-        """Get the item at the given index"""
-        return self.unwrap(super (WeakList,self).__getitem__( index))
+        """Get the item, or the items of the slice, at the given index"""
+        held = super (WeakList,self).__getitem__( index )
+        if isinstance( index, slice ):
+            return [self.unwrap(obj) for obj in held]
+        return self.unwrap(held)
     def pop( self, index=-1 ):
         """Pop an item from the list, removing it and returning it"""
         return self.unwrap( super(WeakList,self).pop(index))
@@ -98,28 +108,31 @@ class WeakList( list ):
     def count( self, item ):
         """Return integer count of instances of item in list"""
         return self.get().count(item)
-    def index( self, item ):
-        """Return integer index of item in list"""
-        return self.get().index(item)
+    def index( self, item, start = 0, stop = None ):
+        """Return integer index of item in list
+
+        Raises ValueError where there is no such item, as `list.index` does.
+        """
+        found = self.get()
+        if stop is None:
+            return found.index(item, start)
+        return found.index(item, start, stop)
     def remove( self, item ):
         """Remove the given item from the list"""
         t = self.get()
         result = t.remove( item )
         self[:] = t
         return result
-    def sort( self, function = None):
-        """Sort the list of objects
+    def sort( self, *, key = None, reverse = False ):
+        """Sort the referents, then rebuild the list of references
 
-        This sorts the objects referenced,
-        then rebuilds the list of references!
+        Takes ``key`` and ``reverse``, as :meth:`list.sort` does.  Sorting the
+        references themselves would order them by address, which is no order at
+        all from the caller's side.
         """
-        t = self.get()
-        if function is not None:
-            result = t.sort( function )
-        else:
-            result = t.sort( )
-        self[:] = t
-        return result
+        found = self.get()
+        found.sort( key = key, reverse = reverse )
+        self[:] = found
     def __eq__( self, sequence ):
         """Compare the list to another (==)"""
         return self.get() == sequence

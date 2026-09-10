@@ -9,7 +9,7 @@ the field values.
 We use Numeric Python arrays whereever possible.
 """
 
-from typing import Any, Tuple
+from typing import TYPE_CHECKING, Any, Optional, Tuple
 import operator
 from vrml import field, csscolors, arrays
 import sys
@@ -18,6 +18,35 @@ from functools import reduce
 from ._bytes import unicode, long
 
 xrange = range
+
+if TYPE_CHECKING:
+    class _FieldHost:
+        """What the mix-ins below need from the `field.Field` beside them.
+
+        Each `_SF*`/`_MF*` class here is one half of a field type: it holds the
+        coercion and checking rules for one VRML97 value, and is combined with
+        `field.Field`, which holds the name, the default and the descriptor
+        protocol -- ``class SFInt32(_SFInt32, field.Field)``.  Declaring the
+        half's side of that arrangement is what lets the coercion code be read
+        on its own.
+
+        Nothing at run time: the name is `object` there, so the mix-ins have
+        the bases they always had.
+        """
+
+        name: str
+        defaultobj: Any
+        dimension: Tuple[int, ...]
+        #: Whether `defaultobj` is a factory to call rather than a value to
+        #: hand out.  An attribute on `BaseField`, not a method.
+        call_default: bool
+
+        def typeName(self) -> str: ...
+        def coerce(self, value: Any) -> Any: ...
+        def fset(self, client: Any, value: Any, notify: Any = True) -> Any: ...
+        def fdel(self, client: Any, notify: Any = True) -> Any: ...
+else:
+    _FieldHost = object
 
 MAX_INT = getattr(sys, 'maxint', None) or getattr(sys, 'maxsize', None)
 
@@ -125,7 +154,7 @@ def MFSimple_vrmlstr(value, lineariser=None):
 # `str is bytes` is the Python 2 test, and it is False on every
 # interpreter this package supports, so only the branch below it ran.
 
-class _SFString(object):
+class _SFString(_FieldHost):
     """SFString field/event type base-class"""
 
     defaultDefault = ""
@@ -142,7 +171,13 @@ class _SFString(object):
         """
         if isinstance(value, bytes):
             return value.decode('utf-8')
-        elif isinstance(value, field.SEQUENCE_TYPES):
+        elif isinstance(value, field.UNPACK_TYPES):
+            # A map, zip or range has no length; draw the values out before
+            # measuring, as the multi-value types do.
+            value = list(value)
+        # `tuple, list` rather than `field.SEQUENCE_TYPES`: the lazy members of
+        # that tuple have just been drawn out, and these two are what is left.
+        if isinstance(value, (tuple, list)):
             if value and len(value) == 1:
                 value = value[0]
             elif not value:
@@ -163,7 +198,7 @@ class _SFString(object):
     vrmlstr = staticmethod(SFString_vrmlstr)
 
 
-class _MFString(object):
+class _MFString(_FieldHost):
     """MFString field/event type base-class"""
 
     defaultDefault = list
@@ -198,7 +233,7 @@ class _MFString(object):
     vrmlstr = staticmethod(MFString_vrmlstr)
 
 
-class _SFBool(object):
+class _SFBool(_FieldHost):
     """SFBool field/event type base-class"""
 
     defaultDefault = 0
@@ -235,7 +270,7 @@ class _SFBool(object):
             return 'FALSE'
 
 
-class _SFInt32(object):
+class _SFInt32(_FieldHost):
     """SFInt32 field/event type base-class"""
 
     defaultDefault = 0
@@ -300,7 +335,7 @@ class _SFUInt32(_SFInt32):
         return base
 
 
-class _SFFloat(object):
+class _SFFloat(_FieldHost):
     """SFFloat field/event type base-class"""
 
     defaultDefault = 0.0
@@ -333,7 +368,7 @@ class _SFTime(_SFFloat):
     defaultDefault = 0.0
 
 
-class _MFInt32(object):
+class _MFInt32(_FieldHost):
     """MFInt32 field/event type base-class
 
     Stored as a flat Numeric-python array
@@ -396,7 +431,7 @@ class _SFImage(_MFInt32):
     acceptedTypes = ('I', UINT_TYPE)
 
 
-class _MFFloat(object):
+class _MFFloat(_FieldHost):
     """MFFloat field/event type base-class
 
     Stored as a flat Numeric-python array
@@ -450,7 +485,7 @@ class _MFTime(_MFFloat):
     """
 
 
-class _SFVec(object):
+class _SFVec(_FieldHost):
     """SFVecXX field/event type base-class
 
     Stored as a Numeric-python double array of self.length
@@ -463,12 +498,21 @@ class _SFVec(object):
     #: number of ints" rather than fixing the length at the base.
     dimension: Tuple[int, ...] = (3,)  # our dimension...
 
+    #: `length` memoised; None until it is first asked for.  The dimension of
+    #: a field type does not change, so it is worked out once per field.
+    _length: "Optional[int]" = None
+
     @property
     def length(self):
-        import operator
+        """How many numbers one value of this field holds
 
-        self.length = reduce(operator.mul, self.dimension)
-        return self.length
+        The product of :attr:`dimension`: three for an SFVec3f, four for an
+        SFRotation.  An MFVec divides its printed output into rows of this
+        many, so writing a scene out reads it.
+        """
+        if self._length is None:
+            self._length = reduce(operator.mul, self.dimension)
+        return self._length
 
     def defaultDefault(self):
         """Default default value for vectors/colours"""
@@ -521,7 +565,7 @@ class _SFVec(object):
         return arrays.array(value, arrays.typeCode(value))
 
 
-class _Color(object):
+class _Color(_FieldHost):
     """Mix-in for colour-value clamping and string coercion"""
 
     def coerce(self, value):
@@ -535,7 +579,7 @@ class _Color(object):
         return arrays.array(value, arrays.typeCode(value))
 
 
-class _SFArray(object):
+class _SFArray(_FieldHost):
     """Base class which holds a single array-type value (can be arbitrarily spec'd numpy array)"""
 
     defaultDefault = list
@@ -552,7 +596,8 @@ class _SFArray(object):
         if isinstance(value, (str, unicode)):
             value = [
                 float(x)
-                for x in value.replace(',', ' ').replace('[', ' ').replace(']').split()
+                for x in (value.replace(',', ' ').replace('[', ' ')
+                          .replace(']', ' ').split())
             ]
         if field.UNPACK_TYPES and isinstance(value, field.UNPACK_TYPES):
             value = list(value)
@@ -624,11 +669,20 @@ class _MFVec(_SFArray):
     #: As `_SFVec.dimension`: each field type gives its own shape.
     dimension: Tuple[int, ...] = (3,)  # our dimension...
 
+    #: `length` memoised; None until it is first asked for.  The dimension of
+    #: a field type does not change, so it is worked out once per field.
+    _length: "Optional[int]" = None
+
     @property
     def length(self):
-        import operator
+        """How many numbers one value of this field holds
 
-        self._length = reduce(operator.mul, self.dimension)
+        The product of :attr:`dimension`: three for an SFVec3f, four for an
+        SFRotation.  An MFVec divides its printed output into rows of this
+        many, so writing a scene out reads it.
+        """
+        if self._length is None:
+            self._length = reduce(operator.mul, self.dimension)
         return self._length
 
     def reshape(self, value):
@@ -818,8 +872,8 @@ class _MFColor(_Color, _MFVec3f):
             return super(_MFColor, self).coerce(value)
         except (ValueError, TypeError) as err:
             # allow for string-based specifications...
-            result = []
-            current = []
+            result: list = []
+            current: list = []
             for item in value:
                 if isinstance(item, (str, unicode)):
                     if current:

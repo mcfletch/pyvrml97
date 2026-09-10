@@ -105,8 +105,18 @@ class ROUTE( node.Node ):
                 value = value,
                 event = event,
             )
-    def copy( self, copier ):
-        """Copy the route for the copier object"""
+    def copy( self, copier = None ):
+        """Copy the route for the copier object
+
+        A route copies only as part of a scene graph copy, since both of the
+        nodes it joins have to be copied first for it to point at anything --
+        so the copier is required here where `Node.copy` defaults it.
+        """
+        if copier is None:
+            raise ValueError(
+                """A route copies as part of a scene graph copy; pass the"""
+                """ Copier that is doing it."""
+            )
         source = self.source.copy(copier)
         destination = self.destination.copy( copier )
         return self.__class__(

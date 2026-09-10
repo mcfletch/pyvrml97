@@ -1,6 +1,6 @@
 """property sub-class providing VRML field semantics"""
 
-from typing import Any, List, Tuple
+from typing import TYPE_CHECKING, Any, List
 from pydispatch import dispatcher, robustapply
 import weakref
 from vrml import protonamespace
@@ -18,13 +18,16 @@ baseEventTypes = protonamespace.ProtoNamespace({})
 
 ### stuff used by the various field sub-types
 NUMERIC_TYPES = (int, float, long)
-SEQUENCE_TYPES: Tuple[type, ...] = (tuple, list)
-MAP_TYPE = type(map(int, [0]))
-ZIP_TYPE: type = type(zip([], []))
-RANGE_TYPE = type(range(3))
+MAP_TYPE = map
+ZIP_TYPE = zip
+RANGE_TYPE = range
 #: The lazy iterables a field coerces to a sequence before storing.
 UNPACK_TYPES = (MAP_TYPE, ZIP_TYPE, RANGE_TYPE)
-SEQUENCE_TYPES += UNPACK_TYPES
+#: What a field will take a multi-value from.  Written as one expression, and
+#: with the classes named rather than derived from a sample -- `type(map(...))`
+#: *is* `map`, and a checker reading `isinstance(value, SEQUENCE_TYPES)` can
+#: only narrow the value where it can see which classes are in the tuple.
+SEQUENCE_TYPES = (tuple, list) + UNPACK_TYPES
 _NULL: List[Any] = []
 
 
@@ -156,16 +159,32 @@ class BaseField(object):
             defaultobj = self._set(client, defaultobj)
         return defaultobj
 
+    def _del(self, client):
+        """Remove the client's own value, so a read answers the default again
+
+        The counterpart of :meth:`_set`, and the primitive both the descriptor
+        protocol and :meth:`fdel` go through -- each of those is the other's
+        caller in one direction or the other, so neither can be the one that
+        does the work.
+        """
+        if isinstance(client, type):
+            try:
+                delattr(client, self.name)
+            except AttributeError:
+                raise AttributeError(self.name) from None
+        else:
+            try:
+                del client.__dict__[self.name]
+            except KeyError:
+                raise AttributeError(self.name) from None
+
     def __delete__(self, client):
         """Delete our value from client's dictionary"""
-        try:
-            client.__dict__[self.name]
-        except KeyError:
-            raise AttributeError(self.name) from None
+        self._del(client)
 
     def fdel(self, client, notify=True):
         """Delete with notify"""
-        self.__delete__(client)
+        self._del(client)
         if notify:
             dispatcher.send(
                 ('del', self),
@@ -358,7 +377,27 @@ class Field(BaseField):
         return False
 
 
-class WeakField(object):
+if TYPE_CHECKING:
+    class _WeakFieldHost:
+        """What `WeakField` needs of the field beside it.
+
+        `WeakField` is one half of a field type: it wraps the value in a weak
+        reference on the way in and resolves it on the way out, and the
+        `Field` it is combined with does the storing --
+        ``class WeakSFNode(_SFNode, field.WeakField, field.Field)``.  Declaring
+        the half's side of that is what lets its `super()` calls be read.
+
+        `object` at run time, so the mix-in has the base it always had.
+        """
+
+        def fget(self, client: Any, cls: Any = None) -> Any: ...
+        def fset(self, client: Any, value: Any, notify: Any = True) -> Any: ...
+        def fdel(self, client: Any, notify: Any = True) -> Any: ...
+else:
+    _WeakFieldHost = object
+
+
+class WeakField(_WeakFieldHost):
     """A Mix-in for fields which stores weak-references to values"""
 
     def fset(self, client, value, notify=1):
@@ -376,12 +415,14 @@ class WeakField(object):
         value = super(WeakField, self).fset(client, value, notify=notify)
         return value()
 
-    def fget(self, client):
-        """Get the client's value for this property
+    def fget(self, client, cls=None):
+        """Get the client's value for this property, resolving the reference
 
-        if notify is true send a notification event.
+        Takes `cls` because `BaseField` aliases `fget` to `__get__`, and the
+        descriptor protocol passes the owning class: an override that did not
+        accept it could not stand in for the field it is mixed into.
         """
-        value = super(WeakField, self).fget(client)
+        value = super(WeakField, self).fget(client, cls)
         if not value:
             # is already default value, since refs are always non-null
             return value

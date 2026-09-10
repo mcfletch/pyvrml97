@@ -1,5 +1,8 @@
 --prefer-binary 
-simpleparse
+# 3.0.0a3 or newer: it is the first release with wheels for a current
+# Python, and 2.2.4's mxTextTools C extension does not compile against a
+# current GCC.  Named as a pre-release so an installer does not skip it.
+simpleparse >= 3.0.0a3
 numpy >= 2.0.1; python_version >= '3.10'
 numpy; python_version < '3.10'
 PyDispatcher

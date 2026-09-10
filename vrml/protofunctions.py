@@ -155,6 +155,7 @@ def getFields(cls, events=0):
     cls = _getcls(cls)
     from vrml import field
 
+    wanted: type
     if events:
         wanted = field.Event
     else:

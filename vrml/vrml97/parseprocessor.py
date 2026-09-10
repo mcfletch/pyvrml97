@@ -401,7 +401,7 @@ class ParseProcessor(DispatchProcessor):
             else:
                 result.append(float(buffer[start:stop]))
         if final:
-            result = array(result, 'f')
+            return array(result, 'f')
         return result
 
     def MFInt32(self, tuples, buffer):

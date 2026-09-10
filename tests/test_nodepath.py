@@ -104,3 +104,38 @@ class TestNodePath( unittest.TestCase ):
         matrix = path.transformMatrix()
         projected = dot( array([ 0,0,1,1],'f'),matrix )
         assert allclose( projected, array([1,0,0,1],'f'),atol=.0001), projected
+
+
+class TestSlicingAPath(unittest.TestCase):
+    """A slice of a path is a path.
+
+    The event system takes the tail of one -- the part of the new path a
+    pointer has entered that the old one did not cover -- and hands it on as
+    the path a handler is called with. A plain list there has no
+    ``transformMatrix``, so a handler asking where it is in the world fails.
+    """
+
+    def setUp(self):
+        self.path = nodepath.NodePath() + [
+            Transform(translation=(1, 0, 0), DEF='first'),
+            Transform(translation=(0, 2, 0), DEF='second'),
+            Transform(translation=(0, 0, 3), DEF='third'),
+        ]
+
+    def test_a_tail_is_still_a_path(self):
+        self.assertIsInstance(self.path[1:], nodepath.NodePath)
+
+    def test_a_head_is_still_a_path(self):
+        self.assertIsInstance(self.path[:-1], nodepath.NodePath)
+
+    def test_a_slice_keeps_the_nodes_it_was_given(self):
+        self.assertEqual([node.DEF for node in self.path[1:]], ['second', 'third'])
+
+    def test_a_tail_can_answer_its_own_transform(self):
+        """What the event system does with one."""
+        matrix = self.path[1:].transformMatrix()
+        self.assertEqual(matrix.shape, (4, 4))
+
+    def test_one_element_is_still_the_node(self):
+        self.assertIs(self.path[0], self.path[0])
+        self.assertEqual(self.path[0].DEF, 'first')

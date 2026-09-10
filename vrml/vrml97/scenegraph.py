@@ -1,4 +1,6 @@
 """Scenegraph node-like "prototype" for VRML97"""
+from typing import Optional
+
 from vrml import node, protofunctions, protonamespace, fieldtypes, route
 from vrml import copier as copiermodule
 from vrml.vrml97 import nodetypes
@@ -49,10 +51,12 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         children -- Node list
             see attribute children
         '''
-        if root is not None:
-            self.root = weakref.ref( root )
-        else:
-            self.root = None
+        #: A weak reference to the graph this one sits inside, or None where it
+        #: is the outermost.  Weak, so a scene graph does not keep its parent
+        #: alive.
+        self.root: "Optional[weakref.ReferenceType]" = (
+            weakref.ref( root ) if root is not None else None
+        )
         if protoTypes is None:
             protoTypes = protonamespace.ProtoNamespace()
         self.protoTypes = protoTypes
@@ -77,10 +81,10 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         if current is not None:
             return current
         elif hasattr( self, 'root'):
-            root = self.root
-            if root:
-                root = root()
-                if root:
+            reference = self.root
+            if reference is not None:
+                root = reference()
+                if root is not None:
                     return root.getProto( name )
         return None
 
@@ -163,12 +167,18 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         # order for creation is going to be important to make sure
         # that prototypes are available to nodes getting re-built
         # if we aren't sharing protos...
-        if not copier.shareProtos:
-            newPrototypes = protonamespace.ProtoNamespace()
-            for key,value in self.protoTypes.items():
-                newPrototypes[key] = protofunctions.copyProto( value, copier )
-        else:
-            newPrototypes = self.protoTypes.copy()
+        if not copier.shareProtos and self.protoTypes:
+            # A prototype is a node *class*, and copying one means building a
+            # second class with the same fields and the same body -- which
+            # `Copier` says it does not do ("we don't currently support not
+            # doing this").  Say so here rather than partway through a copy.
+            raise NotImplementedError(
+                """Copying a scene graph without sharing its prototypes is not"""
+                """ supported; this one declares %d (%s). Use a Copier with"""
+                """ shareProtos left on."""
+                % (len(self.protoTypes), ', '.join(sorted(self.protoTypes)))
+            )
+        newPrototypes = self.protoTypes.copy()
         newDefs = {}
         for key,value in self.defNames.items():
             if (not key) or value is None:
