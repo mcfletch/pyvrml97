@@ -153,15 +153,6 @@ class Lineariser:
         '''
         for route in clientNode.routes:
             self._preroute(clientNode, route)
-        if clientNode is None:
-            startind = self.buffer.tell()
-            if len(self.cursceneGraph) == 0:  # new file
-                self.buffer.write('#VRML V2.0 utf8\n')
-            self.alreadydone[id(clientNode)] = (
-                startind,
-                self.buffer.tell(),
-            )  # register this scenegraph's extents
-            return None
         startind = self._canUse(clientNode)
         if type(startind) is not int:  # this node has already been declared
             self.buffer.write(startind)
@@ -263,8 +254,11 @@ class Lineariser:
             # the following will write everything into the current proto's buffer
             # references to prototypes not already linearised will cause a recursive
             # call to proto that will write those into the protobuffer before returning
+            # Truth rather than `is not None`: a prototype declared without a
+            # body answers NULL for its scene graph, which has no children to
+            # write and no routes to look for.
             sg = getSceneGraph(clientNode)
-            if sg is not None:
+            if sg:
                 self._sceneGraph(sg)
             if 'EndComments' in linvalues and linvalues['EndComments'] * 60 < (
                 (buffer.tell())
@@ -466,10 +460,6 @@ class Lineariser:
             buffer.write('%(full_element_separator)s%(curindent)s' % (self.linvalues))
             field.fieldVrmlstr(self, bool(requireDefault))
 
-    def _fieldref(self, clientNode: Any, *args: Any, **namedargs: Any) -> Any:
-        self.buffer.write('IS %s' % clientNode.declaredName)
-        return None
-
     def _preroute(self, sceneGraph: Any, clientNode: Any) -> None:
         """Pre-scans all routes, forces all routed nodes to have DEF names"""
         for child in (clientNode.source, clientNode.destination):
@@ -504,19 +494,13 @@ class Lineariser:
         )
 
     def _sffield(self, anyobj: Any, field: Any, *args: Any, **namedargs: Any) -> Any:
+        '''Write one field's value, in whatever shape its type has
+
+        The field is asked how to write its value; a node field is followed
+        into instead, since what a node field holds is a whole node -- or a
+        Script, a prototype or an EXTERNPROTO, each of which has a shape of
+        its own in the file.
         '''
-        Any to String takes an object and checks how it should
-        be linearised given that it is supposed to become a fieldType
-        This is done by first determining if the field has a __vrmlStr__
-        attribute.  If it doesn't, a standard coerce_to is called with
-        the particular fieldType as the source. and 'String' as the
-        target.
-        This is necessary because the SFNode field can have any of Scripts,
-        Nodes, ProtoTypes and ExternProtos (well, not according to the
-        parsers, but someone might attempt it).
-        '''
-        if field is node.RootScenegraphNode:
-            return None
         # Whether this holds nodes is the *field's* to say.  `protoName` of a
         # plain list answers `__MFNode__` whatever is in it, so an MFString's
         # list of strings was written as a list of nodes: an opening bracket

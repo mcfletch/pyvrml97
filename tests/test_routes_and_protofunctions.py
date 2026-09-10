@@ -8,7 +8,7 @@ the scene graph it belongs to, the URL an EXTERNPROTO came from.
 
 import unittest
 
-from vrml import node, protofunctions, route
+from vrml import field, node, protofunctions, route
 from vrml.vrml97 import basenodes
 from vrml.vrml97.scenegraph import SceneGraph
 
@@ -79,11 +79,52 @@ class TestForwardingAValue(unittest.TestCase):
         wired = route.ROUTE(None, 'translation', self.destination, 'translation')
         wired.bind()
 
+    def test_a_field_the_destination_does_not_have_is_reported_not_raised(self):
+        """A scene file can name a field the other node does not have, and
+        the write that set the cascade going is not the place to raise."""
+        wired = route.ROUTE(self.source, 'translation',
+                            self.destination, 'whichChoice')
+        wired.bind()
+        self.source.translation = (1.0, 2.0, 3.0)
+
     def test_a_value_the_destination_refuses_is_reported_not_raised(self):
         """A route runs inside a field notification, which has nobody to raise
         to, so a bad value is reported and the rest of the cascade goes on."""
+        held = basenodes.Sphere()
+        wired = route.ROUTE(self.source, 'translation', held, 'radius')
+        wired.bind()
+        self.source.translation = (1.0, 2.0, 3.0)
+        self.assertAlmostEqual(held.radius, 1.0, places=5)
+
+    def test_deleting_the_source_field_forwards_the_default(self):
+        """Putting a field back to its default is a change like any other,
+        and what carries is the value a read now answers."""
+        self.source.translation = (1.0, 2.0, 3.0)
+        del self.source.translation
+        self.assertEqual(list(self.destination.translation), [0.0, 0.0, 0.0])
+
+    def test_an_event_may_be_the_far_end(self):
+        """An eventIn is not a field, and is written into rather than set."""
+        held = basenodes.Transform()
+        wired = route.ROUTE(self.source, 'children', held, 'addChildren')
+        wired.bind()
+        child = basenodes.Group()
+        self.source.children = [child]
+        self.assertEqual(list(held.addChildren), [child])
+
+    def test_a_value_an_event_refuses_is_reported_not_raised(self):
+        """A node's handler for an event may refuse what reaches it, and
+        that is as far as the refusal goes."""
+
+        class Refusing(node.Node):
+            PROTO = 'Refusing'
+            set_size = field.newEvent('set_size', 'SFFloat', 0)
+
+            def on_set_size(self, value):
+                raise ValueError('no')
+
         wired = route.ROUTE(self.source, 'translation',
-                            self.destination, 'whichChoice')
+                            Refusing(), 'set_size')
         wired.bind()
         self.source.translation = (1.0, 2.0, 3.0)
 
@@ -169,6 +210,37 @@ class TestFieldsOnAPrototype(unittest.TestCase):
     def test_asking_for_a_field_that_is_not_there_raises(self):
         with self.assertRaises(AttributeError):
             protofunctions.getField(self.built, 'nosuchfield')
+
+    def test_a_field_stored_under_another_name_is_found_by_that_name(self):
+        """A node's DEF is declared as `DEF` and stored as `' DEF'`, which
+        is how a field keeps a name a program cannot write."""
+        found = protofunctions.getField(basenodes.Transform, ' DEF')
+        self.assertEqual(found.name, ' DEF')
+        self.assertTrue(hasattr(found, 'fset'))
+
+    def test_an_event_stored_under_another_name_is_found_too(self):
+        declared = field.newEvent(' hidden', 'SFFloat')
+        held = type('Held', (node.Node,), {'PROTO': 'Held',
+                                           'hidden': declared})
+        self.assertIs(protofunctions.getField(held, ' hidden'), declared)
+
+    def test_a_set_prefix_finds_the_field_it_names(self):
+        """VRML97 writes `set_translation` for the eventIn a field has."""
+        self.assertIs(
+            protofunctions.getField(basenodes.Transform, 'set_translation'),
+            protofunctions.getField(basenodes.Transform, 'translation'))
+
+    def test_a_changed_suffix_finds_it_as_well(self):
+        self.assertIs(
+            protofunctions.getField(basenodes.Transform,
+                                    'translation_changed'),
+            protofunctions.getField(basenodes.Transform, 'translation'))
+
+    def test_a_name_nothing_declares_says_which_prototype(self):
+        with self.assertRaises(AttributeError) as caught:
+            protofunctions.getField(basenodes.Transform, 'nosuchfield')
+        self.assertIn('Transform', str(caught.exception))
+        self.assertIn('nosuchfield', str(caught.exception))
 
     def test_the_fields_of_a_node_include_the_ones_it_declares(self):
         declared = {f.name for f in protofunctions.getFields(basenodes.Transform)}

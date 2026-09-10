@@ -199,11 +199,16 @@ class CacheHolder( object ):
             )
         )
     def clear( self, signal: Any=None, sender: Any=None ) -> None:
-        """Clear this object's held value (only)"""
+        """Clear this object's held value, so the next read builds a new one
+
+        The dependencies stay, since what they record is what the *next*
+        value will be built from.
+        """
+        self.data = None
         if not self.client():
+            # Nothing will ask for a value built for a node that has gone, so
+            # the entry goes as well rather than sitting empty.
             self( signal=signal, sender=sender )
-        else:
-            self.data = None
     def __call__( self, signal: Any=None, sender: Any=None ) -> "Optional[int]":
         """Delete the cached value (this object)
 
@@ -236,14 +241,11 @@ class CacheHolder( object ):
             try:
                 del current[ self.key ]
                 if not current:
-                    try:
-                        del cache[ client_id ]
-                    except KeyError:
-                        pass
-                try:
-                    del self.nodeDependencies[:]
-                except Exception:
-                    pass
+                    # `pop` rather than `del`: this runs as a weak
+                    # reference's callback, so another one may have taken the
+                    # entry out between the read above and here.
+                    cache.pop( client_id, None )
+                del self.nodeDependencies[:]
                 return 1
             except KeyError:
                 return 0

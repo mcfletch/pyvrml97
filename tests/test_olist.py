@@ -44,6 +44,48 @@ class TestOList( unittest.TestCase ):
         assert self.out == [('new','those'),('new','that'),('del','their')], self.out
 
 
+class TestDeletingOneItem(unittest.TestCase):
+    """`del olist[0]` announces the item that went, as every other way of
+    taking one out does."""
+
+    def setUp(self):
+        self.out = []
+        self.olist = olist.OList(['first', 'second'])
+        connect(self.on_change, sender=self.olist)
+
+    def on_change(self, signal, value):
+        self.out.append((signal, value))
+
+    def test_it_is_announced(self):
+        del self.olist[0]
+        self.assertEqual(self.out, [('del', 'first')])
+
+    def test_the_item_is_gone(self):
+        del self.olist[0]
+        self.assertEqual(list(self.olist), ['second'])
+
+
+class TestWhereTheAnnouncementComesFrom(unittest.TestCase):
+    """A list announces itself unless it was told which node it belongs to,
+    and it holds that node weakly."""
+
+    def test_by_default_the_list_is_the_sender(self):
+        held = olist.OList()
+        self.assertIs(held._sender(), held)
+
+    def test_a_named_sender_is_used_instead(self):
+        held = olist.OList()
+        owner = TestWhereTheAnnouncementComesFrom
+        held.setSender(owner)
+        self.assertIs(held._sender(), owner)
+
+    def test_a_sender_that_has_gone_leaves_the_list_as_the_sender(self):
+        held = olist.OList()
+        held.setSender(None)
+        held.sender = lambda: None      # the weak reference, now empty
+        self.assertIs(held._sender(), held)
+
+
 class TestInPlaceAdd:
     """`+=` has to leave the name bound to the list.
 

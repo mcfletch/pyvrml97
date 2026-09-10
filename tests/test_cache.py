@@ -134,6 +134,71 @@ class TestThrowingItAway(unittest.TestCase):
         self.assertEqual(held(), 0)
 
 
+class TestClearingWithoutRemoving(unittest.TestCase):
+    """`clear` drops the value and keeps the entry, so that the next render
+    builds a new one against the dependencies already recorded."""
+
+    def setUp(self):
+        self.cache = cache.Cache()
+        self.node = Watched()
+
+    def test_the_value_is_gone(self):
+        held = self.cache.holder(self.node, 'compiled')
+        held.clear()
+        self.assertIsNone(self.cache.getData(self.node))
+
+    def test_the_entry_is_still_there(self):
+        held = self.cache.holder(self.node, 'compiled')
+        held.clear()
+        self.assertIs(self.cache.getHolder(self.node), held)
+
+    def test_a_holder_whose_client_has_gone_asks_to_be_removed(self):
+        """There is nothing left to build a value for, so clearing goes to
+        the removal path rather than emptying an entry that will not be read
+        again. The client's own weak reference is what takes the entry out."""
+        held = self.cache.holder(self.node, 'compiled')
+        held.client = lambda: None
+        held.clear()
+        self.assertIsNone(held.data)
+
+
+class TestWhenRemovingFindsNothing(unittest.TestCase):
+    """Removing runs as a weak reference's callback, with nobody to raise
+    to, so each way of finding nothing is answered rather than thrown."""
+
+    def setUp(self):
+        self.cache = cache.Cache()
+        self.node = Watched()
+
+    def test_an_entry_another_key_already_emptied(self):
+        held = self.cache.holder(self.node, 'compiled')
+        self.cache.pop(id(self.node))
+        self.assertEqual(held(), 0)
+
+    def test_a_key_that_is_no_longer_in_the_entry(self):
+        held = self.cache.holder(self.node, 'compiled')
+        del self.cache[id(self.node)][held.key]
+        self.assertEqual(held(), 0)
+
+    def test_the_node_dependencies_are_let_go_of(self):
+        held = self.cache.holder(self.node, 'compiled')
+        held.depend(Watched())
+        held()
+        self.assertEqual(len(held.nodeDependencies), 0)
+
+    def test_a_cache_that_raises_is_reported_rather_than_passed_on(self):
+        """A weak reference's callback can run while the interpreter is
+        taking the cache apart, and what that raises is a RuntimeError."""
+
+        class Raising(dict):
+            def get(self, key, default=None):
+                raise RuntimeError('changed size during iteration')
+
+        held = self.cache.holder(self.node, 'compiled')
+        held.cache = lambda: Raising()
+        self.assertIsNone(held())
+
+
 class TestDependingOnANodeItself(unittest.TestCase):
     """`depend` with no field is a dependency on the node still being there."""
 

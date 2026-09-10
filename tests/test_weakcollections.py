@@ -161,6 +161,13 @@ class TestComparingAWeakList(unittest.TestCase):
         self.assertTrue(shorter < self.weak)
         self.assertTrue(shorter <= self.weak)
 
+    def test_it_orders_below_a_longer_list(self):
+        longer = self.items + [Thing(3)]
+        self.assertTrue(self.weak < longer)
+        self.assertTrue(self.weak <= longer)
+        self.assertFalse(self.weak < self.items)
+        self.assertTrue(self.weak <= self.items)
+
     def test_its_representation_names_the_class_and_the_referents(self):
         shown = repr(self.weak)
         self.assertIn('WeakList', shown)
@@ -194,6 +201,30 @@ class TestBuildingAWeakList(unittest.TestCase):
     def test_index_searches_between_a_start_and_a_stop(self):
         weak = WeakList(self.held)
         self.assertEqual(weak.index(self.held[2], 1, 3), 2)
+
+    def test_extend_stores_a_reference_to_each(self):
+        self.weak.extend(self.held[1:])
+        self.assertEqual(list(self.weak), self.held)
+
+    def test_what_extend_added_is_held_weakly_too(self):
+        weak = WeakList()
+        going = Thing(9)
+        weak.extend([going])
+        del going
+        gc.collect()
+        self.assertEqual(len(weak), 0)
+
+    def test_a_referent_taken_out_twice_over_is_not_reported(self):
+        """The callback that removes a dead reference can run after the list
+        has already dropped it, and it has nobody to raise to."""
+        weak = WeakList()
+        going = Thing(9)
+        weak.append(going)
+        reference = list.__getitem__(weak, 0)
+        callback = reference.__callback__
+        del going
+        gc.collect()
+        self.assertIsNone(callback(reference))
 
     def test_wrapping_a_reference_stores_what_it_points_at(self):
         """A caller may hand over a reference rather than the object."""

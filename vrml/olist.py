@@ -84,6 +84,7 @@ class OList( list ):
             return current
         else:
             value = self[index]
+            super( OList,self ).__delitem__( index )
             self._sendRemoved( value )
         return value
     def __setitem__( self, index: "Union[SupportsIndex, slice]", value: Any ) -> Any:

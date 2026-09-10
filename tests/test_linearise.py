@@ -13,7 +13,7 @@ construct on its own.
 
 import unittest
 
-from vrml import protofunctions
+from vrml import node, protofunctions
 from vrml.vrml97 import basenodes, linearise
 from vrml.vrml97.parser import buildParser
 from vrml.vrml97.scenegraph import SceneGraph
@@ -294,6 +294,142 @@ class TestARoute(unittest.TestCase):
         wired = back.routes[0]
         self.assertEqual(protofunctions.defName(wired.source), 'Clock')
         self.assertEqual(wired.sourceField, 'fraction_changed')
+
+
+class TestWritingNothing(unittest.TestCase):
+    """NULL is a value a node field can hold, and it has a spelling."""
+
+    def test_it_is_written_as_the_word(self):
+        self.assertIn('NULL', linearise.Lineariser().linear(node.NULL))
+
+    def test_a_field_left_at_null_is_not_written_at_all(self):
+        """A field at its default is left out, and NULL is what a node
+        field defaults to."""
+        text = written(SceneGraph(children=[basenodes.Shape()]))
+        self.assertNotIn('geometry', text)
+
+    def test_a_field_set_to_something_is_written(self):
+        text = written(SceneGraph(children=[
+            basenodes.Shape(geometry=basenodes.Sphere())]))
+        self.assertIn('geometry', text)
+
+
+class TestANodeInTwoPlacesWithNoName(unittest.TestCase):
+    """USE needs a DEF name. A node reached twice without one is written
+    out again, with a comment saying what happened, because there is no
+    other way to say it in the file format."""
+
+    def scene(self):
+        shared = basenodes.Transform(translation=(1, 2, 3))
+        return SceneGraph(children=[
+            basenodes.Group(children=[shared, shared])])
+
+    def test_it_says_what_it_did(self):
+        self.assertIn('WARNING', written(self.scene()))
+
+    def test_the_node_is_written_both_times(self):
+        text = written(self.scene())
+        self.assertEqual(text.count('Transform'), 2)
+
+    def test_what_it_wrote_still_reads_back(self):
+        back = read(written(self.scene()))
+        group = back.children[0]
+        self.assertEqual(len(group.children), 2)
+        self.assertEqual(list(group.children[1].translation), [1.0, 2.0, 3.0])
+
+
+class TestNamingWhatARouteNames(unittest.TestCase):
+    """A ROUTE names its ends by DEF name, so a routed node that has none
+    is given one before the file is written."""
+
+    def scene(self):
+        clock = basenodes.TimeSensor()
+        mover = basenodes.Transform()
+        scene = SceneGraph(children=[clock, mover])
+        scene.addRoute((clock, 'fraction_changed', mover, 'set_translation'))
+        return scene
+
+    def test_the_route_reads_back(self):
+        back = read(written(self.scene()))
+        self.assertTrue(back.routes)
+
+    def test_both_ends_were_given_names(self):
+        back = read(written(self.scene()))
+        wired = back.routes[0]
+        self.assertTrue(protofunctions.defName(wired.source))
+        self.assertTrue(protofunctions.defName(wired.destination))
+
+    def test_a_generated_name_does_not_take_one_that_is_taken(self):
+        clock = basenodes.TimeSensor()
+        mover = basenodes.Transform()
+        scene = SceneGraph(children=[clock, mover])
+        scene.regDefName('TimeSensor_0', basenodes.TimeSensor())
+        scene.addRoute((clock, 'fraction_changed', mover, 'set_translation'))
+        written(scene)
+        self.assertNotEqual(protofunctions.defName(clock), 'TimeSensor_0')
+
+
+class TestTwoPrototypesOfOneName(unittest.TestCase):
+    """A file declares a name once. Where two prototypes answer to one,
+    the first is written and the second stands for it."""
+
+    def scene(self):
+        """Two prototype classes registered under two names, both called
+        Wheel -- which is what reading two files into one scene gives."""
+        scene = SceneGraph()
+        scene.addProto(node.prototype('Wheel'))
+        scene.protoTypes['Other'] = node.prototype('Wheel')
+        return scene
+
+    def test_only_one_declaration_is_written(self):
+        self.assertEqual(written(self.scene()).count('PROTO Wheel'), 1)
+
+    def test_what_it_wrote_reads_back(self):
+        self.assertIn('Wheel', read(written(self.scene())).protoTypes)
+
+
+class TestWritingAPrototypeOnItsOwn(unittest.TestCase):
+    """`linear` takes a prototype as readily as a node, which is how a
+    caller writes a declaration without a scene around it."""
+
+    def test_the_declaration_is_written(self):
+        text = linearise.Lineariser().linear(node.prototype('Wheel'))
+        self.assertIn('PROTO Wheel', text)
+
+
+class TestAFieldTypeItCannotWrite(unittest.TestCase):
+    """Every field type says how to write its value. One that says neither
+    that nor anything the lineariser knows is named, rather than written as
+    nothing and read back as a file with a field missing."""
+
+    class Silent:
+        """As little of a field as `_sffield` reads."""
+
+        name = 'thing'
+
+        def typeName(self):
+            return 'Silent'
+
+        def __str__(self):
+            return 'field Silent thing'
+
+    def test_it_says_which_field_type(self):
+        lineariser = linearise.Lineariser()
+        lineariser.linear(SceneGraph())
+        with self.assertRaises(TypeError) as caught:
+            lineariser._sffield('a value', self.Silent())
+        self.assertIn('Silent', str(caught.exception))
+
+
+class TestCarryingWhatWasWrittenBetweenPasses(unittest.TestCase):
+    """A caller may hand in the record of what has been written already,
+    which is how two writings share their USE names."""
+
+    def test_it_is_the_dictionary_that_was_given(self):
+        record = {}
+        lineariser = linearise.Lineariser(alreadydone=record)
+        lineariser.linear(SceneGraph(children=[basenodes.Group()]))
+        self.assertIs(lineariser.alreadydone, record)
 
 
 class TestHowItIsLaidOut(unittest.TestCase):
