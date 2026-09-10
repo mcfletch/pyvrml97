@@ -15,6 +15,13 @@ optimize the rendering process.
 .. _`PyDispatcher`: https://pypi.python.org/pypi/PyDispatcher
 .. _`Numpy`: https://pypi.python.org/pypi/numpy
 
+`RELEASE-NOTES-2.3.5.md`_ says what changed for a program using this release,
+including the two behaviour changes a caller may need to act on:
+``transformmatrix.orthoMatrix`` is transposed, and ``Node.copy()`` copies the
+whole subtree.
+
+.. _`RELEASE-NOTES-2.3.5.md`: RELEASE-NOTES-2.3.5.md
+
 Installation
 -------------
 
