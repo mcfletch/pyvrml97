@@ -5,7 +5,7 @@ extensive use of properties
 """
 
 from typing import Any, Callable, Tuple
-from vrml import field, fieldtypes, weakkeydictfix
+from vrml import field, fieldtypes
 #: The two node field types here are halves of a field type in the same way
 #: the ones in `fieldtypes` are, and need the same thing of the `field.Field`
 #: they are combined with.
@@ -596,7 +596,9 @@ field.register(MFNode)
 ##field.register( WeakMFNode )
 field.register(MFNodeEvt)
 
-ISMAPS = weakkeydictfix.WeakKeyDictionary()
+#: Which of a prototype's fields each node's own fields are wired to, keyed
+#: weakly on the node so an entry does not keep a scene graph alive.
+ISMAPS: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
 
 
 def ismaps(node: Any) -> Any:
