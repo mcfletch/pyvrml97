@@ -32,9 +32,22 @@ false, and -1 for anything else, which reads as true. `NULL == 42` was true and
 another NULL, differs from anything that is not a node, and can be a dictionary
 key.
 
-One visible effect: a node field left at NULL is no longer written out, because
-the lineariser leaves a field at its default alone and can now see that NULL is
-one. Files are shorter and read back the same.
+### A field left at its default is no longer written
+
+`arrays.safeCompare` is what the lineariser asks about every field it is about
+to write, and it answered two questions wrongly. Two arrays were "the same"
+when they shared a single element, and a list compared as a different type from
+an array — which is the pair the question is usually about, since a node
+declares its default as a list of numbers and stores its value as an array. So
+no vector field ever looked like its default, and every one was written out.
+
+A `Transform` with a translation set was written with all eight of its fields;
+it is written with the one now. Files are shorter and read back the same. NULL
+node fields go the same way, now that `NULL` compares as a value.
+
+A program that read the output looking for a field it had not set will not find
+it. That is what the format says, and what a file written by anything else
+looks like.
 
 ### `del someNode.children[0]` removes the child
 
