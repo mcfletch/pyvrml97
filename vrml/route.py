@@ -1,5 +1,5 @@
 """ROUTE and ISRoute Implementations (event-processing)"""
-from typing import Any
+from typing import Any, Set
 import traceback
 from vrml import field, fieldtypes, protofunctions, node
 from pydispatch import dispatcher
@@ -17,12 +17,17 @@ class ROUTE( node.Node ):
     sourceField = fieldtypes.SFString('sourceField',)
     destination = node.SFNode('destination',)
     destinationField = fieldtypes.SFString( 'destinationField',)
+    #: Destination field names already reported as missing, so a route that
+    #: names one does not say so on every change.
+    _unknownFields: "Set[str]"
+
     def __init__( self, *arguments: Any, **named: Any ) -> None:
         """Initialize the route object
 
         Calls self.bind() after normal node.Node
         argument processing.
         """
+        self._unknownFields = set()
         if arguments:
             if len(arguments) == 4:
                 named['source'] = arguments[0]
@@ -84,7 +89,23 @@ class ROUTE( node.Node ):
         if signal == 'del':
             value = sourceField.fget( sender )
         if destination and destinationField:
-            destinationField = protofunctions.getField( destination, destinationField )
+            try:
+                destinationField = protofunctions.getField(
+                    destination, destinationField
+                )
+            except (AttributeError, KeyError):
+                # The source end of a route reports a field that is not there
+                # and carries on; this end raised, out of whatever field
+                # assignment set the cascade going -- so a scene file naming a
+                # field the destination node does not have took down an
+                # unrelated write. Reported once per route, since a route
+                # forwards on every change.
+                if destinationField not in self._unknownFields:
+                    self._unknownFields.add( destinationField )
+                    print("""%s: field %s doesn't exist on %s"""%(
+                        protofunctions.protoName(self), destinationField,
+                        destination))
+                return
             if event and hasattr(event, "visited"):
                 if event.visited((destination, destinationField),):
                     ### Short-circuit before a cycle is created...

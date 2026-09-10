@@ -13,6 +13,7 @@ shorter tuple to answer with.
 import copy
 import gc
 import unittest
+import weakref
 
 from vrml.protonamespace import ProtoNamespace
 from vrml.weaklist import WeakList
@@ -138,3 +139,98 @@ class TestProtoNamespaceCopies(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestComparingAWeakList(unittest.TestCase):
+    """A weak list compares as the list of referents it stands for."""
+
+    def setUp(self):
+        self.items = [Thing(1), Thing(2)]
+        self.weak = WeakList(self.items)
+
+    def test_it_equals_the_list_of_its_referents(self):
+        self.assertTrue(self.weak == self.items)
+
+    def test_it_differs_from_another_list(self):
+        self.assertTrue(self.weak != [Thing(9)])
+
+    def test_it_orders_against_a_plain_list(self):
+        shorter = self.items[:1]
+        self.assertTrue(self.weak > shorter)
+        self.assertTrue(self.weak >= shorter)
+        self.assertTrue(shorter < self.weak)
+        self.assertTrue(shorter <= self.weak)
+
+    def test_its_representation_names_the_class_and_the_referents(self):
+        shown = repr(self.weak)
+        self.assertIn('WeakList', shown)
+        self.assertIn('Thing(1)', shown)
+
+
+class TestBuildingAWeakList(unittest.TestCase):
+    """Each way of putting an item in wraps it, and each way of taking one out
+    resolves it."""
+
+    def setUp(self):
+        self.held = [Thing(1), Thing(2), Thing(3)]
+        self.weak = WeakList(self.held[:1])
+
+    def test_append_stores_a_reference_and_answers_the_object(self):
+        self.weak.append(self.held[1])
+        self.assertEqual(list(self.weak), self.held[:2])
+
+    def test_insert_puts_it_where_it_was_asked_for(self):
+        self.weak.insert(0, self.held[1])
+        self.assertEqual(list(self.weak), [self.held[1], self.held[0]])
+
+    def test_setting_one_item_replaces_it(self):
+        self.weak[0] = self.held[2]
+        self.assertEqual(list(self.weak), [self.held[2]])
+
+    def test_pop_takes_the_object_out(self):
+        self.assertIs(self.weak.pop(), self.held[0])
+        self.assertEqual(list(self.weak), [])
+
+    def test_index_searches_between_a_start_and_a_stop(self):
+        weak = WeakList(self.held)
+        self.assertEqual(weak.index(self.held[2], 1, 3), 2)
+
+    def test_wrapping_a_reference_stores_what_it_points_at(self):
+        """A caller may hand over a reference rather than the object."""
+        weak = WeakList([weakref.ref(self.held[0])])
+        self.assertEqual(list(weak), [self.held[0]])
+
+
+class TestComparingAWeakTuple(unittest.TestCase):
+    def setUp(self):
+        self.items = [Thing(1), Thing(2)]
+        self.weak = WeakTuple(self.items)
+
+    def test_it_equals_the_list_of_its_referents(self):
+        self.assertTrue(self.weak == self.items)
+
+    def test_it_differs_from_another_list(self):
+        self.assertTrue(self.weak != [Thing(9)])
+
+    def test_it_orders_against_a_plain_list(self):
+        shorter = self.items[:1]
+        self.assertTrue(self.weak > shorter)
+        self.assertTrue(self.weak >= shorter)
+        self.assertTrue(shorter < list(self.weak))
+        self.assertTrue(self.weak <= self.items)
+
+    def test_adding_answers_a_plain_tuple(self):
+        """The membership of a WeakTuple is fixed, so a sum is not one."""
+        third = Thing(3)
+        self.assertEqual(self.weak + (third,), tuple(self.items) + (third,))
+
+    def test_its_representation_names_the_class(self):
+        self.assertIn('WeakTuple', repr(self.weak))
+
+    def test_looking_for_something_it_does_not_hold_raises(self):
+        with self.assertRaises(ValueError):
+            self.weak.index(Thing(9))
+
+    def test_wrapping_a_reference_stores_what_it_points_at(self):
+        held = Thing(1)
+        self.assertEqual(list(WeakTuple([weakref.ref(held)])), [held])

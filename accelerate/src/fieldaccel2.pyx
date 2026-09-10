@@ -62,11 +62,23 @@ cdef class BaseField( object ):
         return defaultobj
 
     cdef _del(self, client, int notify):
-        """Delete the value, with notifications"""
-        try:
-            value = client.__dict__.pop( self.name )
-        except KeyError as err:
-            raise AttributeError( self.name )
+        """Delete the value, with notifications
+
+        A prototype holds its values on the class, and a class's `__dict__` is
+        a read-only mapping proxy -- so that case goes through `delattr`, as
+        the matching branch of `_set` goes through `setattr`.
+        """
+        if isinstance( client, type ):
+            try:
+                value = getattr( client, self.name )
+                delattr( client, self.name )
+            except AttributeError as err:
+                raise AttributeError( self.name )
+        else:
+            try:
+                value = client.__dict__.pop( self.name )
+            except KeyError as err:
+                raise AttributeError( self.name )
         if notify:
             send(
                 ('del',self), 

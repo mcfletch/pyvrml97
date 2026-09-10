@@ -131,3 +131,56 @@ class TestOrdinaryFieldsStillWork:
         child = Child(name='given')
         del child.name
         assert child.name == ''
+
+
+
+class TestDeletingAFieldFromAPrototype:
+    """A prototype holds its field values on the class itself.
+
+    `setSceneGraph`, `setExternalURL` and their `del` counterparts all work on
+    a prototype rather than an instance, and a class's `__dict__` is a
+    read-only mapping proxy -- so setting and deleting there go through
+    `setattr` and `delattr`, not through the dictionary.
+
+    Both the pure-Python field and the compiled one have to do this: which is
+    in use is decided by whether `PyVRML97-accelerate` is installed, and a
+    user does not expect the answer to change with it.
+    """
+
+    def built(self):
+        from vrml import node as node_module
+        return node_module.prototype('Wheel')
+
+    def test_a_scene_graph_is_set_and_read_back(self) -> None:
+        from vrml import protofunctions
+        from vrml.vrml97.scenegraph import SceneGraph
+        built, graph = self.built(), SceneGraph()
+        protofunctions.setSceneGraph(built, graph)
+        assert protofunctions.getSceneGraph(built) is graph
+
+    def test_a_scene_graph_is_deleted(self) -> None:
+        from vrml import protofunctions
+        from vrml.vrml97.scenegraph import SceneGraph
+        built, graph = self.built(), SceneGraph()
+        protofunctions.setSceneGraph(built, graph)
+        protofunctions.delSceneGraph(built)
+        assert protofunctions.getSceneGraph(built) is not graph
+
+    def test_an_external_url_is_set_and_read_back(self) -> None:
+        from vrml import protofunctions
+        built = self.built()
+        protofunctions.setExternalURL(built, ['http://example.com/w.wrl'])
+        assert list(protofunctions.getExternalURL(built)) == [
+            'http://example.com/w.wrl']
+
+    def test_an_external_url_is_deleted(self) -> None:
+        from vrml import protofunctions
+        built = self.built()
+        protofunctions.setExternalURL(built, ['http://example.com/w.wrl'])
+        protofunctions.delExternalURL(built)
+        assert list(protofunctions.getExternalURL(built)) == []
+
+    def test_deleting_one_that_was_never_set_raises(self) -> None:
+        from vrml import protofunctions
+        with pytest.raises(AttributeError):
+            protofunctions.delSceneGraph(self.built())
