@@ -15,17 +15,25 @@ from simpleparse.parser import Parser
 #print file
 grammar = r'''
 header         := headerStatement,profileStatement,componentStatement*,metaStatement*
-headerStatement  := ('#X3D',ts,SFNumber,ts,'utf8',ts,headerComment?,newLine)/('#',headerComment?,newLine)
+# No `ts` before the comment: `ts` matches a newline as well as a space, so
+# it ate the line ending and left `newLine` nothing to match -- which made
+# the whole first alternative fail and `#X3D 3.0 utf8`, the encoding's own
+# header, unparseable.
+headerStatement  := ('#X3D',ts,SFNumber,ts,'utf8',headerComment?,newLine)/('#',headerComment?,newLine)
 headerComment  := -newLine+
 profileStatement := 'PROFILE', ts, profileName,newLine
 profileName    := name
 <newLine>      := ('\r\n'/'\r'/'\n')
 
-componentStatement := 'COMPONENT',ts, componentNameId, ts,':', ts, componentSupportLevel
+# Each header statement ends its own line, as `profileStatement` does: without
+# that, a file whose header is the last thing in it left the line ending for
+# `vrmlScene` to absorb, and a header with no scene after it had nothing to
+# absorb it -- so `COMPONENT` or `META` as the final line raised.
+componentStatement := 'COMPONENT',ts, componentNameId, ts,':', ts, componentSupportLevel, newLine
 componentNameId := name
 componentSupportLevel := SFNumber
 
-metaStatement  := 'META',ts, metakey,ts,metavalue
+metaStatement  := 'META',ts, metakey,ts,metavalue, newLine
 metakey        := SFString
 metavalue      := SFString
 
