@@ -37,6 +37,23 @@ def namekey(node: Any) -> Any:
     return node.name
 
 
+def protoNames(skipProtos: Any) -> "Dict[str, int]":
+    """The prototype names in `skipProtos`, as a set to look one up in.
+
+    A caller names the prototypes to leave out either by name or by passing
+    the prototype itself, in a mapping (whose keys are read) or any other
+    iterable.
+    """
+    names: "Dict[str, int]" = {}
+    if not skipProtos:
+        return names
+    if hasattr(skipProtos, 'keys'):
+        skipProtos = skipProtos.keys()
+    for item in skipProtos:
+        names[item if isinstance(item, str) else protoName(item)] = 1
+    return names
+
+
 def linearise(value: Any, linvalues: Any=defaults, **namedargs: Any) -> str:
     """Linearise the given (node) value to a string"""
     lineariser = Lineariser(linvalues, **namedargs)
@@ -72,11 +89,20 @@ class Lineariser:
         *args: Any,
         **namedargs: Any
     ) -> str:
+        '''Linearise a node, script, or scenegraph
+
+        skipProtos -- the prototypes to leave out, named either by name or by
+            the prototype itself, in a mapping or any other iterable.  Their
+            instances are still written, so this is how a caller writes a
+            fragment for a file that already declares them.
+        skipUnusedProtos -- when true, write only the prototypes something in
+            the scene is an instance of, rather than every prototype the
+            scenegraph has registered.
         '''
-        Linearise a node, script, or scenegraph
-        '''
-        # prototypes in this dictionary will not be linearised
-        self.skipProtos: "Dict[Any, Any]" = {}
+        # prototypes named in here are left out, so that a caller can write a
+        # fragment for a file that already declares them; instances of them
+        # are still written.
+        self.skipProtos: "Dict[str, int]" = protoNames(skipProtos)
         # skipUnusedProtos skips the "prototype collection" linearisation step
         # this has the effect of not outputing any prototype which is not actually
         # used in the file.  By default is "off", that is, all protos are linearised
@@ -185,6 +211,9 @@ class Lineariser:
         if builtin(clientNode):
             # this prototype should not be linearised
             return 0
+        if clientName in self.skipProtos:
+            # the caller says the output lands where this is already declared
+            return 1
         if id(clientNode) in self.protoalreadydone:
             # this precise prototype has been linearised already...
             return 1
@@ -467,29 +496,38 @@ class Lineariser:
         Nodes, ProtoTypes and ExternProtos (well, not according to the
         parsers, but someone might attempt it).
         '''
-        try:
-            if field is node.RootScenegraphNode:
-                return
-            pName = protoName(anyobj)
-            handler = self.typecache.get(pName)
-            if handler:
-                return handler(anyobj)
-            if isinstance(anyobj, list):
-                return self._mfnode(anyobj)
-            return self._Node(anyobj)
-        except AttributeError:
-            if hasattr(field, 'vrmlstr'):
-                result = field.vrmlstr(anyobj, self)
-                if result is not None:
-                    self.buffer.write(result)
-            elif hasattr(self, field.typeName()):
-                result = getattr(self, field.typeName())(anyobj)
-                if result is not None:
-                    self.buffer.write(result)
+        if field is node.RootScenegraphNode:
+            return None
+        # Whether this holds nodes is the *field's* to say.  `protoName` of a
+        # plain list answers `__MFNode__` whatever is in it, so an MFString's
+        # list of strings was written as a list of nodes: an opening bracket
+        # that was never closed, with the node's next field swallowed inside
+        # it, and a file that would not parse back.
+        if field.typeName() in ('SFNode', 'MFNode'):
+            try:
+                pName = protoName(anyobj)
+            except AttributeError:
+                pass                # NULL, or a value that is not a node
             else:
-                raise TypeError(
-                    '''Unknown fieldType %s, cannot convert to string''' % field
-                ) from None
+                handler = self.typecache.get(pName)
+                if handler:
+                    return handler(anyobj)
+                if isinstance(anyobj, list):
+                    return self._mfnode(anyobj)
+                return self._Node(anyobj)
+        if hasattr(field, 'vrmlstr'):
+            result = field.vrmlstr(anyobj, self)
+            if result is not None:
+                self.buffer.write(result)
+        elif hasattr(self, field.typeName()):
+            result = getattr(self, field.typeName())(anyobj)
+            if result is not None:
+                self.buffer.write(result)
+        else:
+            raise TypeError(
+                '''Unknown fieldType %s, cannot convert to string''' % field
+            )
+        return None
 
     ### Utility functions...
     def _dedent(self) -> None:

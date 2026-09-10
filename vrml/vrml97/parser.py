@@ -22,7 +22,11 @@ from simpleparse.parser import Parser
 #print file
 grammar = r'''
 header         := -[\n]*
-vrmlFile       := header, vrmlScene, !, EOF
+# `ts` before the end, because `header` stops at the newline and a scene of no
+# nodes consumes nothing after it: without it a file that is a header alone --
+# or one whose last line is a comment -- has whitespace left over and does not
+# parse.
+vrmlFile       := header, vrmlScene, ts, !, EOF
 rootItem       := ts,(Proto/ExternProto/ROUTE/('USE',ts,USE,ts)/Script/Node),ts
 vrmlScene      := rootItem*
 
