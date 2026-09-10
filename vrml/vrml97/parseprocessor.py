@@ -1,6 +1,7 @@
 """SimpleParse post-processor builds node-graph from parse-tree
 """
 
+from typing import Any, List
 # Named rather than starred, and `getString` is aliased on the way in: the
 # module defines its own `getString` below, and this read `_getString =
 # getString` *before* that definition, relying on the star import still
@@ -19,7 +20,7 @@ from vrml.protofunctions import *
 from vrml.arrays import array
 
 
-def as_str(value, encoding='utf-8'):
+def as_str(value: Any, encoding: str='utf-8'):
     """A slice of the parse buffer as text
 
     simpleparse hands back whichever of bytes and text the source was read as,
@@ -40,7 +41,7 @@ def getString(*args, **named):
 class ParseProcessor(DispatchProcessor):
     """Builds in-memory node-graph from VRML97 parse-tree"""
 
-    def __init__(self, basePrototypes=None, baseURI=""):
+    def __init__(self, basePrototypes=None, baseURI: str="") -> None:
         """Initialise the ParseProcessor
 
         basePrototypes -- name: constructor mapping for all
@@ -69,18 +70,18 @@ class ParseProcessor(DispatchProcessor):
             basePrototypes = basenamespaces.basePrototypes.copy()
         self.basePrototypes = basePrototypes
         self.baseURI = baseURI
-        self.sceneGraphStack = []
-        self.prototypeStack = []
-        self.nodeStack = []
-        self.fieldTypeStack = []
+        self.sceneGraphStack: "List[Any]" = []
+        self.prototypeStack: "List[Any]" = []
+        self.nodeStack: "List[Any]" = []
+        self.fieldTypeStack: "List[Any]" = []
 
     ### High-level constructs in the grammar
-    def header(self, table, buffer):
+    def header(self, table: Any, buffer: Any) -> None:
         """We ignore the header for now"""
 
     EOF = header
 
-    def rootItem(self, table, buffer):
+    def rootItem(self, table: Any, buffer: Any) -> None:
         """A scenegraph root-item"""
         (tag, left, right, children) = table
         # ROUTE and proto are already taken care of, as would be is
@@ -89,7 +90,7 @@ class ParseProcessor(DispatchProcessor):
         result = [item for item in items if isinstance(item, node.Node)]
         self.sceneGraphStack[-1].children.extend(result)
 
-    def vrmlScene(self, table, buffer):
+    def vrmlScene(self, table: Any, buffer: Any):
         """Instantiate a VRML scene object"""
         (tag, left, right, children) = table
         if self.sceneGraphStack:
@@ -110,7 +111,7 @@ class ParseProcessor(DispatchProcessor):
         return node
 
     ### The two prototype sub-types
-    def Proto(self, table, buffer):
+    def Proto(self, table: Any, buffer: Any) -> None:
         """Process a regular Prototype declaration"""
         (tag, left, right, children) = table
         proto = node.prototype(getString(children[0], buffer))
@@ -122,7 +123,7 @@ class ParseProcessor(DispatchProcessor):
         finally:
             self.prototypeStack.pop()
 
-    def ExternProto(self, table, buffer):
+    def ExternProto(self, table: Any, buffer: Any) -> None:
         """Process an external Prototype declaration"""
         (tag, left, right, children) = table
         proto = node.prototype(getString(children[0], buffer))
@@ -135,7 +136,7 @@ class ParseProcessor(DispatchProcessor):
             self.prototypeStack.pop()
 
     ### Node instances of the various types
-    def Node(self, table, buffer):
+    def Node(self, table: Any, buffer: Any):
         '''Create new node, returning the value to the caller'''
         (tag, start, stop, sublist) = table
         if sublist[0][0] == 'name':
@@ -164,7 +165,7 @@ class ParseProcessor(DispatchProcessor):
         self.nodeStack.pop()
         return newNode
 
-    def Script(self, table, buffer):
+    def Script(self, table: Any, buffer: Any):
         '''A script node (can be a root node)'''
         (tag, start, stop, sublist) = table
         # what's the DEF name...
@@ -185,7 +186,9 @@ class ParseProcessor(DispatchProcessor):
             self.sceneGraphStack[-1].regDefName(name, newNode)
         self.nodeStack.append(newNode)
         # now get the field-declarations...
-        _fields, attributes, isMaps = [], [], []
+        _fields: "List[Any]" = []
+        attributes: "List[Any]" = []
+        isMaps: "List[Any]" = []
         for item in rest:
             if item[0] in ("ScriptEventDecl", "ScriptFieldDecl"):
                 f, mapName = dispatch(self, item, buffer)
@@ -204,11 +207,11 @@ class ParseProcessor(DispatchProcessor):
         self.nodeStack.pop()
         return newNode
 
-    def SFNull(self, tup, buffer):
+    def SFNull(self, tup, buffer: Any):
         '''Create a reference to the SFNull node'''
         return self.sceneGraphStack[-1].getProto("NULL")
 
-    def USE(self, tup, buffer):
+    def USE(self, tup, buffer: Any):
         """Create a reference to an existing named node"""
         name = getString(tup, buffer)
         node = self.sceneGraphStack[-1].getDEF(name)
@@ -222,7 +225,7 @@ class ParseProcessor(DispatchProcessor):
             )
         return node
 
-    def ROUTE(self, table, buffer):
+    def ROUTE(self, table: Any, buffer: Any):
         '''Create a new route object/node, add the current sceneGraph'''
         (tag, start, stop, sublist) = table
         (s, sf, d, df) = [getString(item, buffer) for item in sublist]
@@ -246,7 +249,7 @@ class ParseProcessor(DispatchProcessor):
         )
 
     ### Field and event declarations
-    def fieldDecl(self, table, buffer):
+    def fieldDecl(self, table: Any, buffer: Any) -> None:
         (tag, left, right, (exposure, datatype, name, value)) = table
         datatype = getString(datatype, buffer)
         self.fieldTypeStack.append(datatype)
@@ -264,7 +267,7 @@ class ParseProcessor(DispatchProcessor):
         finally:
             self.fieldTypeStack.pop()
 
-    def extFieldDecl(self, table, buffer):
+    def extFieldDecl(self, table: Any, buffer: Any) -> None:
         '''An external field declaration, no default value'''
         (tag, start, stop, (exposure, datatype, name)) = table
         datatype = getString(datatype, buffer)
@@ -277,7 +280,7 @@ class ParseProcessor(DispatchProcessor):
             ),
         )
 
-    def eventDecl(self, table, buffer):
+    def eventDecl(self, table: Any, buffer: Any) -> None:
         (tag, left, right, (direction, datatype, name)) = table
         datatype = getString(datatype, buffer)
         addField(
@@ -289,7 +292,7 @@ class ParseProcessor(DispatchProcessor):
             ),
         )
 
-    def ScriptEventDecl(self, table, buffer):
+    def ScriptEventDecl(self, table: Any, buffer: Any):
         (tag, left, right, sublist) = table
         direction, datatype, name = [getString(item, buffer) for item in sublist[:3]]
         if len(sublist) > 3:
@@ -301,7 +304,7 @@ class ParseProcessor(DispatchProcessor):
             mapName,
         )
 
-    def ScriptFieldDecl(self, table, buffer):
+    def ScriptFieldDecl(self, table: Any, buffer: Any):
         """Field declaration for a script node"""
         (tag, left, right, (exposure, datatype, name, value)) = table
         datatype = getString(datatype, buffer)
@@ -329,7 +332,7 @@ class ParseProcessor(DispatchProcessor):
             self.fieldTypeStack.pop()
 
     ### Node attributes and field values
-    def Attr(self, table, buffer):
+    def Attr(self, table: Any, buffer: Any):
         '''An attribute of a node or script'''
         (tag, start, stop, (name, value)) = table
         name = getString(name, buffer)
@@ -361,7 +364,7 @@ class ParseProcessor(DispatchProcessor):
             finally:
                 self.fieldTypeStack.pop()
 
-    def Field(self, table, buffer):
+    def Field(self, table: Any, buffer: Any):
         '''A field value (of any type)'''
         (tag, start, stop, sublist) = table
         if sublist and sublist[0][0] in ('USE', 'Script', 'Node', 'SFNull'):
@@ -376,33 +379,33 @@ class ParseProcessor(DispatchProcessor):
             function = getattr(self, self.fieldTypeStack[-1])
             return function(sublist, buffer)
 
-    def SFBool(self, table, buffer):
+    def SFBool(self, table: Any, buffer: Any):
         '''Boolean, in Python tradition is either 0 or 1'''
         (tup,) = table
         return getString(tup, buffer) == 'TRUE'
 
-    def SFFloat(self, table, buffer):
+    def SFFloat(self, table: Any, buffer: Any):
         (tup,) = table
         return float(getString(tup, buffer))
 
     SFTime = SFFloat
 
-    def SFInt32(self, table, buffer):
+    def SFInt32(self, table: Any, buffer: Any):
         (tup,) = table
         return int(getString(tup, buffer), 0)
 
-    def SFVec3f(self, table, buffer):
+    def SFVec3f(self, table: Any, buffer: Any):
         return [float(getString(item, buffer)) for item in table]
 
-    def SFVec2f(self, table, buffer):
+    def SFVec2f(self, table: Any, buffer: Any):
         return [float(getString(item, buffer)) for item in table]
 
     SFColor = SFVec3f
 
-    def SFRotation(self, table, buffer):
+    def SFRotation(self, table: Any, buffer: Any):
         return [float(getString(item, buffer)) for item in table]
 
-    def SFArray(self, values, buffer, final=True):
+    def SFArray(self, values: Any, buffer: Any, final: bool=True):
         """Process a vector-of-values data-set"""
         result = []
         for tag, start, stop, children in values:
@@ -414,7 +417,7 @@ class ParseProcessor(DispatchProcessor):
             return array(result, 'f')
         return result
 
-    def MFInt32(self, tuples, buffer):
+    def MFInt32(self, tuples: Any, buffer: Any):
         # localisation
         if not tuples:
             return []
@@ -422,16 +425,16 @@ class ParseProcessor(DispatchProcessor):
 
     SFImage = MFInt32
 
-    def MFUInt32(self, tuples, buffer):
+    def MFUInt32(self, tuples: Any, buffer: Any):
         # localisation
         return [int(buffer[start:stop], 0) for (tag, start, stop, children) in tuples]
 
-    def MFFloat(self, tuples, buffer):
+    def MFFloat(self, tuples: Any, buffer: Any):
         return [float(buffer[start:stop]) for (tag, start, stop, children) in tuples]
 
     MFColor = MFRotation = MFVec2f = MFVec3f = MFTime = MFFloat32 = MFFloat
 
-    def MFString(self, tuples, buffer):
+    def MFString(self, tuples: Any, buffer: Any):
         bigresult = []
         for _tag, _start, _stop, sublist in tuples:
             result = []
@@ -445,7 +448,7 @@ class ParseProcessor(DispatchProcessor):
             bigresult.append("".join(result))
         return bigresult
 
-    def SFString(self, table, buffer):
+    def SFString(self, table: Any, buffer: Any):
         '''Return the (escaped) string as a simple Python string'''
         ((tag, start, stop, sublist),) = table
         result = []
@@ -459,12 +462,12 @@ class ParseProcessor(DispatchProcessor):
         return "".join(result)
 
     ### Low-level/trivial constructs which have their own processing functions
-    def IS(self, table, buffer):
+    def IS(self, table: Any, buffer: Any):
         '''Create a field reference'''
         (tag, start, stop, (nametuple,)) = table
         return getString(nametuple, buffer)
 
-    def ExtProtoURL(self, table, buffer):
+    def ExtProtoURL(self, table: Any, buffer: Any):
         '''add the url to the external prototype'''
         (tag, start, stop, sublist) = table
         return self.MFString(sublist, buffer)

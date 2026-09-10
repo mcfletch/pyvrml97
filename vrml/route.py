@@ -1,4 +1,5 @@
 """ROUTE and ISRoute Implementations (event-processing)"""
+from typing import Any
 import traceback
 from vrml import field, fieldtypes, protofunctions, node
 from pydispatch import dispatcher
@@ -16,7 +17,7 @@ class ROUTE( node.Node ):
     sourceField = fieldtypes.SFString('sourceField',)
     destination = node.SFNode('destination',)
     destinationField = fieldtypes.SFString( 'destinationField',)
-    def __init__( self, *arguments, **named ):
+    def __init__( self, *arguments, **named ) -> None:
         """Initialize the route object
 
         Calls self.bind() after normal node.Node
@@ -39,7 +40,7 @@ class ROUTE( node.Node ):
         dispatcher.
         """
         return self._bind( self.source, self.sourceField )
-    def _bind( self, source, field ):
+    def _bind( self, source, field ) -> None:
         """Low-level binding of the source,field key
 
         This method allows sub-classes to do multiple
@@ -60,7 +61,7 @@ class ROUTE( node.Node ):
         else:
             print("""NULL ROUTE bound""", self)
     def forward(
-        self, signal, sender, event=None, value=None, **arguments
+        self, signal: Any, sender, event: Any=None, value: Any=None, **arguments
     ):
         """Forward a value update to our destination
         """
@@ -71,10 +72,10 @@ class ROUTE( node.Node ):
         )
     def _forward(
         self,
-        sender, signal,
+        sender, signal: Any,
         destination, destinationField,
-        event=None, value=None, **arguments
-    ):
+        event: Any=None, value: Any=None, **arguments
+    ) -> None:
         """Do the low-level forwarding of the value to a target field"""
         if event is None:
             from vrml import event as eventmodule
@@ -91,7 +92,7 @@ class ROUTE( node.Node ):
                 event.visited( (destination,destinationField), 1)
             if isinstance( destinationField, field.Field ):
                 try:
-                    value = destinationField.fset( destination, value, notify = 0 )
+                    value = destinationField.fset( destination, value, notify = False )
                 except (ValueError, TypeError):
                     traceback.print_exc()
             else:
@@ -105,7 +106,7 @@ class ROUTE( node.Node ):
                 value = value,
                 event = event,
             )
-    def copy( self, copier = None ):
+    def copy( self, copier: Any = None ):
         """Copy the route for the copier object
 
         A route copies only as part of a scene graph copy, since both of the
@@ -154,12 +155,12 @@ class IS( ROUTE ):
     the sub-nodes.
     """
     PROTO = "IS"
-    def bind( self ):
+    def bind( self ) -> None:
         """Bind the in and out routes for the IS mapping
         """
         self._bind( self.source, self.sourceField )
         self._bind( self.destination, self.destinationField )
-    def forward( self, signal, sender, event=None, value=None, **arguments ):
+    def forward( self, signal: Any, sender, event: Any=None, value: Any=None, **arguments ):
         """Forward a value update to our destination (or source)
         """
         if sender is self.source:

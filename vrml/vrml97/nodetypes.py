@@ -1,5 +1,7 @@
 """VRML97 semantic node-types"""
 
+from typing import Any
+
 class Traversable( object ):
     """Traversable nodes (Nodes which have node attributes)
     """
@@ -18,7 +20,7 @@ class Transforming( Grouping ):
     Billboard is not yet implemented, so there's
     only the one functional node in the type-set
     """
-    def localMatrices( self, translate=True,scale=True,rotate=True ):
+    def localMatrices( self, translate: bool=True,scale: bool=True,rotate: bool=True ) -> Any:
         """Calculate/lookup our local matrices
 
         Certain operations want, e.g. just the rotation of an item,

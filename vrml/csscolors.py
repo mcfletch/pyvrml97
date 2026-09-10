@@ -1,5 +1,6 @@
 """Module to allow using strings to specify colors"""
-def stringToColor( value ):
+from typing import Any
+def stringToColor( value: Any ):
     """Given a string value, determine appropriate color"""
     value = value.lower()
     possible = cssColors.get( value )
@@ -11,10 +12,10 @@ def stringToColor( value ):
         return toFloat(packed,16),toFloat(packed,8), toFloat(packed,0)
     else:
         raise ValueError( """String %(value)r couldn't be recognised as a color name, or #FFFFFF style encoding"""%locals())
-def toInt( value ):
+def toInt( value: Any ):
     """Take float value and give single-byte integer equivalent"""
     return int(round(value*255,0))
-def toFloat( value, shift=0 ):
+def toFloat( value: Any, shift: int=0 ):
     """Take single-byte integer value return floating point equivalent"""
     return ((value&(255<<shift))>>shift)/255.0
 
@@ -166,10 +167,10 @@ if __name__ == "__main__":
     import unittest
     from vrml import arrays
     class ColorTests(unittest.TestCase):
-        def testForwardName (self):
+        def testForwardName (self) -> None:
             for name, value in cssColors.items():
                 assert stringToColor( name ) == value
-        def testForwardHexidecimal (self):
+        def testForwardHexidecimal (self) -> None:
             for _name, value in cssColors.items ():
                 representation = '#%02x%02x%02x'%tuple(map(toInt,value))
                 result = stringToColor( representation )

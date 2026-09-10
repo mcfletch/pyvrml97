@@ -1,4 +1,5 @@
 """Scenegraph node-like "prototype" for VRML97"""
+from typing import Any
 from typing import Optional
 
 from vrml import node, protofunctions, protonamespace, fieldtypes, route
@@ -36,7 +37,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         routes=None, defNames=None,
         children=None,
         *args, **namedargs
-    ):
+    ) -> None:
         '''
         root -- sceneGraph root or Dictionary root or Module root or None
             Base object for root of protoType namespace hierarchy
@@ -71,7 +72,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         if routes:
             for route in routes:
                 self.addRoute( route )
-    def getProto( self, name ):
+    def getProto( self, name: str ):
         """Get a prototype by name
 
         go up the scenegraph chain to try to resolve
@@ -87,11 +88,11 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
                     return root.getProto( name )
         return None
 
-    def getDEF( self, name ):
+    def getDEF( self, name: str ):
         """Get a node by DEF name"""
         return self.defNames.get(name)
 
-    def regDefName(self, defName, object):
+    def regDefName(self, defName, object) -> None:
         ''' Register a DEF name for a particular object
 
             defName -- string DEFName
@@ -106,7 +107,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
             del self.defNames[current]
         protofunctions.defName( object, defName )
         self.defNames[defName] = object
-    def addProto(self, proto):
+    def addProto(self, proto) -> None:
         '''Register a Prototype for this sceneGraph
         proto -- Prototype PROTO
         '''
@@ -159,7 +160,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
 ##		"""Add an isMap for the given name to the given node+field"""
 ##		self.isMaps.setdefault( name, []).append( (node,field) )
 
-    def copy( self, copier=None ):
+    def copy( self, copier: Any=None ):
         """Copy this node for copier"""
         if copier is None:
             copier = copiermodule.Copier()

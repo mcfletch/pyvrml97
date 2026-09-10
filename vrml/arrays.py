@@ -13,7 +13,7 @@ Numeric tends to be a bit flaky...
 from numpy import (
     abs, acos, allclose, angle, any,
     append, arange, arccos, argmax, argmin, argsort, array,
-    asarray, ascontiguousarray, astype, bool, char, character, clip,
+    asarray, ascontiguousarray, astype, char, character, clip,
     compress, concatenate, copy, cos, cross, diff, divide,
     dot, dtype, e, flatnonzero, flip, frombuffer, half,
     identity, indices, less, less_equal, matrix, max, min,
@@ -130,7 +130,7 @@ def contiguous(a):
 __all__ = [
     'ArrayType', 'abs', 'acos', 'allclose', 'angle', 'any',
     'append', 'arange', 'arccos', 'argmax', 'argmin', 'argsort',
-    'array', 'asarray', 'ascontiguousarray', 'astype', 'bool', 'char',
+    'array', 'asarray', 'ascontiguousarray', 'astype', 'char',
     'character', 'clip', 'compress', 'concatenate', 'contiguous', 'copy',
     'cos', 'cross', 'diff', 'divide', 'divide_safe', 'dot',
     'dtype', 'e', 'flatnonzero', 'flip', 'frombuffer', 'frustcullaccel',

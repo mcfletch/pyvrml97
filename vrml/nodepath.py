@@ -1,5 +1,6 @@
 """Representation and manipulation of scenegraph paths
 """
+from typing import Any, SupportsIndex, Union
 from vrml import node, weaklist
 
 class NodePath( list ):
@@ -26,7 +27,7 @@ class NodePath( list ):
                 str( N )
                 for N in self
             ]))
-    def common (self, other):
+    def common (self, other: Any):
         """Return the common root sub-path between ourselves and other
 
         If there is no common sub-root, returns an empty path
@@ -38,12 +39,12 @@ class NodePath( list ):
             else:
                 break
         return self.__class__(result)
-    def __add__(self, other):
+    def __add__(self, other: Any):
         """Return a new path with other as tail"""
         if isinstance( other, node.Node ):
             other = [other]
         return self.__class__( super(NodePath, self).__add__( other))
-    def __getitem__(self, index):
+    def __getitem__(self, index: "Union[SupportsIndex, slice]") -> Any:
         """Return the node at an index, or a new path for a slice
 
         A slice of a path is a path: the event system hands a handler the tail
@@ -55,7 +56,7 @@ class NodePath( list ):
         if isinstance(index, slice):
             return self.__class__(held)
         return held
-    def __eq__( self, other ):
+    def __eq__( self, other: Any ):
         """Check whether we are equal to another path"""
         if len(self) != len(other):
             return 0

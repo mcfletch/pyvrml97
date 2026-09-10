@@ -95,7 +95,7 @@ def transMatrix( source=None ):
     T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'f' )
     return T, T1
 
-def perspectiveMatrix( fovy, aspect, zNear, zFar, inverse=False ):
+def perspectiveMatrix( fovy, aspect, zNear, zFar, inverse: bool=False ):
     """Create a perspective matrix from given parameters
 
     Note that this is the same matrix as for gluPerspective,
@@ -117,7 +117,7 @@ def perspectiveMatrix( fovy, aspect, zNear, zFar, inverse=False ):
             [0,0,(zFar+zNear)/zDelta,-1],
             [0,0,(2*zFar*zNear)/zDelta,0]
         ],'f')
-def orthoMatrix( left=-1.0, right=1.0, bottom=-1.0, top=1.0, zNear=-1.0, zFar=1.0 ):
+def orthoMatrix( left=-1.0, right: float=1.0, bottom=-1.0, top: float=1.0, zNear=-1.0, zFar: float=1.0 ):
     """Calculate an orthographic projection matrix
 
     Similar to glOrtho

@@ -572,7 +572,7 @@ class Transform( nodetypes.Children, nodetypes.Transforming, node.Node ):
     #Events
     removeChildren = field.newEvent( 'removeChildren', 'MFNode', 0)
     addChildren = field.newEvent( 'addChildren', 'MFNode', 0)
-    def localMatrices( self, translate=True,scale=True,rotate=True ):
+    def localMatrices( self, translate: bool=True,scale: bool=True,rotate: bool=True ):
         """Calculate/lookup our local matrices
 
         Certain operations want, e.g. just the rotation of an item,

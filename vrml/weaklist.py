@@ -1,5 +1,6 @@
 """list sub-class which holds weak references to objects"""
 
+from typing import Any, Optional, SupportsIndex, Union
 import weakref
 
 class WeakList( list ):
@@ -19,14 +20,14 @@ class WeakList( list ):
     execution (if the referent has been garbage
     collected).
     """
-    def __init__( self, sequence=() ):
+    def __init__( self, sequence: Any=() ) -> None:
         """Initialize the list, with an optional sequence of objects
 
         The WeakList will store weak references to objects
         within the sequence.
         """
         super( WeakList, self).__init__( map( self.wrap, sequence))
-    def wrap( self, item ):
+    def wrap( self, item: Any ):
         """Wrap an individual item in a weak-reference
 
         If the item is already a weak reference, we store
@@ -37,7 +38,7 @@ class WeakList( list ):
         if isinstance( item, weakref.ReferenceType ):
             item = item()
         return weakref.ref( item, self.__remover() )
-    def unwrap( self, item ):
+    def unwrap( self, item: Any ):
         """Unwrap an individual item
 
         This is a fairly trivial operation at the moment,
@@ -67,7 +68,7 @@ class WeakList( list ):
             yield self[index]
             index += 1
 
-    def __setitem__( self, index, item ):
+    def __setitem__( self, index: "Union[SupportsIndex, slice]", item: Any ) -> Any:
         """Set the item at the given index"""
         if isinstance( index, slice ):
             item = [self.wrap(each) for each in item]
@@ -77,38 +78,39 @@ class WeakList( list ):
             index, item
         )
 
-    def append( self, item ):
+    def append( self, item: Any ):
         """Append a single item to the list"""
         return super( WeakList,self).append( self.wrap(item))
-    def insert( self, index, item ):
+    def insert( self, index: "SupportsIndex", item: Any ) -> Any:
         """Insert an item at the given index"""
         return super( WeakList,self).insert(
             index, self.wrap(item)
         )
-    def extend( self, sequence ):
+    def extend( self, sequence: Any ):
         """Extend this list with another sequence"""
         return super( WeakList, self).extend([
             self.wrap(obj) for obj in sequence
         ])
     __iadd__ = extend
 
-    def __getitem__( self, index ):
+    def __getitem__( self, index: "Union[SupportsIndex, slice]" ) -> Any:
         """Get the item, or the items of the slice, at the given index"""
         held = super (WeakList,self).__getitem__( index )
         if isinstance( index, slice ):
             return [self.unwrap(obj) for obj in held]
         return self.unwrap(held)
-    def pop( self, index=-1 ):
+    def pop( self, index: "SupportsIndex" = -1 ) -> Any:
         """Pop an item from the list, removing it and returning it"""
         return self.unwrap( super(WeakList,self).pop(index))
 
-    def __contains__( self, item ):
+    def __contains__( self, item: Any ):
         """Return boolean indicating whether the item is in the list"""
         return item in self.get()
-    def count( self, item ):
+    def count( self, item: Any ):
         """Return integer count of instances of item in list"""
         return self.get().count(item)
-    def index( self, item, start = 0, stop = None ):
+    def index( self, item: Any, start: "SupportsIndex" = 0,
+               stop: "Optional[SupportsIndex]" = None ) -> int:
         """Return integer index of item in list
 
         Raises ValueError where there is no such item, as `list.index` does.
@@ -117,13 +119,13 @@ class WeakList( list ):
         if stop is None:
             return found.index(item, start)
         return found.index(item, start, stop)
-    def remove( self, item ):
+    def remove( self, item: Any ):
         """Remove the given item from the list"""
         t = self.get()
         result = t.remove( item )
         self[:] = t
         return result
-    def sort( self, *, key = None, reverse = False ):
+    def sort( self, *, key = None, reverse = False ) -> None:
         """Sort the referents, then rebuild the list of references
 
         Takes ``key`` and ``reverse``, as :meth:`list.sort` does.  Sorting the
@@ -133,24 +135,24 @@ class WeakList( list ):
         found = self.get()
         found.sort( key = key, reverse = reverse )
         self[:] = found
-    def __eq__( self, sequence ):
+    def __eq__( self, sequence: Any ):
         """Compare the list to another (==)"""
         return self.get() == sequence
-    def __ge__( self, sequence ):
+    def __ge__( self, sequence: Any ):
         """Compare the list to another (>=)"""
         return self.get() >= sequence
-    def __gt__( self, sequence ):
+    def __gt__( self, sequence: Any ):
         """Compare the list to another (>)"""
         return self.get() > sequence
 
-    def __le__( self, sequence ):
+    def __le__( self, sequence: Any ):
         """Compare the list to another (<=)"""
         return self.get() <= sequence
-    def __lt__( self, sequence ):
+    def __lt__( self, sequence: Any ):
         """Compare the list to another (<)"""
         return self.get() < sequence
 
-    def __ne__( self, sequence ):
+    def __ne__( self, sequence: Any ):
         """Compare the list to another (!=)"""
         return self.get() != sequence
 
@@ -160,7 +162,7 @@ class WeakList( list ):
 
     def __remover(self):
         """Construct a function callback for eliminating a particular reference"""
-        def remove(reference, selfref=weakref.ref(self)):  # noqa: B008 - the default is the weak ref
+        def remove(reference, selfref=weakref.ref(self)) -> None:  # noqa: B008 - the default is the weak ref
             """Removes passed reference from the referenced self (selfref)
             Note that the callback does not keep the list alive.
             This approach is taken directly from the WeakKeyDictionary.

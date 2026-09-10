@@ -2,6 +2,7 @@
 """
 
 
+from typing import Any, Dict, List
 from io import StringIO
 from vrml import arrays
 from vrml import protofunctions
@@ -32,11 +33,11 @@ minimal1 = {
 }
 
 
-def namekey(node):
+def namekey(node: Any):
     return node.name
 
 
-def linearise(value, linvalues=defaults, **namedargs):
+def linearise(value: Any, linvalues=defaults, **namedargs):
     """Linearise the given (node) value to a string"""
     lineariser = Lineariser(linvalues, **namedargs)
     return lineariser.linear(value)
@@ -50,7 +51,7 @@ class Lineariser:
     cleared after the initial linearisation.
     '''
 
-    def __init__(self, linvalues=None, alreadydone=None, *args, **namedargs):
+    def __init__(self, linvalues=None, alreadydone=None, *args, **namedargs) -> None:
         if linvalues is None:
             linvalues = defaults
         if namedargs:
@@ -65,7 +66,7 @@ class Lineariser:
     def linear(
         self,
         clientNode,
-        buffer=None,
+        buffer: Any=None,
         skipProtos=None,
         skipUnusedProtos=None,
         *args,
@@ -75,7 +76,7 @@ class Lineariser:
         Linearise a node, script, or scenegraph
         '''
         # prototypes in this dictionary will not be linearised
-        self.skipProtos = {}
+        self.skipProtos: "Dict[Any, Any]" = {}
         # skipUnusedProtos skips the "prototype collection" linearisation step
         # this has the effect of not outputing any prototype which is not actually
         # used in the file.  By default is "off", that is, all protos are linearised
@@ -86,7 +87,7 @@ class Lineariser:
         # protoalreadydone is used in place of the scenegraph-specific
         # node alreadydone.  This allows us to push all protos up to the
         # top level of the hierarchy (thus making the process of linearisation much simpler)
-        self.protoalreadydone = {}
+        self.protoalreadydone: "Dict[Any, Any]" = {}
         # main working algo...
         self.typecache = {
             'Script': self._Script,
@@ -95,10 +96,10 @@ class Lineariser:
         }
         self.buffer = buffer or StringIO()
         self.alreadydone.clear()
-        self.cursceneGraph = (
-            []
-        )  # used to look up whether we need to output a prototype...
-        self.curproto = []
+        #: The scene graphs being written, innermost last; a prototype is
+        #: output once per graph that refers to it.
+        self.cursceneGraph: "List[Any]" = []
+        self.curproto: "List[Any]" = []
         self.indentationlevel = 0
         if type(clientNode) in (list, tuple):
             for child in clientNode:
@@ -120,7 +121,8 @@ class Lineariser:
         A little niave, the sceneGraph just outputs everything
         in its prototypes, then everything in its childlist, then all its ROUTES
         '''
-        [self._preroute(clientNode, route) for route in clientNode.routes]
+        for route in clientNode.routes:
+            self._preroute(clientNode, route)
         if clientNode is None:
             startind = self.buffer.tell()
             if len(self.cursceneGraph) == 0:  # new file
@@ -339,7 +341,7 @@ class Lineariser:
         self.alreadydone[id(clientNode)] = startind, buffer.tell()
         return None
 
-    def _attrDict(self, object):
+    def _attrDict(self, object) -> None:
         """Write out the attribute dictionary for an object"""
         buffer = self.buffer
         linvalues = self.linvalues
@@ -385,7 +387,7 @@ class Lineariser:
                 )
                 self._sffield(val, field)
 
-    def _eventDict(self, clientNode):
+    def _eventDict(self, clientNode) -> None:
         '''
         Event Dictionaries have two possible sources of information,
         the eventDict and the isNames dictionary.  The first provides
@@ -402,7 +404,7 @@ class Lineariser:
             field.eventVrmlstr(self)
             # XXX do IS-mapping here!
 
-    def _fieldDict(self, clientNode, requireDefault=1, skipFields=('DEF',)):
+    def _fieldDict(self, clientNode, requireDefault: int=1, skipFields=('DEF',)) -> None:
         buffer = self.buffer
         fields = [
             field
@@ -420,7 +422,7 @@ class Lineariser:
         self.buffer.write('IS %s' % clientNode.declaredName)
         return None
 
-    def _preroute(self, sceneGraph, clientNode):
+    def _preroute(self, sceneGraph, clientNode) -> None:
         """Pre-scans all routes, forces all routed nodes to have DEF names"""
         for child in (clientNode.source, clientNode.destination):
             DEF = defName(child)
@@ -434,7 +436,7 @@ class Lineariser:
                         break
                     count += 1
 
-    def _route(self, clientNode):
+    def _route(self, clientNode) -> None:
         '''Linearise a route'''
         # should check here to make sure the ROUTEs are valid
         buffer = self.buffer
@@ -490,11 +492,11 @@ class Lineariser:
                 ) from None
 
     ### Utility functions...
-    def _dedent(self):
+    def _dedent(self) -> None:
         self.indentationlevel = self.indentationlevel - 1
         self.linvalues['curindent'] = self.linvalues['indent'] * self.indentationlevel
 
-    def _indent(self, exact=None):
+    def _indent(self, exact=None) -> None:
         if exact is not None:
             self.indentationlevel = exact
         else:
@@ -525,7 +527,7 @@ class Lineariser:
             ind = self.alreadydone[id(clientNode)] = self.buffer.tell()
             return ind
 
-    def _nullNode(self, clientNode):
+    def _nullNode(self, clientNode) -> None:
         self.buffer.write('NULL')
 
     def _defName(self, clientNode):
@@ -546,7 +548,7 @@ class Lineariser:
         return method(clientNode)
 
     ### Field-type handlers...
-    def _mfnode(self, anyobj, *args, **namedargs):
+    def _mfnode(self, anyobj, *args, **namedargs) -> None:
         '''
         Really, this will handle any list of elements where all elements
         have a __vrmlStr__ method, but since most of those are nodes, we'll

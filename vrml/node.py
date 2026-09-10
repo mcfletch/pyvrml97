@@ -130,7 +130,7 @@ class Node(object):
             ",\n\t".join(attributes),
         )
 
-    def copy(self, copier=None):
+    def copy(self, copier: Any=None):
         """Copy this node for copier"""
         if copier is None:
             copier = copiermodule.Copier()
@@ -168,7 +168,7 @@ class PrototypedNode(object):
     actual implementation of the node.
     """
 
-    def __init__(self, *arguments, **namedarguments):
+    def __init__(self, *arguments, **namedarguments) -> None:
         """Initialise the node with appropriate named args
 
         Also attempts to instantiate the sub-node scenegraph
@@ -177,7 +177,7 @@ class PrototypedNode(object):
         PrototypedNode.instantiate(self)
         super(PrototypedNode, self).__init__(*arguments, **namedarguments)
 
-    def instantiate(self):
+    def instantiate(self) -> None:
         """Make a copy of the class scenegraph-template for this node
 
         Also needs to bind IS mappings/routes for the template,
@@ -239,7 +239,7 @@ class PrototypedNode(object):
 
 
 def prototype(
-    name,
+    name: str,
     fields=(),
     sceneGraph=None,
     externalURL=None,
@@ -287,7 +287,7 @@ class NullNode(Node):
         """Make the NULL node evaluate to false"""
         return False
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any):
         """Compare the NULL node to other objects"""
         try:
             if protoName(self) == protoName(other):
@@ -329,7 +329,7 @@ class _SFNode(_FieldHost):
     requiredTypes: Tuple[type, ...] = ()
     allowNULL = 1
 
-    def fset(self, client, value, notify=1):
+    def fset(self, client: Any, value: Any, notify: int=1):
         """Set the client's value for this property
 
         notify -- if true send a notification event
@@ -354,7 +354,7 @@ class _SFNode(_FieldHost):
         """Default SFNode value"""
         return NULL
 
-    def coerce(self, value):
+    def coerce(self, value: Any):
         """Coerce value to an SFNode reference"""
         if self.requiredTypes and isinstance(value, self.requiredTypes):
             return value
@@ -378,7 +378,7 @@ class _SFNode(_FieldHost):
                 % (self.name, repr(value), self.requiredTypes)
             )
 
-    def vrmlstr(self, value, lineariser):
+    def vrmlstr(self, value: Any, lineariser: Any):
         """Convert the given value to a VRML97 representation"""
         return lineariser._linear(value)
 
@@ -414,7 +414,7 @@ class WeakSFNode(_SFNode, field.WeakField, field.Field):
 class RootScenegraphNode(WeakSFNode):
     fieldType = 'RootScenegraphNode'
 
-    def fset(self, client, value, notify=1):
+    def fset(self, client: Any, value: Any, notify: int=1):
         """Set the root scenegraph node (recursively)
 
         TODO: this will blow up on cyclic graphs!
@@ -463,7 +463,7 @@ assert Node.rootSceneGraph.name == " root", Node.rootSceneGraph.name
 def _changeSender(nodeRef, field):
     """Utility function to send node-change messages on olist updates"""
 
-    def onOListChange(sender, signal, value):
+    def onOListChange(sender, signal: Any, value: Any) -> None:
         client = nodeRef()
         if client:
             dispatcher.send(
@@ -485,7 +485,7 @@ class _MFNode(_FieldHost):
     baseSFNode = SFNode('GeneralSFNode')
     baseObjectType = olist.OList
 
-    def fset(self, client, value, notify=1):
+    def fset(self, client: Any, value: Any, notify: int=1):
         """Set the client's value for this property
 
         notify -- if true send a notification event
@@ -531,7 +531,7 @@ class _MFNode(_FieldHost):
                         Node.rootSceneGraph.fset(val, clientRoot, notify=0)
         return value
 
-    def getDefault(self, client=None):
+    def getDefault(self, client: Any=None):
         """The empty child list a node starts with, wired to that node.
 
         A field read before it is ever written materialises its default here,
@@ -551,7 +551,7 @@ class _MFNode(_FieldHost):
             defaultobj = self.fset(client, defaultobj, notify=0)
         return defaultobj
 
-    def coerce(self, value):
+    def coerce(self, value: Any):
         """Coerce value to an MFNode list-of-objects"""
         SF = self.__class__.baseSFNode
         if SF.requiredTypes and isinstance(value, SF.requiredTypes):
@@ -566,11 +566,11 @@ class _MFNode(_FieldHost):
                 % (self.name, repr(value))
             )
 
-    def vrmlstr(self, value, lineariser):
+    def vrmlstr(self, value: Any, lineariser: Any):
         """Convert the given value to a VRML97 representation"""
         return lineariser._mfnode(value)
 
-    def copyValue(self, value, copier=None):
+    def copyValue(self, value: Any, copier: Any=None):
         """Copy a value for copier"""
         SF = self.__class__.baseSFNode
         return [SF.copyValue(node, copier) for node in value]
@@ -599,7 +599,7 @@ field.register(MFNodeEvt)
 ISMAPS = weakkeydictfix.WeakKeyDictionary()
 
 
-def ismaps(node):
+def ismaps(node: Any):
     """Get the isMaps for the given node
 
     Returns a field-name:(sub-node,field) mapping

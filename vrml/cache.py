@@ -33,6 +33,7 @@ Note:
     with the Python 2.2.2 weakref and weakkeydictionary
     mechanisms.
 """
+from typing import Any, List
 from vrml import protofunctions
 import weakref
 #from vrml.weakkeydictfix import WeakKeyDictionary
@@ -51,13 +52,13 @@ class Cache (dict):
     instances.  The CacheHolder is responsible for
     most of the implementation of the cache.
     """
-    def getHolder( self, client, key = ""):
+    def getHolder( self, client: Any, key: Any = ""):
         """Return the cache holder for the given client and key"""
         current = self.get(id(client))
         if current is not None:
             return current.get( key)
         return None
-    def getData( self, client, key="", default=None):
+    def getData( self, client: Any, key: Any="", default: Any=None):
         """Return the data for given client and key, default otherwise"""
         current = self.get( id(client) )
         if current is not None:
@@ -67,9 +68,9 @@ class Cache (dict):
         return default
     def holder(
         self,
-        client,
+        client: Any,
         data,
-        key="",
+        key: Any="",
     ):
         """Create a new CacheHolder in this cache"""
         return CacheHolder(
@@ -84,7 +85,7 @@ getData = CACHE.getData
 
 def cleaner( cache, id ):
     """Return callback function that cleans the given id from cache"""
-    def clean_id( weak ):
+    def clean_id( weak ) -> None:
         try:
             del cache[id]
         except Exception:
@@ -117,10 +118,10 @@ class CacheHolder( object ):
     #__slots__ = ('client','data','key','cache','nodeDependencies','__weakref__','notifier')
     def __init__(
         self,
-        client, data,
-        key="",
+        client: Any, data,
+        key: Any="",
         cache = CACHE,
-    ):
+    ) -> None:
         """Initialise the cache-deletion callable
 
         client -- the node doing the caching, if gc'd,
@@ -134,18 +135,18 @@ class CacheHolder( object ):
         self.key = key
         self.data = data
         self.cache = weakref.ref( cache )
-        self.nodeDependencies = []
+        self.nodeDependencies: "List[Any]" = []
 
         # get the cached values for this client node
         set = cache.get(client_id, None)
         if set is None:
             cache[ client_id ] = set = {}
         set[key] = self
-    def set( self, data ):
+    def set( self, data ) -> None:
         """Set data after instantiation"""
         self.data = data
 
-    def depend( self, node, field=None ):
+    def depend( self, node: Any, field=None ) -> None:
         """Add a dependency on given node's field value
 
         source -- the node being watched
@@ -180,14 +181,14 @@ class CacheHolder( object ):
         else:
             # dependency on the mere existence of the node
             self.depend_object( node )
-    def depend_signal( self, signal, sender=dispatcher.Any ):
+    def depend_signal( self, signal: Any, sender=dispatcher.Any ) -> None:
         """Depend on signal from sender"""
         dispatcher.connect(
             self.clear,#receiver
             signal,
             sender,
         )
-    def depend_object( self, node ):
+    def depend_object( self, node: Any ) -> None:
         """Depend on node's existence"""
         self.nodeDependencies.append(
             weakref.ref(
@@ -195,13 +196,13 @@ class CacheHolder( object ):
                 self,
             )
         )
-    def clear( self, signal=None, sender=None ):
+    def clear( self, signal: Any=None, sender=None ) -> None:
         """Clear this object's held value (only)"""
         if not self.client():
             self( signal=signal, sender=sender )
         else:
             self.data = None
-    def __call__( self, signal=None, sender=None ):
+    def __call__( self, signal: Any=None, sender=None ):
         """Delete the cached value (this object)
 
         This de-registers ourselves from our cache object,

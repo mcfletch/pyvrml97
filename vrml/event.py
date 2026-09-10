@@ -1,11 +1,16 @@
 """Routable event base-class for VRML environments"""
 
+from typing import Any, Dict, Optional
+
+
 class Event( object ):
     """Routable event for VRML environments"""
-    def __init__( self ):
+
+    def __init__( self ) -> None:
         """Initialize the Event object"""
-        self.visitedNodes = {}
-    def visited (self, key, value = None):
+        self.visitedNodes: Dict[Any, Any] = {}
+
+    def visited (self, key: Any, value: Optional[Any] = None) -> Optional[Any]:
         """Check for or register visitation of the given key
 
         key -- an opaque hashable value, normally the node and

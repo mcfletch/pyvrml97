@@ -19,7 +19,7 @@ else:
 
 
 class _MatrixHolder( object ):
-    def __init__( self, matrix):
+    def __init__( self, matrix) -> None:
         self.matrix = matrix
 
 class _NodePath( _PathHost ):
@@ -35,11 +35,11 @@ class _NodePath( _PathHost ):
     children: Optional[List[Any]] = None
     active = True
     broken = False
-    def isTransform( self, item ):
+    def isTransform( self, item: Any ):
         """Customization Point: determine whether a node is a Transform"""
         return isinstance(item, nodetypes.Transforming)
 
-    def transformMatrix( self, translate=True, scale=True, rotate=True, matrixHolder=False, inverse=False ):
+    def transformMatrix( self, translate: bool=True, scale: bool=True, rotate: bool=True, matrixHolder: bool=False, inverse: bool=False ):
         """Calculate (and cache) a transform matrix for this path
 
         Calculates our transformMatrix from our parent's transform
@@ -71,7 +71,7 @@ class _NodePath( _PathHost ):
             mHolder = holder.data
             if mHolder is not None:
                 return mHolder
-        def get_mat( item ):
+        def get_mat( item: Any ):
             child_holder = item.localMatrices(translate=translate,scale=scale,rotate=rotate)
             if doConnect:
                 holder.depend( child_holder )
@@ -92,7 +92,7 @@ class _NodePath( _PathHost ):
             matrix = identity(4, dtype='f')
         holder.data = matrix
         return holder.data
-    def transformChildren( self, reverse=0 ):
+    def transformChildren( self, reverse: int=0 ):
         """Yield all transforming children"""
         t = nodetypes.Transforming
         if reverse:
@@ -106,7 +106,7 @@ class _NodePath( _PathHost ):
                 if isinstance(item, t):
                     yield item
 
-    def __add__(self, other):
+    def __add__(self, other: Any):
         """Add parent-matrix pre-caching support to nodepaths"""
         base = super( _NodePath, self).__add__( other )
         base.parent = self       # type: ignore[attr-defined]
@@ -143,7 +143,7 @@ class _NodePath( _PathHost ):
             child = todo.pop( 0 )
             yield child
             todo[:0] = list( child.iterchildren() )
-    def invalidate( self ):
+    def invalidate( self ) -> None:
         """Set this path to be invalid (and every path below it)"""
         self.broken = True
         for desc in self.iterdescendents( ):

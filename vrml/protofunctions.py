@@ -14,6 +14,7 @@ module.
 
 
 
+from typing import Any
 def _getcls(cls):
     """Utility function returns class when passed instance or class"""
     if type(cls) is type:
@@ -30,7 +31,7 @@ def getPrototype(cls):
     return _getcls(cls)
 
 
-def protoName(obj, value=None, *args, **named):
+def protoName(obj: Any, value: Any=None, *args, **named):
     """Get/set the prototype name for the object"""
     obj = _getcls(obj)
     if value is not None:
@@ -44,7 +45,7 @@ def protoName(obj, value=None, *args, **named):
         return possible
 
 
-def defName(obj, value=None, *args, **named):
+def defName(obj: Any, value: Any=None, *args, **named):
     """Get/set the VRML97 defName for the object"""
     from vrml import node
 
@@ -54,7 +55,7 @@ def defName(obj, value=None, *args, **named):
         return node.Node.DEF.fget(obj, *args, **named)
 
 
-def name(obj, value=None, *args, **named):
+def name(obj: Any, value: Any=None, *args, **named):
     """Get/set prototype name for prototypes, DEF name for nodes"""
     if type(obj) is type:
         return protoName(obj, value, *args, **named)
@@ -62,7 +63,7 @@ def name(obj, value=None, *args, **named):
         return defName(obj, value, *args, **named)
 
 
-def root(obj, value=None, *args, **named):
+def root(obj: Any, value: Any=None, *args, **named):
     """Get/set root-node reference for nodes/protos"""
     from vrml import node
 
@@ -79,7 +80,7 @@ def builtin(cls):
     return not issubclass(_getcls(cls), node.PrototypedNode)
 
 
-def addField(cls, field):
+def addField(cls, field) -> None:
     """Add a particular field/event to the class/prototype definition
 
     At present this just calls setattr(cls,field.name,field)
@@ -87,7 +88,7 @@ def addField(cls, field):
     setattr(_getcls(cls), field.name, field)
 
 
-def removeField(cls, field):
+def removeField(cls, field) -> None:
     """Remove a particular field/event to the class/prototype definition
 
     If field is a string, calls delattr(cls,field) for the class
@@ -145,7 +146,7 @@ def getField(cls, field):
     )
 
 
-def getFields(cls, events=0):
+def getFields(cls, events: int=0):
     """Get all fields of the definition/prototype
 
     if events is true, then return events

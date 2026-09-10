@@ -1,5 +1,7 @@
 """Module providing patched weakkeydictionary operation"""
 import weakref
+from typing import Any, Dict, Optional
+
 ref = weakref.ref
 
 class WeakKeyDictionary( weakref.WeakKeyDictionary ):
@@ -10,14 +12,14 @@ class WeakKeyDictionary( weakref.WeakKeyDictionary ):
     WeakKeyDictionary class.  This class provides
     a work-around for it.
     """
-    def __init__(self, dict=None):
+    def __init__(self, dict: Optional[Dict[Any, Any]] = None) -> None:
         """Initialize the WeakKeyDictionary
 
         dict -- previously-existing weak key records or
             None to create a new dictionary
         """
-        self.data = {}
-        def remove(k, selfref=ref(self)):  # noqa: B008 - the default is the weak ref
+        self.data: Dict[Any, Any] = {}
+        def remove(k: Any, selfref: Any = ref(self)) -> None:  # noqa: B008 - the default is the weak ref
             self = selfref()
             if self is not None and self.data:
                 try:
@@ -29,7 +31,7 @@ class WeakKeyDictionary( weakref.WeakKeyDictionary ):
         self._remove = remove
         if dict is not None:
             self.update(dict)
-    def __delitem__(self, key):
+    def __delitem__(self, key: Any) -> None:
         """Overridden delitem to avoid scanning"""
         try:
             del self.data[weakref.ref(key)]
