@@ -12,7 +12,6 @@ we could do so with most changes confined to this
 module.
 """
 
-from __future__ import unicode_literals
 
 
 def _getcls(cls):

@@ -283,11 +283,9 @@ class NullNode(Node):
         """Get code-like representation of NULL node"""
         return '<NULL vrml SFNode>'
 
-    def __nonzero__(self):
+    def __bool__(self):
         """Make the NULL node evaluate to false"""
         return False
-
-    __bool__ = __nonzero__
 
     def __eq__(self, other):
         """Compare the NULL node to other objects"""

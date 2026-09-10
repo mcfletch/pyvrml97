@@ -17,9 +17,19 @@ from simpleparse.dispatchprocessor import getString as _getString
 from vrml import node, field
 from vrml.protofunctions import *
 from vrml.arrays import array
-from .._bytes import as_str
 
-long = int
+
+def as_str(value, encoding='utf-8'):
+    """A slice of the parse buffer as text
+
+    simpleparse hands back whichever of bytes and text the source was read as,
+    and a VRML97 string field holds text.
+    """
+    if isinstance(value, str):
+        return value
+    if isinstance(value, bytes):
+        return value.decode(encoding)
+    return str(value)
 
 
 def getString(*args, **named):
@@ -414,7 +424,7 @@ class ParseProcessor(DispatchProcessor):
 
     def MFUInt32(self, tuples, buffer):
         # localisation
-        return [long(buffer[start:stop], 0) for (tag, start, stop, children) in tuples]
+        return [int(buffer[start:stop], 0) for (tag, start, stop, children) in tuples]
 
     def MFFloat(self, tuples, buffer):
         return [float(buffer[start:stop]) for (tag, start, stop, children) in tuples]
@@ -445,7 +455,7 @@ class ParseProcessor(DispatchProcessor):
             elif element[0] == 'ESCAPEDCHAR':
                 result.append(as_str(buffer[element[1] + 1 : element[2]]))
             elif element[0] == 'SIMPLEBACKSLASH':
-                result.append(as_str('\\'))
+                result.append('\\')
         return "".join(result)
 
     ### Low-level/trivial constructs which have their own processing functions

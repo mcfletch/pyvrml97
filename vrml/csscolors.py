@@ -1,6 +1,6 @@
 """Module to allow using strings to specify colors"""
 def stringToColor( value ):
-    """Given a string/unicode value, determine appropriate color"""
+    """Given a string value, determine appropriate color"""
     value = value.lower()
     possible = cssColors.get( value )
     if possible:

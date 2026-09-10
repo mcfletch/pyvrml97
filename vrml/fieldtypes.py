@@ -15,9 +15,7 @@ from vrml import field, csscolors, arrays
 import sys
 from functools import reduce
 
-from ._bytes import unicode, long
 
-xrange = range
 
 if TYPE_CHECKING:
     class _FieldHost:
@@ -48,7 +46,7 @@ if TYPE_CHECKING:
 else:
     _FieldHost = object
 
-MAX_INT = getattr(sys, 'maxint', None) or getattr(sys, 'maxsize', None)
+MAX_INT = sys.maxsize
 
 DOUBLE_TYPE = arrays.typeCode(arrays.array([0], 'd'))
 FLOAT_TYPE = arrays.typeCode(arrays.array([0], 'f'))
@@ -65,7 +63,7 @@ def _collapse(inlist, isinstance=isinstance, ltype=list, maxint=MAX_INT):
     '''
     try:
         # for every possible index
-        for ind in xrange(maxint):
+        for ind in range(maxint):
             # while that index currently holds a list
             while isinstance(inlist[ind], ltype):
                 # expand that list into the index (and subsequent indicies)
@@ -164,7 +162,7 @@ class _SFString(_FieldHost):
         """Coerce the given value to our type
         Allowable types:
             simple string -> unchanged
-            unicode string -> utf-8 encoded
+            str -> utf-8 encoded
 
             sequence of length == 1 where first element is a string -> returns first element
             sequence of length > 1 where all elements are strings -> returns string.join( value, '')
@@ -184,14 +182,14 @@ class _SFString(_FieldHost):
                 value = u""
             else:
                 value = u"".join(value)
-        if not isinstance(value, unicode):
-            value = unicode(value)
+        if not isinstance(value, str):
+            value = str(value)
         return value
 
     @classmethod
     def check(self, value):
         "Raise ValueError if isn't correct type"
-        if not isinstance(value, unicode):
+        if not isinstance(value, str):
             return 0
         return 1
 
@@ -209,7 +207,7 @@ class _MFString(_FieldHost):
             simple string -> wrapped in a list
             sequence of strings (of any length) -> equivalent list returned
         """
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, str):
             value = [value]
         try:
             return [SFString.coerce(item) for item in value]
@@ -222,7 +220,7 @@ class _MFString(_FieldHost):
     def check(self, value):
         "Raise ValueError if isn't correct type"
         if isinstance(value, list):
-            if not filter(None, [isinstance(item, (str, unicode)) for item in value]):
+            if not filter(None, [isinstance(item, str) for item in value]):
                 return 1
         return 0
 
@@ -243,7 +241,7 @@ class _SFBool(_FieldHost):
         Allowable types:
             any object with true/false protocol
         """
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, str):
             try:
                 value = int(value)
             except (ValueError, TypeError):
@@ -314,7 +312,7 @@ class _SFUInt32(_SFInt32):
             any object with true/false protocol
         """
         try:
-            return long(value)
+            return int(value)
         except ValueError:
             raise ValueError(
                 """Attempted to set value for an %s field which is not compatible: %s"""
@@ -323,13 +321,13 @@ class _SFUInt32(_SFInt32):
 
     def check(self, value):
         """Check that the given value is of exactly expected type"""
-        if isinstance(value, long):
+        if isinstance(value, int):
             return 1
         return 0
 
     def vrmlstr(self, value, lineariser=None):
         """Convert the given value to a VRML97 representation"""
-        base = str(long(value))
+        base = str(int(value))
         if base[-1] in ('l', 'L'):
             base = base[:-1]
         return base
@@ -381,7 +379,7 @@ class _MFInt32(_FieldHost):
 
     def coerce(self, value):
         """Base coercion mechanism for multiple-value integer fields"""
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, str):
             value = [self.base_converter(x) for x in value.replace(',', ' ').split()]
         if isinstance(value, field.NUMERIC_TYPES):
             return arrays.array([int(value)], self.arrayDataType)
@@ -413,7 +411,7 @@ class _MFUInt32(_MFInt32):
 
     defaultDefault = list
     arrayDataType = 'I'
-    base_converter = long
+    base_converter = int
     acceptedTypes = ('I', UINT_TYPE)
 
 
@@ -443,7 +441,7 @@ class _MFFloat(_FieldHost):
 
     def coerce(self, value):
         """Base coercion mechanism for floating point field types"""
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, str):
             value = [float(x) for x in value.replace(',', ' ').split()]
         if isinstance(value, field.NUMERIC_TYPES):
             return arrays.array([float(value)], self.targetType)
@@ -520,9 +518,9 @@ class _SFVec(_FieldHost):
 
     def coerce(self, value):
         """Base coercion mechanism for vector-like field types"""
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, str):
             value = [float(x) for x in value.replace(',', ' ').split()]
-        if isinstance(value, (int, long, float)):
+        if isinstance(value, (int, float)):
             value = arrays.zeros(self.dimension, self.targetType)
             value[:] = float(value)
         elif isinstance(value, arrays.ArrayType):
@@ -593,7 +591,7 @@ class _SFArray(_FieldHost):
         return value
 
     def coerce(self, value):
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, str):
             value = [
                 float(x)
                 for x in (value.replace(',', ' ').replace('[', ' ')
@@ -612,7 +610,7 @@ class _SFArray(_FieldHost):
                     [float(obj) for obj in value],
                     self.targetType,
                 )
-        elif isinstance(value, (int, long, float)):
+        elif isinstance(value, (int, float)):
             value = arrays.array([value], self.targetType)
         else:
             try:
@@ -816,7 +814,7 @@ class _SFColor(_Color, _SFVec3f):
 
     def coerce(self, value):
         """Adds string-coercion for color data types"""
-        if isinstance(value, (str, unicode)):
+        if isinstance(value, str):
             value = csscolors.stringToColor(value)
         return super(_SFColor, self).coerce(value)
 
@@ -875,7 +873,7 @@ class _MFColor(_Color, _MFVec3f):
             result: list = []
             current: list = []
             for item in value:
-                if isinstance(item, (str, unicode)):
+                if isinstance(item, str):
                     if current:
                         raise ValueError(
                             """Incorrect number of float values %r before string value %r for color number %s"""

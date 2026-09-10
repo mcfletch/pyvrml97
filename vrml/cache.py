@@ -39,12 +39,6 @@ import weakref
 from pydispatch import dispatcher
 import traceback
 
-import sys
-if sys.version_info[0] == 2:
-    bytes = str
-else:
-    unicode = str
-
 class Cache (dict):
     """Trivial sub-class of a dict which has some convenience methods
 
@@ -169,7 +163,7 @@ class CacheHolder( object ):
             for our client node.
         """
         if field is not None:
-            if isinstance( field, (bytes,unicode)):
+            if isinstance( field, (bytes, str)):
                 field = protofunctions.getField(node, field)
             self.depend_signal(
                 ('set', field),#signal

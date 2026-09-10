@@ -1,7 +1,6 @@
 """Representation and manipulation of scenegraph paths
 """
 from vrml import node, weaklist
-xrange = range
 
 class NodePath( list ):
     """Path within a scenegraph from root to particular node

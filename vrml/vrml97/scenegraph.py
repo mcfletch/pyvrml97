@@ -5,7 +5,6 @@ from vrml import node, protofunctions, protonamespace, fieldtypes, route
 from vrml import copier as copiermodule
 from vrml.vrml97 import nodetypes
 import weakref
-from .._bytes import unicode
 
 class SceneGraph( nodetypes.Traversable, node.Node ):
     ''' A VRML 97 sceneGraph
@@ -132,9 +131,9 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
                 # 4-element route definition, e.g. from strings...
                 from vrml.route import ROUTE
                 source,sourceField,destination,destinationField = route
-                if isinstance( source, (str,unicode)):
+                if isinstance( source, str):
                     source = self.getDEF( source )
-                if isinstance( destination, (str,unicode)):
+                if isinstance( destination, str):
                     destination = self.getDEF( destination )
                 route = ROUTE(
                     source = source,
@@ -149,7 +148,7 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
                     raise TypeError(
                         """Need a callable target object!"""
                     )
-                if isinstance( source, (str,unicode)):
+                if isinstance( source, str):
                     source = self.getDEF( source )
                 field = protofunctions.getField( source, sourceField )
                 field.watch( source, target, ('set',field) )

@@ -11,13 +11,12 @@ try:
 except Exception as err:
     fieldaccel2 = None
 
-from ._bytes import bytes, unicode, long
 
 baseFieldTypes = protonamespace.ProtoNamespace({})
 baseEventTypes = protonamespace.ProtoNamespace({})
 
 ### stuff used by the various field sub-types
-NUMERIC_TYPES = (int, float, long)
+NUMERIC_TYPES = (int, float)
 MAP_TYPE = map
 ZIP_TYPE = zip
 RANGE_TYPE = range
@@ -62,7 +61,7 @@ def newField(name, dataType, exposure=1, default=_NULL):
     exposure -- boolean (0/1) indicating whether this is an exposed field
     default -- default value for the field
     """
-    if isinstance(dataType, (bytes, unicode)):
+    if isinstance(dataType, (bytes, str)):
         dataType = baseFieldTypes[dataType]
     return dataType(name, exposure, default)
 
@@ -73,7 +72,7 @@ def newEvent(name, dataType, direction=1):
     dataType --
     direction -- 0 == in, 1 == out
     """
-    if isinstance(dataType, (bytes, unicode)):
+    if isinstance(dataType, (bytes, str)):
         dataType = baseEventTypes[dataType]
     return dataType(name, direction)
 

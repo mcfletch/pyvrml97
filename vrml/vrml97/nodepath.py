@@ -1,13 +1,11 @@
 """Node-paths for VRML97 incl. transform-matrix calculation
 """
-from __future__ import generators
 from typing import TYPE_CHECKING, Any, List, Optional
 from vrml import nodepath
 from vrml.cache import CACHE
 from vrml.vrml97 import transformmatrix, nodetypes
 from vrml.arrays import *
 import weakref
-xrange = range
 
 if TYPE_CHECKING:
     #: What `_NodePath` needs of the path beside it.  It is one half of a path
@@ -98,7 +96,7 @@ class _NodePath( _PathHost ):
         """Yield all transforming children"""
         t = nodetypes.Transforming
         if reverse:
-            for i in xrange(len(self)-1,-1, -1):
+            for i in range(len(self)-1,-1, -1):
                 item = self[i]
                 if isinstance(item, t):
                     yield item

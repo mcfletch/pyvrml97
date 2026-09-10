@@ -1,12 +1,8 @@
 """object for linearizing a scene graph to VRML97
 """
 
-from __future__ import unicode_literals
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from io import StringIO
+from io import StringIO
 from vrml import arrays
 from vrml import protofunctions
 from vrml.protofunctions import *

@@ -85,8 +85,6 @@ class OList( list ):
             value = self[index]
             self._sendRemoved( value )
         return value
-    def __delslice__( self, i,j):
-        return self.__delitem__( slice(i,j))
     def __setitem__( self, index, value ):
         """Set a value and send a message"""
         if isinstance( index, slice ):
@@ -113,8 +111,6 @@ class OList( list ):
             if current is not value:
                 self._sendAdded( value )
             return value
-    def __setslice__( self, i,j, iterable ):
-        return self.__setitem__( slice(i,j), iterable)
     # `list.__add__` answers a plain list while this answers an OList, which
     # a checker reads as the two disagreeing. They do, and deliberately: an
     # in-place add keeps the observable list, a copy does not.
