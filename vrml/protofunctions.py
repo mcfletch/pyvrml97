@@ -129,11 +129,11 @@ def getField(cls: Any, field: str) -> Any:
         # OK, may be a space-prefixed name...
         for fieldObject in getFields(cls):
             if fieldObject.name == field:
-                return field
+                return fieldObject
         # OK, may be an event with space-prefixed name
         for fieldObject in getFields(cls, 1):
             if fieldObject.name == field:
-                return field
+                return fieldObject
         # OK, may be one of the "component" events
         # of a field...
         if field.startswith("set_"):

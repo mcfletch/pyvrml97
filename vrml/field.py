@@ -271,9 +271,14 @@ class Field(BaseField):
         self.__doc__ = str(self)
 
     def fhas(self, client: Any) -> bool:
-        """Determine whether the client currently has a non-default value"""
+        """Whether the client has a value of its own, rather than the default
+
+        A prototype holds its values on the class, where they shadow the field
+        in the class dictionary -- so what says one was set there is that
+        reading the name answers a value rather than the field itself.
+        """
         if isinstance(client, type):
-            return hasattr(client, self.name)
+            return getattr(client, self.name, self) is not self
         return self.name in client.__dict__
 
     def copy(self, client: Any=None, copier: Any=None) -> Any:
@@ -329,25 +334,32 @@ class Field(BaseField):
         """Convert the given value to a VRML97 representation"""
         return ""
 
-    def fieldVrmlstr(self, lineariser: Any) -> None:
-        """Write the field's definition to the lineariser
+    def fieldVrmlstr(self, lineariser: Any, withDefault: bool=True) -> None:
+        """Write the field's declaration to the lineariser
 
-        Basically this gives you a VRML97 fragment
-        which can be used for creating a PROTO which
-        will have the equivalent of this field available.
+        This is the VRML97 fragment that declares a field of this type on a
+        PROTO, so that the prototype has the equivalent of this field.
+
+        withDefault -- write the default value after the declaration. An
+            EXTERNPROTO declares its interface and nothing else -- the values
+            live in the file the URL names -- so its fields are written as the
+            declaration alone.
         """
         if self.exposure:
             exposed = "exposedField"
         else:
             exposed = "field"
         lineariser.buffer.write(
-            '%s %s %s '
+            '%s %s %s'
             % (
                 exposed,
                 self.typeName(),
                 self.name,
             )
         )
+        if not withDefault:
+            return
+        lineariser.buffer.write(' ')
         result = self.vrmlstr(
             # coerce is necessary because the
             # default values are often not in
@@ -415,7 +427,10 @@ class WeakField(_WeakFieldHost):
             value = value()
         if not value:
             if not isinstance(client, type):
-                self.fdel(client, notify=notify)
+                try:
+                    self.fdel(client, notify=notify)
+                except AttributeError:
+                    pass        # nothing of ours was there to clear
             return None
         value = weakref.ref(value)
         value = super(WeakField, self).fset(client, value, notify=notify)

@@ -121,14 +121,16 @@ def perspectiveMatrix( fovy: float, aspect: float, zNear: float, zFar: float, in
 def orthoMatrix( left: float=-1.0, right: float=1.0, bottom: float=-1.0, top: float=1.0, zNear: float=-1.0, zFar: float=1.0 ) -> Any:
     """Calculate an orthographic projection matrix
 
-    Similar to glOrtho
+    The same matrix as glOrtho, transposed: the offset is in the last row, as
+    it is in every other matrix here, so that a point goes through it as
+    ``dot( point, matrix )`` like the rest of the module's.
     """
-    tx = - ( right + left ) / float( right-left )
-    ty = - ( top + bottom ) / float( top-bottom )
-    tz = - ( zFar + zNear ) / float( zFar-zNear )
+    rl = float( right-left ) or VERY_SMALL
+    tb = float( top-bottom ) or VERY_SMALL
+    fn = float( zFar-zNear ) or VERY_SMALL
     return array([
-        [2/(right-left),	0,	0,	 tx],
-        [0,	 2/(top-bottom),	0,	 ty],
-        [0,	0,	 -2/(zFar-zNear),	 tz],
-        [0,	0,	0,	1],
+        [2/rl,	0,	0,	0],
+        [0,	 2/tb,	0,	0],
+        [0,	0,	 -2/fn,	0],
+        [-( right + left ) / rl,	-( top + bottom ) / tb,	-( zFar + zNear ) / fn,	1],
     ], dtype='f')

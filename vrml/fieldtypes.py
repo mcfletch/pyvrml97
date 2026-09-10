@@ -211,7 +211,7 @@ class _MFString(_FieldHost):
             value = [value]
         try:
             return [SFString.coerce(item) for item in value]
-        except ValueError as error:
+        except (TypeError, ValueError) as error:
             raise ValueError(
                 """Attempted to set value %r for an %s field which is not compatible: %s"""
                 % (value, self.typeName(), error)
@@ -520,8 +520,11 @@ class _SFVec(_FieldHost):
         if isinstance(value, str):
             value = [float(x) for x in value.replace(',', ' ').split()]
         if isinstance(value, (int, float)):
-            value = arrays.zeros(self.dimension, self.targetType)
-            value[:] = float(value)
+            # The number is read out before the array takes the name, since
+            # one number fills every place: a uniform scale, a grey colour.
+            filled = arrays.zeros(self.dimension, self.targetType)
+            filled[:] = float(value)
+            value = filled
         elif isinstance(value, arrays.ArrayType):
             if arrays.typeCode(value) not in self.acceptedTypes:
                 value = value.astype(self.targetType)
@@ -1481,29 +1484,3 @@ field.register(MFVec3dEvt)
 field.register(MFVec4dEvt)
 field.register(MFMatrix3dEvt)
 field.register(MFMatrix4dEvt)
-
-if __name__ == "__main__":
-    import unittest
-
-    class ColorTest(unittest.TestCase):
-        """Test simple color coercion"""
-
-        def testMFColorString(self) -> None:
-            color = MFColor("test", 1, list)
-            result = color.coerce([0.2, 0.3, 0.4, 'red'])
-            assert arrays.allclose(result, ((0.2, 0.3, 0.4), (1, 0, 0)))
-
-        def testSFColorString(self) -> None:
-            color = SFColor("test", 1, list)
-            for value, expected in [
-                ((0.2, 0.3, 0.4), (0.2, 0.3, 0.4)),
-                ('red', (1, 0, 0)),
-                ('#ff0000', (1, 0, 0)),
-            ]:
-                result = color.coerce(value)
-                assert arrays.allclose(result, expected), (
-                    """FAIL: color conversion for %(value)r\nExpected: %(expected)s\nGot:%(result)s"""
-                    % (locals())
-                )
-
-    unittest.main()

@@ -9,6 +9,10 @@ from vrml import protofunctions
 from vrml.protofunctions import *
 from vrml import node
 
+#: Where a prototype's URL is kept.  It is written after the interface, as
+#: VRML97 puts it, rather than among the fields the interface declares.
+EXTERNAL_URL = 'externalURL'
+
 defaults = {
     'subelspacer': ', ',
     'courtesyspace': ' ',
@@ -242,7 +246,10 @@ class Lineariser:
         # write the declaration...
         self._indent()
         self._eventDict(clientNode)
-        self._fieldDict(clientNode, requireDefault=1)  # clientNode.__gi__ == "PROTO")
+        # An EXTERNPROTO declares its interface and no values: the file the
+        # URL names is where they are.  Writing a default there gives a file
+        # the grammar will not read back.
+        self._fieldDict(clientNode, requireDefault=not externalURL)
         self._dedent()
         linvalues = self.linvalues
         if externalURL:
@@ -348,8 +355,7 @@ class Lineariser:
             buffer.write(startind)
             return None
         # Note: we assume that defNames are being stored in the Node as well as the sceneGraph, if not, will need to do a reverse lookup there
-        DEF = self._defName(clientNode)
-        buffer.write('%s Script {' % (DEF,))
+        buffer.write('%sScript {' % (self._defName(clientNode),))
         self._indent()
         self._indent()
         linvalues = self.linvalues
@@ -358,10 +364,11 @@ class Lineariser:
         self._fieldDict(
             getPrototype(clientNode),
             requireDefault=1,
-            skipFields=(' DEF', 'url', 'directOutput', 'mustEvaluate'),
+            skipFields=(EXTERNAL_URL, 'url', 'directOutput', 'mustEvaluate'),
         )
         self._dedent()
         self._attrDict(clientNode)
+        DEF = name(clientNode)
         PROTO = protoName(clientNode)
         buffer.write(
             '%(full_element_separator)s%(curindent)s}#%%s' % linvalues % (DEF or PROTO)
@@ -433,7 +440,19 @@ class Lineariser:
             field.eventVrmlstr(self)
             # XXX do IS-mapping here!
 
-    def _fieldDict(self, clientNode: Any, requireDefault: int=1, skipFields: Any=('DEF',)) -> None:
+    def _fieldDict(
+        self,
+        clientNode: Any,
+        requireDefault: int=1,
+        skipFields: Any=(EXTERNAL_URL,),
+    ) -> None:
+        """Write the field declarations of a prototype or a script
+
+        requireDefault -- write each field's default after its declaration.
+            An EXTERNPROTO's interface carries no values, so it asks for the
+            declarations alone.
+        skipFields -- the field names to leave out.
+        """
         buffer = self.buffer
         fields = [
             field
@@ -445,7 +464,7 @@ class Lineariser:
         fields.sort(key=namekey)
         for field in fields:
             buffer.write('%(full_element_separator)s%(curindent)s' % (self.linvalues))
-            field.fieldVrmlstr(self)
+            field.fieldVrmlstr(self, bool(requireDefault))
 
     def _fieldref(self, clientNode: Any, *args: Any, **namedargs: Any) -> Any:
         self.buffer.write('IS %s' % clientNode.declaredName)

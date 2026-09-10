@@ -91,7 +91,9 @@ class Node(object):
 
     def __str__(self) -> str:
         """Get a friendly representation of the Node"""
-        if 'DEF' in self.__dict__ and defName(self):
+        # The field is declared as `DEF` and stored under `' DEF'`, so the
+        # stored name is the one to look for.
+        if ' DEF' in self.__dict__ and defName(self):
             return """%s( DEF=%r @0x%X )""" % (
                 self.__class__.__name__,
                 defName(self),
@@ -206,24 +208,33 @@ class PrototypedNode(object):
         sg = template.copy(copier)
         for fieldName, mappings in isMappings:
             sourceField = getField(self, fieldName)
+            hasDefault = hasattr(sourceField, 'getDefault')
+            default = sourceField.getDefault() if hasDefault else None
             for destination, destinationField in mappings:
-                r = route.IS(
-                    source=self,
-                    sourceField=fieldName,
-                    destination=destination,
-                    destinationField=destinationField,
-                )
-                sg.routes.append(r)
-            if hasattr(sourceField, 'getDefault'):
-                default = sourceField.getDefault()
-                try:
-                    getField(destination, destinationField).fset(
-                        destination,
-                        default,
-                        notify=0,
+                # The mappings name the *prototype's* nodes, and this
+                # instance's body is a copy of those -- so the wiring has to
+                # reach the copy the copier just made, or every instance
+                # would write into the one body they were all copied from.
+                copied = copier.use(destination)
+                if copied is not None:
+                    destination = copied
+                sg.routes.append(
+                    route.IS(
+                        source=self,
+                        sourceField=fieldName,
+                        destination=destination,
+                        destinationField=destinationField,
                     )
-                except AttributeError:
-                    pass
+                )
+                if hasDefault:
+                    try:
+                        getField(destination, destinationField).fset(
+                            destination,
+                            default,
+                            notify=0,
+                        )
+                    except AttributeError:
+                        pass
         PrototypedNode.scenegraph.fset(self, sg)
 
     def renderedChildren(self, types: Any=None) -> Any:
@@ -287,13 +298,20 @@ class NullNode(Node):
         """Make the NULL node evaluate to false"""
         return False
 
-    def __eq__(self, other: Any) -> Any:
-        """Compare the NULL node to other objects"""
+    def __eq__(self, other: Any) -> bool:
+        """Whether `other` is a NULL node as well"""
         try:
-            if protoName(self) == protoName(other):
-                return 0
+            return bool(protoName(self) == protoName(other))
         except (AttributeError, TypeError, ValueError):
-            return -1  # could be 1, doesn't really matter
+            return False        # not a node, so not this one
+
+    def __hash__(self) -> int:
+        """The same for every NULL, as equality is
+
+        Hashable because a copier keeps the nodes it has copied in a
+        dictionary, and NULL turns up in one wherever a node field is empty.
+        """
+        return hash(self.PROTO)
 
     def clone(self) -> Any:
         """Replicate the null object (return another pointer to it)"""
@@ -343,11 +361,7 @@ class _SFNode(_FieldHost):
         """
         value = super(_SFNode, self).fset(client, value, notify)
         if value:
-            clientRoot = Node.rootSceneGraph.fget(client)
-            if clientRoot:
-                valueRoot = Node.rootSceneGraph.fget(value)
-                if not valueRoot:
-                    Node.rootSceneGraph.fset(value, clientRoot, notify=0)
+            _passRootDown(client, [value])
         return value
 
     def defaultDefault(self) -> Any:
@@ -382,6 +396,23 @@ class _SFNode(_FieldHost):
         """Convert the given value to a VRML97 representation"""
         return lineariser._linear(value)
 
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
+        """Copy the node this field points at
+
+        A node's copy is a copy all the way down: a field that pointed at the
+        original's child would give the copy no child of its own, so writing
+        to one would be seen through the other -- and each instance of a
+        prototype is a copy of its body.
+
+        `copier` is what keeps a node reached twice one node in the copy,
+        which is what DEF/USE and a prototype's IS wiring both need.
+        """
+        if value is None or value is NULL:
+            return value
+        if copier is None:
+            copier = copiermodule.Copier()
+        return value.copy(copier)
+
 
 class SFNode(_SFNode, field.Field):
     """(Restricted) SFNode type
@@ -409,6 +440,15 @@ class WeakSFNode(_SFNode, field.WeakField, field.Field):
     """Weak-referenced SFNode field-type"""
 
     fieldType = 'WeakSFNode'
+
+    def copyValue(self, value: Any, copier: Any=None) -> Any:
+        """Point at the same node the original pointed at
+
+        What a weak field holds is not part of the node holding it -- the
+        scene root a node points back at is the file it is in -- so a copy
+        belongs to the same one rather than to a copy of the whole file.
+        """
+        return value
 
 
 class RootScenegraphNode(WeakSFNode):
@@ -441,7 +481,11 @@ class RootScenegraphNode(WeakSFNode):
             elif each_field.name == ' DEF':
                 try:
                     DEF = each_field.__get__(client)
-                    value.regDefName(DEF, client)
+                    if DEF:
+                        # An unnamed node has no name to register, and an
+                        # entry under the empty string would answer
+                        # `getDEF('')` with whichever node was last put in.
+                        value.regDefName(DEF, client)
                 except AttributeError:
                     pass
         return result
@@ -460,12 +504,36 @@ assert PrototypedNode.scenegraph.name == " scenegraph", PrototypedNode.scenegrap
 assert Node.rootSceneGraph.name == " root", Node.rootSceneGraph.name
 
 
+def _passRootDown(client: Any, values: Any) -> None:
+    """Give each of `values` the client's scene root, where it has none
+
+    A node learns which file it is in from whatever it is attached to, and
+    that is how the DEF names and the prototype declarations reach it. Only a
+    node with no root of its own is given one, so that attaching a node that
+    belongs to another scene does not take it out of that one.
+
+    Anything in `values` that is not a node is passed over: an observable list
+    holds routes as readily as nodes, and a field with no required types holds
+    whatever it was given.
+    """
+    clientRoot = Node.rootSceneGraph.fget(client)
+    if not clientRoot:
+        return
+    for value in values:
+        if isinstance(value, Node) and not Node.rootSceneGraph.fget(value):
+            Node.rootSceneGraph.fset(value, clientRoot, notify=0)
+
+
 def _changeSender(nodeRef: Any, field: Any) -> "Callable[..., Any]":
     """Utility function to send node-change messages on olist updates"""
 
     def onOListChange(sender: Any, signal: Any, value: Any) -> None:
         client = nodeRef()
         if client:
+            if signal == olist.OList.NEW_CHILD_EVT:
+                # A child appended to the list is attached as much as one
+                # assigned into it, so it learns the scene the same way.
+                _passRootDown(client, [value])
             dispatcher.send(
                 ('set', field),
                 client,
@@ -523,12 +591,7 @@ class _MFNode(_FieldHost):
                 weak=False,  # don't weakref receiver so it will hang around...
             )
         if value:
-            clientRoot = Node.rootSceneGraph.fget(client)
-            if clientRoot:
-                for val in value:
-                    valueRoot = Node.rootSceneGraph.fget(val)
-                    if not valueRoot:
-                        Node.rootSceneGraph.fset(val, clientRoot, notify=0)
+            _passRootDown(client, value)
         return value
 
     def getDefault(self, client: Any=None) -> Any:

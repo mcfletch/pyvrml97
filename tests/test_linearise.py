@@ -160,6 +160,120 @@ class TestAPrototype(unittest.TestCase):
         self.assertNotIn('PROTO Wheel', text)
 
 
+class TestAnExternalPrototype(unittest.TestCase):
+    """An EXTERNPROTO names the interface and says where the body is. Its
+    declaration carries no values -- VRML97 has none there -- so what is
+    written is the field list alone, then the URL."""
+
+    SOURCE = ('#VRML V2.0 utf8\n'
+              'EXTERNPROTO Wheel [ field SFFloat radius ] "wheel.wrl"\n'
+              'Wheel { }\n')
+
+    def written(self):
+        return written(read(self.SOURCE))
+
+    def test_it_is_written_as_an_externproto(self):
+        self.assertIn('EXTERNPROTO Wheel', self.written())
+
+    def test_the_url_is_written_after_the_interface(self):
+        text = self.written()
+        self.assertLess(text.index(']'), text.index('"wheel.wrl"'))
+
+    def test_the_interface_carries_no_values(self):
+        interface = self.written().split(']')[0]
+        self.assertIn('field SFFloat radius', interface)
+        self.assertNotIn('radius 0', interface)
+
+    def test_the_url_is_not_written_as_a_declared_field(self):
+        """`externalURL` is where the URL is kept, not part of what the
+        prototype declares."""
+        self.assertNotIn('externalURL', self.written())
+
+    def test_what_it_wrote_reads_back(self):
+        back = read(self.written())
+        self.assertIn('Wheel', back.protoTypes)
+
+    def test_the_url_reads_back(self):
+        back = read(self.written())
+        self.assertEqual(list(protofunctions.getExternalURL(
+            back.protoTypes['Wheel'])), ['wheel.wrl'])
+
+
+class TestAPrototypesEvents(unittest.TestCase):
+    """A PROTO's interface declares events as well as fields."""
+
+    SOURCE = ('#VRML V2.0 utf8\n'
+              'PROTO Thing [\n'
+              '  eventIn SFFloat set_x\n'
+              '  eventOut SFFloat x_changed\n'
+              '  field SFFloat r 1.0\n'
+              ']\n'
+              '{ Shape { geometry Sphere { radius IS r } } }\n'
+              'Thing { }\n')
+
+    def test_the_events_are_written(self):
+        text = written(read(self.SOURCE))
+        self.assertIn('eventIn SFFloat set_x', text)
+        self.assertIn('eventOut SFFloat x_changed', text)
+
+    def test_the_body_writes_its_is_mapping(self):
+        self.assertIn('IS r', written(read(self.SOURCE)))
+
+    def test_it_reads_back_with_the_mapping_intact(self):
+        back = read(written(read(self.SOURCE)))
+        instance = back.protoTypes['Thing']()
+        instance.r = 3.0
+        self.assertAlmostEqual(
+            instance.scenegraph.children[0].geometry.radius, 3.0, places=5)
+
+    def test_the_url_is_not_written_as_a_declared_field(self):
+        self.assertNotIn('externalURL', written(read(self.SOURCE)))
+
+
+class TestAScript(unittest.TestCase):
+    """A Script declares its own interface and carries its source."""
+
+    SOURCE = ('#VRML V2.0 utf8\n'
+              'DEF Watcher Script {\n'
+              '  eventIn SFFloat set_value\n'
+              '  eventOut SFFloat value_changed\n'
+              '  field SFFloat scale 2.0\n'
+              '  url "javascript:function set_value(v){}"\n'
+              '}\n')
+
+    def written(self):
+        return written(read(self.SOURCE))
+
+    def test_it_is_written_as_a_script(self):
+        self.assertIn('Script {', self.written())
+
+    def test_its_name_is_written_once(self):
+        self.assertIn('DEF Watcher Script {', self.written())
+
+    def test_its_declared_interface_is_written(self):
+        text = self.written()
+        self.assertIn('eventIn SFFloat set_value', text)
+        self.assertIn('eventOut SFFloat value_changed', text)
+        self.assertIn('field SFFloat scale', text)
+
+    def test_the_url_is_written_as_a_value_not_a_declaration(self):
+        text = self.written()
+        self.assertIn('javascript:', text)
+        self.assertNotIn('field MFString url', text)
+
+    def test_the_closing_comment_names_it(self):
+        self.assertIn('}#Watcher', self.written())
+
+    def test_what_it_wrote_reads_back(self):
+        back = read(self.written())
+        self.assertAlmostEqual(back.children[0].scale, 2.0, places=5)
+
+    def test_a_script_with_no_name_is_written_too(self):
+        text = written(read('#VRML V2.0 utf8\nScript { url "js:x" }\n'))
+        self.assertIn('Script {', text)
+        self.assertIn('}#Script', text)
+
+
 class TestARoute(unittest.TestCase):
     SOURCE = ('#VRML V2.0 utf8\n'
               'DEF Clock TimeSensor { }\n'

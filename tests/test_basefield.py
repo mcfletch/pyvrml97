@@ -11,8 +11,8 @@ build.
 whichever one is installed.  The cases live in `TheContract` and each
 implementation gets a class of its own, so a failure names the build it is in.
 
-`tests/test_field.py` covers the `Field` layer above these -- the exposure
-flag, copying, the VRML97 forms; this is the storage underneath it.
+`tests/test_field_declaration.py` covers the `Field` layer above these -- the
+exposure flag, copying, the VRML97 forms; this is the storage underneath it.
 """
 
 import unittest
