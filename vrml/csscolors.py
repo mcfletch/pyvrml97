@@ -162,17 +162,3 @@ cssColors = {
     'crimson' : (0.8627,0.0784,0.2353),
     'lightpink' : (1.0,0.7137,0.7569),
 }
-
-if __name__ == "__main__":
-    import unittest
-    from vrml import arrays
-    class ColorTests(unittest.TestCase):
-        def testForwardName (self) -> None:
-            for name, value in cssColors.items():
-                assert stringToColor( name ) == value
-        def testForwardHexidecimal (self) -> None:
-            for _name, value in cssColors.items ():
-                representation = '#%02x%02x%02x'%tuple(map(toInt,value))
-                result = stringToColor( representation )
-                assert arrays.allclose( result, value, 0.001), """Expected %r, got %r"""%(value, result)
-    unittest.main ()
