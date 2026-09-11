@@ -229,6 +229,38 @@ class TheContract:
             held.fdel(prototype)
         self.assertIn('size', str(caught.exception))
 
+    def test_deleting_one_the_declaring_class_never_set_says_which_field(self):
+        """The class that declares the field is the common prototype: reading
+        the name there answers the field itself, so a delete that took that
+        for a value would remove the declaration."""
+        held = self.a_field()
+        declaring = self.a_holder(held)
+        with self.assertRaises(AttributeError) as caught:
+            held.fdel(declaring)
+        self.assertIn('size', str(caught.exception))
+
+    def test_a_refused_delete_leaves_the_declaration_in_place(self):
+        """Every instance of the class reads through that declaration, so
+        losing it takes the field away from all of them."""
+        held = self.a_field()
+        declaring = self.a_holder(held)
+        with self.assertRaises(AttributeError):
+            held.fdel(declaring)
+        self.assertIs(declaring.size, held)
+        self.assertEqual(declaring().size, 1.0)
+
+    def test_a_refused_delete_on_a_prototype_says_nothing(self):
+        """A deletion that did not happen is not a change to hear about."""
+        held = self.a_field()
+        declaring = self.a_holder(held)
+        listener = Recorder().connect(declaring)
+        try:
+            with self.assertRaises(AttributeError):
+                held.fdel(declaring)
+        finally:
+            listener.disconnect(declaring)
+        self.assertEqual(listener.heard, [])
+
     ### What it refuses
     def refusing(self, error):
         """A field whose type will take nothing, to see what the refusal

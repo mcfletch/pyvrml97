@@ -66,9 +66,15 @@ cdef class BaseField( object ):
 
         A prototype holds its values on the class, and a class's `__dict__` is
         a read-only mapping proxy -- so that case goes through `delattr`, as
-        the matching branch of `_set` goes through `setattr`.
+        the matching branch of `_set` goes through `setattr`.  What says a
+        value was set there is that reading the name answers something other
+        than the field itself: on the class that declares the field the read
+        answers the field, and deleting *that* would take the declaration away
+        from every instance.
         """
         if isinstance( client, type ):
+            if getattr( client, self.name, self ) is self:
+                raise AttributeError( self.name )
             try:
                 value = getattr( client, self.name )
                 delattr( client, self.name )
