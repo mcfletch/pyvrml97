@@ -1,0 +1,58 @@
+name: Tests
+
+# The suite on every interpreter `requires-python` admits, and on both
+# implementations of the field primitives.
+#
+# `requires-python = ">=3.9"` and the trove classifiers are a promise to
+# everyone whose system Python is 3.9, and the suite is what evaluates it: the
+# typecheck cannot, since mypy refuses `--python-version=3.9` outright and
+# numpy's own stubs need 3.12 to parse. A floor nothing runs is a floor that is
+# true until the first person standing on it finds otherwise.
+#
+# `accel0` and `accel1` are the pure-Python `BaseField` and the compiled one
+# that replaces it. `tests/test_basefield.py` holds the two to the same
+# contract, which only means something where both are run.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tox:
+    name: ${{ matrix.toxenv }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # What a consumer's own checker reads out of the shipped `py.typed`.
+          - {python: '3.12', toxenv: typecheck}
+          # The floor, both ways round: a compiled extension built by the
+          # oldest supported interpreter is where a Cython API that moved on
+          # shows up.
+          - {python: '3.9', toxenv: py39-accel0}
+          - {python: '3.9', toxenv: py39-accel1}
+          - {python: '3.10', toxenv: py310-accel1}
+          - {python: '3.11', toxenv: py311-accel1}
+          - {python: '3.12', toxenv: py312-accel0}
+          - {python: '3.12', toxenv: py312-accel1}
+          - {python: '3.13', toxenv: py313-accel1}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install tox
+        run: python -m pip install --upgrade pip tox "tox-uv>=1"
+
+      - name: Run the tests
+        run: python -m tox -e ${{ matrix.toxenv }}
