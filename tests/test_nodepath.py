@@ -140,6 +140,31 @@ class TestSlicingAPath(unittest.TestCase):
         self.assertIs(self.path[0], self.path[0])
         self.assertEqual(self.path[0].DEF, 'first')
 
+    def test_the_last_node_is_the_one_a_renderer_draws(self):
+        """What a render pass asks of a path more than anything else."""
+        self.assertEqual(self.path[-1].DEF, 'third')
+
+    def test_an_index_off_the_end_says_so(self):
+        with self.assertRaises(IndexError):
+            self.path[3]
+        with self.assertRaises(IndexError):
+            self.path[-4]
+
+    def test_a_slice_with_a_step_is_still_a_path(self):
+        every_other = self.path[::2]
+        self.assertIsInstance(every_other, nodepath.NodePath)
+        self.assertEqual([node.DEF for node in every_other], ['first', 'third'])
+
+    def test_a_slice_past_the_ends_is_an_empty_path(self):
+        self.assertIsInstance(self.path[9:], nodepath.NodePath)
+        self.assertEqual(len(self.path[9:]), 0)
+
+    def test_a_subclass_slices_to_its_own_kind(self):
+        """`__class__`, not NodePath: OpenGLContext's own path is a subclass."""
+        class Longer(nodepath.NodePath):
+            pass
+        self.assertIsInstance(Longer(self.path)[1:], Longer)
+
 
 class TestKeepingTheMatrixItWorkedOut(unittest.TestCase):
     """A path's transform is cached beside it, so a renderer asking for it

@@ -51,11 +51,15 @@ class NodePath( list ):
         of one -- the part of the new path a pointer entered that the old did
         not cover -- and a handler asking where that is in the world calls
         `transformMatrix` on it.
+
+        An integer index takes nothing but the list's own lookup, because that
+        is the call a renderer makes: `path[-1]` is how every pass reaches the
+        node it is about to draw, and a frame does it thousands of times. The
+        slice is the rare case and pays for itself.
         """
-        held = super(NodePath, self).__getitem__(index)
         if isinstance(index, slice):
-            return self.__class__(held)
-        return held
+            return self.__class__(list.__getitem__(self, index))
+        return list.__getitem__(self, index)
     def __eq__( self, other: Any ) -> Any:
         """Check whether we are equal to another path"""
         if len(self) != len(other):
