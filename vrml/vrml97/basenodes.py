@@ -584,7 +584,8 @@ class Transform( nodetypes.Children, nodetypes.Transforming, node.Node ):
         for the local node, each of which can be None
         """
         key=('local_matrices',translate,scale,rotate)
-        holder = cache.CACHE.getHolder( self, key=key )
+        found = cache.CACHE.get( id(self) )
+        holder = None if found is None else found.get( key )
         if holder is None:
             doConnect = True
             holder = cache.CACHE.holder( self, None, key=key )

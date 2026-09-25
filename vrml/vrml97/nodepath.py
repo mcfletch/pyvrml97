@@ -18,6 +18,10 @@ else:
     _PathHost = object
 
 
+#: The cache key's first part for a forward and an inverse matrix.
+_MATRIX_NAMES = ('matrix', 'inverse_matrix')
+
+
 class _NodePath( _PathHost ):
     """Path within a VRML97 scenegraph from root to particular node
 
@@ -62,20 +66,29 @@ class _NodePath( _PathHost ):
         out again costs one product per path rather than one per transform
         above it.
         """
-        key=(['matrix','inverse_matrix'][int(bool(inverse))],translate,scale,rotate)
+        key = (_MATRIX_NAMES[1 if inverse else 0], translate, scale, rotate)
+        # The cache's own lookup, written out: this is asked of every path a
+        # renderer draws, every frame.
+        found = CACHE.get( id(self) )
+        holder = None if found is None else found.get( key )
+        if holder is not None:
+            matrix = holder.data
+            if matrix is not None:
+                return matrix
         # The paths from this one up to the nearest with its matrix in hand.
-        todo = []
+        todo = [ (self, holder) ]
         path: Any = self
         base = None
         while True:
-            holder = CACHE.getHolder( path, key=key )
-            if holder is not None and holder.data is not None:
-                base = holder.data
-                break
-            todo.append( (path, holder) )
             parent = path.parent
             if parent is None or len(parent) >= len(path):
                 break
+            found = CACHE.get( id(parent) )
+            holder = None if found is None else found.get( key )
+            if holder is not None and holder.data is not None:
+                base = holder.data
+                break
+            todo.append( (parent, holder) )
             path = parent
         for path, holder in reversed( todo ):
             base = path._extendMatrix( base, holder, key, translate, scale, rotate, inverse )
@@ -101,19 +114,31 @@ class _NodePath( _PathHost ):
                 source = CACHE.getHolder( parent, key=key )
                 holder.depend_holder( source )
                 holder.depend( source )
-        local = []
         t = nodetypes.Transforming
-        for index in range( start, len(self) ):
-            item = self[index]
+        if len(self) - start == 1:
+            # A path one node longer than its parent, which is nearly all of
+            # them.
+            item = self[-1]
+            own = None
             if isinstance( item, t ):
                 child_holder = item.localMatrices( translate=translate, scale=scale, rotate=rotate )
                 if doConnect:
                     holder.depend_holder( child_holder )
                     holder.depend( child_holder )
-                local.append( child_holder.data[inverse] )
-        if inverse:
-            local.reverse()
-        own = transformmatrix.compressMatrices( *local )
+                own = child_holder.data[inverse]
+        else:
+            local = []
+            for index in range( start, len(self) ):
+                item = self[index]
+                if isinstance( item, t ):
+                    child_holder = item.localMatrices( translate=translate, scale=scale, rotate=rotate )
+                    if doConnect:
+                        holder.depend_holder( child_holder )
+                        holder.depend( child_holder )
+                    local.append( child_holder.data[inverse] )
+            if inverse:
+                local.reverse()
+            own = transformmatrix.compressMatrices( *local )
         if own is None:
             matrix = base
         elif base is None:
