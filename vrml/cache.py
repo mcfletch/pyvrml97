@@ -35,6 +35,7 @@ Note:
 """
 from typing import Any, Callable, List, Optional
 from vrml import protofunctions
+from vrml.weaklist import WeakRefs
 import weakref
 #from vrml.weakkeydictfix import WeakKeyDictionary
 from pydispatch import dispatcher
@@ -138,7 +139,7 @@ class CacheHolder( object ):
         self.nodeDependencies: "List[Any]" = []
         #: Weak references to the holders built from this one's value, which
         #: :meth:`clear` clears with it. None until there is one.
-        self.builtOn: "Optional[List[Any]]" = None
+        self.builtOn: "Optional[WeakRefs]" = None
 
         # get the cached values for this client node
         set = cache.get(client_id, None)
@@ -204,11 +205,14 @@ class CacheHolder( object ):
         was cleared.
 
         ``source`` does not keep this holder alive. To go when ``source``
-        goes, depend on it with :meth:`depend` as well.
+        goes, depend on it with :meth:`depend` as well. The references of
+        holders that have gone are pruned as more are added
+        (:class:`~vrml.weaklist.WeakRefs`), so a source many short-lived
+        holders are built from does not accumulate them.
         """
         if source.builtOn is None:
-            source.builtOn = []
-        source.builtOn.append( weakref.ref( self ) )
+            source.builtOn = WeakRefs()
+        source.builtOn.add( self )
     def depend_object( self, node: Any ) -> None:
         """Depend on node's existence"""
         self.nodeDependencies.append(
@@ -241,16 +245,12 @@ class CacheHolder( object ):
             refs = holder.builtOn
             if not refs:
                 continue
-            live = []
             for ref in refs:
                 built = ref()
-                if built is None:
-                    continue
-                live.append( ref )
-                if built.data is not None:
+                if built is not None and built.data is not None:
                     built.data = None
                     todo.append( built )
-            holder.builtOn = live
+            refs.prune()
     def __call__( self, signal: Any=None, sender: Any=None ) -> "Optional[int]":
         """Delete the cached value (this object)
 

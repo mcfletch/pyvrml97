@@ -16,7 +16,7 @@ import unittest
 import weakref
 
 from vrml.protonamespace import ProtoNamespace
-from vrml.weaklist import WeakList
+from vrml.weaklist import WeakList, WeakRefs
 from vrml.weaktuple import WeakTuple
 
 
@@ -278,3 +278,18 @@ class TestComparingAWeakTuple(unittest.TestCase):
     def test_wrapping_a_reference_answers_one_to_the_same_object(self):
         held = Thing(1)
         self.assertIs(self.weak.wrap(weakref.ref(held))(), held)
+
+
+class TestWeakRefs(unittest.TestCase):
+    """References to objects that come and go, pruned as the list grows."""
+
+    def test_the_dead_are_dropped_once_the_list_has_doubled(self):
+        kept = [Thing(n) for n in range(3)]
+        refs = WeakRefs()
+        for _ in range(1000):
+            refs.add(Thing(-1))
+            gc.collect()
+        for item in kept:
+            refs.add(item)
+        self.assertLessEqual(len(refs), WeakRefs.PRUNE_AT + len(kept))
+        self.assertEqual([ref() for ref in refs if ref() is not None], kept)

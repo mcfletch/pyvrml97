@@ -3,9 +3,9 @@
 from typing import Any, Iterator, List, Optional, TYPE_CHECKING
 from vrml import nodepath
 from vrml.cache import CACHE
+from vrml.weaklist import WeakRefs
 from vrml.vrml97 import transformmatrix, nodetypes
 from vrml.arrays import *
-import weakref
 
 if TYPE_CHECKING:
     #: What `_NodePath` needs of the path beside it.  It is one half of a path
@@ -32,7 +32,7 @@ class _NodePath( _PathHost ):
     parent: Optional[Any] = None
     #: Weak references to the paths extending this one, so invalidating a
     #: transform can reach the whole subtree.  None until there is one.
-    children: Optional[List[Any]] = None
+    children: Optional[WeakRefs] = None
     active = True
     broken = False
 
@@ -59,7 +59,9 @@ class _NodePath( _PathHost ):
 
         The matrix is kept in the cache until one of the transforms above it
         changes, and the same array is answered until then. A path whose
-        own nodes do not transform answers its parent's array. Each path
+        own nodes do not transform answers its parent's array. Do not modify
+        the array answered: it is the cached value, shared with every path
+        answering the same one; copy it to change it. Each path
         depends on its parent path's matrix and on its own transforms' local
         matrices (:meth:`vrml.cache.CacheHolder.depend_holder`), so moving a
         transform clears the paths below it and no others, and working one
@@ -170,8 +172,8 @@ class _NodePath( _PathHost ):
         base = super( _NodePath, self).__add__( other )
         base.parent = self       # type: ignore[attr-defined]
         if self.children is None:
-            self.children = []
-        self.children.append( weakref.ref( base ))
+            self.children = WeakRefs()
+        self.children.add( base )
         # watch for other sending events which say that
         # this relationship is no longer active...
         return base

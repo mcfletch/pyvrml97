@@ -3,6 +3,7 @@ from vrml.vrml97 import nodepath
 from vrml.vrml97.basenodes import Group, Transform
 from pydispatch import dispatcher
 from vrml.arrays import allclose, array, pi,dot
+from vrml.cache import CACHE
 
 class TestNodePath( unittest.TestCase ):
     def setUp( self ):
@@ -295,3 +296,24 @@ class TestWhatATransformingNodeHasToAnswer(unittest.TestCase):
 
         with self.assertRaises(NotImplementedError):
             Untransformed().localMatrices()
+
+
+class TestTransientPaths(unittest.TestCase):
+    """A path made for one frame and dropped leaves nothing behind on the
+    paths and transforms it was built from."""
+
+    def test_their_weak_references_do_not_pile_up(self):
+        import gc
+        base = nodepath.NodePath() + [Transform(translation=(1, 0, 0))]
+        base.transformMatrix()
+        leaf = Transform(translation=(0, 2, 0))
+        for _ in range(10000):
+            path = base + [leaf]
+            path.transformMatrix()
+            del path
+        gc.collect()
+        key = (nodepath._MATRIX_NAMES[0], True, True, True)
+        source = CACHE.getHolder(base, key=key)
+        self.assertLess(len(source.builtOn), 1000)
+        self.assertLess(len(leaf.localMatrices().builtOn), 1000)
+        self.assertLess(len(base.children), 1000)

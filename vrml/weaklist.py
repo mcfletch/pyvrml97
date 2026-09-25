@@ -178,3 +178,34 @@ class WeakList( list ):
                     pass
         return remove
 
+
+
+class WeakRefs( list ):
+    """Weak references to objects, with the dead ones dropped as it grows
+
+    For a list a caller walks itself, calling each reference: the paths built
+    on a path, the cache holders built from a holder. A referent that goes
+    leaves its dead reference in the list until the next :meth:`add` that finds
+    the list at twice the size it had after the last pruning, so a list whose
+    referents come and go stays proportional to the ones alive, and pruning
+    costs a constant amount per :meth:`add`.
+    """
+    __slots__ = ( '_prune_at', )
+
+    #: The smallest size at which a list is pruned.
+    PRUNE_AT = 16
+
+    def __init__( self, references: Any=() ) -> None:
+        super().__init__( references )
+        self._prune_at = max( self.PRUNE_AT, 2 * len(self) )
+
+    def add( self, item: Any ) -> None:
+        """Append a weak reference to ``item``, first pruning the dead if due"""
+        if len(self) >= self._prune_at:
+            self.prune()
+        self.append( weakref.ref( item ) )
+
+    def prune( self ) -> None:
+        """Drop the references whose referents have gone"""
+        self[:] = [ ref for ref in self if ref() is not None ]
+        self._prune_at = max( self.PRUNE_AT, 2 * len(self) )
