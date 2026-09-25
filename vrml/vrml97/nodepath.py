@@ -52,39 +52,80 @@ class _NodePath( _PathHost ):
 
         That is, you use the homogenous coordinate, and
         make it the first item in the dot'ing.
+
+        The matrix is kept in the cache until one of the transforms above it
+        changes, and the same array is answered until then. A path whose
+        own nodes do not transform answers its parent's array. Each path
+        depends on its parent path's matrix and on its own transforms' local
+        matrices (:meth:`vrml.cache.CacheHolder.depend_holder`), so moving a
+        transform clears the paths below it and no others, and working one
+        out again costs one product per path rather than one per transform
+        above it.
         """
         key=(['matrix','inverse_matrix'][int(bool(inverse))],translate,scale,rotate)
-        holder = CACHE.getHolder( self, key=key )
-        if holder is None:
-            doConnect = True
+        # The paths from this one up to the nearest with its matrix in hand.
+        todo = []
+        path: Any = self
+        base = None
+        while True:
+            holder = CACHE.getHolder( path, key=key )
+            if holder is not None and holder.data is not None:
+                base = holder.data
+                break
+            todo.append( (path, holder) )
+            parent = path.parent
+            if parent is None or len(parent) >= len(path):
+                break
+            path = parent
+        for path, holder in reversed( todo ):
+            base = path._extendMatrix( base, holder, key, translate, scale, rotate, inverse )
+        return base
+
+    def _extendMatrix( self, base: Any, holder: Any, key: Any, translate: bool,
+                       scale: bool, rotate: bool, inverse: bool ) -> Any:
+        """Work out this path's matrix from ``base``, its parent's
+
+        ``base`` is None for a path with no parent, which is worked out from
+        its first node. ``holder`` is this path's holder, or None where it
+        has never had one: then it is made, and told what it depends on.
+        """
+        doConnect = holder is None
+        if doConnect:
             holder = CACHE.holder( self, None, key=key )
-            mHolder = None
-        else:
-            doConnect = False
-            mHolder = holder.data
-            if mHolder is not None:
-                return mHolder
-        def get_mat( item: Any ) -> Any:
-            child_holder = item.localMatrices(translate=translate,scale=scale,rotate=rotate)
+        start = 0
+        if base is not None:
+            parent = self.parent
+            assert parent is not None, 'a base matrix is its parent path\'s'
+            start = len(parent)
             if doConnect:
-                holder.depend( child_holder )
-                # TODO: assumes child is a Transform!
-                if translate:
-                    holder.depend( item, 'translation' )
-                if scale:
-                    holder.depend( item, 'scale' )
-                    holder.depend( item, 'scaleOrientation' )
-                if rotate:
-                    holder.depend( item, 'rotation' )
-                    holder.depend( item, 'center' )
-            return child_holder.data[inverse]
-        matrix = transformmatrix.compressMatrices(
-            *[get_mat(item) for item in self.transformChildren(reverse=inverse)]
-        )
+                source = CACHE.getHolder( parent, key=key )
+                holder.depend_holder( source )
+                holder.depend( source )
+        local = []
+        t = nodetypes.Transforming
+        for index in range( start, len(self) ):
+            item = self[index]
+            if isinstance( item, t ):
+                child_holder = item.localMatrices( translate=translate, scale=scale, rotate=rotate )
+                if doConnect:
+                    holder.depend_holder( child_holder )
+                    holder.depend( child_holder )
+                local.append( child_holder.data[inverse] )
+        if inverse:
+            local.reverse()
+        own = transformmatrix.compressMatrices( *local )
+        if own is None:
+            matrix = base
+        elif base is None:
+            matrix = own
+        elif inverse:
+            matrix = dot( base, own )
+        else:
+            matrix = dot( own, base )
         if matrix is None:
             matrix = identity(4, dtype='f')
         holder.data = matrix
-        return holder.data
+        return matrix
     def transformChildren( self, reverse: int=0 ) -> "Iterator[Any]":
         """Yield all transforming children"""
         t = nodetypes.Transforming

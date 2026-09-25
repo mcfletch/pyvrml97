@@ -1,6 +1,7 @@
 import unittest
 from vrml.vrml97 import nodepath
-from vrml.vrml97.basenodes import Transform
+from vrml.vrml97.basenodes import Group, Transform
+from pydispatch import dispatcher
 from vrml.arrays import allclose, array, pi,dot
 
 class TestNodePath( unittest.TestCase ):
@@ -189,6 +190,76 @@ class TestKeepingTheMatrixItWorkedOut(unittest.TestCase):
         first = self.path.transformMatrix()
         self.path[0].translation = (2, 0, 0)
         self.assertIsNot(self.path.transformMatrix(), first)
+
+
+class TestAMatrixBuiltOnItsParents(unittest.TestCase):
+    """A path's matrix is its parent path's with its own nodes' applied.
+
+    A renderer asks every path for its matrix every frame. Moving one
+    transform clears the paths below it and no others, and each of those is
+    worked out again from its parent's matrix rather than from the root.
+    """
+
+    def setUp(self):
+        self.root = nodepath.NodePath() + [Transform(translation=(1, 0, 0), DEF='root')]
+        self.car = self.root + [Transform(translation=(0, 0, 5), DEF='car')]
+        self.wheel = self.car + [Transform(rotation=(1, 0, 0, pi / 2), DEF='wheel')]
+        self.hub = self.wheel + [Group(DEF='hub')]
+        self.tree = self.root + [Transform(translation=(9, 0, 0), DEF='tree')]
+        self.everything = (self.root, self.car, self.wheel, self.hub, self.tree)
+        for path in self.everything:
+            path.transformMatrix()
+            path.transformMatrix(inverse=True)
+
+    def test_moving_a_transform_moves_everything_below_it(self):
+        self.car[-1].translation = (0, 0, 7)
+        point = dot(array([0, 0, 0, 1], 'f'), self.hub.transformMatrix())
+        assert allclose(point, [1, 0, 7, 1]), point
+
+    def test_the_inverse_follows_too(self):
+        self.car[-1].translation = (0, 0, 7)
+        point = dot(array([1, 0, 7, 1], 'f'), self.hub.transformMatrix(inverse=True))
+        assert allclose(point, [0, 0, 0, 1], atol=1e-5), point
+
+    def test_moving_a_transform_leaves_the_paths_beside_it_alone(self):
+        before = {id(path): path.transformMatrix() for path in self.everything}
+        self.car[-1].translation = (0, 0, 7)
+        self.assertIs(self.tree.transformMatrix(), before[id(self.tree)])
+        self.assertIs(self.root.transformMatrix(), before[id(self.root)])
+
+    def test_moving_the_root_moves_a_path_three_levels_down(self):
+        self.root[-1].translation = (4, 0, 0)
+        point = dot(array([0, 0, 0, 1], 'f'), self.hub.transformMatrix())
+        assert allclose(point, [4, 0, 5, 1]), point
+
+    def test_a_node_that_does_not_transform_has_its_parents_matrix(self):
+        self.assertIs(self.hub.transformMatrix(), self.wheel.transformMatrix())
+
+    def test_a_path_extended_by_several_nodes_at_once(self):
+        path = self.root + [Transform(translation=(0, 2, 0)),
+                            Transform(scale=(3, 3, 3))]
+        point = dot(array([1, 0, 0, 1], 'f'), path.transformMatrix())
+        assert allclose(point, [4, 2, 0, 1]), point
+
+    def test_the_same_answer_as_working_it_out_from_the_root(self):
+        self.car[-1].rotation = (0, 1, 0, 0.3)
+        self.wheel[-1].scale = (1, 2, 1)
+        whole = nodepath.NodePath(list(self.hub))
+        assert allclose(self.hub.transformMatrix(), whole.transformMatrix(), atol=1e-6)
+        assert allclose(self.hub.transformMatrix(inverse=True),
+                        whole.transformMatrix(inverse=True), atol=1e-6)
+
+    def test_a_path_subscribes_to_no_field_of_its_own(self):
+        """Only a transform's own local matrices watch its fields, so a scene's
+        subscriptions grow with its transforms and not with its paths."""
+        def receivers():
+            return sum(len(found) for signals in dispatcher.connections.values()
+                       for found in signals.values())
+        watched = receivers()
+        more = [self.wheel + [Group()] for _ in range(20)]
+        for path in more:
+            path.transformMatrix()
+        self.assertEqual(receivers(), watched)
 
 
 class TestWhichChildPathsAreStillThere(unittest.TestCase):

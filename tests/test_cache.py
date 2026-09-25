@@ -162,6 +162,57 @@ class TestClearingWithoutRemoving(unittest.TestCase):
         self.assertIsNone(held.data)
 
 
+class TestAValueBuiltFromAnother(unittest.TestCase):
+    """`depend_holder` says one held value was built from another, so
+    clearing the one it was built from clears it as well, however far down a
+    chain of such values it is."""
+
+    def setUp(self):
+        self.cache = cache.Cache()
+        self.nodes = [Watched() for _ in range(4)]
+        self.holders = [self.cache.holder(n, 'value %d' % i)
+                        for i, n in enumerate(self.nodes)]
+        self.holders[0].depend(self.nodes[0], 'size')
+        for built, source in zip(self.holders[1:], self.holders):
+            built.depend_holder(source)
+
+    def test_clearing_the_source_clears_what_was_built_from_it(self):
+        self.holders[0].clear()
+        self.assertIsNone(self.holders[1].data)
+
+    def test_it_reaches_the_whole_chain(self):
+        self.nodes[0].size = 3.0
+        self.assertEqual([h.data for h in self.holders], [None] * 4)
+
+    def test_clearing_a_middle_value_leaves_its_sources_alone(self):
+        self.holders[2].clear()
+        self.assertEqual([h.data is None for h in self.holders],
+                         [False, False, True, True])
+
+    def test_the_dependency_outlives_a_clear(self):
+        self.holders[0].clear()
+        for index, held in enumerate(self.holders):
+            held.set('again %d' % index)
+        self.holders[0].clear()
+        self.assertIsNone(self.holders[3].data)
+
+    def test_a_value_built_from_two_sources_is_cleared_by_either(self):
+        both = self.cache.holder(Watched(), 'both')
+        both.depend_holder(self.holders[1])
+        both.depend_holder(self.holders[3])
+        self.holders[3].clear()
+        self.assertIsNone(both.data)
+
+    def test_a_built_value_that_has_gone_is_passed_over(self):
+        client = Watched()
+        gone = self.cache.holder(client, 'gone')
+        gone.depend_holder(self.holders[0])
+        del gone, client
+        gc.collect()
+        self.holders[0].clear()
+        self.assertIsNone(self.holders[1].data)
+
+
 class TestWhenRemovingFindsNothing(unittest.TestCase):
     """Removing runs as a weak reference's callback, with nobody to raise
     to, so each way of finding nothing is answered rather than thrown."""

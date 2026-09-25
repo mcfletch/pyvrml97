@@ -136,6 +136,9 @@ class CacheHolder( object ):
         self.data = data
         self.cache = weakref.ref( cache )
         self.nodeDependencies: "List[Any]" = []
+        #: Weak references to the holders built from this one's value, which
+        #: :meth:`clear` clears with it. None until there is one.
+        self.builtOn: "Optional[List[Any]]" = None
 
         # get the cached values for this client node
         set = cache.get(client_id, None)
@@ -190,6 +193,22 @@ class CacheHolder( object ):
             signal,
             sender,
         )
+    def depend_holder( self, source: "CacheHolder" ) -> None:
+        """Clear this holder whenever ``source`` is cleared
+
+        For a value built from another held value: a path's transform matrix
+        from its parent path's, say. Clearing ``source`` clears this, and
+        whatever was built from this in turn, without either subscribing to
+        the fields ``source`` was built from. A holder that is already clear
+        stops the cascade, since nothing can have been built from it since it
+        was cleared.
+
+        ``source`` does not keep this holder alive. To go when ``source``
+        goes, depend on it with :meth:`depend` as well.
+        """
+        if source.builtOn is None:
+            source.builtOn = []
+        source.builtOn.append( weakref.ref( self ) )
     def depend_object( self, node: Any ) -> None:
         """Depend on node's existence"""
         self.nodeDependencies.append(
@@ -205,10 +224,33 @@ class CacheHolder( object ):
         value will be built from.
         """
         self.data = None
+        if self.builtOn:
+            self._clearBuiltOn()
         if not self.client():
             # Nothing will ask for a value built for a node that has gone, so
             # the entry goes as well rather than sitting empty.
             self( signal=signal, sender=sender )
+    def _clearBuiltOn( self ) -> None:
+        """Clear every holder built from this one, and from those, and so on
+
+        Iterative, since a chain of paths is as deep as the scenegraph.
+        """
+        todo = [ self ]
+        while todo:
+            holder = todo.pop()
+            refs = holder.builtOn
+            if not refs:
+                continue
+            live = []
+            for ref in refs:
+                built = ref()
+                if built is None:
+                    continue
+                live.append( ref )
+                if built.data is not None:
+                    built.data = None
+                    todo.append( built )
+            holder.builtOn = live
     def __call__( self, signal: Any=None, sender: Any=None ) -> "Optional[int]":
         """Delete the cached value (this object)
 
