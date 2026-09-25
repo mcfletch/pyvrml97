@@ -242,7 +242,7 @@ class TestWhenRemovingFindsNothing(unittest.TestCase):
         taking the cache apart, and what that raises is a RuntimeError."""
 
         class Raising(dict):
-            def get(self, key, default=None):
+            def get(self, key, default=None):  # noqa: ARG002 overrides dict.get
                 raise RuntimeError('changed size during iteration')
 
         held = self.cache.holder(self.node, 'compiled')

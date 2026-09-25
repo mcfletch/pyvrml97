@@ -103,6 +103,11 @@ class TestAVector(unittest.TestCase):
             self.field().coerce(object())
         self.assertIn('SFVec3f', str(caught.exception))
 
+    def test_a_refusal_carries_the_reason_numpy_gave(self):
+        with self.assertRaises(ValueError) as caught:
+            self.field().coerce(object())
+        self.assertIsInstance(caught.exception.__cause__, TypeError)
+
     def test_its_default_is_the_zero_vector(self):
         self.assertEqual(list(self.field().defaultDefault()), [0.0, 0.0, 0.0])
 
@@ -130,6 +135,11 @@ class TestAVectorList(unittest.TestCase):
         with self.assertRaises(ValueError) as caught:
             self.field().coerce(object())
         self.assertIn('MFVec3f', str(caught.exception))
+
+    def test_a_refusal_carries_the_reason_numpy_gave(self):
+        with self.assertRaises(ValueError) as caught:
+            self.field().coerce(object())
+        self.assertIsInstance(caught.exception.__cause__, TypeError)
 
 
 class TestAColour(unittest.TestCase):

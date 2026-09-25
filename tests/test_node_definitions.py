@@ -24,7 +24,7 @@ class TestTheNurbsNodes(unittest.TestCase):
     """The NURBS extension proposal's nodes."""
 
     #: Each name, and one field it must declare.
-    DECLARED = [
+    DECLARED = (
         ('Contour2D', 'children'),
         ('NurbsCurve', 'knot'),
         ('NurbsCurve2D', 'knot'),
@@ -32,7 +32,7 @@ class TestTheNurbsNodes(unittest.TestCase):
         ('NurbsSurface', 'uKnot'),
         ('Polyline2D', 'point'),
         ('TrimmedSurface', 'trimmingContour'),
-    ]
+    )
 
     def test_it_declares_the_nodes_the_proposal_names(self):
         for name, _field in self.DECLARED:
@@ -63,12 +63,12 @@ class TestTheNurbsNodes(unittest.TestCase):
 class TestTheShaderNodes(unittest.TestCase):
     """The programmable-shader extension's nodes."""
 
-    DECLARED = [
+    DECLARED = (
         'FloatUniform', 'GLSLImport', 'GLSLObject', 'GLSLShader',
         'IntUniform', 'Shader', 'ShaderAttribute', 'ShaderBuffer',
         'ShaderGeometry', 'ShaderIndexBuffer', 'ShaderSlice',
         'TextureBufferUniform', 'TextureUniform',
-    ]
+    )
 
     def test_it_declares_the_nodes_the_extension_names(self):
         for name in self.DECLARED:
@@ -116,7 +116,7 @@ class TestTheShaderNodes(unittest.TestCase):
 class TestTheTreeNodes(unittest.TestCase):
     """The volumetric-tree nodes."""
 
-    DECLARED = ['TreeAttractor', 'TreeNode', 'TreeParameters', 'VolumetricTree']
+    DECLARED = ('TreeAttractor', 'TreeNode', 'TreeParameters', 'VolumetricTree')
 
     def test_it_declares_the_nodes(self):
         for name in self.DECLARED:

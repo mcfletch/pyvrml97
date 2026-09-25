@@ -1,6 +1,6 @@
 """Module to allow using strings to specify colors"""
-from typing import Any, Tuple
-def stringToColor( value: Any ) -> "Tuple[float, float, float]":
+from typing import Any
+def stringToColor( value: Any ) -> "tuple[float, float, float]":
     """Given a string value, determine appropriate color"""
     value = value.lower()
     possible = cssColors.get( value )

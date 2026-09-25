@@ -9,7 +9,7 @@ the field values.
 We use Numeric Python arrays whereever possible.
 """
 
-from typing import Any, Optional, TYPE_CHECKING, Tuple
+from typing import Any, Optional, TYPE_CHECKING
 import operator
 from vrml import field, csscolors, arrays
 import sys
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
         name: str
         defaultobj: Any
-        dimension: Tuple[int, ...]
+        dimension: tuple[int, ...]
         #: Whether `defaultobj` is a factory to call rather than a value to
         #: hand out.  An attribute on `BaseField`, not a method.
         call_default: bool
@@ -84,14 +84,14 @@ def collapse(inlist: Any) -> Any:
 def _linvalues(lineariser: Any) -> Any:
     """Get the linearisation values for a lineariser"""
     if lineariser is None:
-        from vrml.vrml97 import linearise
+        from vrml.vrml97 import linearise  # noqa: PLC0415 cycle: linearise imports vrml.node, which imports this module
 
         return linearise.defaults
     else:
         return lineariser.linvalues
 
 
-def SFString_vrmlstr(value: Any, lineariser: Any=None) -> str:
+def SFString_vrmlstr(value: Any, lineariser: Any=None) -> str:  # noqa: ARG001 the field-type protocol vrmlstr(value, lineariser)
     """Convert the given value to a VRML97 representation"""
     return '"%s"' % ('\\"'.join('\\\\'.join(value.split('\\')).split('"')))
 
@@ -122,7 +122,7 @@ def MFString_vrmlstr(value: Any, lineariser: Any=None) -> str:
         return linvalues['subelspacer'].join(anyobject)
 
 
-def SFFloat_vrmlstr(value: Any, lineariser: Any=None) -> str:
+def SFFloat_vrmlstr(value: Any, lineariser: Any=None) -> str:  # noqa: ARG001 the field-type protocol vrmlstr(value, lineariser)
     """Convert floats to (compact) VRML97 representation"""
     rpr = str(value)
     if rpr == '0.0':
@@ -223,7 +223,7 @@ class _MFString(_FieldHost):
             return int(all(isinstance(item, str) for item in value))
         return 0
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Copy a value for copier"""
         return value[:]
 
@@ -259,7 +259,7 @@ class _SFBool(_FieldHost):
             return 1
         return 0
 
-    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:  # noqa: ARG002 the field-type protocol vrmlstr(value, lineariser)
         """Convert the given value to a VRML97 representation"""
         if value:
             return 'TRUE'
@@ -291,7 +291,7 @@ class _SFInt32(_FieldHost):
             return 1
         return 0
 
-    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:  # noqa: ARG002 the field-type protocol vrmlstr(value, lineariser)
         """Convert the given value to a VRML97 representation"""
         try:
             return str(int(value))
@@ -324,7 +324,7 @@ class _SFUInt32(_SFInt32):
             return 1
         return 0
 
-    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:  # noqa: ARG002 the field-type protocol vrmlstr(value, lineariser)
         """Convert the given value to a VRML97 representation"""
         return str(int(value))
 
@@ -397,7 +397,7 @@ class _MFInt32(_FieldHost):
 
     vrmlstr = staticmethod(MFSimple_vrmlstr)
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -459,7 +459,7 @@ class _MFFloat(_FieldHost):
 
     vrmlstr = staticmethod(MFSimple_vrmlstr)
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -490,7 +490,7 @@ class _SFVec(_FieldHost):
     #: The shape a value of this field has. Each field type gives its own
     #: -- (4,) for a rotation, (4,4) for a matrix -- so this says "some
     #: number of ints" rather than fixing the length at the base.
-    dimension: Tuple[int, ...] = (3,)  # our dimension...
+    dimension: tuple[int, ...] = (3,)  # our dimension...
 
     #: `length` memoised; None until it is first asked for.  The dimension of
     #: a field type does not change, so it is worked out once per field.
@@ -536,11 +536,11 @@ class _SFVec(_FieldHost):
         else:
             try:
                 value = arrays.asarray(value, self.targetType)
-            except Exception:
+            except Exception as err:
                 raise ValueError(
                     """Attempted to set value for an %s field which is not compatible: %s"""
                     % (self.typeName(), repr(value))
-                ) from None
+                ) from err
             else:
                 value = value.reshape(self.dimension)
         if value.shape != self.dimension:
@@ -561,7 +561,7 @@ class _SFVec(_FieldHost):
             [SFFloat_vrmlstr(obj, lineariser) for obj in value]
         )
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -575,7 +575,7 @@ class _Color(_FieldHost):
         value = arrays.clip(value, 0.0, 1.0)
         return value
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -586,7 +586,7 @@ class _SFArray(_FieldHost):
     defaultDefault = list
     #: The array type codes a value may already be in. Subclasses give
     #: their own and there are not always three, so the length is open.
-    acceptedTypes: Tuple[Any, ...] = ('d', DOUBLE_TYPE, 'V')
+    acceptedTypes: tuple[Any, ...] = ('d', DOUBLE_TYPE, 'V')
     targetType = DOUBLE_TYPE
 
     def reshape(self, value: Any) -> Any:
@@ -618,11 +618,11 @@ class _SFArray(_FieldHost):
         else:
             try:
                 value = arrays.asarray(value, self.targetType)
-            except Exception:
+            except Exception as err:
                 raise ValueError(
                     """Attempted to set value for an %s field which is not compatible: %s"""
                     % (self.typeName(), repr(value))
-                ) from None
+                ) from err
         # special casing, again, for explicitly structured arrays
         if not arrays.typeCode(value) == 'V':
             value = arrays.contiguous(self.reshape(value))
@@ -640,11 +640,11 @@ class _SFArray(_FieldHost):
             and arrays.typeCode(value) in self.acceptedTypes
         )
 
-    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:  # noqa: ARG002 the field-type protocol vrmlstr(value, lineariser)
         """Convert the given value to a VRML97 representation"""
         return str(value)
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 
@@ -666,7 +666,7 @@ class _MFVec(_SFArray):
     acceptedTypes = ('d', DOUBLE_TYPE)
     targetType = DOUBLE_TYPE
     #: As `_SFVec.dimension`: each field type gives its own shape.
-    dimension: Tuple[int, ...] = (3,)  # our dimension...
+    dimension: tuple[int, ...] = (3,)  # our dimension...
 
     #: `length` memoised; None until it is first asked for.  The dimension of
     #: a field type does not change, so it is worked out once per field.
@@ -717,7 +717,7 @@ class _MFVec(_SFArray):
                 del sets[:setLength]
             return '[%s]' % ('\n'.join(stringsets2))
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Copy a value for copier"""
         return arrays.array(value, arrays.typeCode(value))
 

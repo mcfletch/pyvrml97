@@ -2,7 +2,8 @@
 
 import operator
 import weakref
-from typing import Any, Iterator, Optional, SupportsIndex, Union
+from typing import Any, Optional, SupportsIndex, Union
+from collections.abc import Iterator
 
 def _reference( item: Any ) -> "weakref.ReferenceType":
     """A weak reference to `item`, whether or not it is one already.

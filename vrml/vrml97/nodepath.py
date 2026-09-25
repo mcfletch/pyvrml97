@@ -1,6 +1,8 @@
 """Node-paths for VRML97 incl. transform-matrix calculation
 """
-from typing import Any, Iterator, List, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
+from collections.abc import Iterator
+import warnings
 from vrml import nodepath
 from vrml.cache import CACHE
 from vrml.weaklist import WeakRefs
@@ -13,7 +15,7 @@ if TYPE_CHECKING:
     #: `nodepath.WeakNodePath` is the list the nodes themselves live in --
     #: so the caching code indexes and iterates its own host.  `object` at run
     #: time, leaving the mix-in the base it always had.
-    _PathHost = List[Any]
+    _PathHost = list[Any]
 else:
     _PathHost = object
 
@@ -46,6 +48,9 @@ class _NodePath( _PathHost ):
         translate -- if true, include translations in the matrix
         scale -- if true, include scales in the matrix
         rotate -- if true, include rotations in the matrix
+        matrixHolder -- deprecated and ignored: the matrix is answered
+            whatever it says, and a true value raises a DeprecationWarning
+        inverse -- if true, answer the inverse matrix
 
         Note: to apply these matrices to a particular coordinate,
         you would do the following:
@@ -68,6 +73,11 @@ class _NodePath( _PathHost ):
         out again costs one product per path rather than one per transform
         above it.
         """
+        if matrixHolder:
+            warnings.warn(
+                'transformMatrix ignores matrixHolder and answers the matrix',
+                DeprecationWarning, stacklevel=2,
+            )
         key = (_MATRIX_NAMES[1 if inverse else 0], translate, scale, rotate)
         # The cache's own lookup, written out: this is asked of every path a
         # renderer draws, every frame.
@@ -93,7 +103,7 @@ class _NodePath( _PathHost ):
             todo.append( (parent, holder) )
             path = parent
         for path, holder in reversed( todo ):
-            base = path._extendMatrix( base, holder, key, translate, scale, rotate, inverse )
+            base = path._extendMatrix( base, holder, key, translate, scale, rotate, inverse )  # noqa: SLF001 the same class's helper, on each path of the chain
         return base
 
     def _extendMatrix( self, base: Any, holder: Any, key: Any, translate: bool,

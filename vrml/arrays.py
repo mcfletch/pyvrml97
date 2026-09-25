@@ -73,8 +73,8 @@ def safeCompare(first: Any, second: Any) -> bool:
     ):
         try:
             first, second = asarray(first), asarray(second)
-        except Exception:
-            pass                # ragged, or holding something numpy refuses
+        except ValueError:
+            pass                # ragged: compared as sequences below
         else:
             if first.shape != second.shape:
                 return False

@@ -20,8 +20,5 @@ basePrototypes = protonamespace.ProtoNamespace(
     }
 )
 for key,value in basenodes.__dict__.items():
-    try:
-        if issubclass( value, node.Node ):
-            basePrototypes[key] = value
-    except Exception:
-        pass
+    if isinstance( value, type ) and issubclass( value, node.Node ):
+        basePrototypes[key] = value

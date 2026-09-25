@@ -33,6 +33,10 @@ can install via::
 
 The PyVRML97_accelerate module requires that you have a working compiler
 (or, if you are on Windows, prebuilt wheels likely are available).
+It is optional: without it the pure-Python field is used. An accelerator that
+is installed but fails to load, as when it was built against another numpy,
+leaves the pure-Python field in place and logs a warning with the error on the
+``vrml.field`` logger.
 
 .. image:: https://ci.appveyor.com/api/projects/status/MikeCFletcher/pyvrml97/branch/master
     :target: https://ci.appveyor.com/project/MikeCFletcher/pyvrml97

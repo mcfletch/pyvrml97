@@ -9,6 +9,7 @@ import unittest
 
 from vrml import arrays, csscolors, nodepath, protonamespace
 from vrml.vrml97.basenodes import Transform
+from vrml import node as node_module
 
 
 class TestReadingAColour(unittest.TestCase):
@@ -57,11 +58,9 @@ class TestTheIsMapMapping(unittest.TestCase):
     """
 
     def test_it_starts_empty(self):
-        from vrml import node as node_module
         self.assertIsInstance(len(node_module.ISMAPS), int)
 
     def test_a_node_gets_its_own_map(self):
-        from vrml import node as node_module
         transform = Transform()
         first = node_module.ISMAPS.setdefault(transform, {})
         first['translation'] = 'protoTranslation'
@@ -69,13 +68,11 @@ class TestTheIsMapMapping(unittest.TestCase):
                          {'translation': 'protoTranslation'})
 
     def test_two_nodes_do_not_share_one(self):
-        from vrml import node as node_module
         one, other = Transform(), Transform()
         node_module.ISMAPS.setdefault(one, {})['a'] = 1
         self.assertEqual(node_module.ISMAPS.setdefault(other, {}), {})
 
     def test_an_entry_goes_when_its_node_does(self):
-        from vrml import node as node_module
         transform = Transform()
         node_module.ISMAPS.setdefault(transform, {})['a'] = 1
         before = len(node_module.ISMAPS)

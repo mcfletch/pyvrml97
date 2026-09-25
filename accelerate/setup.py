@@ -13,6 +13,7 @@ import os
 
 import numpy
 from setuptools import setup, Extension
+from Cython import __version__ as cython_version
 from Cython.Build import cythonize
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -48,8 +49,6 @@ def _toolchain():
     expands to is numpy's own declarations rather than anything in this
     package.
     """
-    from Cython import __version__ as cython_version
-
     return 'cython %s\nnumpy %s\n' % (cython_version, numpy.__version__)
 
 
@@ -77,8 +76,10 @@ def drop_c_from_another_toolchain():
     for path in glob.glob(os.path.join(HERE, BUILD_DIR, SRC, '*.c')):
         os.unlink(path)
     os.makedirs(os.path.dirname(TOOLCHAIN_STAMP), exist_ok=True)
-    with open(TOOLCHAIN_STAMP, 'w', encoding='utf-8') as handle:
+    partial = TOOLCHAIN_STAMP + '.partial'
+    with open(partial, 'w', encoding='utf-8') as handle:
         handle.write(wanted)
+    os.replace(partial, TOOLCHAIN_STAMP)
 
 
 if __name__ == "__main__":

@@ -21,6 +21,7 @@ That is, you use the homogenous coordinate, and
 make it the first item in the dot'ing.
 """
 from typing import Any
+import warnings
 # `from math import *` stood here too and supplied nothing: every free name in
 # this module -- array, dot, identity, pi -- comes from the array
 # implementation. Having both meant a checker saw numpy's `cos` land on
@@ -144,7 +145,17 @@ def localMatrices(
         scaleOrientation: Any = (0,1,0,0),
         parentMatrix: Any = None,
     ) -> Any:
-    """Calculate (forward,inverse) matrices for this transform element"""
+    """Calculate (forward,inverse) matrices for this transform element
+
+    parentMatrix -- deprecated and ignored: the pair is the element's own,
+        with no parent composed in, and passing one raises a
+        DeprecationWarning. `transformMatrix` composes with a parent.
+    """
+    if parentMatrix is not None:
+        warnings.warn(
+            'localMatrices ignores parentMatrix; the pair is the local one',
+            DeprecationWarning, stacklevel=2,
+        )
     T,T1 = transMatrix( translation )
     C,C1 = transMatrix( center )
     R,R1 = rotMatrix( rotation )

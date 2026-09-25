@@ -33,7 +33,7 @@ Note:
     with the Python 2.2.2 weakref and weakkeydictionary
     mechanisms.
 """
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, Optional
 from vrml import protofunctions
 from vrml.weaklist import WeakRefs
 import weakref
@@ -86,11 +86,8 @@ getData = CACHE.getData
 
 def cleaner( cache: Any, id: Any ) -> "Callable[[Any], None]":
     """Return callback function that cleans the given id from cache"""
-    def clean_id( weak: Any ) -> None:
-        try:
-            del cache[id]
-        except Exception:
-            pass
+    def clean_id( _weak: Any ) -> None:
+        cache.pop(id, None)
     return clean_id
 
 
@@ -136,7 +133,7 @@ class CacheHolder( object ):
         self.key = key
         self.data = data
         self.cache = weakref.ref( cache )
-        self.nodeDependencies: "List[Any]" = []
+        self.nodeDependencies: "list[Any]" = []
         #: Weak references to the holders built from this one's value, which
         #: :meth:`clear` clears with it. None until there is one.
         self.builtOn: "Optional[WeakRefs]" = None
@@ -251,7 +248,7 @@ class CacheHolder( object ):
                     built.data = None
                     todo.append( built )
             refs.prune()
-    def __call__( self, signal: Any=None, sender: Any=None ) -> "Optional[int]":
+    def __call__( self, signal: Any=None, sender: Any=None ) -> "Optional[int]":  # noqa: ARG002 a weak reference's callback and a pydispatch receiver
         """Delete the cached value (this object)
 
         Answers 1 where an entry was found and removed and 0 where there was

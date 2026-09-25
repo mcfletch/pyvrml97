@@ -176,7 +176,7 @@ class TestWiringSomethingToAFunction(unittest.TestCase):
         self.scene.regDefName('Mover', self.node)
         self.told = []
 
-    def receiver(self, signal, sender, **named):
+    def receiver(self, signal):
         self.told.append(signal[0])
 
     def test_a_change_reaches_it(self):

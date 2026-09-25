@@ -16,6 +16,7 @@ import unittest
 from vrml import node, protofunctions
 from vrml.vrml97 import basenodes
 from vrml.vrml97.scenegraph import SceneGraph
+from vrml import fieldtypes
 
 
 class TestBuildingOne(unittest.TestCase):
@@ -226,8 +227,6 @@ class TestDeclaringAPrototype(unittest.TestCase):
         self.assertEqual(protofunctions.protoName(built), 'Wheel')
 
     def test_the_fields_it_is_given_are_declared_on_it(self):
-        from vrml import fieldtypes
-
         built = node.prototype('Wheel', [fieldtypes.SFFloat('radius', 1, 1.0)])
         self.assertAlmostEqual(built().radius, 1.0, places=5)
 

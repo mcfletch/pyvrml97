@@ -135,6 +135,16 @@ class TestLocalMatrices(unittest.TestCase):
         back = moved(backward, moved(forward, (1, 1, 1)))
         self.assertTrue(allclose(back, (1, 1, 1), 0, 1e-6), back)
 
+    def test_a_parent_matrix_is_ignored_and_deprecated(self):
+        """The pair is the node's own, so a parent passed in is not
+        composed into it; passing one warns."""
+        parent = transformmatrix.transformMatrix(translation=(10, 0, 0))
+        with self.assertWarns(DeprecationWarning):
+            forward, _ = transformmatrix.localMatrices(
+                translation=(1, 0, 0), parentMatrix=parent)
+        found = moved(forward, (0, 0, 0))
+        self.assertTrue(allclose(found, (1, 0, 0), 0, 1e-6), found)
+
 
 class TestTheProjections(unittest.TestCase):
     """A perspective and an orthographic matrix, which a viewpoint builds."""

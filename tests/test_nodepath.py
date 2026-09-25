@@ -1,9 +1,11 @@
+import gc
 import unittest
 from vrml.vrml97 import nodepath
 from vrml.vrml97.basenodes import Group, Transform
 from pydispatch import dispatcher
 from vrml.arrays import allclose, array, pi,dot
 from vrml.cache import CACHE
+from vrml.vrml97 import nodetypes
 
 class TestNodePath( unittest.TestCase ):
     def setUp( self ):
@@ -106,6 +108,17 @@ class TestNodePath( unittest.TestCase ):
         matrix = path.transformMatrix()
         projected = dot( array([ 0,0,1,1],'f'),matrix )
         assert allclose( projected, array([1,0,0,1],'f'),atol=.0001), projected
+
+
+class TestTheMatrixHolderArgument(unittest.TestCase):
+    """`transformMatrix` answers the matrix whatever `matrixHolder` says,
+    so passing it warns."""
+
+    def test_passing_it_is_deprecated(self):
+        path = nodepath.NodePath() + [Transform(translation=(1, 0, 0))]
+        with self.assertWarns(DeprecationWarning):
+            found = path.transformMatrix(matrixHolder=True)
+        self.assertTrue(allclose(found, path.transformMatrix()))
 
 
 class TestSlicingAPath(unittest.TestCase):
@@ -275,8 +288,6 @@ class TestWhichChildPathsAreStillThere(unittest.TestCase):
         self.assertEqual(list(self.root.iterchildren()), [self.child])
 
     def test_one_that_has_gone_is_dropped_rather_than_yielded(self):
-        import gc
-
         going = self.root + [Transform(DEF='second')]
         del going
         gc.collect()
@@ -289,8 +300,6 @@ class TestWhatATransformingNodeHasToAnswer(unittest.TestCase):
     through, so the base says so rather than answering something wrong."""
 
     def test_a_type_that_has_not_said_is_asked_and_says_so(self):
-        from vrml.vrml97 import nodetypes
-
         class Untransformed(nodetypes.Transforming):
             pass
 
@@ -303,7 +312,6 @@ class TestTransientPaths(unittest.TestCase):
     paths and transforms it was built from."""
 
     def test_their_weak_references_do_not_pile_up(self):
-        import gc
         base = nodepath.NodePath() + [Transform(translation=(1, 0, 0))]
         base.transformMatrix()
         leaf = Transform(translation=(0, 2, 0))
@@ -312,7 +320,7 @@ class TestTransientPaths(unittest.TestCase):
             path.transformMatrix()
             del path
         gc.collect()
-        key = (nodepath._MATRIX_NAMES[0], True, True, True)
+        key = (nodepath._MATRIX_NAMES[0], True, True, True)  # noqa: SLF001 the cache key transformMatrix stores under, to read its holder
         source = CACHE.getHolder(base, key=key)
         self.assertLess(len(source.builtOn), 1000)
         self.assertLess(len(leaf.localMatrices().builtOn), 1000)

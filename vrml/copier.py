@@ -1,6 +1,6 @@
 """Object representing node-copying pass"""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class Copier( object ):
@@ -8,7 +8,7 @@ class Copier( object ):
 
     #: Source node -> its copy, for the nodes reached more than once.  Built on
     #: first use, since a graph with no sharing never needs it.
-    useNodes: Dict[Any, Any]
+    useNodes: dict[Any, Any]
 
     def __init__(
         self,

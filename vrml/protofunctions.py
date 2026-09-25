@@ -14,7 +14,8 @@ module.
 
 
 
-from typing import Any, List
+from typing import Any
+from vrml import field
 def _getcls(cls: Any) -> type:
     """Utility function returns class when passed instance or class"""
     if type(cls) is type:
@@ -31,7 +32,7 @@ def getPrototype(cls: Any) -> Any:
     return _getcls(cls)
 
 
-def protoName(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
+def protoName(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:  # noqa: ARG001 public; the get/set signature it shares with name() and defName()
     """Get/set the prototype name for the object"""
     obj = _getcls(obj)
     if value is not None:
@@ -47,7 +48,7 @@ def protoName(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
 
 def defName(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
     """Get/set the VRML97 defName for the object"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     if value is not None:
         return node.Node.DEF.fset(obj, value, *args, **named)
@@ -65,7 +66,7 @@ def name(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
 
 def root(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
     """Get/set root-node reference for nodes/protos"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     if value is not None:
         return node.Node.rootSceneGraph.fset(obj, value, *args, **named)
@@ -75,7 +76,7 @@ def root(obj: Any, value: Any=None, *args: Any, **named: Any) -> Any:
 
 def builtin(cls: Any) -> Any:
     """Return whether the class is "built-in" to the system"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     return not issubclass(_getcls(cls), node.PrototypedNode)
 
@@ -146,15 +147,13 @@ def getField(cls: Any, field: str) -> Any:
     )
 
 
-def getFields(cls: Any, events: int=0) -> "List[Any]":
+def getFields(cls: Any, events: int=0) -> "list[Any]":
     """Get all fields of the definition/prototype
 
     if events is true, then return events
     instead of fields.
     """
     cls = _getcls(cls)
-    from vrml import field
-
     wanted: type
     if events:
         wanted = field.Event
@@ -194,41 +193,41 @@ def getFields(cls: Any, events: int=0) -> "List[Any]":
 
 def setSceneGraph(cls: Any, sg: Any) -> Any:
     """Set the scenegraph associated with a prototype"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     return node.PrototypedNode.scenegraph.fset(cls, sg)
 
 
 def getSceneGraph(cls: Any) -> Any:
     """Get the scenegraph associated with a prototype (or None)"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     return node.PrototypedNode.scenegraph.fget(cls)
 
 
 def delSceneGraph(cls: Any) -> Any:
     """Delete the scenegraph associated with a prototype"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     return node.PrototypedNode.scenegraph.fdel(cls)
 
 
 def setExternalURL(cls: Any, url: Any) -> Any:
     """Set the externproto URL associated with a prototype"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     return node.Node.externalURL.fset(cls, url)
 
 
 def getExternalURL(cls: Any) -> Any:
     """Get the externproto URL associated with a prototype (or [])"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     return node.Node.externalURL.fget(cls)
 
 
 def delExternalURL(cls: Any) -> Any:
     """Delete the externproto URL associated with a prototype"""
-    from vrml import node
+    from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module
 
     return node.Node.externalURL.fdel(cls)

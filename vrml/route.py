@@ -1,7 +1,8 @@
 """ROUTE and ISRoute Implementations (event-processing)"""
-from typing import Any, Set
+from typing import Any
 import traceback
 from vrml import field, fieldtypes, protofunctions, node
+from vrml import event as eventmodule
 from pydispatch import dispatcher
 
 class ROUTE( node.Node ):
@@ -19,7 +20,7 @@ class ROUTE( node.Node ):
     destinationField = fieldtypes.SFString( 'destinationField',)
     #: Destination field names already reported as missing, so a route that
     #: names one does not say so on every change.
-    _unknownFields: "Set[str]"
+    _unknownFields: "set[str]"
 
     def __init__( self, *arguments: Any, **named: Any ) -> None:
         """Initialize the route object
@@ -66,24 +67,24 @@ class ROUTE( node.Node ):
         else:
             print("""NULL ROUTE bound""", self)
     def forward(
-        self, signal: Any, sender: Any, event: Any=None, value: Any=None, **arguments: Any
+        self, signal: Any, sender: Any, event: Any=None, value: Any=None,
+        **arguments: Any,  # noqa: ARG002 a pydispatch receiver: the signal's other named arguments
     ) -> Any:
         """Forward a value update to our destination
         """
         return self._forward(
             sender, signal,
             self.destination, self.destinationField,
-            event, value, **arguments
+            event, value,
         )
     def _forward(
         self,
         sender: Any, signal: Any,
         destination: Any, destinationField: Any,
-        event: Any=None, value: Any=None, **arguments: Any
+        event: Any=None, value: Any=None,
     ) -> None:
         """Do the low-level forwarding of the value to a target field"""
         if event is None:
-            from vrml import event as eventmodule
             event = eventmodule.Event()
         signal, sourceField = signal
         if signal == 'del':
@@ -181,18 +182,21 @@ class IS( ROUTE ):
         """
         self._bind( self.source, self.sourceField )
         self._bind( self.destination, self.destinationField )
-    def forward( self, signal: Any, sender: Any, event: Any=None, value: Any=None, **arguments: Any ) -> Any:
+    def forward(
+        self, signal: Any, sender: Any, event: Any=None, value: Any=None,
+        **arguments: Any,  # noqa: ARG002 a pydispatch receiver: the signal's other named arguments
+    ) -> Any:
         """Forward a value update to our destination (or source)
         """
         if sender is self.source:
             return self._forward(
                 sender, signal,
                 self.destination, self.destinationField,
-                event, value, **arguments
+                event, value,
             )
         elif sender is self.destination:
             return self._forward(
                 sender, signal,
                 self.source, self.sourceField,
-                event, value, **arguments
+                event, value,
             )

@@ -2,12 +2,14 @@
 """
 
 
-from typing import Any, Dict, List
+from typing import Any
+from collections.abc import Callable
 from io import StringIO
 from vrml import arrays
 from vrml import protofunctions
 from vrml.protofunctions import *
 from vrml import node
+from vrml import fieldtypes
 
 #: Where a prototype's URL is kept.  It is written after the interface, as
 #: VRML97 puts it, rather than among the fields the interface declares.
@@ -41,14 +43,14 @@ def namekey(node: Any) -> Any:
     return node.name
 
 
-def protoNames(skipProtos: Any) -> "Dict[str, int]":
+def protoNames(skipProtos: Any) -> "dict[str, int]":
     """The prototype names in `skipProtos`, as a set to look one up in.
 
     A caller names the prototypes to leave out either by name or by passing
     the prototype itself, in a mapping (whose keys are read) or any other
     iterable.
     """
-    names: "Dict[str, int]" = {}
+    names: "dict[str, int]" = {}
     if not skipProtos:
         return names
     if hasattr(skipProtos, 'keys'):
@@ -72,7 +74,7 @@ class Lineariser:
     cleared after the initial linearisation.
     '''
 
-    def __init__(self, linvalues: Any=None, alreadydone: Any=None, *args: Any, **namedargs: Any) -> None:
+    def __init__(self, linvalues: Any=None, alreadydone: Any=None, *args: Any, **namedargs: Any) -> None:  # noqa: ARG002 public signature, which accepts and ignores extras
         if linvalues is None:
             linvalues = defaults
         if namedargs:
@@ -90,8 +92,8 @@ class Lineariser:
         buffer: Any=None,
         skipProtos: Any=None,
         skipUnusedProtos: Any=None,
-        *args: Any,
-        **namedargs: Any
+        *args: Any,  # noqa: ARG002 public signature, which accepts and ignores extras
+        **namedargs: Any  # noqa: ARG002 public signature, which accepts and ignores extras
     ) -> str:
         '''Linearise a node, script, or scenegraph
 
@@ -106,7 +108,7 @@ class Lineariser:
         # prototypes named in here are left out, so that a caller can write a
         # fragment for a file that already declares them; instances of them
         # are still written.
-        self.skipProtos: "Dict[str, int]" = protoNames(skipProtos)
+        self.skipProtos: "dict[str, int]" = protoNames(skipProtos)
         # skipUnusedProtos skips the "prototype collection" linearisation step
         # this has the effect of not outputing any prototype which is not actually
         # used in the file.  By default is "off", that is, all protos are linearised
@@ -117,7 +119,7 @@ class Lineariser:
         # protoalreadydone is used in place of the scenegraph-specific
         # node alreadydone.  This allows us to push all protos up to the
         # top level of the hierarchy (thus making the process of linearisation much simpler)
-        self.protoalreadydone: "Dict[Any, Any]" = {}
+        self.protoalreadydone: "dict[Any, Any]" = {}
         # main working algo...
         self.typecache = {
             'Script': self._Script,
@@ -128,15 +130,15 @@ class Lineariser:
         self.alreadydone.clear()
         #: The scene graphs being written, innermost last; a prototype is
         #: output once per graph that refers to it.
-        self.cursceneGraph: "List[Any]" = []
-        self.curproto: "List[Any]" = []
+        self.cursceneGraph: "list[Any]" = []
+        self.curproto: "list[Any]" = []
         self.indentationlevel = 0
         if type(clientNode) in (list, tuple):
             for child in clientNode:
-                self._linear(child)
+                self.linearNode(child)
                 self.buffer.write('\n')
         else:
-            self._linear(clientNode)
+            self.linearNode(clientNode)
         del self.typecache  # to clear references to this node...
         self.alreadydone.clear()
         # side effect has filled up protobuffer for us
@@ -178,7 +180,7 @@ class Lineariser:
                     self._proto(proto)
         # linearise the node/script children, they will include their prototypes if they are not already done
         for child in clientNode.children:
-            self._linear(child)
+            self.linearNode(child)
             buffer.write(self.linvalues['full_element_separator'])
         # linearise the routes
         for route in clientNode.routes:
@@ -245,8 +247,6 @@ class Lineariser:
         linvalues = self.linvalues
         if externalURL:
             buffer.write('\n] ')
-            from vrml import fieldtypes
-
             buffer.write(fieldtypes.MFString_vrmlstr(externalURL, self))
             buffer.write('\n')
         else:
@@ -286,7 +286,7 @@ class Lineariser:
         self.curproto.pop()
         return None
 
-    def _Node(self, clientNode: Any, *args: Any, **namedargs: Any) -> Any:
+    def _Node(self, clientNode: Any) -> Any:
         '''Linearise an individual node'''
         # if we don't already have this nodes prototype in the
         # root namespace, insert it there.  For now we don't allow
@@ -300,8 +300,7 @@ class Lineariser:
             return None
         # now calculate the representation of this node...
         defName = self._defName(clientNode)
-        namedargs['linvalues'] = linvalues = self.linvalues
-        namedargs['alreadydone'] = self.alreadydone
+        linvalues = self.linvalues
         buffer.write(
             '%s%s {'
             % (
@@ -415,7 +414,7 @@ class Lineariser:
                     % linvalues
                     % (field.name,)
                 )
-                self._sffield(val, field)
+                self.linearField(val, field)
 
     def _eventDict(self, clientNode: Any) -> None:
         '''
@@ -493,7 +492,7 @@ class Lineariser:
             % values
         )
 
-    def _sffield(self, anyobj: Any, field: Any, *args: Any, **namedargs: Any) -> Any:
+    def linearField(self, anyobj: Any, field: Any) -> Any:
         '''Write one field's value, in whatever shape its type has
 
         The field is asked how to write its value; a node field is followed
@@ -520,7 +519,7 @@ class Lineariser:
             if handler:
                 return handler(anyobj)
             if isinstance(anyobj, list):
-                return self._mfnode(anyobj)
+                return self.linearNodes(anyobj)
             return self._Node(anyobj)
         if hasattr(field, 'vrmlstr'):
             result = field.vrmlstr(anyobj, self)
@@ -572,7 +571,7 @@ class Lineariser:
             ind = self.alreadydone[id(clientNode)] = self.buffer.tell()
             return ind
 
-    def _nullNode(self, clientNode: Any) -> None:
+    def _nullNode(self, _clientNode: Any) -> None:
         self.buffer.write('NULL')
 
     def _defName(self, clientNode: Any) -> Any:
@@ -582,9 +581,13 @@ class Lineariser:
         else:
             return ''
 
-    def _linear(self, clientNode: Any) -> Any:
-        '''Linearise a particular client node of whatever type by dispatching to
-        appropriate method...'''
+    def linearNode(self, clientNode: Any) -> Any:
+        '''Write one node, script, prototype or scenegraph into the buffer
+
+        The node's own kind chooses how it is written. A field type's
+        `vrmlstr` calls this to write a node it holds.
+        '''
+        method: Callable[[Any], Any]
         if type(clientNode) is type:
             method = self._proto
         else:
@@ -593,11 +596,10 @@ class Lineariser:
         return method(clientNode)
 
     ### Field-type handlers...
-    def _mfnode(self, anyobj: Any, *args: Any, **namedargs: Any) -> None:
-        '''
-        Really, this will handle any list of elements where all elements
-        have a __vrmlStr__ method, but since most of those are nodes, we'll
-        keep the name for now.
+    def linearNodes(self, anyobj: Any) -> None:
+        '''Write a list of nodes into the buffer, each by `linearNode`
+
+        A field type's `vrmlstr` calls this to write the nodes it holds.
         format:
             [(mffieldsep)
             (curindent)(indent)child
@@ -615,7 +617,7 @@ class Lineariser:
                 buffer.write(
                     '%(full_element_separator)s%(curindent)s%(indent)s' % linvalues
                 )
-                self._linear(el)
+                self.linearNode(el)
             buffer.write('%(full_element_separator)s%(curindent)s]' % linvalues)
             self._dedent()
         else:

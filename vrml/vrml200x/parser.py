@@ -11,6 +11,7 @@ from typing import Any
 # definitions, which the grammar below refers to by name.
 from simpleparse.common import chartypes  # noqa: F401
 from simpleparse.parser import Parser
+from vrml.vrml97 import parseprocessor
 
 #print file
 grammar = r'''
@@ -91,7 +92,6 @@ class VRMLParser( Parser ):
     """Simple subclassing of Parser to create proper ParseProcessor"""
     def buildProcessor( self ) -> Any:
         """Build and return a vrml.vrml97.parseprocessor.ParseProcessor"""
-        from vrml.vrml97 import parseprocessor
         return parseprocessor.ParseProcessor()
 
 def buildParser( declaration: Any = grammar ) -> Any:

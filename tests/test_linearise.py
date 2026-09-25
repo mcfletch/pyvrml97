@@ -319,7 +319,7 @@ class TestANodeFieldHoldingSomethingElse(unittest.TestCase):
         lineariser = linearise.Lineariser()
         lineariser.linear(SceneGraph())
         with self.assertRaises(TypeError) as caught:
-            lineariser._sffield('not a node', held)
+            lineariser.linearField('not a node', held)
         self.assertIn('geometry', str(caught.exception))
         self.assertIn('not a node', str(caught.exception))
 
@@ -353,7 +353,7 @@ class TestALineariserThatKnowsAFieldType(unittest.TestCase):
             return '"%s"' % (value,)
 
     class Silent:
-        """As little of a field as `_sffield` reads."""
+        """As little of a field as `linearField` reads."""
 
         name = 'thing'
 
@@ -364,7 +364,7 @@ class TestALineariserThatKnowsAFieldType(unittest.TestCase):
         lineariser = self.Knowing()
         lineariser.linear(SceneGraph())
         lineariser.buffer = io.StringIO()
-        lineariser._sffield('a value', self.Silent())
+        lineariser.linearField('a value', self.Silent())
         self.assertEqual(lineariser.buffer.getvalue(), '"a value"')
 
 
@@ -530,7 +530,7 @@ class TestAFieldTypeItCannotWrite(unittest.TestCase):
     nothing and read back as a file with a field missing."""
 
     class Silent:
-        """As little of a field as `_sffield` reads."""
+        """As little of a field as `linearField` reads."""
 
         name = 'thing'
 
@@ -544,7 +544,7 @@ class TestAFieldTypeItCannotWrite(unittest.TestCase):
         lineariser = linearise.Lineariser()
         lineariser.linear(SceneGraph())
         with self.assertRaises(TypeError) as caught:
-            lineariser._sffield('a value', self.Silent())
+            lineariser.linearField('a value', self.Silent())
         self.assertIn('Silent', str(caught.exception))
 
 

@@ -88,6 +88,21 @@ class TestSafeCompare(unittest.TestCase):
         self.assertTrue(arrays.safeCompare([0.0, 0.0, 0.0],
                                            arrays.array([0.0, 0.0, 0.0], 'f')))
 
+    def test_a_failure_to_convert_is_not_read_as_a_ragged_sequence(self):
+        """Only a ragged sequence is compared element by element; an error
+        raised while converting a value reaches the caller."""
+
+        class Unconvertible:
+            def __array__(self, *args, **named):
+                raise RuntimeError('cannot convert')
+
+        with self.assertRaises(RuntimeError):
+            arrays.safeCompare([Unconvertible()], [Unconvertible()])
+
+    def test_ragged_sequences_are_compared_as_sequences(self):
+        self.assertTrue(arrays.safeCompare([[1, 2], [3]], [[1, 2], [3]]))
+        self.assertFalse(arrays.safeCompare([[1, 2], [3]], [[1, 2], [4]]))
+
     def test_a_sequence_of_other_numbers_does_not(self):
         self.assertFalse(arrays.safeCompare([0.0, 0.0, 0.0],
                                             arrays.array([1.0, 0.0, 0.0], 'f')))

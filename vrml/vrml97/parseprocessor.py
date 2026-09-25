@@ -1,7 +1,7 @@
 """SimpleParse post-processor builds node-graph from parse-tree
 """
 
-from typing import Any, List
+from typing import Any
 # Named rather than starred, and `getString` is aliased on the way in: the
 # module defines its own `getString` below, and this read `_getString =
 # getString` *before* that definition, relying on the star import still
@@ -18,6 +18,7 @@ from simpleparse.dispatchprocessor import getString as _getString
 from vrml import node, field
 from vrml.protofunctions import *
 from vrml.arrays import array
+from vrml.vrml97 import basenamespaces
 
 
 def as_str(value: Any, encoding: str='utf-8') -> str:
@@ -65,15 +66,13 @@ class ParseProcessor(DispatchProcessor):
         """
         self.position = 0
         if basePrototypes is None:
-            from vrml.vrml97 import basenamespaces
-
             basePrototypes = basenamespaces.basePrototypes.copy()
         self.basePrototypes = basePrototypes
         self.baseURI = baseURI
-        self.sceneGraphStack: "List[Any]" = []
-        self.prototypeStack: "List[Any]" = []
-        self.nodeStack: "List[Any]" = []
-        self.fieldTypeStack: "List[Any]" = []
+        self.sceneGraphStack: "list[Any]" = []
+        self.prototypeStack: "list[Any]" = []
+        self.nodeStack: "list[Any]" = []
+        self.fieldTypeStack: "list[Any]" = []
 
     ### High-level constructs in the grammar
     def header(self, table: Any, buffer: Any) -> None:
@@ -186,9 +185,9 @@ class ParseProcessor(DispatchProcessor):
             self.sceneGraphStack[-1].regDefName(name, newNode)
         self.nodeStack.append(newNode)
         # now get the field-declarations...
-        _fields: "List[Any]" = []
-        attributes: "List[Any]" = []
-        isMaps: "List[Any]" = []
+        _fields: "list[Any]" = []
+        attributes: "list[Any]" = []
+        isMaps: "list[Any]" = []
         for item in rest:
             if item[0] in ("ScriptEventDecl", "ScriptFieldDecl"):
                 f, mapName = dispatch(self, item, buffer)
@@ -207,7 +206,7 @@ class ParseProcessor(DispatchProcessor):
         self.nodeStack.pop()
         return newNode
 
-    def SFNull(self, tup: Any, buffer: Any) -> Any:
+    def SFNull(self, tup: Any, buffer: Any) -> Any:  # noqa: ARG002 a simpleparse DispatchProcessor production
         '''Create a reference to the SFNull node'''
         return self.sceneGraphStack[-1].getProto("NULL")
 

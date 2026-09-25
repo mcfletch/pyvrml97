@@ -1,14 +1,22 @@
 """property sub-class providing VRML field semantics"""
 
-from typing import Any, List, Optional, TYPE_CHECKING
+from typing import Any, Optional, TYPE_CHECKING
 from pydispatch import dispatcher, robustapply
+import logging
 import weakref
 from vrml import protonamespace
 
-# conditional import via package entry points
+# The compiled field comes from the optional vrml_accelerate package.
 try:
     from vrml_accelerate import fieldaccel2
-except Exception as err:
+except ImportError:
+    fieldaccel2 = None
+except Exception:
+    # Installed but not loadable, as when built against another numpy.
+    logging.getLogger(__name__).warning(
+        'vrml_accelerate.fieldaccel2 failed to load; the Python field is used',
+        exc_info=True,
+    )
     fieldaccel2 = None
 
 
@@ -27,7 +35,7 @@ UNPACK_TYPES = (MAP_TYPE, ZIP_TYPE, RANGE_TYPE)
 #: *is* `map`, and a checker reading `isinstance(value, SEQUENCE_TYPES)` can
 #: only narrow the value where it can see which classes are in the tuple.
 SEQUENCE_TYPES = (tuple, list) + UNPACK_TYPES
-_NULL: List[Any] = []
+_NULL: list[Any] = []
 
 
 def register(cls: Any) -> None:
@@ -315,7 +323,7 @@ class Field(BaseField):
         else:
             return _NULL
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Copy a value for copier"""
         return value
 
@@ -340,7 +348,7 @@ class Field(BaseField):
             default,
         )
 
-    def vrmlstr(self, value: Any, lineariser: Any) -> Any:
+    def vrmlstr(self, value: Any, lineariser: Any) -> Any:  # noqa: ARG002 the field-type protocol vrmlstr(value, lineariser)
         """Convert the given value to a VRML97 representation"""
         return ""
 

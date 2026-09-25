@@ -4,7 +4,7 @@ Requires Python 2.2.x, as it makes
 extensive use of properties
 """
 
-from typing import Any, Callable, Tuple
+from typing import Any, Callable
 from vrml import field, fieldtypes
 #: The two node field types here are halves of a field type in the same way
 #: the ones in `fieldtypes` are, and need the same thing of the `field.Field`
@@ -154,7 +154,7 @@ class Node(object):
             passed arguments for the linearisation object
         see lineariser4.Lineariser
         '''
-        from vrml.vrml97 import linearise
+        from vrml.vrml97 import linearise  # noqa: PLC0415 cycle: linearise imports this module
 
         return linearise.linearise(self, **namedargs)
 
@@ -186,7 +186,7 @@ class PrototypedNode(object):
         and negotiate not-yet-loaded external prototypes and
         the like.
         """
-        from vrml import route
+        from vrml import route  # noqa: PLC0415 cycle: vrml.route imports this module
 
         isMappings = None
         for cls in self.__class__.__mro__[:-1]:
@@ -197,7 +197,7 @@ class PrototypedNode(object):
                 break
         if isMappings is None:
             # no scenegraph defined...
-            from vrml.vrml97 import scenegraph
+            from vrml.vrml97 import scenegraph  # noqa: PLC0415 cycle: vrml.vrml97.scenegraph imports this module
 
             template = scenegraph.SceneGraph()
             PrototypedNode.scenegraph.fset(cls, template)
@@ -344,7 +344,7 @@ class _SFNode(_FieldHost):
     #: The types a value must be one of, or empty for no constraint.
     #: Set per field -- `SFNode.requiredTypes = (Node,)` below -- so the
     #: empty tuple here must not fix the element type.
-    requiredTypes: Tuple[type, ...] = ()
+    requiredTypes: tuple[type, ...] = ()
     allowNULL = 1
 
     def fset(self, client: Any, value: Any, notify: int=1) -> Any:
@@ -394,7 +394,7 @@ class _SFNode(_FieldHost):
 
     def vrmlstr(self, value: Any, lineariser: Any) -> Any:
         """Convert the given value to a VRML97 representation"""
-        return lineariser._linear(value)
+        return lineariser.linearNode(value)
 
     def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy the node this field points at
@@ -441,7 +441,7 @@ class WeakSFNode(_SFNode, field.WeakField, field.Field):
 
     fieldType = 'WeakSFNode'
 
-    def copyValue(self, value: Any, copier: Any=None) -> Any:
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
         """Point at the same node the original pointed at
 
         What a weak field holds is not part of the node holding it -- the
@@ -631,7 +631,7 @@ class _MFNode(_FieldHost):
 
     def vrmlstr(self, value: Any, lineariser: Any) -> Any:
         """Convert the given value to a VRML97 representation"""
-        return lineariser._mfnode(value)
+        return lineariser.linearNodes(value)
 
     def copyValue(self, value: Any, copier: Any=None) -> Any:
         """Copy a value for copier"""

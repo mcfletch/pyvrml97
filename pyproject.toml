@@ -75,8 +75,37 @@ cache-keys = [{ file = "pyproject.toml" }, { file = "vrml/__init__.py" }]
 # Named explicitly rather than left to ruff's default, which has widened
 # between releases: a gate whose meaning moves when a tool is upgraded is not a
 # gate. `E,W,F,B` is what the other pre-2010 projects here hold to.
+[tool.openglcontext-checks]
+# The OGC rules (openglcontext-checks) this project is clean of, held by
+# the workspace preflight. The others join as the project reaches zero of
+# each; the counts are in openglcontext/plans/DEFECT-PREVENTION.md.
+select = ["OGC101", "OGC102", "OGC111", "OGC121", "OGC141", "OGC161", "OGC221", "OGC223"]
+
+[tool.openglcontext-checks.scopes]
+# The modules that read a VRML97 document's text into values, which OGC101,
+# OGC102 and OGC111 hold to checked values, sizes and paths.
+loader = ["vrml/vrml97/parser.py", "vrml/vrml97/parseprocessor.py"]
+
 [tool.ruff.lint]
-select = ["E", "W", "F", "B"]
+select = [
+    "E", "W", "F", "B", "PGH003", "PGH004", "PLE0604", "PLE0605",
+    # A noqa that silences nothing, and an exception caught blind, swallowed,
+    # or logged without its traceback.
+    "RUF100", "S110", "S112", "E722", "BLE001", "TRY400",
+    # A class attribute that is mutable and shared by every instance.
+    "RUF012",
+    # A private name reached from outside its class or module.
+    "SLF001",
+    # An argument nothing reads.
+    "ARG",
+    # An import inside a function, where the module top would do.
+    "PLC0415",
+    # Naive datetimes, exec, and unsafe tarfile, pickle, eval and urlopen.
+    "DTZ", "S102", "S202", "S301", "S307", "S310",
+    # `X | Y` rather than `Union`/`Optional`, the builtin generics rather
+    # than their `typing` aliases, and `collections.abc` for the ABCs.
+    "UP006", "UP007", "UP035",
+]
 # `_name` as well as `_`: an underscore prefix is how Python says a name is
 # bound but deliberately unused.
 dummy-variable-rgx = "^(_[a-zA-Z0-9_]*|err)$"

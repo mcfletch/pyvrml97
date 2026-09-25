@@ -1,6 +1,7 @@
 """list sub-class which holds weak references to objects"""
 
-from typing import Any, Callable, Iterator, List, Optional, SupportsIndex, Union
+from typing import Any, Callable, Optional, SupportsIndex, Union
+from collections.abc import Iterator
 import weakref
 
 class WeakList( list ):
@@ -47,7 +48,7 @@ class WeakList( list ):
         """
         return item()
 
-    def get( self ) -> "List[Any]":
+    def get( self ) -> "list[Any]":
         """Get all items as a list of strong references
 
         An item whose referent has been collected is left out: a list's

@@ -3,6 +3,7 @@ from typing import Any, Optional
 
 from vrml import node, protofunctions, protonamespace, fieldtypes, route
 from vrml import copier as copiermodule
+from vrml.route import ROUTE
 from vrml.vrml97 import nodetypes
 import weakref
 
@@ -129,7 +130,6 @@ class SceneGraph( nodetypes.Traversable, node.Node ):
         if isinstance( route, (tuple,list)):
             if len(route) == 4:
                 # 4-element route definition, e.g. from strings...
-                from vrml.route import ROUTE
                 source,sourceField,destination,destinationField = route
                 if isinstance( source, str):
                     source = self.getDEF( source )

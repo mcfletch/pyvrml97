@@ -1,3 +1,4 @@
+import gc
 import unittest
 from vrml import olist
 from vrml.olist import OList
@@ -69,21 +70,36 @@ class TestWhereTheAnnouncementComesFrom(unittest.TestCase):
     """A list announces itself unless it was told which node it belongs to,
     and it holds that node weakly."""
 
+    class Owner:
+        """A node the list can belong to."""
+
+    def announced_by(self, sender, held):
+        heard = []
+
+        def hear(signal, value):
+            heard.append((signal, value))
+
+        connect(hear, sender=sender, weak=False)
+        held.append('child')
+        return heard
+
     def test_by_default_the_list_is_the_sender(self):
         held = olist.OList()
-        self.assertIs(held._sender(), held)
+        self.assertEqual(self.announced_by(held, held), [('new', 'child')])
 
     def test_a_named_sender_is_used_instead(self):
         held = olist.OList()
-        owner = TestWhereTheAnnouncementComesFrom
+        owner = self.Owner()
         held.setSender(owner)
-        self.assertIs(held._sender(), owner)
+        self.assertEqual(self.announced_by(owner, held), [('new', 'child')])
 
     def test_a_sender_that_has_gone_leaves_the_list_as_the_sender(self):
         held = olist.OList()
-        held.setSender(None)
-        held.sender = lambda: None      # the weak reference, now empty
-        self.assertIs(held._sender(), held)
+        owner = self.Owner()
+        held.setSender(owner)
+        del owner
+        gc.collect()
+        self.assertEqual(self.announced_by(held, held), [('new', 'child')])
 
 
 class TestInPlaceAdd:

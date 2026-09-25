@@ -20,14 +20,13 @@ import unittest
 import numpy as np
 
 from vrml import fieldtypes
+from vrml.vrml97 import linearise
 
 
 class Lineariser:
     """A lineariser at a chosen depth, which is all `vrmlstr` reads of one."""
 
     def __init__(self, **overrides):
-        from vrml.vrml97 import linearise
-
         self.linvalues = dict(linearise.defaults)
         self.linvalues.update(overrides)
 

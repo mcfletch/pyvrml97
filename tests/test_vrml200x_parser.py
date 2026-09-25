@@ -11,6 +11,8 @@ import unittest
 
 from vrml.vrml200x import parser
 from vrml.vrml97.scenegraph import SceneGraph
+from vrml.vrml200x.parser import grammar
+from vrml.vrml97 import parseprocessor
 
 
 HEADER = '#X3D 3.0 utf8\nPROFILE Immersive\n'
@@ -32,7 +34,6 @@ class TestBuildingTheParser(unittest.TestCase):
 
     def test_it_builds_a_parse_processor(self):
         """The same one VRML97 uses: the two share their node vocabulary."""
-        from vrml.vrml97 import parseprocessor
         built = parser.buildParser().buildProcessor()
         self.assertIsInstance(built, parseprocessor.ParseProcessor)
 
@@ -41,7 +42,6 @@ class TestBuildingTheParser(unittest.TestCase):
 
     def test_a_grammar_can_be_passed_in(self):
         """The default is the module's own; a caller may hand over another."""
-        from vrml.vrml200x.parser import grammar
         self.assertIsNotNone(parser.buildParser(grammar))
 
 

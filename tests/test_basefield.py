@@ -15,6 +15,11 @@ implementation gets a class of its own, so a failure names the build it is in.
 exposure flag, copying, the VRML97 forms; this is the storage underneath it.
 """
 
+import os
+import subprocess
+import sys
+import tempfile
+import textwrap
 import unittest
 
 from pydispatch import dispatcher
@@ -36,8 +41,8 @@ class Recorder:
         dispatcher.connect(self.hear, sender=sender, weak=False)
         return self
 
-    def hear(self, signal, sender, **named):
-        self.heard.append((signal[0], named.get('value')))
+    def hear(self, signal, value=None):
+        self.heard.append((signal[0], value))
 
     def disconnect(self, sender):
         dispatcher.disconnect(self.hear, sender=sender, weak=False)
@@ -267,7 +272,7 @@ class TheContract:
         says."""
 
         class Refusing(self.implementation):
-            def coerce(self, value):
+            def coerce(self, value):  # noqa: ARG002 overrides coerce(value)
                 raise error('no')
 
         return Refusing('size', 1.0)
@@ -284,7 +289,7 @@ class TheContract:
         class Refusing(field.Field):
             defaultDefault = 1.0
 
-            def coerce(self, value):
+            def coerce(self, value):  # noqa: ARG002 overrides coerce(value)
                 raise ValueError('no')
 
         with self.assertRaises(ValueError) as caught:
@@ -329,6 +334,45 @@ class TestThePythonImplementation(TheContract, unittest.TestCase):
                  'the accelerator is not installed')
 class TestTheAcceleratedImplementation(TheContract, unittest.TestCase):
     implementation = field.BaseField
+
+
+class TestAnAcceleratorThatFailsToLoad(unittest.TestCase):
+    """An installed accelerator that cannot be loaded, as when it was built
+    against another numpy, leaves the Python field in place and logs why."""
+
+    def import_field_with(self, fieldaccel2_source):
+        with tempfile.TemporaryDirectory() as directory:
+            package = os.path.join(directory, 'vrml_accelerate')
+            os.mkdir(package)
+            with open(os.path.join(package, '__init__.py'), 'w'):
+                pass
+            with open(os.path.join(package, 'fieldaccel2.py'), 'w') as module:
+                module.write(textwrap.dedent(fieldaccel2_source))
+            environment = dict(os.environ)
+            environment['PYTHONPATH'] = os.pathsep.join(
+                [directory] + [p for p in sys.path if p]
+            )
+            return subprocess.run(
+                [sys.executable, '-c',
+                 'from vrml import field; '
+                 'print(field.BaseField is field.PyBaseField)'],
+                env=environment, capture_output=True, text=True, check=True,
+            )
+
+    def test_the_python_field_serves_and_the_error_is_logged(self):
+        result = self.import_field_with(
+            "raise ValueError('numpy.dtype size changed')\n"
+        )
+        self.assertEqual(result.stdout.strip(), 'True')
+        self.assertIn('numpy.dtype size changed', result.stderr)
+        self.assertIn('Traceback', result.stderr)
+
+    def test_an_absent_accelerator_is_silent(self):
+        result = self.import_field_with(
+            "raise ImportError('no compiled module')\n"
+        )
+        self.assertEqual(result.stdout.strip(), 'True')
+        self.assertEqual(result.stderr, '')
 
 
 if __name__ == '__main__':

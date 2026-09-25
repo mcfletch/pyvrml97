@@ -11,6 +11,7 @@ import unittest
 from vrml import field, node, protofunctions, route
 from vrml.vrml97 import basenodes
 from vrml.vrml97.scenegraph import SceneGraph
+from vrml import copier
 
 
 class TestBuildingARoute(unittest.TestCase):
@@ -120,7 +121,7 @@ class TestForwardingAValue(unittest.TestCase):
             PROTO = 'Refusing'
             set_size = field.newEvent('set_size', 'SFFloat', 0)
 
-            def on_set_size(self, value):
+            def on_set_size(self, value):  # noqa: ARG002 an event handler takes the value
                 raise ValueError('no')
 
         wired = route.ROUTE(self.source, 'translation',
@@ -143,7 +144,6 @@ class TestCopyingARoute(unittest.TestCase):
             self.route.copy()
 
     def test_it_copies_with_one(self):
-        from vrml import copier
         duplicate = self.route.copy(copier.Copier())
         self.assertIsNot(duplicate, self.route)
         self.assertEqual(duplicate.sourceField, 'translation')
@@ -187,20 +187,17 @@ class TestFieldsOnAPrototype(unittest.TestCase):
         self.built = node.prototype('Wheel')
 
     def test_a_field_can_be_added_and_read_back(self):
-        from vrml import field
         added = field.newField('radius', 'SFFloat', 1, 1.0)
         protofunctions.addField(self.built, added)
         self.assertIs(protofunctions.getField(self.built, 'radius'), added)
 
     def test_a_field_can_be_removed_by_name(self):
-        from vrml import field
         protofunctions.addField(self.built, field.newField('radius', 'SFFloat', 1, 1.0))
         protofunctions.removeField(self.built, 'radius')
         with self.assertRaises(AttributeError):
             protofunctions.getField(self.built, 'radius')
 
     def test_a_field_can_be_removed_by_object(self):
-        from vrml import field
         added = field.newField('radius', 'SFFloat', 1, 1.0)
         protofunctions.addField(self.built, added)
         protofunctions.removeField(self.built, added)

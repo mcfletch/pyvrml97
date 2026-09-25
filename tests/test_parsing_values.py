@@ -13,6 +13,9 @@ builds; this covers the values inside them.
 import unittest
 
 from vrml.vrml97.parser import buildParser
+from vrml import field as fieldmodule
+from vrml.vrml97 import parseprocessor
+from vrml.vrml97.parseprocessor import as_str
 
 PARSER = buildParser()
 
@@ -241,9 +244,6 @@ class TestAFieldTypeAPrototypeDeclares(unittest.TestCase):
     def test_every_registered_type_can_be_declared(self):
         """A file may name any field type the library has, so each has to
         have a way of being read."""
-        from vrml import field as fieldmodule
-        from vrml.vrml97 import parseprocessor
-
         #: Node-valued types have their own path through the processor.
         by_hand = {'SFNode', 'MFNode', 'WeakSFNode', 'RootScenegraphNode'}
         missing = sorted(
@@ -311,8 +311,6 @@ class TestReadingASliceOfTheSource(unittest.TestCase):
     as."""
 
     def as_str(self, value):
-        from vrml.vrml97.parseprocessor import as_str
-
         return as_str(value)
 
     def test_text_comes_back_as_it_is(self):

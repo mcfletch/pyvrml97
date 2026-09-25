@@ -17,6 +17,8 @@ import pytest
 from pydispatch.dispatcher import connect
 
 from vrml import field, node, olist
+from vrml import protofunctions
+from vrml.vrml97.scenegraph import SceneGraph
 
 
 class Watcher:
@@ -28,10 +30,10 @@ class Watcher:
         connect(self.on_add, signal=olist.OList.NEW_CHILD_EVT)
         connect(self.on_remove, signal=olist.OList.DEL_CHILD_EVT)
 
-    def on_add(self, sender, value, **named):
+    def on_add(self, sender, value):
         self.added.append((sender, value))
 
-    def on_remove(self, sender, value, **named):
+    def on_remove(self, sender, value):
         self.removed.append((sender, value))
 
 
@@ -73,7 +75,8 @@ class TestAssigningAChildList:
         assert watcher.added
         assert all(sender is holder for sender, _ in watcher.added)
 
-    def test_the_list_object_is_kept(self, watcher) -> None:
+    @pytest.mark.usefixtures('watcher')
+    def test_the_list_object_is_kept(self) -> None:
         """Whatever is holding a reference to the list keeps a live one."""
         holder = Holder(children=[Child()])
         before = holder.children
@@ -118,7 +121,7 @@ class TestOrdinaryFieldsStillWork:
         seen = []
 
         class Listener:
-            def note(self, sender, value=None, **named):
+            def note(self, value=None):
                 seen.append(value)
 
         listener = Listener()
@@ -148,39 +151,31 @@ class TestDeletingAFieldFromAPrototype:
     """
 
     def built(self):
-        from vrml import node as node_module
-        return node_module.prototype('Wheel')
+        return node.prototype('Wheel')
 
     def test_a_scene_graph_is_set_and_read_back(self) -> None:
-        from vrml import protofunctions
-        from vrml.vrml97.scenegraph import SceneGraph
         built, graph = self.built(), SceneGraph()
         protofunctions.setSceneGraph(built, graph)
         assert protofunctions.getSceneGraph(built) is graph
 
     def test_a_scene_graph_is_deleted(self) -> None:
-        from vrml import protofunctions
-        from vrml.vrml97.scenegraph import SceneGraph
         built, graph = self.built(), SceneGraph()
         protofunctions.setSceneGraph(built, graph)
         protofunctions.delSceneGraph(built)
         assert protofunctions.getSceneGraph(built) is not graph
 
     def test_an_external_url_is_set_and_read_back(self) -> None:
-        from vrml import protofunctions
         built = self.built()
         protofunctions.setExternalURL(built, ['http://example.com/w.wrl'])
         assert list(protofunctions.getExternalURL(built)) == [
             'http://example.com/w.wrl']
 
     def test_an_external_url_is_deleted(self) -> None:
-        from vrml import protofunctions
         built = self.built()
         protofunctions.setExternalURL(built, ['http://example.com/w.wrl'])
         protofunctions.delExternalURL(built)
         assert list(protofunctions.getExternalURL(built)) == []
 
     def test_deleting_one_that_was_never_set_raises(self) -> None:
-        from vrml import protofunctions
         with pytest.raises(AttributeError):
             protofunctions.delSceneGraph(self.built())

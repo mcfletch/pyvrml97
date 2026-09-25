@@ -1,5 +1,6 @@
 import unittest
 from vrml import fieldtypes
+from vrml.vrml97 import linearise
 
 class TestFieldTypes( unittest.TestCase ):
     def test_mfvec3f(self):
@@ -65,7 +66,6 @@ class TestTheProductOfADimension(unittest.TestCase):
 
     def test_a_vector_field_writes_itself_out(self):
         """What `length` is read for."""
-        from vrml.vrml97 import linearise
         field = fieldtypes.MFVec3f(name="points")
         text = field.vrmlstr(field.coerce('[1 2 3] [4 5 6]'), linearise.Lineariser())
         self.assertIn('1', text)

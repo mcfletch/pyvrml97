@@ -235,7 +235,7 @@ class TestCopying(unittest.TestCase):
     def test_copying_for_a_node_that_did_not_answers_nothing(self):
         """`_NULL`, which is the copier's sign to leave the field alone."""
         declared = fieldtypes.SFFloat('size', 1, 1.0)
-        self.assertIs(declared.copy(Client()), field._NULL)
+        self.assertIs(declared.copy(Client()), field._NULL)  # noqa: SLF001 the sentinel copy() answers has no public name
 
     def test_the_base_copies_a_value_as_it_stands(self):
         given = object()
@@ -294,7 +294,7 @@ class TestWatchingAField(unittest.TestCase):
         declared = fieldtypes.SFFloat('size', 1, 1.0)
         client = Client()
 
-        def receiver(signal, sender, **named):
+        def receiver(signal):
             told.append(signal[0])
 
         connect(declared, client, receiver)
@@ -314,7 +314,7 @@ class TestWatchingAField(unittest.TestCase):
         declared = fieldtypes.SFFloatEvt('changed', 1)
         client = Client()
 
-        def receiver(signal, sender, **named):
+        def receiver(signal):
             told.append(signal[0])
 
         declared.watch(client, receiver)
@@ -369,7 +369,7 @@ class TestAnEventPort(unittest.TestCase):
         declared = fieldtypes.SFFloatEvt('changed', 1)
         client = Client()
 
-        def receiver(signal, sender, **named):
+        def receiver(signal):
             told.append(signal[0])
 
         declared.watch(client, receiver)
