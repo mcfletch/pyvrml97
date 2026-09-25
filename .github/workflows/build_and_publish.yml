@@ -13,9 +13,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-latest is Apple Silicon (arm64) and macos-15-intel is x86_64,
-        # which is what an Intel Mac needs: a Python extension module gets no
-        # help from Rosetta. macos-13, the Intel label macos-15-intel replaces,
+        # macos-latest is Apple Silicon (arm64) and macos-15-intel is x86_64.
+        # An Intel Mac cannot run an arm64 wheel, so it needs one built on
+        # x86_64. macos-13, the Intel label macos-15-intel replaces,
         # is retired - a job asking for one waits out GitHub's queue limit and
         # is cancelled. One runner per architecture; a second of either would
         # just rebuild the identical wheel.
