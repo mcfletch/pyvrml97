@@ -26,3 +26,6 @@ accelerate/src/*.c
 
 # uv lock (byproduct of tox-uv; not tracked for a library)
 uv.lock
+
+# Working copies of this repository that tools check out beside it
+.claude/
