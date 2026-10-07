@@ -55,5 +55,29 @@ class TestFirstDifference(unittest.TestCase):
         self.assertIsNone(first_difference(scene(deep), scene(deep)))
 
 
+
+class TestProgramSource(unittest.TestCase):
+    """A Script's source inline (XML CDATA, sourceCode) and as an inline
+    url (ClassicVRML's "ecmascript:...") are the same program."""
+
+    def test_inline_source_and_an_inline_url_are_equal(self):
+        cdata = x3d.Script(url=['script.js'], sourceCode='\necmascript:\nfunction f() {}\n')
+        inline = x3d.Script(url=['ecmascript:\nfunction f() {}', 'script.js'])
+        self.assertIsNone(first_difference(scene(cdata), scene(inline)))
+
+    def test_different_programs_differ(self):
+        found = first_difference(scene(x3d.Script(sourceCode='ecmascript: a')),
+                                 scene(x3d.Script(url=['ecmascript: b'])))
+        self.assertIn('source', found)
+
+
+class TestIgnoring(unittest.TestCase):
+    def test_a_named_field_is_not_compared(self):
+        left = scene(x3d.FontStyle(style='BOLD'))
+        right = scene(x3d.FontStyle())
+        self.assertIsNotNone(first_difference(left, right))
+        self.assertIsNone(first_difference(left, right, ignore=[('FontStyle', 'style')]))
+
+
 if __name__ == '__main__':
     unittest.main()

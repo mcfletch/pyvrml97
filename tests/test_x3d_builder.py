@@ -247,7 +247,15 @@ class TestDialects(unittest.TestCase):
         built = Built()
         built.document('Full', '3.0')
         built.node('PhysicalMaterial')
-        self.assertEqual(len(problems(built.end_document(), 'warning')), 1)
+        warnings = problems(built.end_document(), 'warning')
+        self.assertEqual([p.message for p in warnings], ['X3D 3.0 has no node PhysicalMaterial'])
+
+    def test_a_vrml97_document_names_its_version_vrml97(self):
+        built = Built()
+        built.document('', '2.0')
+        built.node('LocalFog')
+        warnings = problems(built.end_document(), 'warning')
+        self.assertEqual([p.message for p in warnings], ['VRML97 has no node LocalFog'])
 
     def test_an_unknown_version_reads_as_the_nearest(self):
         built = Built()

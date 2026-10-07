@@ -171,6 +171,8 @@ class SceneBuilder:
         self.column = 0
         self.scene = X3DScene(baseURI=baseURI)
         self.dialect: DialectTables = dialects.DIALECTS[x3d.X3D_VERSION].tables()
+        #: The name of the document's version, for messages: 'VRML97', 'X3D 3.3'.
+        self.version_name = dialects.DIALECTS[x3d.X3D_VERSION].name
         self._units: "dict[str, float]" = {}
         self._scope = _Scope(None)
         self._body = _Body(self._scope)
@@ -200,10 +202,9 @@ class SceneBuilder:
 
     def document(self, profile: str = '', version: str = '') -> None:
         """The document's header: its profile and version"""
-        if profile:
-            if profile not in profiles.PROFILES:
-                self.problem('warning', 'Unknown profile %r' % profile)
-            self.scene.profile = profile
+        if profile and profile not in profiles.PROFILES:
+            self.problem('warning', 'Unknown profile %r' % profile)
+        self.scene.profile = profile
         if version:
             self.scene.version = version
             chosen = dialects.DIALECTS.get(version)
@@ -214,6 +215,7 @@ class SceneBuilder:
                 self.problem('warning', 'Unknown version %r; read as %s' % (version, nearest))
                 chosen = dialects.DIALECTS[nearest]
             self.dialect = chosen.tables()
+            self.version_name = chosen.name
 
     def component(self, name: str, level: int) -> None:
         """A `component` statement"""
@@ -337,7 +339,7 @@ class SceneBuilder:
             self._frames.append(frame)
             return None
         if not self.dialect.has_node(type_name) and self._scope.proto(type_name) is None:
-            self.problem('warning', 'X3D %s has no node %s' % (self.scene.version, type_name))
+            self.problem('warning', '%s has no node %s' % (self.version_name, type_name))
         built = cls()
         if isinstance(built, x3d.X3DScriptNode):
             self._scripts += 1
@@ -374,6 +376,21 @@ class SceneBuilder:
     def defined(self, name: str) -> bool:
         """Whether a DEF in the current scope has given `name` a node"""
         return self._lookup(name) is not None
+
+    def field_type(self, name: str) -> "str | None":
+        """The type of the open node's field `name`, as its document names it
+
+        None where the node has no such field, or there is no open node.
+        """
+        frame = self._frames[-1] if self._frames else None
+        if frame is None or frame.node is None:
+            return None
+        try:
+            declared = protofunctions.getField(
+                frame.node, self.dialect.current_name(frame.type_name, name))
+        except AttributeError:
+            return None
+        return str(declared.typeName())
 
     def current_node(self) -> Any:
         """The node being built, or None outside one or in skipped content"""

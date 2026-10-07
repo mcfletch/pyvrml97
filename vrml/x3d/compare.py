@@ -4,11 +4,14 @@
 the first node type, field value, route or statement that differs, or None
 where the graphs are equal. Numbers compare to float32 precision. A node
 shared in one graph has to be shared at the same places in the other.
-Comments and `meta` statements are not compared, and inline program source
-is compared without the whitespace around it.
+Comments and `meta` statements are not compared. A Script's or shader's
+program is compared as one text without the whitespace around it, whether a
+document carries it inline (XML's character data, the `sourceCode` field) or
+as an inline url (ClassicVRML's `"ecmascript:..."`), which the encodings
+define as the same thing.
 """
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import Any
 
 import numpy as np
@@ -17,6 +20,22 @@ from vrml import field, node, protofunctions
 
 #: Relative and absolute tolerance for numbers: what float32 resolves.
 TOLERANCE = 1e-6
+
+#: The url schemes of a program written inline.
+INLINE_SCHEMES = ('ecmascript:', 'javascript:', 'vrmlscript:')
+
+
+def _inline(url: str) -> bool:
+    return url.strip().lower().startswith(INLINE_SCHEMES)
+
+
+def _program(target: Any) -> "tuple[str, list[str]]":
+    """A node's inline program text, and the urls that are not inline"""
+    urls = list(getattr(target, 'url', None) or [])
+    source = (getattr(target, 'sourceCode', '') or '').strip()
+    if not source:
+        source = '\n'.join(url.strip() for url in urls if _inline(url))
+    return source, [url for url in urls if not _inline(url)]
 
 
 def _values_differ(a: Any, b: Any) -> "str | None":
@@ -48,7 +67,8 @@ def _values_differ(a: Any, b: Any) -> "str | None":
 
 
 class _Comparison:
-    def __init__(self) -> None:
+    def __init__(self, ignore: "frozenset[tuple[str, str]]") -> None:
+        self.ignore = ignore
         self.pairs: "dict[Any, Any]" = {}
         self.reverse: "dict[Any, Any]" = {}
 
@@ -66,10 +86,18 @@ class _Comparison:
         if protofunctions.protoName(a) != protofunctions.protoName(b):
             return '%s: %s != %s' % (path, protofunctions.protoName(a),
                                      protofunctions.protoName(b))
+        type_name = protofunctions.protoName(a)
         names = {f.name for f in protofunctions.getFields(a)} | {
             f.name for f in protofunctions.getFields(b)}
+        if 'sourceCode' in names and 'url' in names:
+            left, right = _program(a), _program(b)
+            if left[0] != right[0]:
+                return '%s: program source %r != %r' % (path, left[0][:60], right[0][:60])
+            if left[1] != right[1]:
+                return '%s.url: %r != %r' % (path, left[1], right[1])
+            names -= {'sourceCode', 'url'}
         for name in sorted(names):
-            if name.startswith(' ') or name == 'externalURL':
+            if name.startswith(' ') or name == 'externalURL' or (type_name, name) in self.ignore:
                 continue
             found = self.fields(a, b, name, '%s.%s' % (path, name))
             if found:
@@ -88,10 +116,6 @@ class _Comparison:
             return self.node_lists(list(left or []), list(right or []), path)
         if isinstance(left_field, node.SFNode):
             return self.nodes(left, right, path)
-        if name == 'sourceCode' and isinstance(left, str) and isinstance(right, str):
-            # The encodings keep inline source with different whitespace
-            # around it: XML's CDATA as written, JSON's as a list of lines.
-            left, right = left.strip(), right.strip()
         found = _values_differ(left, right)
         return '%s: %s' % (path, found) if found else None
 
@@ -117,9 +141,16 @@ def _records(nodes: Sequence[Any], names: Sequence[str]) -> "list[tuple[Any, ...
     return [tuple(getattr(item, name) for name in names) for item in nodes]
 
 
-def first_difference(a: Any, b: Any) -> "str | None":
-    """Where two scenes first differ, or None where their graphs are equal"""
-    for name in ('profile', 'version'):
+def first_difference(
+    a: Any, b: Any, ignore: "Iterable[tuple[str, str]]" = (), header: bool = True,
+) -> "str | None":
+    """Where two scenes first differ, or None where their graphs are equal
+
+    ignore -- (node type, field name) pairs not to compare
+    header -- compare the profile, version, components and units; False for
+        the same scene read from a VRML97 file, which has none of them
+    """
+    for name in ('profile', 'version') if header else ():
         if getattr(a, name, None) != getattr(b, name, None):
             return '%s: %r != %r' % (name, getattr(a, name, None), getattr(b, name, None))
     checks = (
@@ -129,13 +160,15 @@ def first_difference(a: Any, b: Any) -> "str | None":
         ('exports', ('localDEF', 'AS')),
     )
     for name, fields in checks:
+        if not header and name in ('components', 'units'):
+            continue
         left = _records(getattr(a, name, ()), fields)
         right = _records(getattr(b, name, ()), fields)
         if left != right:
             return '%s: %s != %s' % (name, left, right)
     if sorted(a.protoTypes) != sorted(b.protoTypes):
         return 'prototypes: %s != %s' % (sorted(a.protoTypes), sorted(b.protoTypes))
-    comparison = _Comparison()
+    comparison = _Comparison(frozenset(ignore))
     found = comparison.node_lists(list(a.children), list(b.children), 'children')
     if found:
         return found
