@@ -1,6 +1,35 @@
-"""Routable event base-class for VRML environments"""
+"""Routable event base-class for VRML environments
 
+An :class:`Event` is one cascade: the routes a change sets going, and the
+changes they make in turn, each field reached at most once
+(ISO/IEC 19775-1, 4.4.8.3). :func:`current` is the cascade being forwarded
+on this thread, so a change made inside it -- a node's handler sending its
+outputs -- carries on the same cascade rather than starting another.
+"""
+
+import contextlib
+import contextvars
+from collections.abc import Iterator
 from typing import Any, Optional
+
+#: The cascade being forwarded, or None between cascades.
+_CURRENT: "contextvars.ContextVar[Optional[Event]]" = contextvars.ContextVar(
+    'vrml_event_cascade', default=None)
+
+
+def current() -> "Optional[Event]":
+    """The cascade being forwarded on this thread, or None"""
+    return _CURRENT.get()
+
+
+@contextlib.contextmanager
+def forwarding(event: "Event") -> Iterator["Event"]:
+    """Make `event` the :func:`current` cascade within the block"""
+    token = _CURRENT.set(event)
+    try:
+        yield event
+    finally:
+        _CURRENT.reset(token)
 
 
 class Event( object ):

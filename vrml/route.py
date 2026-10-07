@@ -83,9 +83,17 @@ class ROUTE( node.Node ):
         destination: Any, destinationField: Any,
         event: Any=None, value: Any=None,
     ) -> None:
-        """Do the low-level forwarding of the value to a target field"""
+        """Do the low-level forwarding of the value to a target field
+
+        A signal that carries no event joins the cascade being forwarded,
+        or begins one.
+        """
         if event is None:
-            event = eventmodule.Event()
+            event = eventmodule.current() or eventmodule.Event()
+        if eventmodule.current() is not event:
+            with eventmodule.forwarding(event):
+                return self._forward(sender, signal, destination, destinationField,
+                                     event, value)
         signal, sourceField = signal
         if signal == 'del':
             value = sourceField.fget( sender )

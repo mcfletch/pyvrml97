@@ -175,7 +175,10 @@ Behaviour
 
 The declarations carry fields; ``vrml.x3d.runtime`` gives some nodes their
 behaviour. Setting an ``inputOnly`` event on a node calls its handler, and the
-outputs the handler sets are forwarded along routes as any field change is:
+outputs the handler sets are forwarded along routes as any field change is.
+A change and everything its routes set going, through handlers and on along
+their outputs' routes, is one cascade (``vrml.event``), in which each field
+is reached at most once, so routes that loop end:
 
 - ``BooleanFilter``, ``BooleanToggle``, ``BooleanTrigger``, ``IntegerTrigger``
   and ``TimeTrigger``, which sends the time of its scene.
