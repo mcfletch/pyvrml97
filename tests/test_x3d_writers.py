@@ -356,6 +356,21 @@ class TestClassic(unittest.TestCase):
 
 
 class TestJSON(unittest.TestCase):
+    def test_a_list_of_numbers_is_one_line(self):
+        points = [(float(i), 0.0, 1.0) for i in range(1000)]
+        scene = X3DScene(children=[nodes.Shape(geometry=nodes.PointSet(
+            coord=nodes.Coordinate(point=points)))])
+        text = x3d.dumps(scene, encoding='json')
+        self.assertLess(len(text.splitlines()), 60)
+        again = x3d.loads(text)
+        self.assertEqual(len(again.children[0].geometry.coord.point), 1000)
+
+    def test_it_reads_as_the_standard_library_writes_it(self):
+        import json as stdjson  # noqa: PLC0415 kept with its use
+        from vrml.x3d.writers import json as writer  # noqa: PLC0415 kept with its use
+        document = {'X3D': {'a': [1, 2.5, True], 'b': [{'c': 'd\n"e"'}, []], 'e': {}, 'f': 'é'}}
+        self.assertEqual(stdjson.loads(writer.text(document)), document)
+
     def test_the_document(self):
         document = json.loads(x3d.dumps(everything(), encoding='json'))
         top = document['X3D']

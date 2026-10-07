@@ -44,6 +44,26 @@ def json_value(type_name: str, value: Any) -> Any:
     return [_number(item) for item in np.asarray(value).ravel()]
 
 
+def text(value: Any, depth: int = 0) -> str:
+    """`value` as JSON text indented by two spaces a level, as `json.dumps`
+    indents it, except that a list of numbers and booleans is one line"""
+    indent, inner = '  ' * depth, '  ' * (depth + 1)
+    if isinstance(value, dict):
+        if not value:
+            return '{}'
+        return '{\n%s\n%s}' % (',\n'.join(
+            '%s%s: %s' % (inner, json.dumps(key, ensure_ascii=False), text(item, depth + 1))
+            for key, item in value.items()), indent)
+    if isinstance(value, list):
+        if not value:
+            return '[]'
+        if all(isinstance(item, (int, float)) for item in value):
+            return '[%s]' % ', '.join(json.dumps(item) for item in value)
+        return '[\n%s\n%s]' % (',\n'.join(
+            inner + text(item, depth + 1) for item in value), indent)
+    return json.dumps(value, ensure_ascii=False)
+
+
 class JSONWriter(SceneWriter):
     """Writes a scene as an X3D JSON document"""
 
@@ -75,7 +95,7 @@ class JSONWriter(SceneWriter):
         children.extend(self.route_objects(self.scene))
         self.leave()
         top['Scene'] = {'-children': children} if children else {}
-        return json.dumps({'X3D': top}, indent=2, ensure_ascii=False) + '\n'
+        return text({'X3D': top}) + '\n'
 
     def head(self) -> "dict[str, Any]":
         head: "dict[str, Any]" = {}
