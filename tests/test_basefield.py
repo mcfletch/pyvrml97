@@ -24,7 +24,7 @@ import unittest
 
 from pydispatch import dispatcher
 
-from vrml import field
+from vrml import event, field
 
 
 class Client:
@@ -159,6 +159,28 @@ class TheContract:
     def test_setting_is_announced_with_the_new_value(self):
         heard = self.heard_while(lambda held, client: held.fset(client, 2.0))
         self.assertEqual(heard, [('set', 2.0)])
+
+    def test_a_set_is_announced_within_one_cascade(self):
+        """Every receiver of a set made outside a cascade is in the same one"""
+        cascades = []
+
+        def first(**_named):
+            cascades.append(event.current())
+
+        def second(**_named):
+            cascades.append(event.current())
+        held, client = self.a_field(), Client()
+        for receiver in (first, second):
+            dispatcher.connect(receiver, sender=client, weak=False)
+        try:
+            held.fset(client, 2.0)
+        finally:
+            for receiver in (first, second):
+                dispatcher.disconnect(receiver, sender=client, weak=False)
+        self.assertEqual(len(cascades), 2)
+        self.assertIsNotNone(cascades[0])
+        self.assertIs(cascades[0], cascades[1])
+        self.assertIsNone(event.current())
 
     def test_deleting_is_announced(self):
         def act(held, client):

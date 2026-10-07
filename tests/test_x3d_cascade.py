@@ -24,6 +24,19 @@ class TestLoops(unittest.TestCase):
         self.assertIs(second.__dict__['inputNegate'], True)
         self.assertEqual(len(routes), 2)
 
+    def test_a_field_set_from_outside_is_one_cascade_down_every_route(self):
+        """Two routes from one field meet again: the field they meet at is
+        reached once"""
+        source, last = runtime.BooleanToggle(), runtime.BooleanToggle()
+        left, right = runtime.BooleanFilter(), runtime.BooleanFilter()
+        _scene = X3DScene(children=[source, left, right, last])
+        _routes = [ROUTE(source, 'toggle', left, 'set_boolean'),
+                   ROUTE(source, 'toggle', right, 'set_boolean'),
+                   ROUTE(left, 'inputTrue', last, 'set_boolean'),
+                   ROUTE(right, 'inputTrue', last, 'set_boolean')]
+        source.toggle = True
+        self.assertIs(last.toggle, True)
+
     def test_separate_cascades_each_reach_the_field(self):
         source, target = runtime.BooleanToggle(), runtime.BooleanFilter()
         _scene = X3DScene(children=[source, target])

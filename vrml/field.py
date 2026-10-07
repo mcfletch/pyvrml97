@@ -5,6 +5,7 @@ from pydispatch import dispatcher, robustapply
 import logging
 import weakref
 from vrml import protonamespace
+from vrml.event import announce
 
 # The compiled field comes from the optional vrml_accelerate package.
 try:
@@ -113,21 +114,12 @@ class BaseField(object):
     def __set__(self, client: Any, value: Any) -> None:
         """Set value for given instance"""
         value = self._set(client, value)
-        dispatcher.send(
-            ('set', self),
-            client,
-            value=value,
-        )
-        # return value
+        announce(('set', self), client, value=value)
 
     def fset(self, client: Any, value: Any, notify: bool=True) -> Any:
         value = self._set(client, value)
         if notify:
-            dispatcher.send(
-                ('set', self),
-                client,
-                value=value,
-            )
+            announce(('set', self), client, value=value)
         return value
 
     def _set(self, client: Any, value: Any) -> Any:
@@ -209,10 +201,7 @@ class BaseField(object):
         """Delete with notify, answering the value that was there"""
         value = self._del(client)
         if notify:
-            dispatcher.send(
-                ('del', self),
-                client,
-            )
+            announce(('del', self), client)
         return value
 
 
@@ -588,7 +577,7 @@ class Event(object):
         client.__dict__[self.name] = value
         # and then send event letting world know...
         if notify:
-            dispatcher.send(('set', self), client, value=value)
+            announce(('set', self), client, value=value)
 
     def __get__(self, client: Any=None, cls: Any=None) -> Any:
         """Get an event's last value"""

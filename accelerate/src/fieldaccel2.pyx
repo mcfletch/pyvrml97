@@ -1,4 +1,4 @@
-from pydispatch.dispatcher import send
+from vrml.event import announce
 _NULL = object()
 
 cdef class BaseField( object ):
@@ -86,10 +86,7 @@ cdef class BaseField( object ):
             except KeyError as err:
                 raise AttributeError( self.name )
         if notify:
-            send(
-                ('del',self), 
-                client, 
-            )
+            announce(('del', self), client)
         return value
     cdef _set(self, client, value, int notify ):
         """Set value to give value, with coercion"""
@@ -104,9 +101,5 @@ cdef class BaseField( object ):
         else:
             client.__dict__[self.name] = value
         if notify:
-            send( 
-                ('set',self), 
-                client, 
-                value=value,
-            )
+            announce(('set', self), client, value=value)
         return value 

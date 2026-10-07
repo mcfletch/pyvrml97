@@ -12,6 +12,8 @@ import contextvars
 from collections.abc import Iterator
 from typing import Any, Optional
 
+from pydispatch import dispatcher
+
 #: The cascade being forwarded, or None between cascades.
 _CURRENT: "contextvars.ContextVar[Optional[Event]]" = contextvars.ContextVar(
     'vrml_event_cascade', default=None)
@@ -28,6 +30,23 @@ def forwarding(event: "Event") -> Iterator["Event"]:
     token = _CURRENT.set(event)
     try:
         yield event
+    finally:
+        _CURRENT.reset(token)
+
+
+def announce(signal: Any, sender: Any, **named: Any) -> Any:
+    """Send `signal` from `sender` within the cascade under way, or a new one
+
+    A field's change goes on along every route from it in one cascade, so
+    routes that part and meet again reach the field where they meet once.
+    """
+    if _CURRENT.get() is not None:
+        return dispatcher.send(signal, sender, **named)
+    # Set and reset by hand rather than through `forwarding`: this runs for
+    # every field set, and the context manager would be most of its cost.
+    token = _CURRENT.set(Event())
+    try:
+        return dispatcher.send(signal, sender, **named)
     finally:
         _CURRENT.reset(token)
 
