@@ -146,6 +146,34 @@ class TestCurrent(BindCase):
         self.assertIs(sent(self.first, 'isBound'), True)
 
 
+class TestInlines(BindCase):
+    """7.2.2: nodes of a file an Inline reads are not candidates for the first
+    encountered bindable"""
+
+    def setUp(self):
+        super().setUp()
+        self.inlined = nodes.Viewpoint(description='inlined')
+        self.inner = ClockedScene(children=[self.inlined])
+        self.inline = nodes.Inline()
+        self.scene.children = list(self.scene.children) + [self.inline]
+
+    def test_the_main_files_node_is_bound_first(self):
+        paths = [(self.scene, self.inline, self.inlined), (self.scene, self.first)]
+        self.assertIs(binding.current_path(paths), paths[1])
+        self.assertIs(binding.bound(self.first), self.first)
+        self.assertIsNone(sent(self.inlined, 'isBound'))
+
+    def test_only_inlined_nodes_bind_none(self):
+        paths = [(self.scene, self.inline, self.inlined)]
+        self.assertIsNone(binding.current_path(paths))
+        self.assertIsNone(sent(self.inlined, 'isBound'))
+
+    def test_an_inlined_node_bound_by_an_event_is_current(self):
+        self.inlined.set_bind = True
+        paths = [(self.scene, self.first), (self.scene, self.inline, self.inlined)]
+        self.assertIs(binding.current_path(paths), paths[1])
+
+
 class TestVRML97(unittest.TestCase):
     def test_vrml97s_bindables_are_x3ds(self):
         from vrml.vrml97 import basenodes  # noqa: PLC0415 kept with its use
@@ -155,3 +183,11 @@ class TestVRML97(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestUnrooted(unittest.TestCase):
+    def test_a_node_made_in_code_is_a_candidate(self):
+        """A scene built in code may leave its nodes without a root"""
+        made = nodes.Viewpoint()
+        paths = [(nodes.Group(children=[made]), made)]
+        self.assertIs(binding.current_path(paths), paths[0])

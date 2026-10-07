@@ -87,23 +87,42 @@ def current(candidates: Iterable[Any]) -> Any:
 def current_path(paths: Sequence[Any]) -> Any:
     """The path of `paths` to the bound node, binding one where it is not reached
 
-    Each path is a sequence ending at a bindable node, all of one kind in one
-    scene: the paths a scene draws, which a `Switch` choosing another child
-    changes. The topmost node of the stack that a path reaches is bound
-    (moved to the top where it is beneath); where none is reached, the first
-    path's node is bound. None where `paths` is empty.
+    Each path is a sequence from the scene drawn to a bindable node, all of
+    one kind: the paths a scene draws, which a `Switch` choosing another child
+    changes. The topmost node a path reaches is bound (moved to the top where
+    it is beneath), looking at the drawn scene's stack and then at those of the
+    scenes its Inlines read. Where none is reached, the first path to a node
+    of the drawn scene itself is bound: the nodes of a file an Inline reads
+    are not candidates for the first bound (19775-1, 7.2.2). None where no
+    path leads to one.
     """
     if not paths:
         return None
-    stack = _stack(_owner(paths[0][-1]), kind_of(paths[0][-1]))
-    for reference in reversed(stack):
-        node = reference()
-        for path in paths:
-            if path[-1] is node:
-                node.set_bind = True
-                return path
-    paths[0][-1].set_bind = True
-    return paths[0]
+    kind = kind_of(paths[0][-1])
+    main = _owner(paths[0][0])
+    owners = [main]
+    for path in paths:
+        owner = _owner(path[-1])
+        if not any(owner is known for known in owners):
+            owners.append(owner)
+    for owner in owners:
+        for reference in reversed(_stack(owner, kind)):
+            node = reference()
+            for path in paths:
+                if path[-1] is node:
+                    node.set_bind = True
+                    return path
+    for path in paths:
+        if not _inlined(path[-1], main):
+            path[-1].set_bind = True
+            return path
+    return None
+
+
+def _inlined(node: Any, main: Any) -> bool:
+    """Whether `node` is of another scene than `main`: one an Inline read"""
+    owner = protofunctions.root(node)
+    return bool(owner) and owner is not main
 
 
 class Bindable(timing.Timed):
