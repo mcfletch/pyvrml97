@@ -57,6 +57,21 @@ class TestBinding(BindCase):
         self.assertIs(sent(self.first, 'isBound'), True)
         self.assertEqual(sent(self.first, 'bindTime'), 9.0)
 
+    def test_a_bound_node_collected_uncovers_the_one_beneath(self):
+        """7.2.2: a bound node deleted behaves as if it were sent set_bind FALSE"""
+        import gc  # noqa: PLC0415 kept with its use
+        passing = nodes.Viewpoint(description='passing')
+        self.scene.children.append(passing)
+        self.first.set_bind = True
+        passing.set_bind = True
+        self.scene.children.remove(passing)
+        del passing
+        gc.collect()
+        self.scene.now = 9.0
+        self.assertIs(binding.bound(self.first), self.first)
+        self.assertIs(sent(self.first, 'isBound'), True)
+        self.assertEqual(sent(self.first, 'bindTime'), 9.0)
+
     def test_unbinding_a_node_beneath_the_top_sends_nothing(self):
         self.first.set_bind = True
         self.second.set_bind = True

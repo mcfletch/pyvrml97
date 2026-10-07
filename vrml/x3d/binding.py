@@ -10,11 +10,14 @@ bound one.
 - `set_bind FALSE` on the top node takes it off: it sends `isBound FALSE` and
   `bindTime`, and the node it uncovers sends `isBound TRUE` and `bindTime`. On
   a node beneath the top it takes the node off and sends nothing.
+- A bound node that has been collected is taken off as if it were sent
+  `set_bind FALSE`, at the next look at its stack: the node it uncovers sends
+  `isBound TRUE` and `bindTime` then.
 
 The stacks are kept on the scene the node is rooted in; a node in no scene is
 a stack of its own. `bindTime` is the node's :meth:`~vrml.x3d.timing.Timed.now`.
-Layers do not yet have stacks of their own: every node of a scene is on the
-scene's stacks.
+Every node of a scene, inside a `Layer` or not, is on the scene's stacks;
+the separate stacks X3D gives each layer (7.2.2) are not kept.
 """
 
 from __future__ import annotations
@@ -43,10 +46,15 @@ def kind_of(node: Any) -> type:
 
 
 def _stack(owner: Any, kind: type) -> "list[weakref.ref[Any]]":
-    """The bind stack of `kind` on `owner`, the top last"""
+    """The bind stack of `kind` on `owner`, the top last; a collected top uncovers
+    the node beneath it"""
     stacks: "dict[type, list[weakref.ref[Any]]]" = owner.__dict__.setdefault('_bindStacks', {})
     found = stacks.setdefault(kind, [])
+    top_collected = bool(found) and found[-1]() is None
     found[:] = [reference for reference in found if reference() is not None]
+    uncovered = found[-1]() if top_collected and found else None
+    if uncovered is not None:
+        uncovered.sendBound(True)
     return found
 
 
