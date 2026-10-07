@@ -1,38 +1,97 @@
 """The ClassicVRML encoding (ISO/IEC 19776-2) and VRML97 (ISO/IEC 14772-1)
 
-One reader for both: the first line says which (`#X3D V4.0 utf8` or
-`#VRML V2.0 utf8`), and the VRML97 dialect applies to the second. Field
-values are read by the type of the field they are for, which the builder
-knows, so a bracketed list of numbers is taken as one slice of text and
-decoded by the field's codec rather than number by number.
+One SimpleParse grammar for both: the first line says which (`#X3D V4.0
+utf8` or `#VRML V2.0 utf8`), and the VRML97 dialect applies to the second.
+The grammar finds a document's structure; a field's value is reported as one
+span, which the processor decodes by the type of the field it is for, so a
+list of numbers is converted by the field's codec in one step rather than
+number by number.
 
 A file with an X3D header that declares fields with VRML97's words
 (`field`, `exposedField`, `eventIn`, `eventOut`) is read with a warning,
-which is an error in strict mode.
+which is an error in strict mode. What Web3D's converter writes outside the
+grammar (a DEF name with a full stop, a prototype inside a list of nodes) is
+read with a warning.
 """
 
 import re
 from typing import Any
 
+from simpleparse.common import chartypes  # noqa: F401 registers EOF, which the grammar names
+from simpleparse.error import ParserSyntaxError
+from simpleparse.parser import Parser
+
 from vrml.x3d import codecs
 from vrml.x3d.builder import SceneBuilder
 from vrml.x3d.scene import X3DScene
 
-TOKEN = re.compile(r'''
-    (?P<space>[ \t\r\n,]+)
-  | (?P<block>\#/\*.*?\*/\#)
-  | (?P<comment>\#[^\n]*)
-  | (?P<string>"(?:[^"\\]|\\.)*")
-  | (?P<number>[+-]?(?:0[xX][0-9a-fA-F]+|(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?))
-  | (?P<punct>[{}\[\].:])
-  | (?P<id>[^\x00-\x20"\#',.\[\]\\{}\x7f+\-0-9:][^\x00-\x20"\#',.\[\]\\{}\x7f]*)
-''', re.VERBOSE | re.DOTALL)
+GRAMMAR = r'''
+classicFile    := header?, statements, ts, EOF
+header         := '#', headerKind, [ \t]+, 'V'?, version, -[\n]*
+headerKind     := 'VRML' / 'X3D'
+version        := [0-9]+, '.', [0-9]+
 
-HEADER = re.compile(r'#(VRML|X3D)\s+V?(\d+\.\d+)\s+utf8[^\n]*')
+statements     := (ts, statement)*
+>statement<    := profile / component / unit / meta / proto / externProto / route
+                / import / export / nodeStatement
 
-#: Up to the close of a list of numbers: anything but a string, a comment or
-#: the bracket.
-NUMBERS = re.compile(r'[^\]"#{}]*')
+profile        := 'PROFILE', ws, !, id
+component      := 'COMPONENT', ws, !, componentName, ts, ':', ts, integer
+componentName  := -[: \t\r\n,]+
+unit           := 'UNIT', ws, !, id, ws, id, ws, factor
+factor         := number
+meta           := 'META', ts, !, string, ts, string
+route          := 'ROUTE', ws, !, id, '.', id, ws, 'TO', ws, id, '.', id
+import         := 'IMPORT', ws, !, id, '.', id, (ws, 'AS', ws, id)?
+export         := 'EXPORT', ws, !, id, (ws, 'AS', ws, id)?
+
+proto          := 'PROTO', ws, !, id, ts, '[', declarations, ts, ']', ts,
+                  '{', protoBody, ts, '}'
+protoBody      := statements
+externProto    := 'EXTERNPROTO', ws, !, id, ts, '[', declarations, ts, ']', ts, urls
+urls           := listValue / string
+declarations   := (ts, declaration)*
+declaration    := accessType, ws, !, id, ws, id, (ts, isTarget)?, (ts, value)?
+isTarget       := 'IS', ws, id
+accessType     := ('initializeOnly' / 'inputOutput' / 'inputOnly' / 'outputOnly'
+                / 'exposedField' / 'field' / 'eventIn' / 'eventOut'), ?(delimiter / EOF)
+
+>nodeStatement< := defNode / useNode / node
+defNode        := 'DEF', ws, !, nodeName, ws, node
+useNode        := 'USE', ws, !, nodeName
+node           := id, ts, '{', nodeBody, ts, '}'!
+nodeBody       := (ts, bodyElement)*
+>bodyElement<  := declaration / proto / externProto / route / connect / fieldValue
+connect        := id, ws, 'IS', ?(delimiter / EOF), ws, !, id
+fieldValue     := id, ts, value
+
+>value<        := listValue / null / nodeStatement / scalars
+null           := 'NULL', ?(delimiter / EOF)
+listValue      := '[', ts, (scalarList / nodeList), ts, ']'!
+scalarList     := scalar, (ts, scalar)*
+nodeList       := (ts, listItem)*
+>listItem<     := proto / externProto / route / nodeStatement
+scalars        := scalar, (ts, scalar)*
+<scalar>       := number / string / (word, ?(delimiter / EOF))
+<word>         := 'TRUE' / 'FALSE' / 'true' / 'false'
+
+nodeName       := id, ('.', idRest+)*
+id             := idFirst, idRest*
+<idFirst>      := -[][{}\000-\040"'#,.\\:+0-9\177-]
+<idRest>       := -[][{}\000-\040"'#,.\\\177]
+<delimiter>    := [][{}\000-\040"'#,.\\\177]
+<number>       := [-+]?, (hexadecimal / decimal)
+<hexadecimal>  := '0', [xX], [0-9a-fA-F]+
+<decimal>      := (([0-9]+, ('.', [0-9]*)?) / ('.', [0-9]+)), ([eE], [-+]?, [0-9]+)?
+integer        := [-+]?, [0-9]+
+string         := '"', (-[\\"] / ('\\', -[\000]))*, '"'
+<ws>           := ([ \t\r\n,] / comment)+
+<ts>           := ([ \t\r\n,] / comment)*
+<comment>      := ('#/*', -'*/#'*, '*/#') / ('#', -[\n]*)
+'''
+
+
+PARSER = Parser(GRAMMAR, 'classicFile')
 
 ACCESS_TYPES = {
     'initializeOnly': 'initializeOnly', 'inputOutput': 'inputOutput',
@@ -42,47 +101,20 @@ VRML97_ACCESS_TYPES = {
     'field': 'initializeOnly', 'exposedField': 'inputOutput',
     'eventIn': 'inputOnly', 'eventOut': 'outputOnly',
 }
-STATEMENT_WORDS = frozenset((
-    'PROTO', 'EXTERNPROTO', 'ROUTE', 'IMPORT', 'EXPORT', 'PROFILE', 'COMPONENT',
-    'UNIT', 'META',
-))
-WORDS = frozenset(('TRUE', 'FALSE', 'true', 'false'))
 
-
-class ClassicSyntaxError(ValueError):
-    """Text the grammar does not allow"""
-
-    def __init__(self, message: str, position: int) -> None:
-        super().__init__(message)
-        self.position = position
-
-
-class _Token:
-    __slots__ = ('kind', 'text', 'start', 'end')
-
-    def __init__(self, kind: str, text: str, start: int, end: int) -> None:
-        self.kind = kind
-        self.text = text
-        self.start = start
-        self.end = end
-
-    def __repr__(self) -> str:
-        return '%s %r' % (self.kind, self.text)
+#: A comment inside a span of values, outside the strings there.
+COMMENT = re.compile(r'"(?:[^"\\]|\\.)*"|#/\*.*?\*/#|#[^\n]*', re.DOTALL)
 
 
 class ClassicReader:
-    """Reads ClassicVRML or VRML97 text into builder calls"""
+    """Turns a ClassicVRML or VRML97 parse tree into builder calls"""
 
     def __init__(self, builder: SceneBuilder, text: str) -> None:
         self.builder = builder
         self.text = text
-        self.position = 0
-        self.peeked: "_Token | None" = None
         self.vrml97 = False
         self._line_position = 0
         self._line = 1
-
-    # Positions and tokens
 
     def _where(self, position: int) -> None:
         """Tell the builder the line and column of `position`"""
@@ -93,466 +125,253 @@ class ClassicReader:
         self.builder.line = self._line
         self.builder.column = position - self.text.rfind('\n', 0, position)
 
-    def peek(self) -> "_Token | None":
-        if self.peeked is None:
-            self.peeked = self._scan()
-        return self.peeked
-
-    def next(self) -> _Token:
-        token = self.peek()
-        if token is None:
-            raise ClassicSyntaxError('Unexpected end of text', len(self.text))
-        self.peeked = None
-        return token
-
-    def _scan(self) -> "_Token | None":
-        text = self.text
-        while self.position < len(text):
-            match = TOKEN.match(text, self.position)
-            if match is None:
-                if text.startswith('#/*', self.position):
-                    raise ClassicSyntaxError('Block comment is not closed', self.position)
-                raise ClassicSyntaxError('Unexpected character %r' % text[self.position],
-                                         self.position)
-            self.position = match.end()
-            kind = match.lastgroup or ''
-            if kind in ('space', 'block', 'comment'):
-                continue
-            return _Token(kind, match.group(), match.start(), match.end())
-        return None
-
-    def expect(self, text: str) -> _Token:
-        token = self.next()
-        if token.text != text:
-            raise ClassicSyntaxError('Expected %r, found %r' % (text, token.text), token.start)
-        return token
-
-    def identifier(self) -> _Token:
-        token = self.next()
-        if token.kind != 'id':
-            raise ClassicSyntaxError('Expected a name, found %r' % token.text, token.start)
-        return token
-
-    def node_name(self) -> str:
-        """A DEF or USE name
-
-        ClassicVRML names cannot hold a full stop, but XML IDs can, and
-        converted documents carry them over: `brick.jpg` is read as one name,
-        with a warning.
-        """
-        token = self.identifier()
-        name = token.text
-        while self.position < len(self.text) and self.text[self.position] == '.':
-            follow = TOKEN.match(self.text, self.position + 1)
-            if follow is None or follow.lastgroup not in ('id', 'number'):
-                break
-            name += '.' + follow.group()
-            self.position = follow.end()
-            self.peeked = None
-        if name != token.text:
-            self._where(token.start)
-            self.builder.problem('warning', 'Name %r holds a full stop' % name)
-        return name
-
-    def at(self, text: str) -> bool:
-        token = self.peek()
-        return token is not None and token.text == text
-
-    # The document
+    def _text(self, production: Any) -> str:
+        return self.text[production[1]:production[2]]
 
     def read(self) -> X3DScene:
         try:
-            self._header()
-            while self.peek() is not None:
-                self._statement()
-        except ClassicSyntaxError as error:
-            self._where(error.position)
-            self.builder.problem('error', 'ClassicVRML: %s' % error)
+            success, children, end = PARSER.parse(self.text)
+        except ParserSyntaxError as error:
+            position = error.position or 0
+            self._where(position)
+            expected = ' (expected %s)' % error.expected if error.expected else ''
+            self.builder.problem('error', 'ClassicVRML: %s%s' % (self._describe(position), expected))
             return self.builder.end_document(complete=False)
-        return self.builder.end_document()
-
-    def _header(self) -> None:
-        match = HEADER.match(self.text)
-        if match is None:
+        if not success:
+            self._where(end)
+            self.builder.problem('error', 'ClassicVRML: %s' % self._describe(end))
+            return self.builder.end_document(complete=False)
+        if not children or children[0][0] != 'header':
             self._where(0)
             self.builder.problem('error', 'No #X3D or #VRML header')
-            return
-        self.vrml97 = match.group(1) == 'VRML'
-        self.position = match.end()
-        self.builder.document('', match.group(2))
+        for production in children:
+            if production[0] != 'EOF':
+                getattr(self, '_' + production[0])(production)
+        return self.builder.end_document()
 
-    def _statement(self) -> None:
-        token = self.peek()
-        assert token is not None
-        word = token.text
-        if word == 'PROFILE':
-            self.next()
-            name = self.identifier()
-            self._where(name.start)
-            self.builder.document(name.text, self.builder.scene.version)
-        elif word == 'COMPONENT':
-            self._component()
-        elif word == 'UNIT':
-            self.next()
-            category = self.identifier()
-            name = self.identifier()
-            factor = self.next()
-            self._where(category.start)
-            try:
-                self.builder.unit(category.text, name.text, float(factor.text))
-            except ValueError:
-                raise ClassicSyntaxError('UNIT conversion factor %r' % factor.text,
-                                         factor.start) from None
-        elif word == 'META':
-            self.next()
-            key = self._string()
-            value = self._string()
-            self.builder.meta(key, value)
-        elif word in ('PROTO', 'EXTERNPROTO'):
-            self._proto()
-        elif word == 'ROUTE':
-            self._route()
-        elif word == 'IMPORT':
-            self._import()
-        elif word == 'EXPORT':
-            self._export()
-        else:
-            self._node_statement()
+    def _describe(self, position: int) -> str:
+        found = self.text[position:position + 20].split('\n')[0]
+        return 'cannot read %r' % found if found else 'unexpected end of text'
 
-    def _component(self) -> None:
-        self.next()
-        name = self.identifier()
-        text = name.text
-        if ':' in text:
-            component, _colon, level = text.partition(':')
-            if not level:
-                level = self.next().text
-        else:
-            self.expect(':')
-            component, level = text, self.next().text
-        self._where(name.start)
-        try:
-            self.builder.component(component, int(level))
-        except ValueError:
-            raise ClassicSyntaxError('COMPONENT level %r' % level, name.start) from None
+    # Statements
 
-    def _string(self) -> str:
-        token = self.next()
-        if token.kind != 'string':
-            raise ClassicSyntaxError('Expected a string, found %r' % token.text, token.start)
-        return codecs.decode('MFString', token.text)[0]
+    def _header(self, production: Any) -> None:
+        kind, version = production[3]
+        self.vrml97 = self._text(kind) == 'VRML'
+        self.builder.document('', self._text(version))
 
-    def _route(self) -> None:
-        start = self.next().start
-        source = self.identifier().text
-        self.expect('.')
-        source_field = self.identifier().text
-        self.expect('TO')
-        destination = self.identifier().text
-        self.expect('.')
-        destination_field = self.identifier().text
-        self._where(start)
-        self.builder.route(source, source_field, destination, destination_field)
+    def _statements(self, production: Any) -> None:
+        for statement in production[3]:
+            self._where(statement[1])
+            getattr(self, '_' + statement[0])(statement)
 
-    def _import(self) -> None:
-        start = self.next().start
-        inline = self.identifier().text
-        self.expect('.')
-        exported = self.identifier().text
-        local = ''
-        if self.at('AS'):
-            self.next()
-            local = self.identifier().text
-        self._where(start)
-        self.builder.import_(inline, exported, local)
+    def _profile(self, production: Any) -> None:
+        self.builder.document(self._text(production[3][0]), self.builder.scene.version)
 
-    def _export(self) -> None:
-        start = self.next().start
-        local = self.identifier().text
-        name = ''
-        if self.at('AS'):
-            self.next()
-            name = self.identifier().text
-        self._where(start)
-        self.builder.export(local, name)
+    def _component(self, production: Any) -> None:
+        name, level = production[3]
+        self.builder.component(self._text(name), int(self._text(level)))
+
+    def _unit(self, production: Any) -> None:
+        category, name, factor = production[3]
+        self.builder.unit(self._text(category), self._text(name), float(self._text(factor)))
+
+    def _meta(self, production: Any) -> None:
+        key, value = (codecs.decode('MFString', self._text(item))[0] for item in production[3])
+        self.builder.meta(key, value)
+
+    def _route(self, production: Any) -> None:
+        names = [self._text(item) for item in production[3]]
+        self.builder.route(*names)
+
+    def _import(self, production: Any) -> None:
+        names = [self._text(item) for item in production[3]]
+        self.builder.import_(names[0], names[1], names[2] if len(names) > 2 else '')
+
+    def _export(self, production: Any) -> None:
+        names = [self._text(item) for item in production[3]]
+        self.builder.export(names[0], names[1] if len(names) > 1 else '')
 
     # Prototypes and declarations
 
-    def _access(self, token: _Token) -> "str | None":
-        if token.text in ACCESS_TYPES:
-            return ACCESS_TYPES[token.text]
-        if token.text in VRML97_ACCESS_TYPES:
-            if not self.vrml97:
-                self._where(token.start)
-                self.builder.problem(
-                    'error' if self.builder.strict else 'warning',
-                    'VRML97 declaration word %r in an X3D file' % token.text)
-            return VRML97_ACCESS_TYPES[token.text]
-        return None
-
-    def _proto(self) -> None:
-        keyword = self.next()
-        extern = keyword.text == 'EXTERNPROTO'
-        name = self.identifier()
-        self._where(name.start)
-        self.builder.start_proto(name.text, extern=extern)
-        self.expect('[')
-        while not self.at(']'):
-            self._declaration(proto=True, values=not extern)
-        self.expect(']')
-        if extern:
-            self.builder.proto_url(self._url_list())
-        else:
-            self.expect('{')
-            self.builder.start_proto_body()
-            while not self.at('}'):
-                self._statement()
-            self.expect('}')
-            self.builder.end_proto_body()
+    def _proto(self, production: Any) -> None:
+        name, declarations, body = production[3]
+        self.builder.start_proto(self._text(name))
+        for declaration in declarations[3]:
+            self._declaration(declaration, proto=True)
+        self.builder.start_proto_body()
+        self._statements(body[3][0])
+        self.builder.end_proto_body()
         self.builder.end_proto()
 
-    def _url_list(self) -> "list[str]":
-        if self.at('['):
-            self.next()
-            urls = []
-            while not self.at(']'):
-                urls.append(self._string())
-            self.next()
-            return urls
-        return [self._string()]
+    def _externProto(self, production: Any) -> None:
+        name, declarations, urls = production[3]
+        self.builder.start_proto(self._text(name), extern=True)
+        for declaration in declarations[3]:
+            self._declaration(declaration, proto=True)
+        self.builder.proto_url(codecs.decode('MFString', self._span(urls[3][0])))
+        self.builder.end_proto()
 
-    def _declaration(self, proto: bool, values: bool) -> None:
+    def _access(self, production: Any) -> str:
+        word = self._text(production)
+        if word in VRML97_ACCESS_TYPES:
+            if not self.vrml97:
+                self._where(production[1])
+                self.builder.problem(
+                    'error' if self.builder.strict else 'warning',
+                    'VRML97 declaration word %r in an X3D file' % word)
+            return VRML97_ACCESS_TYPES[word]
+        return ACCESS_TYPES[word]
+
+    def _declaration(self, production: Any, proto: bool = False) -> None:
         """A field declaration of a prototype's interface, or of a Script or shader"""
-        word = self.next()
-        access = self._access(word)
-        if access is None:
-            raise ClassicSyntaxError('Expected a field declaration, found %r' % word.text,
-                                     word.start)
-        type_name = self.identifier().text
-        name = self.identifier()
-        self._where(name.start)
-        holds_value = values and access in ('initializeOnly', 'inputOutput')
-        if not proto and self.at('IS'):
-            self.builder.declare_field(name.text, type_name, access)
-            self.next()
-            self.builder.connect(name.text, self.identifier().text)
+        self._where(production[1])
+        access_production, type_production, name_production, *rest = production[3]
+        access = self._access(access_production)
+        type_name = self._text(type_production)
+        name = self._text(name_production)
+        target = next((item for item in rest if item[0] == 'isTarget'), None)
+        value = next((item for item in rest if item[0] != 'isTarget'), None)
+        declare = self.builder.proto_field if proto else self.builder.declare_field
+        if target is not None:
+            declare(name, type_name, access)
+            self.builder.connect(name, self._text(target[3][0]))
             return
-        if not holds_value:
-            if proto:
-                self.builder.proto_field(name.text, type_name, access)
-            else:
-                self.builder.declare_field(name.text, type_name, access)
+        if value is None:
+            declare(name, type_name, access)
             return
         if type_name in ('SFNode', 'MFNode'):
+            declare(name, type_name, access)
             if proto:
-                self.builder.proto_field(name.text, type_name, access)
-                self.builder.start_proto_field_nodes(name.text)
-                self._nodes(type_name)
+                self.builder.start_proto_field_nodes(name)
+            else:
+                self.builder.start_field(name)
+            self._nodes(value)
+            if proto:
                 self.builder.end_proto_field_nodes()
             else:
-                self.builder.declare_field(name.text, type_name, access)
-                self.builder.start_field(name.text)
-                self._nodes(type_name)
                 self.builder.end_field()
             return
-        kind, payload = self._value(type_name)
-        if proto:
-            if kind == 'text':
-                self.builder.proto_field(name.text, type_name, access, text=payload)
-            else:
-                self.builder.proto_field(name.text, type_name, access, value=payload)
-        elif kind == 'text':
-            self.builder.declare_field(name.text, type_name, access, text=payload)
+        kind, payload = self._decoded(type_name, value)
+        if kind == 'text':
+            declare(name, type_name, access, text=payload)
         else:
-            self.builder.declare_field(name.text, type_name, access, value=payload)
+            declare(name, type_name, access, value=payload)
 
     # Nodes
 
-    def _node_statement(self, containerField: str = '') -> None:
-        token = self.next()
-        if token.text == 'USE':
-            name = self.node_name()
-            self._where(token.start)
-            self.builder.start_node('', USE=name, containerField=containerField)
-            self.builder.end_node()
-            return
-        DEF = ''
-        if token.text == 'DEF':
-            DEF = self.node_name()
-            token = self.identifier()
-        if token.kind != 'id':
-            raise ClassicSyntaxError('Expected a node, found %r' % token.text, token.start)
-        self._where(token.start)
-        self.builder.start_node(token.text, DEF=DEF, containerField=containerField)
-        self.expect('{')
-        while not self.at('}'):
-            self._body_element()
-        self.next()
+    def _name(self, production: Any) -> str:
+        name = self._text(production)
+        if '.' in name:
+            self._where(production[1])
+            self.builder.problem('warning', 'Name %r holds a full stop' % name)
+        return name
+
+    def _useNode(self, production: Any, containerField: str = '') -> None:
+        self._where(production[1])
+        self.builder.start_node('', USE=self._name(production[3][0]),
+                                containerField=containerField)
         self.builder.end_node()
 
-    def _body_element(self) -> None:
-        token = self.peek()
-        assert token is not None
-        if token.kind != 'id':
-            raise ClassicSyntaxError('Expected a field name, found %r' % token.text, token.start)
-        if token.text in ACCESS_TYPES or token.text in VRML97_ACCESS_TYPES:
-            self._declaration(proto=False, values=True)
-            return
-        if token.text in ('PROTO', 'EXTERNPROTO'):
-            self._proto()
-            return
-        if token.text == 'ROUTE':
-            self._route()
-            return
-        self.next()
-        name = token.text
-        if self.at('IS'):
-            self.next()
-            self._where(token.start)
-            self.builder.connect(name, self.identifier().text)
-            return
-        self._where(token.start)
+    def _defNode(self, production: Any, containerField: str = '') -> None:
+        name, built = production[3]
+        self._node(built, containerField, self._name(name))
+
+    def _node(self, production: Any, containerField: str = '', DEF: str = '') -> None:
+        type_production, body = production[3]
+        self._where(production[1])
+        self.builder.start_node(self._text(type_production), DEF=DEF,
+                                containerField=containerField)
+        for element in body[3]:
+            self._where(element[1])
+            kind = element[0]
+            if kind == 'fieldValue':
+                self._field_value(element)
+            elif kind == 'connect':
+                field, target = element[3]
+                self.builder.connect(self._text(field), self._text(target))
+            elif kind == 'declaration':
+                self._declaration(element)
+            else:
+                getattr(self, '_' + kind)(element)
+        self.builder.end_node()
+
+    def _field_value(self, production: Any) -> None:
+        name_production, value = production[3]
+        name = self._text(name_production)
         type_name = self.builder.field_type(name)
         if type_name is None:
             if self.builder.current_node() is not None:
                 self.builder.problem('warning', '%s has no field %s' % (
                     type(self.builder.current_node()).__name__, name))
-            self._skip_value()
             return
         if type_name in ('SFNode', 'MFNode'):
-            if self.at('NULL'):
-                self.next()
+            if value[0] == 'null':
                 self.builder.field(name, None)
                 return
             self.builder.start_field(name)
-            self._nodes(type_name)
+            self._nodes(value)
             self.builder.end_field()
             return
-        kind, payload = self._value(type_name)
+        kind, payload = self._decoded(type_name, value)
         if kind == 'text':
             self.builder.field_text(name, payload)
         else:
             self.builder.field(name, payload)
 
-    def _nodes(self, type_name: str) -> None:
+    def _nodes(self, value: Any) -> None:
         """A node-valued field's nodes, into the field the builder has open"""
-        if self.at('NULL'):
-            self.next()
+        kind = value[0]
+        if kind == 'null':
             return
-        if type_name == 'MFNode' and self.at('['):
-            self.next()
-            while not self.at(']'):
-                token = self.peek()
-                assert token is not None
-                if token.text in ('PROTO', 'EXTERNPROTO', 'ROUTE'):
-                    # Not part of a node list in the grammar; converted
-                    # documents put them there.
-                    self._where(token.start)
-                    self.builder.problem('warning', '%s statement inside a list of nodes'
-                                         % token.text)
-                    self._statement()
-                    continue
-                self._node_statement()
-            self.next()
-            return
-        self._node_statement()
-
-    def _value(self, type_name: str) -> "tuple[str, Any]":
-        """A non-node value: ('text', XML-style text) or ('value', strings)"""
-        if type_name == 'SFString':
-            return 'value', self._string()
-        if type_name == 'MFString':
-            if self.at('['):
-                self.next()
-                strings = []
-                while not self.at(']'):
-                    strings.append(self._string())
-                self.next()
-                return 'value', strings
-            return 'value', [self._string()]
-        if type_name.startswith('MF') and self.at('['):
-            return 'text', self._bracketed()
-        count = codecs.TUPLE_SIZE.get(type_name, 1)
-        if type_name == 'SFImage':
-            header = [self._scalar() for _ in range(3)]
-            try:
-                count = int(header[0], 0) * int(header[1], 0)
-            except ValueError:
-                raise ClassicSyntaxError('SFImage header %r' % header, self.position) from None
-            return 'text', ' '.join(header + [self._scalar() for _ in range(count)])
-        if type_name == 'MFImage':
-            return 'text', self._bracketed()
-        return 'text', ' '.join(self._scalar() for _ in range(count))
-
-    def _scalar(self) -> str:
-        token = self.next()
-        if token.kind == 'number' or token.text in WORDS:
-            return token.text
-        raise ClassicSyntaxError('Expected a value, found %r' % token.text, token.start)
-
-    def _bracketed(self) -> str:
-        """The text between `[` and `]`, without comments"""
-        self.expect('[')
-        start = self.position
-        match = NUMBERS.match(self.text, start)
-        assert match is not None
-        end = match.end()
-        if end < len(self.text) and self.text[end] == ']':
-            self.position = end + 1
-            return self.text[start:end]
-        parts = []
-        while not self.at(']'):
-            token = self.next()
-            if token.kind not in ('number', 'id', 'string'):
-                raise ClassicSyntaxError('Unexpected %r in a list' % token.text, token.start)
-            parts.append(token.text)
-        self.next()
-        return ' '.join(parts)
-
-    def _skip_value(self) -> None:
-        """Pass over the value of a field nothing here knows the type of"""
-        token = self.peek()
-        if token is None:
-            return
-        if token.text == '[':
-            depth = 0
-            while True:
-                token = self.next()
-                if token.text in ('[', '{'):
-                    depth += 1
-                elif token.text in (']', '}'):
-                    depth -= 1
-                    if depth == 0:
-                        return
-        if token.text in ('USE', 'DEF', 'NULL'):
-            self.next()
-            if token.text != 'NULL':
-                self.identifier()
-                if token.text == 'DEF':
-                    self._skip_node()
-            return
-        if token.kind == 'id' and token.text not in WORDS:
-            self.next()
-            if self.at('{'):
-                self._skip_node(started=True)
-            return
-        while True:
-            token = self.peek()
-            if token is None or not (token.kind in ('number', 'string') or token.text in WORDS):
+        if kind == 'listValue':
+            items = value[3][0]
+            if items[0] == 'scalarList':
+                self._where(items[1])
+                self.builder.problem('error', 'Values where nodes belong: %r'
+                                     % self._text(items)[:40])
                 return
-            self.next()
+            for item in items[3]:
+                if item[0] in ('proto', 'externProto', 'route'):
+                    self._where(item[1])
+                    self.builder.problem('warning', '%s statement inside a list of nodes'
+                                         % self._text(item).split()[0])
+                getattr(self, '_' + item[0])(item)
+            return
+        if kind in ('node', 'defNode', 'useNode'):
+            getattr(self, '_' + kind)(value)
+            return
+        self._where(value[1])
+        self.builder.problem('error', 'Values where a node belongs: %r' % self._text(value)[:40])
 
-    def _skip_node(self, started: bool = False) -> None:
-        if not started:
-            self.identifier()
-        self.expect('{')
-        depth = 1
-        while depth:
-            token = self.next()
-            if token.text == '{':
-                depth += 1
-            elif token.text == '}':
-                depth -= 1
+    def _span(self, value: Any) -> str:
+        """The text of a value, without brackets or comments"""
+        if value[0] == 'listValue':
+            inner = value[3][0] if value[3] else None
+            text = self._text(inner) if inner is not None and inner[0] == 'scalarList' else ''
+        else:
+            text = self._text(value)
+        if '#' in text:
+            text = COMMENT.sub(lambda match: match.group() if match.group().startswith('"')
+                               else ' ', text)
+        return text
+
+    def _decoded(self, type_name: str, value: Any) -> "tuple[str, Any]":
+        """A non-node value: ('text', XML-style text) or ('value', strings)"""
+        if value[0] in ('null', 'node', 'defNode', 'useNode') or (
+                value[0] == 'listValue' and value[3] and value[3][0][0] == 'nodeList'
+                and value[3][0][3]):
+            self._where(value[1])
+            self.builder.problem('error', 'A node where a %s value belongs: %r'
+                                 % (type_name, self._text(value)[:40]))
+            return 'text', ''
+        text = self._span(value)
+        if type_name == 'SFString':
+            strings = codecs.decode('MFString', text)
+            return 'value', strings[0] if strings else ''
+        if type_name == 'MFString':
+            return 'value', codecs.decode('MFString', text)
+        return 'text', text
 
 
 def read(data: bytes, builder: SceneBuilder) -> X3DScene:
