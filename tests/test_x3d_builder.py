@@ -154,6 +154,29 @@ class TestNodes(unittest.TestCase):
         self.assertIsInstance(made, Engine)
         self.assertIn('Box', [p.message.split()[2] for p in problems(scene, 'info')])
 
+    def test_a_node_is_in_the_scene_before_its_fields_are_set(self):
+        """A field that reads the node's document (a url) finds it while it is read."""
+        from vrml import fieldtypes  # noqa: PLC0415 kept with its one use
+        seen = []
+
+        class WatchedURL(fieldtypes.MFString):
+            fieldType = 'MFString'
+
+            def fset(self, client, value, notify=1):
+                seen.append(protofunctions.root(client))
+                return super().fset(client, value, notify)
+
+        class Watched(x3d.ImageTexture):
+            url = WatchedURL('url', 1, list)
+
+        built = Built(prototypes={'ImageTexture': Watched}, baseURI='here.x3d')
+        built.node('Shape', children=[
+            lambda: built.node('Appearance', children=[
+                lambda: built.node('ImageTexture', url='"a.png"')])])
+        scene = built.end_document()
+        self.assertTrue(seen)
+        self.assertIs(seen[0], scene)
+
     def test_an_engine_scene_class(self):
         from vrml.x3d.scene import X3DScene  # noqa: PLC0415 kept with its one use
 

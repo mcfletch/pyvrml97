@@ -371,9 +371,14 @@ class SceneBuilder:
         if not self.dialect.has_node(type_name) and self._scope.proto(type_name) is None:
             self.problem('warning', '%s has no node %s' % (self.version_name, type_name))
         built = cls()
+        notify = isinstance(built, node.PrototypedNode)
+        if not notify:
+            # In the document's scene before any field is set, so a field that
+            # reads the document (a url resolved against it) finds it. A
+            # prototype instance is rooted with its body when it is placed.
+            protofunctions.root(built, self.scene)
         if isinstance(built, x3d.X3DScriptNode):
             self._scripts += 1
-        notify = isinstance(built, node.PrototypedNode)
         frame = _Frame(built, type_name, notify)
         if DEF:
             self._define(DEF, built)
