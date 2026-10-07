@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.0//EN" "https://www.web3d.org/specifications/x3d-3.0.dtd">
+<X3D profile='Interchange' version='3.0' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='https://www.web3d.org/specifications/x3d-3.0.xsd'>
+  <head>
+    <meta content='Figure17_13SimplePixelTexture.x3d' name='title'/>
+    <meta content='Figure 17.13, The VRML 2.0 Sourcebook, Copyright [1997] By Andrea L. Ames, David R. Nadeau, and John L. Moreland' name='creator'/>
+    <meta content='http://www.wiley.com/legacy/compbooks/vrml2sbk/ch17/17fig13.htm' name='reference'/>
+    <meta content='Don Brutzman' name='translator'/>
+    <meta content='28 August 2000' name='created'/>
+    <meta content='20 October 2019' name='modified'/>
+    <meta content='A face with color varying from yellow to red, showing PixelTexture use.' name='description'/>
+    <meta content='https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter17Textures/Figure17_13SimplePixelTexture.x3d' name='identifier'/>
+    <meta content='X3D-Edit 3.3, https://savage.nps.edu/X3D-Edit' name='generator'/>
+    <meta content='../../license.html' name='license'/>
+  </head>
+  <Scene>
+    <WorldInfo title='Figure17_13SimplePixelTexture.x3d'/>
+    <Viewpoint description='PixelTexture' position='0 0 5'/>
+    <Background groundColor='0.8 0.8 1' skyColor='0.8 0.8 1'/>
+    <Shape>
+      <Appearance>
+        <PixelTexture image='1 2 3 0xFFFF00 0xFF0000'/>
+      </Appearance>
+      <IndexedFaceSet DEF='SQUARE' coordIndex='0 1 2 3'>
+        <Coordinate point='-1.5 -1 0 1.5 -1 0 1.5 1 0 -1.5 1 0'/>
+      </IndexedFaceSet>
+    </Shape>
+  </Scene>
+</X3D>

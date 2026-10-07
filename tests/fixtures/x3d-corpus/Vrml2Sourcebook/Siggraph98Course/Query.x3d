@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.3//EN" "https://www.web3d.org/specifications/x3d-3.3.dtd">
+<X3D profile='Immersive' version='3.3' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='https://www.web3d.org/specifications/x3d-3.3.xsd'>
+  <head>
+    <meta content='Query.x3d' name='title'/>
+    <meta content='Query browser state: this world uses the "Browser" object in a script to query information about the VRML browser. That information is sent out as an MFString event that is routed into a Text node string input. The effect is to display a text message showing the Browser information. To give the browser something to do to make it report interesting frame rates, an animating object is displayed beside the text information.' name='description'/>
+    <meta content='David R. Nadeau' name='creator'/>
+    <meta content='Don Brutzman' name='translator'/>
+    <meta content='1 July 1998' name='created'/>
+    <meta content='2 February 2014' name='translated'/>
+    <meta content='20 October 2019' name='modified'/>
+    <meta content='originals/query.wrl' name='reference'/>
+    <meta content='http://www.siggraph.org/s98' name='reference'/>
+    <meta content='http://www.siggraph.org/s98/conference/courses/18.html' name='reference'/>
+    <meta content='http://www.sdsc.edu/~moreland/courses/Siggraph98/vrml97/slides/mt0465.htm' name='reference'/>
+    <meta content='http://www.sdsc.edu/~moreland/courses/Siggraph98/vrml97/vrml97.htm' name='reference'/>
+    <meta content='https://www.web3d.org/x3d/content/examples/X3dResources.html' name='reference'/>
+    <meta content='https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Siggraph98Course/Query.x3d' name='identifier'/>
+    <meta content='Vrml97ToX3dNist, http://ovrt.nist.gov/v2_x3d.html' name='generator'/>
+    <meta content='X3D-Edit, https://savage.nps.edu/X3D-Edit' name='generator'/>
+    <meta content='../license.html' name='license'/>
+  </head>
+  <Scene>
+    <WorldInfo info='"Copyright (c) 1998, David R. Nadeau"' title='Query browser state'/>
+    <Viewpoint description='Entry view'/>
+    <NavigationInfo/>
+    <Transform scale='0.75 0.75 0.75' translation='-4.0 0.0 0.0'>
+      <Inline url='"Two.x3d" "https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Siggraph98Course/Two.x3d" "Two.wrl" "https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Siggraph98Course/Two.wrl"'/>
+    </Transform>
+    <Transform translation='-1.5 1.25 0.0'>
+      <Shape>
+        <Text DEF='Message' string='""'>
+          <FontStyle family='"TYPEWRITER"' size='0.65' style='BOLD'/>
+        </Text>
+      </Shape>
+    </Transform>
+    <TimeSensor DEF='Timer' cycleInterval='4.0' loop='true'/>
+    <Script DEF='Introspect'>
+      <field accessType='inputOnly' name='trigger' type='SFTime'/>
+      <field accessType='outputOnly' name='message' type='MFString'/>
+      <![CDATA[
+ecmascript:
+		function update( ) {
+			message.length = 5;
+			message[0] = 'Browser: ' + Browser.getName( );
+			message[1] = 'Version: ' + Browser.getVersion( );
+			message[2] = 'URL:     ' + Browser.getWorldURL( );
+			message[3] = 'Speed:   ' + Browser.getCurrentSpeed( );
+			message[4] = 'Frames:  ' + Browser.getCurrentFrameRate( );
+		}
+		function initialize( ) {
+			update( );
+		}
+		function trigger( t, ts ) {
+			update( );
+		}
+]]>
+    </Script>
+    <ROUTE fromField='cycleTime' fromNode='Timer' toField='trigger' toNode='Introspect'/>
+    <ROUTE fromField='message' fromNode='Introspect' toField='set_string' toNode='Message'/>
+  </Scene>
+</X3D>

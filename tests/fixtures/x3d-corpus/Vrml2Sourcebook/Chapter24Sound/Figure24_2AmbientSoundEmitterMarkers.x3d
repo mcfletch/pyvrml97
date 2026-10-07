@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.0//EN" "https://www.web3d.org/specifications/x3d-3.0.dtd">
+<X3D profile='Immersive' version='3.0' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='https://www.web3d.org/specifications/x3d-3.0.xsd'>
+  <head>
+    <meta content='Figure24_2AmbientSoundEmitterMarkers.x3d' name='title'/>
+    <meta content='Figure 24.2, The VRML 2.0 Sourcebook, Copyright [1997] By Andrea L. Ames, David R. Nadeau, and John L. Moreland' name='creator'/>
+    <meta content='http://www.wiley.com/legacy/compbooks/vrml2sbk/ch24/24fig02.htm' name='reference'/>
+    <meta content='Don Brutzman' name='translator'/>
+    <meta content='23 September 2000' name='created'/>
+    <meta content='20 October 2019' name='modified'/>
+    <meta content='A world with ambient sound and a set of emitter markers.' name='description'/>
+    <meta content='https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter24Sound/Figure24_2AmbientSoundEmitterMarkers.x3d' name='identifier'/>
+    <meta content='X3D-Edit 3.3, https://savage.nps.edu/X3D-Edit' name='generator'/>
+    <meta content='../../license.html' name='license'/>
+  </head>
+  <Scene>
+    <WorldInfo title='Figure24_2AmbientSoundEmitterMarkers.x3d'/>
+    <Viewpoint description='20m distance, range circles at 5m and 10m' position='0 1 20'/>
+    <NavigationInfo type='"WALK" "EXAMINE" "ANY"'/>
+    <Group>
+      <Sound minBack='5' minFront='5'>
+        <AudioClip description='willow' loop='true' url='"willow1.wav" "https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter24Sound/willow1.wav"'/>
+      </Sound>
+      <Inline url='"Figure24_1EmitterMarkers.x3d" "https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter24Sound/Figure24_1EmitterMarkers.x3d" "Figure24_1EmitterMarkers.wrl" "https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter24Sound/Figure24_1EmitterMarkers.wrl"'/>
+    </Group>
+  </Scene>
+</X3D>

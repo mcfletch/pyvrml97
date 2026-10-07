@@ -170,12 +170,20 @@ class PrototypedNode(object):
     actual implementation of the node.
     """
 
+    #: The node type an instance stands for: the class of the first node of
+    #: the prototype's body, or None where that is not known. A node field
+    #: holding that type holds the instance.
+    nodeType: "type | None" = None
+
     def __init__(self, *arguments: Any, **namedarguments: Any) -> None:
         """Initialise the node with appropriate named args
 
         Also attempts to instantiate the sub-node scenegraph
         for the PrototypedNode
         """
+        pending = PENDING_PROTOTYPES.get(type(self))
+        if pending is not None:
+            pending.add(self)
         PrototypedNode.instantiate(self)
         super(PrototypedNode, self).__init__(*arguments, **namedarguments)
 
@@ -247,6 +255,28 @@ class PrototypedNode(object):
             ]
         else:
             return PrototypedNode.scenegraph.fget(self).children
+
+
+#: Prototype classes declared by EXTERNPROTO whose definition has not been
+#: read, each with the instances made of it so far; giving the class its
+#: body instantiates it in each of them.
+PENDING_PROTOTYPES: "weakref.WeakKeyDictionary[type, weakref.WeakSet[Any]]" = (
+    weakref.WeakKeyDictionary()
+)
+
+
+def accepts(types: "tuple[type, ...]", value: Any) -> bool:
+    """Whether a node field holding `types` holds `value`
+
+    A prototype instance is held where its `nodeType` is, and anywhere when
+    its node type is not known.
+    """
+    if isinstance(value, types):
+        return True
+    if isinstance(value, PrototypedNode):
+        nodeType = type(value).nodeType
+        return nodeType is None or issubclass(nodeType, types)
+    return False
 
 
 def prototype(
@@ -375,7 +405,7 @@ class _SFNode(_FieldHost):
 
     def coerce(self, value: Any) -> Any:
         """Coerce value to an SFNode reference"""
-        if self.requiredTypes and isinstance(value, self.requiredTypes):
+        if self.requiredTypes and accepts(self.requiredTypes, value):
             return value
         elif (value is None or isinstance(value, NullNode)) and self.allowNULL:
             return NULL
@@ -645,14 +675,14 @@ class _MFNode(_FieldHost):
         """Coerce value to an MFNode list-of-objects"""
         SF = self.__class__.baseSFNode
         types = self.requiredTypes or SF.requiredTypes
-        if types and isinstance(value, types):
+        if types and accepts(types, value):
             return self.baseObjectType([value])
         elif not value:
             return self.baseObjectType([])
         elif isinstance(value, field.SEQUENCE_TYPES):
             if self.requiredTypes:
                 for item in value:
-                    if not isinstance(item, types):
+                    if not accepts(types, item):
                         raise ValueError(
                             """%s holds %s nodes, not %r"""
                             % (self.name, ', '.join(t.__name__ for t in types), item)

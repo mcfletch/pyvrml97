@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.0//EN" "https://www.web3d.org/specifications/x3d-3.0.dtd">
+<X3D profile='Interchange' version='3.0' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='https://www.web3d.org/specifications/x3d-3.0.xsd'>
+  <head>
+    <meta content='Figure22_1BackgroundSkySphere.x3d' name='title'/>
+    <meta content='Figure 22.1, The VRML 2.0 Sourcebook, Copyright [1997] By Andrea L. Ames, David R. Nadeau, and John L. Moreland' name='creator'/>
+    <meta content='http://www.wiley.com/legacy/compbooks/vrml2sbk/ch22/22fig01.htm' name='reference'/>
+    <meta content='Don Brutzman' name='translator'/>
+    <meta content='22 August 2000' name='created'/>
+    <meta content='20 October 2019' name='modified'/>
+    <meta content='A sky sphere with multiple colors.' name='description'/>
+    <meta content='https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter22Background/Figure22_1BackgroundSkySphere.x3d' name='identifier'/>
+    <meta content='X3D-Edit 3.3, https://savage.nps.edu/X3D-Edit' name='generator'/>
+    <meta content='../../license.html' name='license'/>
+  </head>
+  <Scene>
+    <WorldInfo title='Figure22_1BackgroundSkySphere.x3d'/>
+    <Background groundColor='0 0 0' skyAngle='1.309 1.571' skyColor='0 0.2 0.7 0 0.5 1 1 1 1'/>
+    <!-- Note that navigation mode doesn't matter much here, since you cannot approach the backround, it always stays at maximum (horizon) distance -->
+    <!-- At least EXAMINE mode lets you easily look up/down/around. -->
+  </Scene>
+</X3D>

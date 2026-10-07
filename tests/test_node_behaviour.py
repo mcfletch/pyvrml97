@@ -339,3 +339,28 @@ class TestARenamedField(unittest.TestCase):
 
     def test_it_names_its_field(self):
         self.assertEqual(Tree.foliage.target, 'leaves')
+
+
+class TestATypedPrototype(unittest.TestCase):
+    """A prototype's instances stand where its first body node would."""
+
+    def setUp(self):
+        self.Typed = node.prototype('TypedBranch', [])
+        self.Typed.nodeType = Branch
+        self.Untyped = node.prototype('Untyped', [])
+
+    def test_an_instance_goes_where_its_node_type_goes(self):
+        self.assertIsInstance(Tree(trunk=self.Typed()).trunk, self.Typed)
+
+    def test_an_instance_is_refused_where_its_node_type_is(self):
+        with self.assertRaises(ValueError):
+            Tree(leaves=[self.Typed()])
+
+    def test_an_instance_whose_type_is_not_known_goes_anywhere(self):
+        self.assertEqual(len(Tree(leaves=[self.Untyped()]).leaves), 1)
+
+    def test_accepts_answers_the_same(self):
+        self.assertTrue(node.accepts((Branch,), self.Typed()))
+        self.assertFalse(node.accepts((Leaf,), self.Typed()))
+        self.assertTrue(node.accepts((Leaf,), self.Untyped()))
+        self.assertFalse(node.accepts((Leaf,), Branch()))

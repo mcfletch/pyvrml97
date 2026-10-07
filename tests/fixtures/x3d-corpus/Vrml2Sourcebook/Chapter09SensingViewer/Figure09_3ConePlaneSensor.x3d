@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.0//EN" "https://www.web3d.org/specifications/x3d-3.0.dtd">
+<X3D profile='Interactive' version='3.0' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='https://www.web3d.org/specifications/x3d-3.0.xsd'>
+  <head>
+    <meta content='Figure09_3ConePlaneSensor.x3d' name='title'/>
+    <meta content='Figure 9.3, The VRML 2.0 Sourcebook, Copyright [1997] By Andrea L. Ames, David R. Nadeau, and John L. Moreland' name='creator'/>
+    <meta content='http://www.wiley.com/legacy/compbooks/vrml2sbk/ch09/09fig03.htm' name='reference'/>
+    <meta content='Don Brutzman' name='translator'/>
+    <meta content='9 August 2000' name='created'/>
+    <meta content='4 September 2023' name='modified'/>
+    <meta content='A Cone that translates in the vertical XY plane when the viewer drags it. Also see Figure 9.4 for comparison.' name='description'/>
+    <meta content='Figure09_4ConePlaneSensorConstrained.x3d' name='reference'/>
+    <meta content='https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter09SensingViewer/Figure09_3ConePlaneSensor.x3d' name='identifier'/>
+    <meta content='X3D-Edit 4.0, https://savage.nps.edu/X3D-Edit' name='generator'/>
+    <meta content='../../license.html' name='license'/>
+  </head>
+  <Scene>
+    <!-- Rotating Cube -->
+    <WorldInfo title='Figure09_3ConePlaneSensor.x3d'/>
+    <Group>
+      <Transform DEF='CUBE_TRANSFORM'>
+        <Shape>
+          <Cone/>
+          <Appearance>
+            <Material diffuseColor='.5 .5 .5' emissiveColor='0 0 .5'/>
+          </Appearance>
+        </Shape>
+      </Transform>
+      <PlaneSensor DEF='MyPlaneSensor' description='Dragged cone stays in vertical XY plane'/>
+    </Group>
+    <!-- Note that we are connecting a translation (SFVec3F) output to a translation (SFVec3F) input in this ROUTE. -->
+    <ROUTE fromField='translation_changed' fromNode='MyPlaneSensor' toField='set_translation' toNode='CUBE_TRANSFORM'/>
+  </Scene>
+</X3D>

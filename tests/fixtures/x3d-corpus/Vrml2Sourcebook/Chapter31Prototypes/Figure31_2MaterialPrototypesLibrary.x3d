@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.0//EN" "https://www.web3d.org/specifications/x3d-3.0.dtd">
+<X3D profile='Immersive' version='3.0' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='https://www.web3d.org/specifications/x3d-3.0.xsd'>
+  <head>
+    <meta content='Figure31_2MaterialPrototypesLibrary.x3d' name='title'/>
+    <meta content='Figure 31.2, The VRML 2.0 Sourcebook, Copyright [1997] By Andrea L. Ames, David R. Nadeau, and John L. Moreland' name='creator'/>
+    <meta content='http://www.wiley.com/legacy/compbooks/vrml2sbk/ch31/31fig02.htm' name='reference'/>
+    <meta content='Don Brutzman' name='translator'/>
+    <meta content='27 September 2000' name='created'/>
+    <meta content='20 October 2019' name='modified'/>
+    <meta content='An external file containing a material library with the WallColor-node-type definition.' name='description'/>
+    <meta content='https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter31Prototypes/Figure31_2MaterialPrototypesLibrary.x3d' name='identifier'/>
+    <meta content='X3D-Edit 3.3, https://savage.nps.edu/X3D-Edit' name='generator'/>
+    <meta content='../../license.html' name='license'/>
+  </head>
+  <Scene>
+    <WorldInfo title='Figure31_2MaterialPrototypesLibrary.x3d'/>
+    <ProtoDeclare name='Aqua'>
+      <ProtoBody>
+        <Material diffuseColor='0 0.6 1'/>
+      </ProtoBody>
+    </ProtoDeclare>
+    <ProtoDeclare name='Gold'>
+      <ProtoBody>
+        <Material ambientIntensity='0.4' diffuseColor='0.22 0.15 0' shininess='0.16' specularColor='0.71 0.70 0.56'/>
+      </ProtoBody>
+    </ProtoDeclare>
+    <ProtoDeclare name='Aluminum'>
+      <ProtoBody>
+        <Material ambientIntensity='0.3' diffuseColor='0.3 0.3 0.5' shininess='0.1' specularColor='0.7 0.7 0.8'/>
+      </ProtoBody>
+    </ProtoDeclare>
+    <ProtoDeclare name='Copper'>
+      <ProtoBody>
+        <Material ambientIntensity='0.26' diffuseColor='0.30 0.11 0' shininess='0.08' specularColor='0.75 0.33 0'/>
+      </ProtoBody>
+    </ProtoDeclare>
+    <!-- It is a good practice to include default message linking to an example scene, in case a user tries to view this Prototype library directly. -->
+    <Anchor description='Figure31_3MaterialExternalPrototypes' url='"Figure31_3MaterialExternalPrototypes.x3d" "https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter31Prototypes/Figure31_3MaterialExternalPrototypes.x3d" "Figure31_3MaterialExternalPrototypes.wrl" "https://www.web3d.org/x3d/content/examples/Vrml2Sourcebook/Chapter31Prototypes/Figure31_3MaterialExternalPrototypes.wrl"'>
+      <Shape>
+        <Text string='"Figure31_2MaterialPrototypesLibrary" "contains prototype definitions" "" "Click on text to see these Materials in" "Figure31_3MaterialExternalPrototypes"'>
+          <FontStyle justify='"MIDDLE" "MIDDLE"' size='0.5'/>
+        </Text>
+        <Appearance>
+          <Material diffuseColor='0 0.6 0.6'/>
+        </Appearance>
+      </Shape>
+    </Anchor>
+  </Scene>
+</X3D>

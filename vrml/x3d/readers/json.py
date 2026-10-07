@@ -1,0 +1,243 @@
+"""The X3D JSON encoding, read with the standard `json` module
+
+Web3D's X3D JSON design: a document is `{"X3D": {...}}`; a node is an
+object with one key, its type, whose value holds its fields as `@name`
+values, its node fields as `-name` (an object or a list of them), and
+`#comment` and `#sourceCode` entries. Statements (`ROUTE`, `ProtoDeclare`,
+`IMPORT`, ...) appear among the nodes. Values arrive typed, so they go to
+the builder as values rather than text.
+"""
+
+import json
+from collections.abc import Mapping
+from typing import Any
+
+from vrml import field
+from vrml.x3d.builder import SceneBuilder
+from vrml.x3d.scene import X3DScene
+
+#: `@` keys of a node object that are the encoding's, not the node's.
+ENCODING_ATTRIBUTES = frozenset(('DEF', 'USE', 'containerField', 'class', 'id', 'style'))
+
+
+class JSONReader:
+    """Turns a decoded X3D JSON document into builder calls"""
+
+    def __init__(self, builder: SceneBuilder) -> None:
+        self.builder = builder
+        #: For each open DEF scope (the scene, each prototype body): the
+        #: node objects its DEFs name, and the names built ahead of their
+        #: DEF because a USE came first.
+        self.scopes: "list[tuple[dict[str, tuple[str, Mapping]], set[str]]]" = []
+
+    def read(self, data: bytes) -> X3DScene:
+        try:
+            document = json.loads(data.decode('utf-8-sig'))
+        except (ValueError, UnicodeDecodeError) as error:
+            self.builder.problem('error', 'JSON: %s' % error)
+            return self.builder.end_document(complete=False)
+        top = document.get('X3D') if isinstance(document, dict) else None
+        if not isinstance(top, dict):
+            self.builder.problem('error', 'JSON document has no X3D object')
+            return self.builder.end_document(complete=False)
+        self.builder.document(str(top.get('@profile', '')), str(top.get('@version', '')))
+        head = top.get('head') or {}
+        for item in self._list(head.get('component')):
+            self.builder.component(str(item.get('@name', '')), int(item.get('@level', 1)))
+        for item in self._list(head.get('unit')):
+            self.builder.unit(str(item.get('@category', '')), str(item.get('@name', '')),
+                              float(item.get('@conversionFactor', 0.0)))
+        for item in self._list(head.get('meta')):
+            others = {key[1:]: str(value) for key, value in item.items()
+                      if key.startswith('@') and key not in ('@name', '@content')}
+            self.builder.meta(str(item.get('@name', '')), str(item.get('@content', '')), **others)
+        scene = top.get('Scene') or {}
+        self._scope(scene.get('-children'))
+        return self.builder.end_document()
+
+    def _scope(self, items: Any) -> None:
+        """Read the nodes of one DEF scope"""
+        definitions: "dict[str, tuple[str, Mapping]]" = {}
+        self._prescan(items, definitions)
+        self.scopes.append((definitions, set()))
+        try:
+            self._items(items)
+        finally:
+            self.scopes.pop()
+
+    def _prescan(self, items: Any, definitions: "dict[str, tuple[str, Mapping]]") -> None:
+        """Find the node objects DEFs name in one scope, not entering prototypes
+
+        Object members are grouped by field name rather than kept in
+        document order, so a USE can come before the DEF it names.
+        """
+        for item in self._list(items):
+            if not isinstance(item, Mapping):
+                continue
+            for name, value in item.items():
+                if not isinstance(value, Mapping) or name.startswith('#') or name in (
+                        'ProtoDeclare', 'ExternProtoDeclare'):
+                    continue
+                if '@DEF' in value:
+                    definitions.setdefault(str(value['@DEF']), (name, value))
+                for key, inner in value.items():
+                    if key.startswith('-'):
+                        self._prescan(inner, definitions)
+                    elif key in ('field', 'fieldValue'):
+                        for declaration in self._list(inner):
+                            if isinstance(declaration, Mapping):
+                                self._prescan(declaration.get('-children'), definitions)
+
+    @staticmethod
+    def _list(value: Any) -> "list[Any]":
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return value
+        return [value]
+
+    def _items(self, items: Any) -> None:
+        """Nodes and statements, in document order"""
+        for item in self._list(items):
+            if not isinstance(item, Mapping):
+                self.builder.problem('error', 'JSON: expected a node, found %r' % (item,))
+                continue
+            for name, value in item.items():
+                self._item(name, value)
+
+    def _item(self, name: str, value: Any) -> None:
+        if name.startswith('#'):
+            return
+        if not isinstance(value, Mapping):
+            self.builder.problem('error', 'JSON: %s is not an object' % name)
+            return
+        statement = getattr(self, '_statement_' + name, None)
+        if statement is not None:
+            statement(value)
+        else:
+            self._node(name, value)
+
+    def _node(
+        self, name: str, value: Mapping, skip: "frozenset[str]" = frozenset(),
+        containerField: "str | None" = None,
+    ) -> None:
+        if containerField is None:
+            containerField = str(value.get('@containerField', ''))
+        DEF = str(value.get('@DEF', ''))
+        USE = str(value.get('@USE', ''))
+        if self.scopes:
+            definitions, early = self.scopes[-1]
+            if USE and not self.builder.defined(USE) and USE in definitions:
+                defined_type, defined = definitions[USE]
+                self._node(defined_type, defined, skip, containerField)
+                early.add(USE)
+                return
+            if DEF and DEF in early:
+                DEF, USE = '', DEF
+        self.builder.start_node(name, DEF=DEF, USE=USE, containerField=containerField)
+        if not USE:
+            self._contents(value, skip)
+        self.builder.end_node()
+
+    def _contents(self, value: Mapping, skip: "frozenset[str]") -> None:
+        """A node's fields, declarations, IS connections and source"""
+        for key, item in value.items():
+            if key in skip:
+                continue
+            if key.startswith('@'):
+                attribute = key[1:]
+                if attribute not in ENCODING_ATTRIBUTES or (
+                        attribute == 'style' and isinstance(item, str) and self._styled()):
+                    self.builder.field(attribute, item)
+            elif key.startswith('-'):
+                self.builder.start_field(key[1:])
+                self._items(item)
+                self.builder.end_field()
+            elif key == 'field':
+                for declaration in self._list(item):
+                    self._declare(declaration)
+            elif key == 'IS':
+                for connection in self._list(item.get('connect')):
+                    self.builder.connect(str(connection.get('@nodeField', '')),
+                                         str(connection.get('@protoField', '')))
+            elif key == 'fieldValue':
+                for given in self._list(item):
+                    name = str(given.get('@name', ''))
+                    if '@value' in given:
+                        self.builder.field(name, given['@value'])
+                    if '-children' in given:
+                        self.builder.start_field(name)
+                        self._items(given['-children'])
+                        self.builder.end_field()
+            elif key == '#sourceCode':
+                lines = self._list(item)
+                self.builder.source_text('\n'.join(str(line) for line in lines))
+
+    def _styled(self) -> bool:
+        """Whether the open node's `style` is a field (FontStyle's is)"""
+        built = self.builder.current_node()
+        return isinstance(getattr(type(built), 'style', None), field.Field)
+
+    def _declare(self, declaration: Mapping) -> None:
+        name = str(declaration.get('@name', ''))
+        type_name = str(declaration.get('@type', ''))
+        access = str(declaration.get('@accessType', ''))
+        if '@value' in declaration:
+            self.builder.declare_field(name, type_name, access, value=declaration['@value'])
+        else:
+            self.builder.declare_field(name, type_name, access)
+        if '-children' in declaration:
+            self.builder.start_field(name)
+            self._items(declaration['-children'])
+            self.builder.end_field()
+
+    def _proto_field(self, declaration: Mapping) -> None:
+        name = str(declaration.get('@name', ''))
+        type_name = str(declaration.get('@type', ''))
+        access = str(declaration.get('@accessType', ''))
+        if '@value' in declaration:
+            self.builder.proto_field(name, type_name, access, value=declaration['@value'])
+        else:
+            self.builder.proto_field(name, type_name, access)
+        if '-children' in declaration:
+            self.builder.start_proto_field_nodes(name)
+            self._items(declaration['-children'])
+            self.builder.end_proto_field_nodes()
+
+    # Statements
+
+    def _statement_ROUTE(self, value: Mapping) -> None:
+        self.builder.route(str(value.get('@fromNode', '')), str(value.get('@fromField', '')),
+                           str(value.get('@toNode', '')), str(value.get('@toField', '')))
+
+    def _statement_IMPORT(self, value: Mapping) -> None:
+        self.builder.import_(str(value.get('@inlineDEF', '')), str(value.get('@importedDEF', '')),
+                             str(value.get('@AS', '')))
+
+    def _statement_EXPORT(self, value: Mapping) -> None:
+        self.builder.export(str(value.get('@localDEF', '')), str(value.get('@AS', '')))
+
+    def _statement_ProtoDeclare(self, value: Mapping) -> None:
+        self.builder.start_proto(str(value.get('@name', '')))
+        interface = value.get('ProtoInterface') or {}
+        for declaration in self._list(interface.get('field')):
+            self._proto_field(declaration)
+        self.builder.start_proto_body()
+        self._scope((value.get('ProtoBody') or {}).get('-children'))
+        self.builder.end_proto_body()
+        self.builder.end_proto()
+
+    def _statement_ExternProtoDeclare(self, value: Mapping) -> None:
+        self.builder.start_proto(str(value.get('@name', '')), extern=True)
+        self.builder.proto_url([str(url) for url in self._list(value.get('@url'))])
+        for declaration in self._list(value.get('field')):
+            self._proto_field(declaration)
+        self.builder.end_proto()
+
+    def _statement_ProtoInstance(self, value: Mapping) -> None:
+        self._node(str(value.get('@name', '')), value, frozenset(('@name',)))
+
+
+def read(data: bytes, builder: SceneBuilder) -> X3DScene:
+    """The scene an X3D JSON document builds"""
+    return JSONReader(builder).read(data)
