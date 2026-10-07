@@ -175,10 +175,47 @@ class KeySensor(x3d.KeySensor):
             self.isActive = False
 
 
+class StringSensor(x3d.StringSensor):
+    """Text typed while it is enabled
+
+    `typed` takes one character: a return ('\\n') ends the text, sending it
+    as `finalText`; a backspace ('\\b') removes the last character where
+    `deletionAllowed`; any other is added to `enteredText`. `isActive` is
+    true from the first character to the return.
+    """
+
+    def _text(self) -> str:
+        return str(self.__dict__.get('_typedText', ''))
+
+    def typed(self, character: str) -> None:
+        """A character typed"""
+        if not self.enabled:
+            return
+        text = self._text()
+        if character == '\n':
+            if text or self.__dict__.get('isActive'):
+                self.finalText = text
+                self.__dict__['_typedText'] = ''
+                self.enteredText = ''
+                self.isActive = False
+            return
+        if character == '\b':
+            if self.deletionAllowed and text:
+                text = text[:-1]
+            else:
+                return
+        else:
+            if not self.__dict__.get('isActive'):
+                self.isActive = True
+            text += character
+        self.__dict__['_typedText'] = text
+        self.enteredText = text
+
+
 #: Each class here by its X3D name.
 PROTOTYPES: "dict[str, type]" = {
     cls.PROTO: cls for cls in (
         BooleanFilter, BooleanToggle, BooleanTrigger, IntegerTrigger, TimeTrigger,
-        BooleanSequencer, IntegerSequencer, KeySensor,
+        BooleanSequencer, IntegerSequencer, KeySensor, StringSensor,
     )
 }

@@ -186,6 +186,8 @@ outputs the handler sets are forwarded along routes as any field change is:
 - ``KeySensor``: ``keyDown(name)`` and ``keyUp(name)`` send ``keyPress``,
   ``actionKeyPress`` (``runtime.ACTION_KEYS``), the modifiers' booleans and
   ``isActive``. Whoever has the keyboard calls them.
+- ``StringSensor``: ``typed(character)`` adds to ``enteredText``; a return
+  sends ``finalText``, and a backspace deletes where ``deletionAllowed``.
 
 A document read with no ``prototypes=`` is built from these classes where they
 exist; ``runtime.PROTOTYPES`` maps them by name for merging with an engine's.

@@ -155,6 +155,39 @@ class TestKeySensor(unittest.TestCase):
         self.assertIsNone(outputs(made, 'keyPress'))
 
 
+class TestStringSensor(unittest.TestCase):
+    def test_characters_are_entered_and_return_ends_the_text(self):
+        made = runtime.StringSensor()
+        for character in 'hi!':
+            made.typed(character)
+        self.assertEqual(outputs(made, 'enteredText'), 'hi!')
+        self.assertIs(outputs(made, 'isActive'), True)
+        made.typed('\n')
+        self.assertEqual(outputs(made, 'finalText'), 'hi!')
+        self.assertEqual(outputs(made, 'enteredText'), '')
+        self.assertIs(outputs(made, 'isActive'), False)
+
+    def test_backspace_deletes_where_deletion_is_allowed(self):
+        made = runtime.StringSensor()
+        for character in 'ab\b':
+            made.typed(character)
+        self.assertEqual(outputs(made, 'enteredText'), 'a')
+        kept = runtime.StringSensor(deletionAllowed=False)
+        for character in 'ab\b':
+            kept.typed(character)
+        self.assertEqual(outputs(kept, 'enteredText'), 'ab')
+
+    def test_return_with_nothing_entered_sends_nothing(self):
+        made = runtime.StringSensor()
+        made.typed('\n')
+        self.assertIsNone(outputs(made, 'finalText'))
+
+    def test_a_disabled_sensor_takes_nothing(self):
+        made = runtime.StringSensor(enabled=False)
+        made.typed('a')
+        self.assertIsNone(outputs(made, 'enteredText'))
+
+
 class TestFromADocument(unittest.TestCase):
     def test_routes_carry_the_outputs(self):
         scene = x3d.loads(b'''<X3D version="4.0"><Scene>
