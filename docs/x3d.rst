@@ -188,6 +188,12 @@ outputs the handler sets are forwarded along routes as any field change is:
   ``isActive``. Whoever has the keyboard calls them.
 - ``StringSensor``: ``typed(character)`` adds to ``enteredText``; a return
   sends ``finalText``, and a backspace deletes where ``deletionAllowed``.
+- ``PositionInterpolator2D`` and ``CoordinateInterpolator2D`` straight between
+  keys; ``SplinePositionInterpolator``, ``SplinePositionInterpolator2D`` and
+  ``SplineScalarInterpolator`` on X3D's Hermite spline, with ``keyVelocity``,
+  ``normalizeVelocity`` and ``closed``; ``SquadOrientationInterpolator`` by
+  spherical cubic interpolation; and ``EaseInEaseOut``. The arithmetic is
+  ``vrml.x3d.interpolation``.
 
 A document read with no ``prototypes=`` is built from these classes where they
 exist; ``runtime.PROTOTYPES`` maps them by name for merging with an engine's.

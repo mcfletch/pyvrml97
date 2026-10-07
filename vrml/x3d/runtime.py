@@ -1,4 +1,4 @@
-"""X3D's event utilities, sequencers and KeySensor, with their behaviour
+"""X3D's event utilities, sequencers, interpolators and key sensors, with their behaviour
 
 The declarations in `vrml.x3d.nodes` carry fields only. The classes here add
 what each node sends for what it receives: setting an inputOnly event on a
@@ -17,6 +17,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
+from vrml.x3d import interpolation
 from vrml.x3d import nodes as x3d
 
 __all__ = ['ACTION_KEYS', 'MODIFIER_KEYS', 'PROTOTYPES', 'clock']
@@ -212,10 +213,87 @@ class StringSensor(x3d.StringSensor):
         self.enteredText = text
 
 
+class Interpolated:
+    """An interpolator: `value_changed` is :meth:`evaluate` of each fraction it receives"""
+
+    key: Any
+    keyValue: Any
+    value_changed: Any
+
+    def evaluate(self, fraction: float) -> Any:
+        """The value at `fraction`"""
+        raise NotImplementedError('%s must evaluate its keys' % type(self).__name__)
+
+    def on_set_fraction(self, value: Any) -> None:
+        if len(self.key) and len(self.keyValue):
+            self.value_changed = self.evaluate(float(value))
+
+
+class PositionInterpolator2D(Interpolated, x3d.PositionInterpolator2D):
+    """A 2D position, straight between keys"""
+
+    def evaluate(self, fraction: float) -> Any:
+        return interpolation.linear(self.key, self.keyValue, fraction)
+
+
+class CoordinateInterpolator2D(Interpolated, x3d.CoordinateInterpolator2D):
+    """A run of 2D points per key, straight between keys"""
+
+    def evaluate(self, fraction: float) -> Any:
+        per_key = max(len(self.keyValue) // len(self.key), 1)
+        return interpolation.linear(self.key, self.keyValue[:per_key * len(self.key)],
+                                    fraction, per_key=per_key)
+
+
+class Splined(Interpolated):
+    """A spline interpolator: X3D's Hermite spline through `keyValue`"""
+
+    closed: Any
+    keyVelocity: Any
+    normalizeVelocity: Any
+
+    def evaluate(self, fraction: float) -> Any:
+        return interpolation.spline(self.key, self.keyValue, fraction, closed=bool(self.closed),
+                                    velocities=self.keyVelocity,
+                                    normalize=bool(self.normalizeVelocity))
+
+
+class SplinePositionInterpolator(Splined, x3d.SplinePositionInterpolator):
+    """A position on a spline through the key values"""
+
+
+class SplinePositionInterpolator2D(Splined, x3d.SplinePositionInterpolator2D):
+    """A 2D position on a spline through the key values"""
+
+
+class SplineScalarInterpolator(Splined, x3d.SplineScalarInterpolator):
+    """A number on a spline through the key values"""
+
+    def evaluate(self, fraction: float) -> Any:
+        return float(super().evaluate(fraction))
+
+
+class SquadOrientationInterpolator(Interpolated, x3d.SquadOrientationInterpolator):
+    """A rotation by spherical cubic interpolation of the key rotations"""
+
+    def evaluate(self, fraction: float) -> Any:
+        return interpolation.squad(self.key, self.keyValue, fraction)
+
+
+class EaseInEaseOut(x3d.EaseInEaseOut):
+    """A fraction eased out of and into each key (:func:`~vrml.x3d.interpolation.ease`)"""
+
+    def on_set_fraction(self, value: Any) -> None:
+        self.modifiedFraction_changed = interpolation.ease(self.key, self.easeInEaseOut, value)
+
+
 #: Each class here by its X3D name.
 PROTOTYPES: "dict[str, type]" = {
     cls.PROTO: cls for cls in (
         BooleanFilter, BooleanToggle, BooleanTrigger, IntegerTrigger, TimeTrigger,
         BooleanSequencer, IntegerSequencer, KeySensor, StringSensor,
+        PositionInterpolator2D, CoordinateInterpolator2D, SplinePositionInterpolator,
+        SplinePositionInterpolator2D, SplineScalarInterpolator, SquadOrientationInterpolator,
+        EaseInEaseOut,
     )
 }
