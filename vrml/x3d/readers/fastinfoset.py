@@ -80,7 +80,8 @@ class FastInfosetReader(ElementReader):
             typed = codecs.from_values(type_name, value)
         except ValueError as error:
             node = self.builder.current_node()
-            self.builder.problem('error', '%s.%s: %s' % (type(node).__name__, name, error), node)
+            self.builder.problem('error', '%s.%s: %s' % (self.builder.current_type(), name, error),
+                                 node)
             return
         self.builder.field(name, typed)
 

@@ -307,7 +307,7 @@ class ClassicReader:
         if type_name is None:
             if self.builder.current_node() is not None:
                 self.builder.problem('warning', '%s has no field %s' % (
-                    type(self.builder.current_node()).__name__, name))
+                    self.builder.current_type(), name))
             return
         if type_name in ('SFNode', 'MFNode'):
             if value[0] == 'null':

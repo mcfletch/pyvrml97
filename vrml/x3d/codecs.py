@@ -61,7 +61,8 @@ def _tokens(text: str) -> "list[str]":
 
 
 def _integer(token: str) -> int:
-    """An integer written in decimal, hexadecimal or with an exponent"""
+    """An integer written in decimal, hexadecimal or with an exponent; a
+    number written with a fraction of zero (``1.0``) is read as its integer"""
     try:
         return int(token)
     except ValueError:
@@ -125,6 +126,19 @@ def _strings(text: str) -> "list[str]":
     return result
 
 
+#: A defined escape, taken out before looking for undefined ones.
+_ESCAPED_PAIRS = re.compile(r'\\["\\]')
+#: A backslash before a character other than a quote or a backslash.
+_UNDEFINED_ESCAPE = re.compile(r'\\[^"\\]')
+
+
+def undefined_escape(text: str) -> bool:
+    """Whether quoted MFString text has a backslash before a character other
+    than a quote or a backslash: only those two are escapes, and the
+    backslash before anything else is dropped"""
+    return is_quoted(text) and bool(_UNDEFINED_ESCAPE.search(_ESCAPED_PAIRS.sub('', text)))
+
+
 def is_quoted(text: str) -> bool:
     """Whether MFString text is written as quoted strings, as it should be"""
     stripped = text.strip()
@@ -143,20 +157,54 @@ def _scalar(converter: "Callable[[str], Any]") -> "Callable[[str], Any]":
     return decode
 
 
+#: The values an integer type holds: X3D's 32-bit signed and unsigned.
+INTEGER_RANGES = {
+    'SFInt32': (-2 ** 31, 2 ** 31 - 1), 'MFInt32': (-2 ** 31, 2 ** 31 - 1),
+    'SFUInt32': (0, 2 ** 32 - 1), 'MFUInt32': (0, 2 ** 32 - 1),
+}
+
+
+def _within(type_name: str, decoder: "Callable[[str], Any]") -> "Callable[[str], Any]":
+    """`decoder`, refusing a value outside `type_name`'s range"""
+    low, high = INTEGER_RANGES[type_name]
+
+    def decode(text: str) -> Any:
+        value = decoder(text)
+        values = np.asarray(value)
+        if values.size and (values.min() < low or values.max() > high):
+            raise ValueError('%s holds %d to %d, not %r' % (type_name, low, high, text[:40]))
+        return value
+    return decode
+
+
+def _finite(decoder: "Callable[[str], Any]") -> "Callable[[str], Any]":
+    """`decoder`, refusing a number that is not finite"""
+    def decode(text: str) -> Any:
+        value = decoder(text)
+        if not np.isfinite(value).all():
+            raise ValueError('%r holds a number that is not finite' % (text[:40],))
+        return value
+    return decode
+
+
 DECODERS: "dict[str, Callable[[str], Any]]" = {
     'SFBool': _boolean,
     'MFBool': _booleans,
-    'SFInt32': _scalar(_integer),
-    'SFUInt32': _scalar(_integer),
     'SFString': str,
     'MFString': _strings,
     'SFNode': _node,
     'MFNode': _node,
 }
-DECODERS.update({name: _scalar(float) for name in SCALAR_FLOAT_TYPES})
+DECODERS.update({name: _finite(_scalar(float)) for name in SCALAR_FLOAT_TYPES})
 DECODERS.update({name: _integers for name in INTEGER_LIST_TYPES})
-DECODERS.update({name: _floats(np.float32) for name in FLOAT32_TYPES})
-DECODERS.update({name: _floats(np.float64) for name in FLOAT64_TYPES})
+DECODERS.update({name: _finite(_floats(np.float32)) for name in FLOAT32_TYPES})
+DECODERS.update({name: _finite(_floats(np.float64)) for name in FLOAT64_TYPES})
+DECODERS.update({
+    'SFInt32': _within('SFInt32', _scalar(_integer)),
+    'SFUInt32': _within('SFUInt32', _scalar(_integer)),
+    'MFInt32': _within('MFInt32', _integers),
+    'MFUInt32': _within('MFUInt32', _integers),
+})
 
 
 def decode(type_name: str, text: str) -> Any:

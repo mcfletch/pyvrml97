@@ -87,6 +87,29 @@ class TestLoading(unittest.TestCase):
         self.assertIsInstance(protofunctions.getSceneGraph(lamp).children[0], nodes.Transform)
         self.assertEqual(scene.problems, [])
 
+    def test_an_external_prototype_named_with_escapes(self):
+        self.write('my lamps.x3dv', '#X3D V4.0 utf8\nPROFILE Core\n'
+                                    'PROTO Lamp [ inputOutput SFFloat size 3 ] { Group { } }\n')
+        path = self.write('scene.x3dv', '#X3D V4.0 utf8\nPROFILE Core\n'
+                                        'EXTERNPROTO Lamp [ inputOutput SFFloat size ] '
+                                        '[ "my%20lamps.x3dv#Lamp" ]\nLamp {}\n')
+        self.assertEqual(x3d.load(path).children[0].size, 3.0)
+
+    def test_where_an_external_prototype_url_leads(self):
+        from vrml.x3d.files import local_path  # noqa: PLC0415 kept with its use
+        base = os.path.join(os.sep, 'worlds', 'scene.x3d')
+        cases = [
+            ('lamps.x3d#Lamp', (os.path.join(os.sep, 'worlds', 'lamps.x3d'), 'Lamp')),
+            ('my%20lamps.x3d', (os.path.join(os.sep, 'worlds', 'my lamps.x3d'), '')),
+            ('file:///shared/lamps.x3d#L', (os.path.normpath('/shared/lamps.x3d'), 'L')),
+            ('C:/protos/lamps.x3d#L', ('C:/protos/lamps.x3d', 'L')),
+            ('https://example.com/lamps.x3d', None),
+            ('#Lamp', None),
+        ]
+        for url, expected in cases:
+            with self.subTest(url=url):
+                self.assertEqual(local_path(url, base), expected)
+
     def test_a_remote_external_prototype_is_not_fetched(self):
         path = self.write('scene.x3dv', '#X3D V4.0 utf8\nPROFILE Core\n'
                                         'EXTERNPROTO Lamp [ ] [ "https://example.com/l.x3dv" ]\n'

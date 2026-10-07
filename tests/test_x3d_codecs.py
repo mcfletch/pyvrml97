@@ -58,6 +58,21 @@ class TestNumbers(unittest.TestCase):
         with self.assertRaises(ValueError):
             held('SFVec3f', '1 2')
 
+    def test_an_integer_past_its_types_range_is_refused(self):
+        for type_name, text in (('SFInt32', '4294967296'), ('MFInt32', '1 -2147483649'),
+                                ('SFUInt32', '-1'), ('MFUInt32', '4294967296')):
+            with self.subTest(type_name=type_name), self.assertRaises(ValueError):
+                codecs.decode(type_name, text)
+
+    def test_an_images_pixels_are_not_held_to_int32(self):
+        self.assertEqual(list(codecs.decode('SFImage', '1 1 4 0xFF0000FF')), [1, 1, 4, 0xFF0000FF])
+
+    def test_a_number_that_is_not_finite_is_refused(self):
+        for type_name, text in (('SFFloat', 'nan'), ('SFTime', 'inf'), ('MFFloat', '1 nan'),
+                                ('SFVec3f', '0 -inf 0'), ('MFDouble', '1 2 inf')):
+            with self.subTest(type_name=type_name), self.assertRaises(ValueError):
+                codecs.decode(type_name, text)
+
     def test_an_unknown_type_is_refused(self):
         with self.assertRaises(KeyError):
             codecs.decode('SFNoSuchThing', '1')

@@ -120,6 +120,16 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(errors(scene)[0].line, 5)
 
 
+class TestProblems(unittest.TestCase):
+    def test_a_problem_names_the_x3d_type_not_the_engines_class(self):
+        class EngineTransform(x3d.Transform):
+            pass
+        scene = read('#X3D V4.0 utf8\nPROFILE Core\nTransform { nosuch 1 }\n',
+                     prototypes={'Transform': EngineTransform})
+        messages = [p.message for p in scene.problems if p.severity == 'warning']
+        self.assertEqual(messages, ['Transform has no field nosuch'])
+
+
 class TestNumberLists(unittest.TestCase):
     """A bracketed list of numbers is read as one span, which its field type decodes"""
 
@@ -273,4 +283,5 @@ class TestWhatWeb3DsConverterWrites(unittest.TestCase):
         scene = x3d_document('Group { children [ EXTERNPROTO Far [ ] "far.x3dv"\n'
                              'Far {} ] }')
         self.assertEqual(len(scene.children[0].children), 1)
-        self.assertEqual([p.severity for p in scene.problems], ['warning'])
+        # the declaration among nodes, and the note that nothing read far.x3dv
+        self.assertEqual([p.severity for p in scene.problems], ['warning', 'info'])

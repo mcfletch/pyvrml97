@@ -252,6 +252,15 @@ class TestFields(unittest.TestCase):
         self.assertEqual(texture.url, ['brick.png'])
         self.assertEqual(len(problems(scene, 'warning')), 1)
 
+    def test_a_backslash_before_another_character_is_read_with_a_warning(self):
+        """Only \\" and \\\\ are escapes in an MFString; C:\\path loses its backslashes"""
+        built = Built()
+        texture = built.node('ImageTexture', url='"C:\\maps\\brick.png" "a\\"b"')
+        scene = built.end_document()
+        self.assertEqual(texture.url, ['C:mapsbrick.png', 'a"b'])
+        self.assertEqual(len(problems(scene, 'warning')), 1)
+        self.assertIn('backslash', problems(scene, 'warning')[0].message)
+
     def test_a_typed_value(self):
         built = Built()
         built.b.start_node('Transform')
@@ -718,6 +727,15 @@ class TestExternalPrototypes(unittest.TestCase):
         built.end_document()
         self.assertEqual(made.size, 2.0)
         self.assertEqual(protofunctions.getExternalURL(Far), ['far.x3d#Far'])
+
+    def test_with_no_resolver_an_extern_prototype_is_noted(self):
+        built = Built()
+        built.start_proto('Far', extern=True)
+        built.proto_url(['far.x3d'])
+        built.end_proto()
+        found = problems(built.end_document(), 'info')
+        self.assertEqual(len(found), 1)
+        self.assertIn('Far', found[0].message)
 
     def test_an_unresolved_instance_goes_in_children(self):
         """19776-1: a ProtoInstance's containerField is children unless it

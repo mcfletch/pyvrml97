@@ -11,7 +11,7 @@ import gzip
 import os
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, BinaryIO
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 from vrml import node
 from vrml.x3d import nodes as x3d
@@ -38,6 +38,26 @@ def staged(path: str) -> "Iterator[BinaryIO]":
 MAX_PROTOTYPE_DEPTH = 8
 
 
+def local_path(url: str, base: str) -> "tuple[str, str] | None":
+    """The file a URL names, relative to the document at `base`, and its
+    fragment; None for a URL that names no local file
+
+    Percent-escapes are decoded. A drive letter (``C:/...``) is a path, not a
+    URL scheme.
+    """
+    parts = urlsplit(url)
+    scheme = parts.scheme
+    if len(scheme) == 1:                      # a Windows drive
+        path, fragment = url.partition('#')[0], parts.fragment
+        return unquote(path), fragment
+    if scheme not in ('', 'file') or not parts.path:
+        return None
+    path = unquote(parts.path)
+    if not os.path.isabs(path):
+        path = os.path.join(os.path.dirname(base), path)
+    return os.path.normpath(path), parts.fragment
+
+
 class LocalPrototypes:
     """Resolves EXTERNPROTO URLs that name local files, relative to the document
 
@@ -60,17 +80,14 @@ class LocalPrototypes:
         if self.depth >= MAX_PROTOTYPE_DEPTH:
             return None
         for url in urls:
-            parts = urlsplit(url)
-            if parts.scheme not in ('', 'file') or not parts.path:
+            local = local_path(url, base)
+            if local is None:
                 continue
-            path = parts.path
-            if not os.path.isabs(path):
-                path = os.path.join(os.path.dirname(base), path)
-            path = os.path.normpath(path)
+            path, fragment = local
             scene = self._scene(path)
             if scene is None:
                 continue
-            found = scene.getProto(parts.fragment or name)
+            found = scene.getProto(fragment or name)
             if found is not None and found not in node.PENDING_PROTOTYPES:
                 return found
         return None

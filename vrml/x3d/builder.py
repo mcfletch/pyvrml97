@@ -459,6 +459,11 @@ class SceneBuilder:
             return None
         return self._frames[-1].node
 
+    def current_type(self) -> str:
+        """The X3D type name of the node being built, as the document names it; ''
+        outside one"""
+        return self._frames[-1].type_name if self._frames else ''
+
     def source_text(self, text: str) -> None:
         """Program text inside the open node, for its `sourceCode` field
 
@@ -546,6 +551,9 @@ class SceneBuilder:
         if type_name == 'MFString' and not codecs.is_quoted(text):
             self.problem('warning', '%s.%s: MFString value not quoted: %r'
                          % (frame.type_name, name, text[:40]), frame.node)
+        elif type_name == 'MFString' and codecs.undefined_escape(text):
+            self.problem('warning', '%s.%s: a backslash before a character other than " or '
+                         '\\ is dropped: %r' % (frame.type_name, name, text[:40]), frame.node)
         self._set(frame, declared, value)
 
     def field(self, name: str, value: Any) -> None:
@@ -772,6 +780,9 @@ class SceneBuilder:
                 else:
                     for message in complete_extern_proto(cls, found):
                         self.problem('error', message)
+            else:
+                self.problem('info', 'EXTERNPROTO %s is not read: no resolver was given'
+                             % definition.name)
             return cls
         body = definition.body or _Body(_Scope(definition.scope))
         template = SceneGraph(children=body.roots, routes=body.routes)
