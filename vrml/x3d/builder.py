@@ -808,6 +808,10 @@ class SceneBuilder:
         if end == 'to' and access in ('outputOnly', 'initializeOnly'):
             self.problem('error', 'ROUTE to %s.%s, which is %s' % (type_name, name, access), target)
             return None
+        if not isinstance(target, node.PrototypedNode) and not self.dialect.has_field(
+                type_name, declared.name):
+            self.problem('warning', '%s has no field %s.%s'
+                         % (self.version_name, type_name, declared.name), target)
         return current
 
     def import_(self, inlineDEF: str, importedDEF: str, AS: str = '') -> None:

@@ -2,10 +2,13 @@
 
 Each archive publishes every scene in several encodings (.x3d, .x3dv, .wrl,
 .json, .x3db). `fetch` downloads archives into the corpus directory
-(`directory`) and extracts the scene files and the licence into
-`<directory>/<name>/`; with `resources`, also the images the scenes name and
-the render Web3D publishes of each scene from each of its viewpoints
-(`viewpoint_renders`), which is what a scene needs to be drawn and compared.
+(`directory`) and extracts the scene files and the licence into one tree
+laid out as Web3D publishes the examples, each archive's in
+`examples(name)`, so a scene naming a file of another archive reaches it;
+`with_references` adds the archives the named ones' scenes reach into. With
+`resources`, the images the scenes name and the render Web3D publishes of each
+scene from each of its viewpoints (`viewpoint_renders`) are extracted too,
+which is what a scene needs to be drawn and compared.
 
 The examples are under the Web3D Consortium Open-Source License
 (https://www.web3d.org/x3d/content/examples/license.html), which is
@@ -20,8 +23,8 @@ import urllib.request
 import zipfile
 from collections.abc import Sequence
 
-__all__ = ['ARCHIVES', 'directory', 'download', 'extract', 'fetch', 'render_name',
-           'viewpoint_renders']
+__all__ = ['ARCHIVES', 'directory', 'download', 'examples', 'extract', 'fetch', 'render_name',
+           'viewpoint_renders', 'with_references']
 
 URL = 'https://www.web3d.org/x3d/content/examples/X3dExamples%s.zip'
 
@@ -35,6 +38,13 @@ ARCHIVES = ('ConformanceNist', 'Vrml2Sourcebook', 'Basic', 'HumanoidAnimation', 
             'X3dForWebAuthors', 'X3dForAdvancedModeling')
 #: The archives fetched where none are named.
 DEFAULT_ARCHIVES = ('ConformanceNist', 'Vrml2Sourcebook')
+#: The archives whose files each archive's scenes name (an Inline, an image).
+REFERENCES = {
+    'ConformanceNist': ('X3dForWebAuthors',),
+    'Vrml2Sourcebook': ('X3dForWebAuthors',),
+}
+#: Where in the corpus directory the examples are, each archive in a folder of its name.
+EXAMPLES = ('www.web3d.org', 'x3d', 'content', 'examples')
 
 SCENE_SUFFIXES = ('.x3d', '.x3dv', '.wrl', '.json', '.x3db')
 #: The images a scene's textures and backgrounds may name.
@@ -54,6 +64,20 @@ def directory() -> str:
     if not base:
         base = os.path.join(os.path.expanduser('~'), '.cache')
     return os.path.join(base, 'pyvrml97', 'x3d-corpus')
+
+
+def examples(archive: str, where: "str | None" = None) -> str:
+    """The folder of an archive's examples in the corpus at `where` (default
+    `directory()`)"""
+    return os.path.join(where or directory(), *EXAMPLES, archive)
+
+
+def with_references(names: Sequence[str]) -> "list[str]":
+    """`names`, and after them the archives their scenes name files of"""
+    found = list(names)
+    for name in names:
+        found.extend(other for other in REFERENCES.get(name, ()) if other not in found)
+    return found
 
 
 def download(name: str, where: str) -> str:
@@ -116,7 +140,7 @@ def fetch(names: Sequence[str] = DEFAULT_ARCHIVES, where: "str | None" = None,
     os.makedirs(where, exist_ok=True)
     counts = {}
     for name in names:
-        counts[name] = extract(download(name, where), os.path.join(where, name), resources)
+        counts[name] = extract(download(name, where), where, resources)
     return counts
 
 

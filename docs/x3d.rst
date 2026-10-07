@@ -385,7 +385,11 @@ Web3D's example corpus
 ``vrml.x3d.corpus`` fetches Web3D's X3D example archives, which publish every
 scene in each encoding, into ``directory()`` (``PYVRML97_X3D_CORPUS``, else
 ``pyvrml97/x3d-corpus`` in the user's cache). ``fetch(names)`` downloads and
-extracts the scene files and the licence; with ``resources=True`` also the
+extracts the scene files and the licence into one tree laid out as Web3D
+publishes them, each archive's in ``examples(name)``, so a scene's Inline of
+another archive's file resolves once that archive is fetched;
+``with_references(names)`` adds the archives the named ones' scenes reach
+into. With ``resources=True`` it also extracts the
 images the scenes name and the render Web3D publishes of each scene from each
 of its viewpoints, which ``viewpoint_renders(path)`` finds by viewpoint
 (``render_name(description)``). ``tools/fetch_x3d_corpus.py`` is the same

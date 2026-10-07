@@ -79,10 +79,21 @@ class TestTheDirectory:
         assert corpus.directory() == os.path.join(str(tmp_path), 'pyvrml97', 'x3d-corpus')
 
     def test_fetch_extracts_an_archive_already_downloaded(self, tmp_path):
+        """Into one tree, as the examples are published, so a scene's references
+        into another archive resolve"""
         archive(tmp_path, MEMBERS)
         counts = corpus.fetch(['ConformanceNist'], where=str(tmp_path), resources=True)
         assert counts == {'ConformanceNist': 1}
-        assert os.path.exists(tmp_path / 'ConformanceNist' / PREFIX / 'vts.jpg')
+        assert os.path.exists(tmp_path / PREFIX / 'vts.jpg')
+
+    def test_an_archives_examples(self, tmp_path):
+        assert corpus.examples('ConformanceNist', str(tmp_path)) == os.path.join(
+            str(tmp_path), *PREFIX.rstrip('/').split('/'))
+
+    def test_the_archives_an_archives_scenes_reach_into(self):
+        assert corpus.with_references(['Vrml2Sourcebook']) == [
+            'Vrml2Sourcebook', 'X3dForWebAuthors']
+        assert corpus.with_references(['X3dForWebAuthors']) == ['X3dForWebAuthors']
 
 
 class TestWeb3DsRenders:

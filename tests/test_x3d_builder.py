@@ -325,6 +325,16 @@ class TestDialects(unittest.TestCase):
                          ['VRML97 has no field Viewpoint.centerOfRotation'])
         self.assertEqual(list(viewpoint.centerOfRotation), [1, 2, 3])
 
+    def test_a_route_to_a_field_the_version_lacks_is_a_warning_and_is_made(self):
+        built = Built()
+        built.document('', '2.0')
+        built.node('TimeSensor', DEF='Clock')
+        built.node('TimeSensor', DEF='Other')
+        made = built.route('Other', 'cycleTime', 'Clock', 'pauseTime')
+        warnings = problems(built.end_document(), 'warning')
+        self.assertEqual([p.message for p in warnings], ['VRML97 has no field TimeSensor.pauseTime'])
+        self.assertIsNotNone(made)
+
     def test_a_vrml97_document_names_its_version_vrml97(self):
         built = Built()
         built.document('', '2.0')

@@ -5,8 +5,8 @@ X3D encoding builds the graph the XML encoding builds: one test that holds
 the readers to one another. The .wrl files are VRML97 translations, which
 drop what VRML97 cannot say (X3D-only fields and nodes), so they are held to
 reading without errors rather than to the XML graph. `tests/fixtures/x3d-corpus` is a committed subset;
-`tools/fetch_x3d_corpus.py` fetches the whole of the ConformanceNist and
-Vrml2Sourcebook archives into a cache this test also reads when it is there.
+`tools/fetch_x3d_corpus.py` fetches whole archives into a cache this test
+also reads, every archive in it, when it is there.
 The examples are under the Web3D Consortium Open-Source License
 (`tests/fixtures/x3d-corpus/*/license.html`).
 """
@@ -30,18 +30,35 @@ ENCODINGS = {
     '.x3dv': (('FontStyle', 'style'), ('ScreenFontStyle', 'style')),
 }
 
-#: Scenes whose translation into an encoding says something else, by suffix:
-#: the converter writes a nested MetadataSet's children twice (the STEP
-#: scenes), gives a declared MFString with no value one empty string, and
-#: rewrites Script source that prints.
+#: Scenes whose translation into an encoding says something else, by suffix.
+#: The ClassicVRML converter writes a nested MetadataSet's children twice (the
+#: STEP scenes) or before the nodes they USE (MetadataNodeExamples), gives a
+#: declared MFString with no value one empty string (speed_*, the fish
+#: prototypes), and splits an unquoted MFString differently (XmpMetadata).
+#: The JSON converter collapses runs of spaces in strings and empties the
+#: blank lines of Script source.
 CONVERTED_DIFFERENTLY = {
     '.x3dv': (
-        'STEP/', 'speed_range', 'speed_scaling', 'ScriptNodeEventOutControl_EcmaScript',
-        'ScriptNodeFieldControl_EcmaScript',
-        'Figure30_2ScriptBackgroundSelect', 'Figure30_3ScriptSoundActivate',
-        'Figure30_5ScriptTorusBuilder',
+        'STEP/', 'speed_range', 'speed_scaling', 'FishPrototype', 'SeaStarPrototype',
+        'PositionInterpolatorPrototype', 'MetadataNodeExamplesX3D', 'XmpMetadataEmbedded',
+    ),
+    '.json': (
+        'TextHaveFunWithX3D', 'TextSpecialCharacters', 'IntroductionMessage',
+        'ElevationGridSimpleWaveAnimation', 'ChangingFog', 'BindingOperations',
+        'MaterialModulatorPrototypeExpanded',
     ),
 }
+
+#: What the ClassicVRML converter writes in place of Script source that prints.
+REWRITTEN_SCRIPT = b'### X3D Browser.print() not supported'
+
+
+def converted_differently(path, suffix):
+    """Whether the converter's translation of a scene into `suffix` says something else"""
+    if any(name in path for name in CONVERTED_DIFFERENTLY.get(suffix, ())):
+        return True
+    with open(path, 'rb') as stream:
+        return REWRITTEN_SCRIPT in stream.read()
 
 #: The values Web3D's .x3db files write a second time under a name their
 #: node does not take: an Anchor's url, an Inline's bboxSize, a LOD's range
@@ -52,9 +69,11 @@ DOUBLED_IN_BINARY = (
 )
 
 #: VRML97 files with errors the reader reports: the STEP translations move
-#: a metadata field out of its node, and script.wrl routes from names it
-#: never defines.
-VRML97_ERRORS = ('STEP/', 'Background/script.wrl')
+#: a metadata field out of its node, script.wrl routes from names it never
+#: defines, the X3dForWebAuthors translations keep X3D's metadata fields, and
+#: MaterialModulator routes from an EXTERNPROTO's field.
+VRML97_ERRORS = ('STEP/', 'Background/script.wrl', 'EmptySceneCoreProfile',
+                 'MetadataNodeExamplesX3D', 'WorldInfoExample', 'MaterialModulator')
 
 
 def scenes(directory):
@@ -86,10 +105,12 @@ class CorpusTests:
     """The checks, over whichever directory of scenes a subclass names"""
 
     directory = ''
-    #: Scenes whose content has an error the readers report: each routes to
-    #: an initializeOnly field of its own prototype.
+    #: Scenes whose content has a problem the readers report: the first two
+    #: route to an initializeOnly field of their own prototype, and
+    #: XmpMetadataEmbedded gives MFString values without quotes.
     KNOWN_ERRORS = (
         'KeySensorActivationKeySwitchTest', 'Figure31_7DonutExternalPrototype',
+        'XmpMetadataEmbedded',
     )
 
     def setUp(self):
@@ -109,8 +130,7 @@ class CorpusTests:
             expected = read(path)
             for suffix, ignore in ENCODINGS.items():
                 other = path[:-len('.x3d')] + suffix
-                if not os.path.exists(other) or any(
-                        name in other for name in CONVERTED_DIFFERENTLY.get(suffix, ())):
+                if not os.path.exists(other) or converted_differently(other, suffix):
                     continue
                 with self.subTest(scene=os.path.relpath(other, self.directory)):
                     self.assertIsNone(first_difference(expected, read(other), ignore=ignore))
