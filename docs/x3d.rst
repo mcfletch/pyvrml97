@@ -201,6 +201,18 @@ outputs the handler sets are forwarded along routes as any field change is:
   ``isActive TRUE`` and ``enterTime``, leaving it ``isActive FALSE`` and
   ``exitTime``, and moving within it ``position_changed`` and
   ``orientation_changed``. A box with a side of zero senses nothing.
+- The pointing-device sensors, ``vrml.x3d.pointing``: ``TouchSensor``,
+  ``PlaneSensor``, ``CylinderSensor`` and ``SphereSensor``. Whoever has the
+  pointer calls ``pointerOver(hit)`` as it moves, ``pointerPress(hit, ray)``
+  when the primary button goes down over the sensor's geometry,
+  ``pointerDrag(hit, ray)`` while it is held and ``pointerRelease(over)``
+  when it comes up, each in the sensor's coordinates (``pointing.Hit``,
+  ``pointing.Ray``). A ``TouchSensor`` sends ``isOver``, the hit's point,
+  normal and texture coordinate, and ``touchTime`` for a release over it;
+  the drag sensors map the drag onto the plane, cylinder or sphere through
+  the first hit and send ``trackPoint_changed`` and their translation or
+  rotation, clamped to their limits, carrying on from the last drag where
+  ``autoOffset`` is true.
 - The followers, ``vrml.x3d.followers``: each chaser reaches a destination
   ``duration`` seconds after it is set, along a smooth step, and each damper
   approaches it through ``order`` first-order filters of time constant
