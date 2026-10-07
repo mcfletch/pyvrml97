@@ -52,26 +52,11 @@ DECLARES_FIELDS = (x3d.X3DScriptNode, x3d.X3DProgrammableShaderObject)
 #: A prototype's class.
 ProtoClass = type[node.PrototypedNode]
 
+#: The attributes of a node's element that can be the encoding's, not the node's.
+ENCODING_ATTRIBUTES = frozenset(('DEF', 'USE', 'containerField', 'class', 'id', 'style'))
+
 #: A field declaration given no value.
 _UNSET: Any = object()
-
-
-def _typed(type_name: str, value: Any) -> Any:
-    """A typed value (JSON's) in the shape its field type takes
-
-    Web3D's JSON converter writes a string field whose text is `true` as a
-    JSON boolean, and some MFString values as one string in their XML text
-    form.
-    """
-    if type_name == 'SFString' and isinstance(value, bool):
-        return 'true' if value else 'false'
-    if type_name == 'MFString':
-        if isinstance(value, str) and value.lstrip().startswith('"'):
-            return codecs.decode('MFString', value)
-        if isinstance(value, list):
-            return [('true' if item else 'false') if isinstance(item, bool) else item
-                    for item in value]
-    return value
 
 
 def unit_factor(category: str, units: "Mapping[str, float]") -> float:
@@ -459,6 +444,17 @@ class SceneBuilder:
             return None
         return self._frames[-1].node
 
+    def encoding_attribute(self, name: str) -> bool:
+        """Whether an attribute of the open node's element is the encoding's
+        (XML's and JSON's) rather than one of its fields: `DEF`, `USE`,
+        `containerField`, `class`, `id`, and `style` where the node has no
+        `style` field of its own (`FontStyle` has)"""
+        if name not in ENCODING_ATTRIBUTES:
+            return False
+        if name == 'style':
+            return not isinstance(getattr(type(self.current_node()), 'style', None), field.Field)
+        return True
+
     def current_type(self) -> str:
         """The X3D type name of the node being built, as the document names it; ''
         outside one"""
@@ -491,8 +487,7 @@ class SceneBuilder:
             self._frames[-1].target.pop()
 
     def _lookup(self, name: str) -> Any:
-        scope: "_Scope | None" = self._scope
-        return scope.defs.get(name) if scope is not None else None
+        return self._scope.defs.get(name)
 
     def _define(self, name: str, built: Any) -> None:
         if name in self._scope.defs:
@@ -561,7 +556,7 @@ class SceneBuilder:
         declared, frame = self._settable(name)
         if declared is None or frame is None:
             return
-        self._set(frame, declared, _typed(declared.typeName(), value))
+        self._set(frame, declared, value)
 
     def _settable(self, name: str) -> "tuple[Any, _Frame | None]":
         if not self._frames:
@@ -655,7 +650,6 @@ class SceneBuilder:
             except (KeyError, ValueError) as error:
                 self.problem('error', 'Field %s: %s' % (name, error))
                 value = _UNSET
-        value = _typed(type_name, value)
         if value is _UNSET or value is None and type_name == 'SFNode':
             return field.newField(name, type_name, exposure)
         try:

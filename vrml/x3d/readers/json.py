@@ -12,16 +12,33 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from vrml import field
+from vrml.x3d import codecs
 from vrml.x3d.builder import SceneBuilder
 from vrml.x3d.scene import X3DScene
 
 #: `@` keys of a node object that are the encoding's, not the node's.
-ENCODING_ATTRIBUTES = frozenset(('DEF', 'USE', 'containerField', 'class', 'id', 'style'))
 #: A ProtoInstance's member naming its prototype, which is not one of its fields.
 PROTOTYPE_NAME = frozenset(('@name',))
 #: A DEF's node type, the members that are not its fields, and its object.
 _Definition = tuple[str, frozenset[str], Mapping]
+
+
+def _typed(type_name: str, value: Any) -> Any:
+    """A typed value (JSON's) in the shape its field type takes
+
+    Web3D's JSON converter writes a string field whose text is `true` as a
+    JSON boolean, and some MFString values as one string in their XML text
+    form.
+    """
+    if type_name == 'SFString' and isinstance(value, bool):
+        return 'true' if value else 'false'
+    if type_name == 'MFString':
+        if isinstance(value, str) and value.lstrip().startswith('"'):
+            return codecs.decode('MFString', value)
+        if isinstance(value, list):
+            return [('true' if item else 'false') if isinstance(item, bool) else item
+                    for item in value]
+    return value
 
 
 class JSONReader:
@@ -197,9 +214,9 @@ class JSONReader:
                 continue
             if key.startswith('@'):
                 attribute = key[1:]
-                if attribute not in ENCODING_ATTRIBUTES or (
-                        attribute == 'style' and isinstance(item, str) and self._styled()):
-                    self.builder.field(attribute, item)
+                if not self.builder.encoding_attribute(attribute):
+                    self.builder.field(attribute,
+                                       _typed(self.builder.field_type(attribute) or '', item))
             elif key.startswith('-'):
                 self.builder.start_field(key[1:])
                 self._items(item)
@@ -224,36 +241,27 @@ class JSONReader:
                 lines = self._list(item)
                 self.builder.source_text('\n'.join(str(line) for line in lines))
 
-    def _styled(self) -> bool:
-        """Whether the open node's `style` is a field (FontStyle's is)"""
-        built = self.builder.current_node()
-        return isinstance(getattr(type(built), 'style', None), field.Field)
-
-    def _declare(self, declaration: Mapping) -> None:
+    def _declare(self, declaration: Mapping, proto: bool = False) -> None:
+        """A field a node (a Script, a shader) or, with `proto`, a prototype
+        declares, with its default"""
         name = str(declaration.get('@name', ''))
         type_name = str(declaration.get('@type', ''))
         access = str(declaration.get('@accessType', ''))
+        declare = self.builder.proto_field if proto else self.builder.declare_field
         if '@value' in declaration:
-            self.builder.declare_field(name, type_name, access, value=declaration['@value'])
+            declare(name, type_name, access, value=_typed(type_name, declaration['@value']))
         else:
-            self.builder.declare_field(name, type_name, access)
+            declare(name, type_name, access)
         if '-children' in declaration:
-            self.builder.start_field(name)
+            if proto:
+                self.builder.start_proto_field_nodes(name)
+            else:
+                self.builder.start_field(name)
             self._items(declaration['-children'])
-            self.builder.end_field()
-
-    def _proto_field(self, declaration: Mapping) -> None:
-        name = str(declaration.get('@name', ''))
-        type_name = str(declaration.get('@type', ''))
-        access = str(declaration.get('@accessType', ''))
-        if '@value' in declaration:
-            self.builder.proto_field(name, type_name, access, value=declaration['@value'])
-        else:
-            self.builder.proto_field(name, type_name, access)
-        if '-children' in declaration:
-            self.builder.start_proto_field_nodes(name)
-            self._items(declaration['-children'])
-            self.builder.end_proto_field_nodes()
+            if proto:
+                self.builder.end_proto_field_nodes()
+            else:
+                self.builder.end_field()
 
     # Statements
 
@@ -272,7 +280,7 @@ class JSONReader:
         self.builder.start_proto(str(value.get('@name', '')))
         interface = value.get('ProtoInterface') or {}
         for declaration in self._list(interface.get('field')):
-            self._proto_field(declaration)
+            self._declare(declaration, proto=True)
         self.builder.start_proto_body()
         self._scope((value.get('ProtoBody') or {}).get('-children'))
         self.builder.end_proto_body()
@@ -282,7 +290,7 @@ class JSONReader:
         self.builder.start_proto(str(value.get('@name', '')), extern=True)
         self.builder.proto_url([str(url) for url in self._list(value.get('@url'))])
         for declaration in self._list(value.get('field')):
-            self._proto_field(declaration)
+            self._declare(declaration, proto=True)
         self.builder.end_proto()
 
     def _statement_ProtoInstance(self, value: Mapping) -> None:

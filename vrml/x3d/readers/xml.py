@@ -12,13 +12,10 @@ from collections.abc import Callable
 from typing import Any
 from xml.parsers import expat
 
-from vrml import field
 from vrml.x3d import codecs
 from vrml.x3d.builder import SceneBuilder
 from vrml.x3d.scene import X3DScene
 
-#: Attributes of a node element that are the encoding's, not the node's.
-ENCODING_ATTRIBUTES = frozenset(('DEF', 'USE', 'containerField', 'class', 'id', 'style'))
 
 #: Elements that only hold others.
 CONTAINERS = frozenset(('head', 'Scene', 'ProtoInterface', 'IS'))
@@ -200,9 +197,8 @@ class ElementReader:
             name, DEF=attributes.get('DEF', ''), USE=attributes.get('USE', ''),
             containerField=attributes.get('containerField', ''),
         )
-        style_is_a_field = isinstance(getattr(type(built), 'style', None), field.Field)
         for key, value in attributes.items():
-            if key in ENCODING_ATTRIBUTES and not (key == 'style' and style_is_a_field):
+            if built is not None and self.builder.encoding_attribute(key):
                 continue
             self._value(key, value)
         return _Element('node', self.builder.end_node)

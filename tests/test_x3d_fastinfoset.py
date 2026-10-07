@@ -481,6 +481,15 @@ class TestTheDocument(unittest.TestCase):
         found = list(events(vocabulary_document(writer)))
         self.assertEqual(found, element('root', [('size', 'big')], [('text', 'ba', False)]))
 
+    def test_additional_data_of_any_octets(self):
+        """X.891 C.2.4: each datum's data is octets, which a processor may ignore"""
+        writer = header(presence='1000000')
+        writer.sequence_length(1)
+        writer.put('0').octet_string(b'urn:example:extra')
+        writer.put('0').octet_string(b'\xff\xfe\x00 not text')
+        writer.start('a').end()
+        self.assertEqual(list(events(writer.finish())), element('a'))
+
     def test_prefixed_name_surrogates(self):
         writer = Writer().octets(b'\xe0\x00\x00\x01').put('0 0100000')
         writer.put('000 00011 10000010')

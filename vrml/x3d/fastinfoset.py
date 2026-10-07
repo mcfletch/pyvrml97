@@ -508,8 +508,10 @@ class _Decoder:
         if presence & 0x80:
             raise FastInfosetError('The padding bit after the version is set')
         if presence & 0x40:
-            for _ in range(2 * self.sequence_length()):
+            # C.2.4: each datum an id (a URI) and its data, any octets; ignored (7.2.9)
+            for _ in range(self.sequence_length()):
                 self.literal_from_bit_2(self.octet())
+                self.octets(self.octet_string_length(self.octet()))
         if presence & 0x20:
             self.initial_vocabulary()
         if presence & 0x10:
