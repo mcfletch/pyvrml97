@@ -74,16 +74,16 @@ class X3DAppearanceChildNode(X3DNode):
 class X3DAppearanceNode(X3DNode):
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DChildNode(X3DNode, nodetypes.Children):
+class X3DChildNode(nodetypes.Children, X3DNode):
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DBindableNode(X3DChildNode, nodetypes.Bindable):
+class X3DBindableNode(nodetypes.Bindable, X3DChildNode):
     bindTime: _Field[float, float]
     isBound: _Field[int, bool | int]
     set_bind: _Field[int, bool | int]
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DBackgroundNode(X3DBindableNode, nodetypes.Background):
+class X3DBackgroundNode(nodetypes.Background, X3DBindableNode):
     groundAngle: _Field[_F64, ArrayLike]
     groundColor: _Field[_F32, ArrayLike]
     skyAngle: _Field[_F64, ArrayLike]
@@ -112,7 +112,7 @@ class X3DVolumeRenderStyleNode(X3DNode):
 class X3DComposableVolumeRenderStyleNode(X3DVolumeRenderStyleNode):
     def __init__(self, *, DEF: str = ..., enabled: bool | int = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DGeometryNode(X3DNode, nodetypes.Geometry):
+class X3DGeometryNode(nodetypes.Geometry, X3DNode):
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
 class X3DComposedGeometryNode(X3DGeometryNode):
@@ -138,13 +138,13 @@ class X3DDamperNode(X3DFollowerNode):
     tolerance: _Field[float, float]
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ..., order: int = ..., tau: float = ..., tolerance: float = ...) -> None: ...
 
-class X3DSensorNode(X3DChildNode, nodetypes.Sensor):
+class X3DSensorNode(nodetypes.Sensor, X3DChildNode):
     description: _Field[str, str]
     enabled: _Field[int, bool | int]
     isActive: _Field[int, bool | int]
     def __init__(self, *, DEF: str = ..., description: str = ..., enabled: bool | int = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DPointingDeviceSensorNode(X3DSensorNode, nodetypes.PointingSensor):
+class X3DPointingDeviceSensorNode(nodetypes.PointingSensor, X3DSensorNode):
     isOver: _Field[int, bool | int]
     def __init__(self, *, DEF: str = ..., description: str = ..., enabled: bool | int = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
@@ -153,7 +153,7 @@ class X3DDragSensorNode(X3DPointingDeviceSensorNode):
     trackPoint_changed: _Field[_F32, ArrayLike]
     def __init__(self, *, DEF: str = ..., autoOffset: bool | int = ..., description: str = ..., enabled: bool | int = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DTextureNode(X3DAppearanceChildNode, nodetypes.Texture):
+class X3DTextureNode(nodetypes.Texture, X3DAppearanceChildNode):
     description: _Field[str, str]
     def __init__(self, *, DEF: str = ..., description: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
@@ -167,7 +167,7 @@ class X3DEnvironmentalSensorNode(X3DSensorNode):
 class X3DFontStyleNode(X3DNode):
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DGroupingNode(X3DChildNode, X3DBoundedObject, nodetypes.Grouping):
+class X3DGroupingNode(nodetypes.Grouping, X3DChildNode, X3DBoundedObject):
     addChildren: _Field[list[X3DChildNode | nodetypes.Children], Sequence[X3DChildNode | nodetypes.Children]]
     children: _Field[list[X3DChildNode | nodetypes.Children], Sequence[X3DChildNode | nodetypes.Children]]
     removeChildren: _Field[list[X3DChildNode | nodetypes.Children], Sequence[X3DChildNode | nodetypes.Children]]
@@ -176,7 +176,7 @@ class X3DGroupingNode(X3DChildNode, X3DBoundedObject, nodetypes.Grouping):
 class X3DInfoNode(X3DChildNode):
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DInterpolatorNode(X3DChildNode, nodetypes.Interpolator):
+class X3DInterpolatorNode(nodetypes.Interpolator, X3DChildNode):
     key: _Field[_F64, ArrayLike]
     set_fraction: _Field[float, float]
     def __init__(self, *, DEF: str = ..., key: ArrayLike = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
@@ -193,7 +193,7 @@ class X3DLayerNode(X3DNode, X3DPickableObject):
 class X3DLayoutNode(X3DChildNode):
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DLightNode(X3DChildNode, nodetypes.Light):
+class X3DLightNode(nodetypes.Light, X3DChildNode):
     ambientIntensity: _Field[float, float]
     color: _Field[_F32, ArrayLike]
     intensity: _Field[float, float]
@@ -303,7 +303,7 @@ class X3DShaderNode(X3DAppearanceChildNode):
     language: _Field[str, str]
     def __init__(self, *, DEF: str = ..., language: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DShapeNode(X3DChildNode, X3DBoundedObject, nodetypes.Rendering):
+class X3DShapeNode(nodetypes.Rendering, X3DChildNode, X3DBoundedObject):
     appearance: _Field[X3DAppearanceNode | node.NullNode, X3DAppearanceNode | None]
     castShadow: _Field[int, bool | int]
     geometry: _Field[X3DGeometryNode | nodetypes.Geometry | node.NullNode, X3DGeometryNode | nodetypes.Geometry | None]
@@ -326,7 +326,7 @@ class X3DSingleTextureTransformNode(X3DTextureTransformNode):
     mapping: _Field[str, str]
     def __init__(self, *, DEF: str = ..., mapping: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DSoundNode(X3DChildNode, nodetypes.Auditory):
+class X3DSoundNode(nodetypes.Auditory, X3DChildNode):
     description: _Field[str, str]
     enabled: _Field[int, bool | int]
     def __init__(self, *, DEF: str = ..., description: str = ..., enabled: bool | int = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
@@ -347,7 +347,7 @@ class X3DSoundDestinationNode(X3DSoundNode):
     mediaDeviceID: _Field[str, str]
     def __init__(self, *, DEF: str = ..., channelCountMode: str = ..., channelInterpretation: str = ..., description: str = ..., enabled: bool | int = ..., gain: float = ..., mediaDeviceID: str = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class X3DTimeDependentNode(X3DChildNode, nodetypes.TimeDependent):
+class X3DTimeDependentNode(nodetypes.TimeDependent, X3DChildNode):
     description: _Field[str, str]
     elapsedTime: _Field[float, float]
     isActive: _Field[int, bool | int]
@@ -408,7 +408,7 @@ class X3DVertexAttributeNode(X3DGeometricPropertyNode):
     name: _Field[str, str]
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ..., name: str = ...) -> None: ...
 
-class X3DViewpointNode(X3DBindableNode, nodetypes.Viewpoint):
+class X3DViewpointNode(nodetypes.Viewpoint, X3DBindableNode):
     description: _Field[str, str]
     farDistance: _Field[float, float]
     jump: _Field[int, bool | int]
@@ -532,7 +532,7 @@ class BallJoint(X3DRigidJointNode):
     body2AnchorPoint: _Field[_F32, ArrayLike]
     def __init__(self, *, DEF: str = ..., anchorPoint: ArrayLike = ..., body1: RigidBody | None = ..., body2: RigidBody | None = ..., forceOutput: str | Sequence[str] = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class Billboard(X3DGroupingNode, nodetypes.Transforming):
+class Billboard(nodetypes.Transforming, X3DGroupingNode):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]
@@ -1286,7 +1286,7 @@ class FloatVertexAttribute(X3DVertexAttributeNode):
     value: _Field[_F64, ArrayLike]
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ..., name: str = ..., numComponents: int = ..., value: ArrayLike = ...) -> None: ...
 
-class Fog(X3DBindableNode, X3DFogObject, nodetypes.Fog):
+class Fog(nodetypes.Fog, X3DBindableNode, X3DFogObject):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]
@@ -1746,7 +1746,7 @@ class IndexedTriangleStripSet(X3DComposedGeometryNode):
     set_index: _Field[_I32, ArrayLike]
     def __init__(self, *, DEF: str = ..., attrib: Sequence[X3DVertexAttributeNode] = ..., ccw: bool | int = ..., color: X3DColorNode | None = ..., colorPerVertex: bool | int = ..., coord: X3DCoordinateNode | None = ..., fogCoord: FogCoordinate | None = ..., index: ArrayLike = ..., metadata: X3DMetadataObject | None = ..., normal: X3DNormalNode | None = ..., normalPerVertex: bool | int = ..., solid: bool | int = ..., tangent: X3DTangentNode | None = ..., texCoord: X3DSingleTextureCoordinateNode | MultiTextureCoordinate | None = ...) -> None: ...
 
-class Inline(X3DChildNode, X3DBoundedObject, X3DUrlObject, nodetypes.Traversable):
+class Inline(nodetypes.Traversable, X3DChildNode, X3DBoundedObject, X3DUrlObject):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]
@@ -2080,7 +2080,7 @@ class MultiTextureTransform(X3DTextureTransformNode):
     textureTransform: _Field[list[X3DSingleTextureTransformNode], Sequence[X3DSingleTextureTransformNode]]
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ..., textureTransform: Sequence[X3DSingleTextureTransformNode] = ...) -> None: ...
 
-class NavigationInfo(X3DBindableNode, nodetypes.NavigationInfo):
+class NavigationInfo(nodetypes.NavigationInfo, X3DBindableNode):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]
@@ -3161,7 +3161,7 @@ class TouchSensor(X3DTouchSensorNode):
     hitTexCoord_changed: _Field[_F32, ArrayLike]
     def __init__(self, *, DEF: str = ..., description: str = ..., enabled: bool | int = ..., metadata: X3DMetadataObject | None = ...) -> None: ...
 
-class Transform(behaviours.LocalMatrices, X3DGroupingNode, nodetypes.Transforming):
+class Transform(behaviours.LocalMatrices, nodetypes.Transforming, X3DGroupingNode):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]

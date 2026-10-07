@@ -93,6 +93,14 @@ class TestTheAbstractTypes(unittest.TestCase):
         self.assertTrue(issubclass(x3d.MovieTexture, x3d.X3DSoundSourceNode))
         self.assertTrue(issubclass(x3d.MovieTexture, x3d.X3DUrlObject))
 
+    def test_an_engine_mix_in_that_lists_its_marker_composes(self):
+        """`(marker, node.Node)` is how an engine class declares itself, and
+        an implementation mixes such a class with the declaration."""
+        for name, marker in generate_x3d.MARKERS.items():
+            mixin = type('Mixin', (getattr(nodetypes, marker), node.Node), {})
+            implementation = type(name, (mixin, getattr(x3d, name)), {})
+            self.assertTrue(issubclass(implementation, getattr(x3d, name)))
+
     def test_every_sensor_is_a_child(self):
         for name, cls in x3d.CONCRETE_NODES.items():
             if issubclass(cls, x3d.X3DSensorNode):

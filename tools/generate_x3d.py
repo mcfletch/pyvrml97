@@ -403,10 +403,13 @@ class Vocabulary:
                 self.aliases.setdefault(type_name, []).append((old, new))
 
     def _plan(self, spec: TypeSpec) -> None:
+        # The marker comes before the X3D bases, so that `node.Node` follows
+        # it, as in the engine's own `(nodetypes.Geometry, node.Node)`
+        # classes, and an implementation may mix both in.
         bases = tuple('behaviours.' + mixin for mixin in BEHAVIOURS.get(spec.name, ()))
-        bases += spec.bases
         if spec.name in MARKERS:
             bases += ('nodetypes.' + MARKERS[spec.name],)
+        bases += spec.bases
         if spec.name == 'X3DNode':
             bases += ('node.Node',)
         # A base that is an ancestor of another listed base adds nothing, and

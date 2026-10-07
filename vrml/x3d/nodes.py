@@ -111,14 +111,14 @@ class X3DAppearanceNode(X3DNode):
     """
 
 
-class X3DChildNode(X3DNode, nodetypes.Children):
+class X3DChildNode(nodetypes.Children, X3DNode):
     """X3D abstract node type, Core component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/core.html#X3DChildNode
     """
 
 
-class X3DBindableNode(X3DChildNode, nodetypes.Bindable):
+class X3DBindableNode(nodetypes.Bindable, X3DChildNode):
     """X3D abstract node type, Core component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/core.html#X3DBindableNode
@@ -129,7 +129,7 @@ class X3DBindableNode(X3DChildNode, nodetypes.Bindable):
     set_bind = field.newEvent('set_bind', 'SFBool', 0)
 
 
-class X3DBackgroundNode(X3DBindableNode, nodetypes.Background):
+class X3DBackgroundNode(nodetypes.Background, X3DBindableNode):
     """X3D abstract node type, EnvironmentalEffects component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/environmentalEffects.html#X3DBackgroundNode
@@ -190,7 +190,7 @@ class X3DComposableVolumeRenderStyleNode(X3DVolumeRenderStyleNode):
     """
 
 
-class X3DGeometryNode(X3DNode, nodetypes.Geometry):
+class X3DGeometryNode(nodetypes.Geometry, X3DNode):
     """X3D abstract node type, Rendering component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/rendering.html#X3DGeometryNode
@@ -234,7 +234,7 @@ class X3DDamperNode(X3DFollowerNode):
     tolerance = field.newField('tolerance', 'SFFloat', 1, -1.0)
 
 
-class X3DSensorNode(X3DChildNode, nodetypes.Sensor):
+class X3DSensorNode(nodetypes.Sensor, X3DChildNode):
     """X3D abstract node type, Core component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/core.html#X3DSensorNode
@@ -245,7 +245,7 @@ class X3DSensorNode(X3DChildNode, nodetypes.Sensor):
     isActive = field.newEvent('isActive', 'SFBool', 1)
 
 
-class X3DPointingDeviceSensorNode(X3DSensorNode, nodetypes.PointingSensor):
+class X3DPointingDeviceSensorNode(nodetypes.PointingSensor, X3DSensorNode):
     """X3D abstract node type, PointingDeviceSensor component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/pointingDeviceSensor.html#X3DPointingDeviceSensorNode
@@ -264,7 +264,7 @@ class X3DDragSensorNode(X3DPointingDeviceSensorNode):
     trackPoint_changed = field.newEvent('trackPoint_changed', 'SFVec3f', 1)
 
 
-class X3DTextureNode(X3DAppearanceChildNode, nodetypes.Texture):
+class X3DTextureNode(nodetypes.Texture, X3DAppearanceChildNode):
     """X3D abstract node type, Texturing component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/texturing.html#X3DTextureNode
@@ -296,7 +296,7 @@ class X3DFontStyleNode(X3DNode):
     """
 
 
-class X3DGroupingNode(X3DChildNode, X3DBoundedObject, nodetypes.Grouping):
+class X3DGroupingNode(nodetypes.Grouping, X3DChildNode, X3DBoundedObject):
     """X3D abstract node type, Grouping component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/grouping.html#X3DGroupingNode
@@ -314,7 +314,7 @@ class X3DInfoNode(X3DChildNode):
     """
 
 
-class X3DInterpolatorNode(X3DChildNode, nodetypes.Interpolator):
+class X3DInterpolatorNode(nodetypes.Interpolator, X3DChildNode):
     """X3D abstract node type, Interpolation component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/interpolators.html#X3DInterpolatorNode
@@ -349,7 +349,7 @@ class X3DLayoutNode(X3DChildNode):
     """
 
 
-class X3DLightNode(X3DChildNode, nodetypes.Light):
+class X3DLightNode(nodetypes.Light, X3DChildNode):
     """X3D abstract node type, Lighting component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/lighting.html#X3DLightNode
@@ -548,7 +548,7 @@ class X3DShaderNode(X3DAppearanceChildNode):
     language = field.newField('language', 'SFString', 0, '', choices=('Cg', 'GLSL', 'HLSL'))
 
 
-class X3DShapeNode(X3DChildNode, X3DBoundedObject, nodetypes.Rendering):
+class X3DShapeNode(nodetypes.Rendering, X3DChildNode, X3DBoundedObject):
     """X3D abstract node type, Shape component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/shape.html#X3DShapeNode
@@ -598,7 +598,7 @@ class X3DSingleTextureTransformNode(X3DTextureTransformNode):
     mapping = field.newField('mapping', 'SFString', 1, '')
 
 
-class X3DSoundNode(X3DChildNode, nodetypes.Auditory):
+class X3DSoundNode(nodetypes.Auditory, X3DChildNode):
     """X3D abstract node type, Sound component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/sound.html#X3DSoundNode
@@ -634,7 +634,7 @@ class X3DSoundDestinationNode(X3DSoundNode):
     mediaDeviceID = field.newField('mediaDeviceID', 'SFString', 1, '')
 
 
-class X3DTimeDependentNode(X3DChildNode, nodetypes.TimeDependent):
+class X3DTimeDependentNode(nodetypes.TimeDependent, X3DChildNode):
     """X3D abstract node type, Time component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/time.html#X3DTimeDependentNode
@@ -747,7 +747,7 @@ class X3DVertexAttributeNode(X3DGeometricPropertyNode):
     name = field.newField('name', 'SFString', 0, '')
 
 
-class X3DViewpointNode(X3DBindableNode, nodetypes.Viewpoint):
+class X3DViewpointNode(nodetypes.Viewpoint, X3DBindableNode):
     """X3D abstract node type, Navigation component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/navigation.html#X3DViewpointNode
@@ -935,7 +935,7 @@ class BallJoint(X3DRigidJointNode):
     body2AnchorPoint = field.newEvent('body2AnchorPoint', 'SFVec3f', 1)
 
 
-class Billboard(X3DGroupingNode, nodetypes.Transforming):
+class Billboard(nodetypes.Transforming, X3DGroupingNode):
     """Navigation component, level 2
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/navigation.html#Billboard
@@ -2027,7 +2027,7 @@ class FloatVertexAttribute(X3DVertexAttributeNode):
     value = field.newField('value', 'MFFloat', 1, list)
 
 
-class Fog(X3DBindableNode, X3DFogObject, nodetypes.Fog):
+class Fog(nodetypes.Fog, X3DBindableNode, X3DFogObject):
     """EnvironmentalEffects component, level 2
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/environmentalEffects.html#Fog
@@ -2667,7 +2667,7 @@ class IndexedTriangleStripSet(X3DComposedGeometryNode):
     set_index = field.newEvent('set_index', 'MFInt32', 0)
 
 
-class Inline(X3DChildNode, X3DBoundedObject, X3DUrlObject, nodetypes.Traversable):
+class Inline(nodetypes.Traversable, X3DChildNode, X3DBoundedObject, X3DUrlObject):
     """Networking component, level 2
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/networking.html#Inline
@@ -3170,7 +3170,7 @@ class MultiTextureTransform(X3DTextureTransformNode):
     textureTransform = field.newField('textureTransform', 'MFNode', 1, list)
 
 
-class NavigationInfo(X3DBindableNode, nodetypes.NavigationInfo):
+class NavigationInfo(nodetypes.NavigationInfo, X3DBindableNode):
     """Navigation component, level 1
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/navigation.html#NavigationInfo
@@ -4764,7 +4764,7 @@ class TouchSensor(X3DTouchSensorNode):
     hitTexCoord_changed = field.newEvent('hitTexCoord_changed', 'SFVec2f', 1)
 
 
-class Transform(behaviours.LocalMatrices, X3DGroupingNode, nodetypes.Transforming):
+class Transform(behaviours.LocalMatrices, nodetypes.Transforming, X3DGroupingNode):
     """Grouping component, level 1
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/grouping.html#Transform
