@@ -36,6 +36,18 @@ class TestLoading(unittest.TestCase):
         with self.assertRaises(x3d.X3DLoadError):
             x3d.loads('#X3D V4.0 utf8\nNoSuchNode {}', strict=True)
 
+    def test_a_staged_write_leaves_nothing_where_it_fails(self):
+        from vrml.x3d.files import staged  # noqa: PLC0415 kept with its use
+        path = os.path.join(self.directory, 'out.x3d')
+        with self.assertRaises(RuntimeError):
+            with staged(path) as stream:
+                stream.write(b'half')
+                raise RuntimeError('disk full')
+        self.assertEqual(os.listdir(self.directory), [])
+        with staged(path) as stream:
+            stream.write(b'whole')
+        self.assertEqual(os.listdir(self.directory), ['out.x3d'])
+
     def test_a_misspelt_option_is_refused(self):
         with self.assertRaises(TypeError):
             x3d.loads('#X3D V4.0 utf8\nGroup {}', strcit=True)

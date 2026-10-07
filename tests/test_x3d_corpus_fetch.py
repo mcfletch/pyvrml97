@@ -82,7 +82,8 @@ class TestTheDirectory:
         """Into one tree, as the examples are published, so a scene's references
         into another archive resolve"""
         archive(tmp_path, MEMBERS)
-        counts = corpus.fetch(['ConformanceNist'], where=str(tmp_path), resources=True)
+        with pytest.warns(UserWarning, match='SHA-256'):
+            counts = corpus.fetch(['ConformanceNist'], where=str(tmp_path), resources=True)
         assert counts == {'ConformanceNist': 1}
         assert os.path.exists(tmp_path / PREFIX / 'vts.jpg')
 

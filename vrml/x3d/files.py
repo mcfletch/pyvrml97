@@ -6,10 +6,11 @@ over a network unless the application passes an `extern_resolver` that does.
 `dump(scene, path)` and `dumps(scene)` write a scene.
 """
 
+import contextlib
 import gzip
 import os
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Iterator, Mapping, Sequence
+from typing import Any, BinaryIO
 from urllib.parse import urlsplit
 
 from vrml import node
@@ -17,6 +18,21 @@ from vrml.x3d import nodes as x3d
 from vrml.x3d import readers, writers
 from vrml.x3d.builder import ExternResolver
 from vrml.x3d.scene import X3DScene
+
+@contextlib.contextmanager
+def staged(path: str) -> "Iterator[BinaryIO]":
+    """A file to write `path` through: written beside it, moved over it when
+    the block ends, and removed where the block raises"""
+    staging = path + '.part'
+    try:
+        with open(staging, 'wb') as stream:
+            yield stream
+        os.replace(staging, path)
+    except BaseException:
+        if os.path.exists(staging):
+            os.remove(staging)
+        raise
+
 
 #: How deep EXTERNPROTO files may name further EXTERNPROTO files.
 MAX_PROTOTYPE_DEPTH = 8
@@ -160,7 +176,5 @@ def dump(
     data = dumps(scene, encoding, version=version, canonical=canonical).encode('utf-8')
     if suffix.endswith('z'):
         data = gzip.compress(data, mtime=0)
-    staging = name + '.part'
-    with open(staging, 'wb') as stream:
+    with staged(name) as stream:
         stream.write(data)
-    os.replace(staging, name)

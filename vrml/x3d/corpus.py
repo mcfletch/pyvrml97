@@ -20,8 +20,11 @@ import os
 import re
 import shutil
 import urllib.request
+import warnings
 import zipfile
 from collections.abc import Sequence
+
+from vrml.x3d.files import staged
 
 __all__ = ['ARCHIVES', 'directory', 'download', 'examples', 'extract', 'fetch', 'render_name',
            'viewpoint_renders', 'with_references']
@@ -84,18 +87,16 @@ def download(name: str, where: str) -> str:
     """The archive's path in `where`, downloading it if it is not there"""
     path = os.path.join(where, 'X3dExamples%s.zip' % name)
     if not os.path.exists(path):
-        staging = path + '.part'
         with urllib.request.urlopen(URL % name, timeout=600) as response, \
-                open(staging, 'wb') as stream:  # noqa: S310 URL is the https constant above
+                staged(path) as stream:  # noqa: S310 URL is the https constant above
             shutil.copyfileobj(response, stream)
-        os.replace(staging, path)
     digest = hashlib.sha256()
     with open(path, 'rb') as stream:
         for block in iter(lambda: stream.read(1 << 20), b''):
             digest.update(block)
     if name in DIGESTS and digest.hexdigest() != DIGESTS[name]:
-        print('%s: SHA-256 %s differs from %s; Web3D has rebuilt it'
-              % (name, digest.hexdigest(), DIGESTS[name]))
+        warnings.warn('%s has SHA-256 %s, not the %s recorded for it'
+                      % (path, digest.hexdigest(), DIGESTS[name]), stacklevel=2)
     return path
 
 
@@ -124,10 +125,8 @@ def extract(archive: str, destination: str, resources: bool = False) -> int:
             if not target.startswith(root + os.sep):
                 raise ValueError('Archive member %r leaves %s' % (name, root))
             os.makedirs(os.path.dirname(target), exist_ok=True)
-            staging = target + '.part'
-            with opened.open(member) as source, open(staging, 'wb') as stream:
+            with opened.open(member) as source, staged(target) as stream:
                 shutil.copyfileobj(source, stream)
-            os.replace(staging, target)
             count += name.lower().endswith('.x3d')
     return count
 
