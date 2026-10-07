@@ -34,6 +34,12 @@ class TestLoading(unittest.TestCase):
         with self.assertRaises(x3d.X3DLoadError):
             x3d.loads('#X3D V4.0 utf8\nNoSuchNode {}', strict=True)
 
+    def test_a_misspelt_option_is_refused(self):
+        with self.assertRaises(TypeError):
+            x3d.loads('#X3D V4.0 utf8\nGroup {}', strcit=True)
+        with self.assertRaises(TypeError):
+            readers.read(b'#X3D V4.0 utf8\nGroup {}', strcit=True)
+
     def test_loads_reads_bytes_or_text(self):
         self.assertIsInstance(x3d.loads(b'#X3D V4.0 utf8\nGroup {}').children[0], nodes.Group)
         self.assertIsInstance(x3d.loads('#VRML V2.0 utf8\nGroup {}').children[0], nodes.Group)

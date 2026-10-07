@@ -8,13 +8,14 @@ over a network unless the application passes an `extern_resolver` that does.
 
 import gzip
 import os
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 from urllib.parse import urlsplit
 
 from vrml import node
 from vrml.x3d import nodes as x3d
 from vrml.x3d import readers, writers
+from vrml.x3d.builder import ExternResolver
 from vrml.x3d.scene import X3DScene
 
 #: How deep EXTERNPROTO files may name further EXTERNPROTO files.
@@ -72,34 +73,51 @@ class LocalPrototypes:
         return self.scenes[path]
 
 
-def load(path: "str | os.PathLike[str]", **options: Any) -> X3DScene:
+def load(
+    path: "str | os.PathLike[str]",
+    *,
+    prototypes: "Mapping[str, type] | None" = None,
+    strict: bool = False,
+    extern_resolver: "ExternResolver | None" = None,
+) -> X3DScene:
     """The scene the document at `path` builds
 
-    options -- passed to `SceneBuilder`: prototypes, strict, and
-        extern_resolver, which replaces the local-file resolver
+    prototypes, strict -- as `SceneBuilder` takes them
+    extern_resolver -- as `SceneBuilder` takes it, in place of the
+        local-file resolver
     """
     name = os.fspath(path)
     with open(name, 'rb') as stream:
         data = stream.read()
-    if 'extern_resolver' not in options:
-        resolver = LocalPrototypes(dict(options))
+    options: "dict[str, Any]" = {'prototypes': prototypes, 'strict': strict}
+    if extern_resolver is None:
+        resolver = LocalPrototypes(options)
         resolver.scenes[os.path.normpath(name)] = None
-        options['extern_resolver'] = resolver
-    return readers.read(data, name=name, **options)
+        extern_resolver = resolver
+    return readers.read(data, name=name, extern_resolver=extern_resolver, **options)
 
 
-def loads(data: "bytes | str", name: str = '', **options: Any) -> X3DScene:
+def loads(
+    data: "bytes | str",
+    name: str = '',
+    *,
+    prototypes: "Mapping[str, type] | None" = None,
+    strict: bool = False,
+    extern_resolver: "ExternResolver | None" = None,
+) -> X3DScene:
     """The scene a document in memory builds; `name` is its base for URLs
 
     Text is read as the characters it is, whatever encoding an XML
-    declaration in it names.
+    declaration in it names. The keywords are `load`'s; the local-file
+    resolver is used where there is a `name` to resolve against.
     """
-    if name:
-        options.setdefault('extern_resolver', LocalPrototypes(dict(options)))
+    options: "dict[str, Any]" = {'prototypes': prototypes, 'strict': strict}
+    if extern_resolver is None and name:
+        extern_resolver = LocalPrototypes(options)
     if isinstance(data, str):
         return readers.read(data.removeprefix('\ufeff').encode('utf-8'), name=name,
-                            charset='utf-8', **options)
-    return readers.read(data, name=name, **options)
+                            charset='utf-8', extern_resolver=extern_resolver, **options)
+    return readers.read(data, name=name, extern_resolver=extern_resolver, **options)
 
 
 

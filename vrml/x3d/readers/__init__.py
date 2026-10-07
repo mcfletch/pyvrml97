@@ -8,10 +8,9 @@ encoding is recognised from the content, or named.
 
 import os
 import zlib
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Callable, Mapping
 
-from vrml.x3d.builder import SceneBuilder
+from vrml.x3d.builder import ExternResolver, SceneBuilder
 from vrml.x3d.readers import classic, fastinfoset, json, xml
 from vrml.x3d.scene import X3DScene
 
@@ -74,7 +73,10 @@ def read(
     encoding: "str | None" = None,
     name: str = '',
     charset: "str | None" = None,
-    **options: Any,
+    *,
+    prototypes: "Mapping[str, type] | None" = None,
+    strict: bool = False,
+    extern_resolver: "ExternResolver | None" = None,
 ) -> X3DScene:
     """The scene a document builds
 
@@ -85,7 +87,7 @@ def read(
     charset -- the character encoding of the bytes, where it is known outside
         the document (an HTTP charset, text encoded by the caller); it is
         used in place of an XML declaration's
-    options -- passed to `SceneBuilder`: prototypes, strict, extern_resolver
+    prototypes, strict, extern_resolver -- as `SceneBuilder` takes them
     """
     if len(data) > MAX_DOCUMENT_BYTES:
         raise ValueError('Document is larger than %d bytes' % MAX_DOCUMENT_BYTES)
@@ -95,5 +97,6 @@ def read(
         encoding = encoding_of(data, name)
     if encoding not in READERS:
         raise UnknownEncoding('No reader for the %s encoding' % encoding)
-    options.setdefault('baseURI', name)
-    return READERS[encoding](data, SceneBuilder(**options), charset)
+    builder = SceneBuilder(prototypes=prototypes, baseURI=name, strict=strict,
+                           extern_resolver=extern_resolver)
+    return READERS[encoding](data, builder, charset)
