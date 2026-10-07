@@ -201,6 +201,17 @@ outputs the handler sets are forwarded along routes as any field change is:
   says the same. ``wake()`` is called when one starts moving, for whoever
   calls ``advance`` each frame.
 
+Every bindable node (``vrml.x3d.binding.Bindable``) is on its scene's bind
+stack of its kind: viewpoints of every sort share one, backgrounds another,
+and fogs and navigation infos have one each. ``set_bind TRUE`` puts a node on
+top, sending ``isBound TRUE`` and ``bindTime`` from it and ``isBound FALSE``
+from the node it covers; ``set_bind FALSE`` on the top node takes it off and
+binds the one beneath again, and on any other node takes it off and sends
+nothing. ``binding.bound(node)`` is the node on top of ``node``'s stack, and
+``binding.current(nodes)`` the bound one of a scene's nodes of one kind,
+binding the first where none is. A node in no scene is a stack of its own.
+Layers share their scene's stacks.
+
 The time a node is at is its scene's. Each node that stamps time is a
 ``vrml.x3d.timing.Timed``, whose ``now()`` calls the ``clock()`` of the scene
 the node is rooted in, and ``timing.clock`` (``time.time``) for a node in no

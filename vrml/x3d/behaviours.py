@@ -1,13 +1,18 @@
 """Behaviour pyvrml97 gives some X3D declarations, as mix-ins
 
 The generated declarations in `vrml.x3d.nodes` carry fields only; a node
-that pyvrml97 itself computes something for takes one of these as a base.
+that pyvrml97 itself computes something for takes one of these as a base:
+`LocalMatrices` for a `Transform`, and `Bindable` (:mod:`vrml.x3d.binding`)
+for every bindable node.
 """
 
 from typing import Any
 
 from vrml import cache
 from vrml.vrml97 import transformmatrix
+from vrml.x3d.binding import Bindable
+
+__all__ = ['Bindable', 'LocalMatrices']
 
 
 class LocalMatrices:

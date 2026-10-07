@@ -128,6 +128,7 @@ MARKERS = {
 #: Mix-ins from `vrml.x3d.behaviours` a declaration takes as its first bases.
 BEHAVIOURS = {
     'Transform': ('LocalMatrices',),
+    'X3DBindableNode': ('Bindable',),
 }
 
 #: Names fields had before X3D 4.1 that the X3DUOM does not record as a

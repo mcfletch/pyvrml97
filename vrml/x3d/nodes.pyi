@@ -79,7 +79,7 @@ class X3DAppearanceNode(X3DNode):
 class X3DChildNode(nodetypes.Children, X3DNode):
     def __init__(self, *, DEF: str = ..., metadata: X3DMetadataObject | None = ..., **fields: Any) -> None: ...
 
-class X3DBindableNode(nodetypes.Bindable, X3DChildNode):
+class X3DBindableNode(behaviours.Bindable, nodetypes.Bindable, X3DChildNode):
     bindTime: _Field[float, float]
     isBound: _Field[bool, bool | int]
     set_bind: _Field[bool, bool | int]

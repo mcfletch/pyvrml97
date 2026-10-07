@@ -118,7 +118,7 @@ class X3DChildNode(nodetypes.Children, X3DNode):
     """
 
 
-class X3DBindableNode(nodetypes.Bindable, X3DChildNode):
+class X3DBindableNode(behaviours.Bindable, nodetypes.Bindable, X3DChildNode):
     """X3D abstract node type, Core component
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/core.html#X3DBindableNode
