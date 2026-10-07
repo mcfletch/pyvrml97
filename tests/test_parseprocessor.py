@@ -274,3 +274,26 @@ class TestErrors(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestAnEnginesDefaults(unittest.TestCase):
+    """A world's nodes have the specification's defaults, whatever an engine's class says."""
+
+    def test_a_directional_light_is_scoped_unless_it_says_otherwise(self):
+        from vrml import field  # noqa: PLC0415 kept with its use
+        from vrml.vrml97 import basenamespaces, parseprocessor  # noqa: PLC0415 kept with its use
+        from vrml.x3d import nodes  # noqa: PLC0415 kept with its use
+
+        class Engine(nodes.DirectionalLight):
+            pass
+        setattr(Engine, 'global', field.newField('global', 'SFBool', 1, True))
+        prototypes = dict(basenamespaces.basePrototypes, DirectionalLight=Engine)
+        source = HEADER + 'DirectionalLight { } DirectionalLight { global TRUE }\n'
+        success, results, _consumed = PARSER.parse(
+            source, processor=parseprocessor.ParseProcessor(basePrototypes=prototypes))
+        quiet, loud = results[1].children
+        self.assertTrue(success)
+        self.assertIsInstance(quiet, Engine)
+        self.assertFalse(getattr(quiet, 'global'))
+        self.assertTrue(getattr(loud, 'global'))
+        self.assertTrue(getattr(Engine(), 'global'))

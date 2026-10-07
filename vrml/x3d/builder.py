@@ -20,7 +20,7 @@ from typing import Any, cast
 
 from vrml import field, node, protofunctions, route
 from vrml.vrml97.scenegraph import SceneGraph
-from vrml.x3d import codecs, dialects, extension, profiles
+from vrml.x3d import codecs, dialect, dialects, extension, profiles
 from vrml.x3d import nodes as x3d
 from vrml.x3d.dialect import DialectTables
 from vrml.x3d.scene import (
@@ -169,38 +169,6 @@ class _Body:
 #: Resolves an EXTERNPROTO's URLs against the document's base URI to the
 #: prototype class they name, or None where none of them can be read.
 ExternResolver = Callable[[Sequence[str], str, str], 'type | None']
-
-
-_DECLARED_DEFAULTS: "dict[type, list[tuple[str, Any]]]" = {}
-
-
-def declared_defaults(cls: type, type_name: str) -> "list[tuple[str, Any]]":
-    """(field, X3D default) for each field whose default `cls` gives otherwise
-
-    An engine's class may default a field as suits a node made in code; a
-    node a document builds has the X3D declaration's default for a field the
-    document leaves out. Node-valued fields are not compared.
-    """
-    found = _DECLARED_DEFAULTS.get(cls)
-    if found is None:
-        found = []
-        declaration = x3d.CONCRETE_NODES.get(type_name)
-        if (declaration is not None and cls is not declaration
-                and not issubclass(cls, node.PrototypedNode)):
-            for declared in protofunctions.getFields(declaration):
-                if declared.name.startswith(' ') or isinstance(declared, (node.SFNode, node.MFNode)):
-                    continue
-                try:
-                    own = protofunctions.getField(cls, declared.name)
-                except AttributeError:
-                    continue
-                if own is declared or not isinstance(own, field.Field):
-                    continue
-                default = declared.coerce(declared.getDefault())
-                if not codecs.same(own.coerce(own.getDefault()), default):
-                    found.append((declared.name, default))
-        _DECLARED_DEFAULTS[cls] = found
-    return found
 
 
 class SceneBuilder:
@@ -434,7 +402,7 @@ class SceneBuilder:
                                  % (frame.type_name, name, len(values)), built)
                 declared.fset(built, values[-1], notify=frame.notify)
             frame.set_fields.add(name)
-        for name, value in declared_defaults(type(built), frame.type_name):
+        for name, value in dialect.declared_defaults(type(built), frame.type_name):
             if name not in frame.set_fields:
                 declared = protofunctions.getField(built, name)
                 declared.fset(built, declared.copyValue(value), notify=False)
