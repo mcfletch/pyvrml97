@@ -85,7 +85,9 @@ class LoadProblem(node.Node):
     """Something reading a document met: an error, a warning or a note
 
     `line` and `column` are 1-based positions in the document, or 0 where
-    the encoding does not give one. `node` is the node concerned, if any.
+    the encoding does not give one; `path` is the way to the problem through
+    a document that has no lines to give (JSON's members and indexes). `node`
+    is the node concerned, if any.
     """
 
     PROTO = 'LoadProblem'
@@ -96,12 +98,15 @@ class LoadProblem(node.Node):
     line = field.newField('line', 'SFInt32', 1, 0)
     column = field.newField('column', 'SFInt32', 1, 0)
     message = field.newField('message', 'SFString', 1, '')
+    path = field.newField('path', 'SFString', 1, '')
     node = node.SFNodeReference('node', 1, node.NULL)
 
     def __str__(self) -> str:
         where = ' line %d' % self.line if self.line else ''
         if self.line and self.column:
             where += ' column %d' % self.column
+        if not self.line and self.path:
+            where = ' at %s' % self.path
         return '%s%s: %s' % (self.severity, where, self.message)
 
 

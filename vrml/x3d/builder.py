@@ -195,6 +195,8 @@ class SceneBuilder:
         self.extern_resolver = extern_resolver
         self.line = 0
         self.column = 0
+        #: Where the reader is in a document with no lines (JSON's members).
+        self.path = ''
         scene_class = self.vocabulary.get('X3DScene', X3DScene)
         if not (isinstance(scene_class, type) and issubclass(scene_class, X3DScene)):
             scene_class = X3DScene
@@ -221,6 +223,7 @@ class SceneBuilder:
         """Record a problem at the reader's current position"""
         record = LoadProblem(
             severity=severity, line=self.line, column=self.column, message=message,
+            path=self.path,
         )
         if subject is not None:
             record.node = subject

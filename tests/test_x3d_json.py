@@ -41,6 +41,14 @@ class TestTheDocument(unittest.TestCase):
         scene = readers.read(b'{"model": {}}', encoding='json')
         self.assertEqual([p.severity for p in scene.problems], ['error'])
 
+    def test_a_problem_names_its_place_in_the_document(self):
+        scene = read([{'Group': {}}, {'Transform': {'-children': [
+            {'Shape': {'-geometry': {'Sphere': {'@radius': 'big'}}}}]}}])
+        problem = [p for p in scene.problems if p.severity == 'error'][0]
+        self.assertEqual(problem.path,
+                         'Scene/-children[1]/Transform/-children[0]/Shape/-geometry/Sphere/@radius')
+        self.assertIn('at Scene/-children[1]', str(problem))
+
     def test_a_malformed_head_is_an_error_and_the_scene_is_read(self):
         scene = read([{'Group': {}}], head={
             'component': [{'@name': 'HAnim', '@level': 'x'}, 'HAnim'],

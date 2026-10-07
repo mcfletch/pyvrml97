@@ -148,8 +148,10 @@ encoding where it is known outside the document, such as an HTTP
 ``version``, ``components``, ``units``, ``meta``, ``imports``, ``exports``
 and ``problems``. Reading does not stop at an error: each problem is a
 ``LoadProblem`` node with ``severity`` (``error``, ``warning`` or ``info``),
-``line``, ``column`` (0 where the encoding gives none), ``message`` and the
-``node`` concerned. ``load(path, strict=True)`` raises ``X3DLoadError`` at
+``line``, ``column`` (0 where the encoding gives none), ``path`` (in a JSON
+document, the members and indexes leading to the problem, such as
+``Scene/-children[1]/Transform/@translation``), ``message`` and the ``node``
+concerned. ``load(path, strict=True)`` raises ``X3DLoadError`` at
 the first error instead. ``X3DScene``, ``LoadProblem``, ``X3DLoadError``
 and ``X3DWriteError`` are all in ``vrml.x3d``.
 

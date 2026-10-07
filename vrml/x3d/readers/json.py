@@ -8,8 +8,9 @@ values, its node fields as `-name` (an object or a list of them), and
 the builder as values rather than text.
 """
 
+import contextlib
 import json
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from typing import Any
 
 from vrml.x3d import codecs
@@ -46,6 +47,8 @@ class JSONReader:
 
     def __init__(self, builder: SceneBuilder, charset: "str | None" = None) -> None:
         self.builder = builder
+        #: The members and indexes leading to where the reader is.
+        self.path: "list[str]" = []
         self.charset = charset or 'utf-8-sig'
         #: For each open DEF scope (the scene, each prototype body): the
         #: node type and object each of its DEFs names, and the names built
@@ -65,7 +68,8 @@ class JSONReader:
         self.builder.document(str(top.get('@profile', '')), str(top.get('@version', '')))
         self._head(self._object(top.get('head'), 'head'))
         try:
-            self._scope(self._object(top.get('Scene'), 'Scene').get('-children'))
+            with self._at('Scene'):
+                self._scope(self._object(top.get('Scene'), 'Scene').get('-children'))
         except RecursionError:
             self.builder.problem('error', 'JSON: nodes nested too deeply to read')
             return self.builder.end_document(complete=False)
@@ -115,13 +119,24 @@ class JSONReader:
             self.builder.problem('error', 'JSON: %s %r is not a number' % (key[1:], value))
             return None
 
+    @contextlib.contextmanager
+    def _at(self, part: str) -> Iterator[None]:
+        """Within the member or index `part` of the one before, for problems' paths"""
+        self.path.append(part)
+        self.builder.path = '/'.join(self.path)
+        try:
+            yield
+        finally:
+            self.path.pop()
+            self.builder.path = '/'.join(self.path)
+
     def _scope(self, items: Any) -> None:
         """Read the nodes of one DEF scope"""
         definitions: "dict[str, _Definition]" = {}
         self._prescan(items, definitions)
         self.scopes.append((definitions, set()))
         try:
-            self._items(items)
+            self._items(items, '-children')
         finally:
             self.scopes.pop()
 
@@ -164,26 +179,29 @@ class JSONReader:
             return value
         return [value]
 
-    def _items(self, items: Any) -> None:
-        """Nodes and statements, in document order"""
-        for item in self._list(items):
-            if not isinstance(item, Mapping):
-                self.builder.problem('error', 'JSON: expected a node, found %r' % (item,))
-                continue
-            for name, value in item.items():
-                self._item(name, value)
+    def _items(self, items: Any, key: str) -> None:
+        """Nodes and statements, in document order: the member `key`'s value"""
+        listed = isinstance(items, list)
+        for index, item in enumerate(self._list(items)):
+            with self._at('%s[%d]' % (key, index) if listed else key):
+                if not isinstance(item, Mapping):
+                    self.builder.problem('error', 'JSON: expected a node, found %r' % (item,))
+                    continue
+                for name, value in item.items():
+                    self._item(name, value)
 
     def _item(self, name: str, value: Any) -> None:
         if name.startswith('#'):
             return
-        if not isinstance(value, Mapping):
-            self.builder.problem('error', 'JSON: %s is not an object' % name)
-            return
-        statement = getattr(self, '_statement_' + name, None)
-        if statement is not None:
-            statement(value)
-        else:
-            self._node(name, value)
+        with self._at(name):
+            if not isinstance(value, Mapping):
+                self.builder.problem('error', 'JSON: %s is not an object' % name)
+                return
+            statement = getattr(self, '_statement_' + name, None)
+            if statement is not None:
+                statement(value)
+            else:
+                self._node(name, value)
 
     def _node(
         self, name: str, value: Mapping, skip: "frozenset[str]" = frozenset(),
@@ -215,11 +233,12 @@ class JSONReader:
             if key.startswith('@'):
                 attribute = key[1:]
                 if not self.builder.encoding_attribute(attribute):
-                    self.builder.field(attribute,
-                                       _typed(self.builder.field_type(attribute) or '', item))
+                    with self._at(key):
+                        self.builder.field(attribute,
+                                           _typed(self.builder.field_type(attribute) or '', item))
             elif key.startswith('-'):
                 self.builder.start_field(key[1:])
-                self._items(item)
+                self._items(item, key)
                 self.builder.end_field()
             elif key == 'field':
                 for declaration in self._list(item):
@@ -235,7 +254,7 @@ class JSONReader:
                         self.builder.field(name, given['@value'])
                     if '-children' in given:
                         self.builder.start_field(name)
-                        self._items(given['-children'])
+                        self._items(given['-children'], '-children')
                         self.builder.end_field()
             elif key == '#sourceCode':
                 lines = self._list(item)
@@ -257,7 +276,7 @@ class JSONReader:
                 self.builder.start_proto_field_nodes(name)
             else:
                 self.builder.start_field(name)
-            self._items(declaration['-children'])
+            self._items(declaration['-children'], '-children')
             if proto:
                 self.builder.end_proto_field_nodes()
             else:
