@@ -4,3 +4,7 @@
 Object Model. VRML97 and earlier X3D versions are dialects of that one
 vocabulary (`vrml.x3d.dialects`).
 """
+
+from vrml.x3d.files import load, loads
+
+__all__ = ['load', 'loads']
