@@ -85,16 +85,25 @@ def current(candidates: Iterable[Any]) -> Any:
 
 
 def current_path(paths: Sequence[Any]) -> Any:
-    """The path of `paths` ending at the :func:`current` node, or None
+    """The path of `paths` to the bound node, binding one where it is not reached
 
-    Each path is a sequence ending at a bindable node; a bound node no path
-    reaches is no path.
+    Each path is a sequence ending at a bindable node, all of one kind in one
+    scene: the paths a scene draws, which a `Switch` choosing another child
+    changes. The topmost node of the stack that a path reaches is bound
+    (moved to the top where it is beneath); where none is reached, the first
+    path's node is bound. None where `paths` is empty.
     """
-    found = current([path[-1] for path in paths])
-    for path in paths:
-        if path[-1] is found:
-            return path
-    return None
+    if not paths:
+        return None
+    stack = _stack(_owner(paths[0][-1]), kind_of(paths[0][-1]))
+    for reference in reversed(stack):
+        node = reference()
+        for path in paths:
+            if path[-1] is node:
+                node.set_bind = True
+                return path
+    paths[0][-1].set_bind = True
+    return paths[0]
 
 
 class Bindable(timing.Timed):

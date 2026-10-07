@@ -129,9 +129,21 @@ class TestCurrent(BindCase):
         self.second.set_bind = True
         self.assertIs(binding.current_path(paths), paths[1])
 
-    def test_a_bound_node_with_no_path_here_is_no_path(self):
+    def test_a_bound_node_the_paths_miss_gives_way_to_the_first_path(self):
         self.third.set_bind = True
-        self.assertIsNone(binding.current_path([(self.scene, self.first)]))
+        paths = [(self.scene, self.first)]
+        self.assertIs(binding.current_path(paths), paths[0])
+        self.assertIs(binding.bound(self.first), self.first)
+
+    def test_the_topmost_node_the_paths_reach_is_bound_again(self):
+        """A Switch showing a node bound before shows it bound"""
+        self.first.set_bind = True
+        self.second.set_bind = True
+        self.third.set_bind = True
+        paths = [(self.scene, self.first)]
+        self.assertIs(binding.current_path(paths), paths[0])
+        self.assertIs(binding.bound(self.first), self.first)
+        self.assertIs(sent(self.first, 'isBound'), True)
 
 
 class TestVRML97(unittest.TestCase):
