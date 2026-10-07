@@ -2,6 +2,7 @@
 """
 from vrml.vrml97 import nodetypes
 from vrml import field, node
+from vrml.x3d import nodes as x3d
 
 class ShaderGeometry( nodetypes.Children, nodetypes.Rendering, node.Node ):
     """Generic geometry definition for a shader-based renderer
@@ -112,7 +113,7 @@ class GLSLObject( node.Node ):
     # textures is a set of texture uniforms...
     textures = field.newField( 'textures', 'MFNode', 1, list )
 
-class Shader( node.Node ):
+class Shader( x3d.X3DAppearanceNode ):
     """Shader is a programmable substitute for an Appearance node"""
     PROTO = 'Shader'
     #Fields

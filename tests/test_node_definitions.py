@@ -106,6 +106,10 @@ class TestTheShaderNodes(unittest.TestCase):
         shader = shaders.GLSLShader(source=['void main(){}'])
         self.assertEqual(list(shader.source), ['void main(){}'])
 
+    def test_a_shader_stands_where_an_appearance_does(self):
+        shape = basenodes.Shape(appearance=shaders.Shader())
+        self.assertIsInstance(shape.appearance, shaders.Shader)
+
     def test_a_glsl_object_holds_its_shaders(self):
         shader = shaders.GLSLShader(source=['void main(){}'])
         self.assertEqual(list(shaders.GLSLObject(shaders=[shader]).shaders),
