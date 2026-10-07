@@ -132,6 +132,19 @@ class TestCylinder(unittest.TestCase):
         self.assertAlmostEqual(sent(sensor, 'rotation_changed')[3], 0.5, places=5)
 
 
+    def test_a_drag_across_the_half_turn_carries_on(self):
+        def at(degrees):
+            theta = math.radians(degrees)
+            point = (math.cos(theta), 0.0, -math.sin(theta))
+            return point, down(tuple(10 * value for value in point), point)
+        sensor = pointing.CylinderSensor(minAngle=0.0, maxAngle=1.5)
+        point, ray = at(170)
+        sensor.pointerPress(pointing.Hit(point), ray)
+        for degrees in (180, 190):
+            sensor.pointerDrag(None, at(degrees)[1])
+        self.assertAlmostEqual(sent(sensor, 'rotation_changed')[3], math.radians(20), places=5)
+
+
 class TestSphere(unittest.TestCase):
     def test_dragging_over_the_sphere_turns_it(self):
         sensor = pointing.SphereSensor()

@@ -79,6 +79,7 @@ class TestChasers(FollowerCase):
         made = followers.ScalarChaser(duration=1.0, initialValue=0.0, initialDestination=4.0)
         self.at(made, 0.0)
         self.assertTrue(made.moving())
+
         self.at(made, 1.0)
         self.assertAlmostEqual(made.value_changed, 4.0)
 
@@ -101,6 +102,17 @@ class TestDampers(FollowerCase):
         self.assertLess(steps, 1000)
         self.assertAlmostEqual(made.value_changed, 1.0, places=2)
         self.assertIs(made.isActive, False)
+
+    def test_a_destination_given_at_rest_is_followed_from_then(self):
+        made = followers.ScalarDamper(order=1, tau=1.0, tolerance=0.001)
+        made.set_destination = 1.0
+        self.at(made, 0.0)
+        self.at(made, 20.0)
+        self.assertIs(made.isActive, False)
+        self.clock.now = 200.0
+        made.set_destination = 2.0
+        self.at(made, 100.016)
+        self.assertAlmostEqual(made.value_changed, 1.0 + (1.0 - math.exp(-0.016)), places=4)
 
     def test_order_zero_jumps(self):
         made = followers.PositionDamper(order=0)

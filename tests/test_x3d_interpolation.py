@@ -67,8 +67,22 @@ class TestSpline(unittest.TestCase):
         self.assertGreater(after[1] - before[1], 0.0)
 
     def test_normalised_velocities_have_the_curves_length(self):
-        found = ip.tangents(np.array([[0.0], [1.0], [3.0]]), normalize=True)
-        self.assertTrue(np.allclose(np.linalg.norm(found[1]), 3.0))
+        found = ip.tangents(np.array([[0.0], [1.0], [3.0]]),
+                            velocities=[[1.0], [0.5], [2.0]], normalize=True)
+        self.assertTrue(np.allclose(np.linalg.norm(found, axis=1), 3.0))
+
+    def test_normalising_leaves_the_tangents_it_works_out(self):
+        """19.2.3: normalizeVelocity applies to the velocities keyVelocity gives"""
+        keys, values = (0.0, 0.1, 0.9, 1.0), np.array([0.0, 2.0, -1.0, 4.0])
+        for fraction in (0.05, 0.5, 0.95):
+            self.assertAlmostEqual(
+                float(ip.spline(keys, values, fraction, normalize=True)),
+                float(ip.spline(keys, values, fraction)))
+
+    def test_normalising_end_velocities_leaves_the_middle(self):
+        values = np.array([[0.0], [1.0], [3.0]])
+        found = ip.tangents(values, velocities=[[1.0], [1.0]], normalize=True)
+        self.assertTrue(np.allclose(found[:, 0], [3.0, 1.5, 3.0]))
 
 
 class TestEase(unittest.TestCase):

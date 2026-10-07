@@ -212,7 +212,8 @@ class CylinderSensor(Dragging, x3d.CylinderSensor):
         length = np.linalg.norm(bearing)
         tilt = math.acos(min(1.0, abs(bearing[1]) / length)) if length else math.pi / 2
         self.__dict__.update(_first=first, _disk=tilt < float(self.diskAngle), _last=None,
-                             _radius=math.hypot(first[0], first[2]))
+                             _radius=math.hypot(first[0], first[2]),
+                             _bearing=_angle_about_y(first), _turned=0.0)
 
     def _track(self, origin: np.ndarray, direction: np.ndarray) -> Optional[np.ndarray]:
         first = self.__dict__['_first']
@@ -236,9 +237,13 @@ class CylinderSensor(Dragging, x3d.CylinderSensor):
         track = self._track(self.into(ray.origin), self.into(ray.direction))
         if track is None:
             return
-        first = self.__dict__['_first']
-        angle = float(self.offset) + _angle_about_y(track) - _angle_about_y(first)
-        angle = _clamped(angle, float(self.minAngle), float(self.maxAngle))
+        # The turn is added up a step at a time, each the shorter way round,
+        # so a drag across the half turn carries on rather than jumping back.
+        bearing = _angle_about_y(track)
+        step = math.remainder(bearing - self.__dict__['_bearing'], 2.0 * math.pi)
+        self.__dict__.update(_bearing=bearing, _turned=self.__dict__['_turned'] + step)
+        angle = _clamped(float(self.offset) + self.__dict__['_turned'],
+                         float(self.minAngle), float(self.maxAngle))
         turning = self.turning()
         self.trackPoint_changed = turning @ track
         self.rotation_changed = np.append(turning @ np.array([0.0, 1.0, 0.0]), angle)

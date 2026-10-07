@@ -73,8 +73,8 @@ def tangents(values: ArrayLike, closed: bool = False,
     Given velocities, one per key or (on an open curve) one for each end, are
     used; the others are half the difference of the neighbouring values, with
     the neighbours of the ends found round the join on a closed curve and the
-    ends' tangents zero on an open one. `normalize` scales each tangent to
-    the length of the whole curve through the values.
+    ends' tangents zero on an open one. `normalize` scales each given
+    velocity to the length of the whole curve through the values (19.2.3).
     """
     found = np.asarray(values, dtype=np.float64)
     points = found.reshape(len(found), -1)
@@ -88,17 +88,20 @@ def tangents(values: ArrayLike, closed: bool = False,
         else:
             result[index] = (points[index + 1] - points[index - 1]) / 2.0
     given = np.asarray(velocities if velocities is not None else (), dtype=np.float64)
+    rows: "list[int]" = []
     if given.size:
         given = given.reshape(-1, points.shape[1])
         if len(given) == count:
-            result = given.copy()
+            rows = list(range(count))
         elif len(given) == 2 and not closed:
-            result[0], result[-1] = given[0], given[1]
-    if normalize:
-        total = float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum())
-        lengths = np.linalg.norm(result, axis=1, keepdims=True)
-        lengths[lengths == 0] = 1.0
-        result = result / lengths * total
+            rows = [0, count - 1]
+        if normalize and rows:
+            total = float(np.linalg.norm(np.diff(points, axis=0), axis=1).sum())
+            lengths = np.linalg.norm(given, axis=1, keepdims=True)
+            lengths[lengths == 0] = 1.0
+            given = given / lengths * total
+        for row, velocity in zip(rows, given):
+            result[row] = velocity
     return result.reshape(found.shape)
 
 

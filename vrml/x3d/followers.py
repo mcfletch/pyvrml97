@@ -206,7 +206,8 @@ class Damper(Follower):
         return last
 
     def _retarget(self, destination: np.ndarray, now: float) -> None:
-        if self.__dict__.get('_last') is None:
+        # From rest, the filters run from now, not from when they came to rest.
+        if self.__dict__.get('_last') is None or not self.moving():
             self.__dict__['_last'] = now
         self.__dict__['_destination'] = destination
 
