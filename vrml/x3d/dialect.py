@@ -306,7 +306,8 @@ def declared_defaults(cls: type, type_name: str) -> "list[tuple[str, Any]]":
 
     An engine's class may default a field as suits a node made in code; a
     node a document builds has the X3D declaration's default for a field the
-    document leaves out. Node-valued fields are not compared.
+    document leaves out, where the document's version has the field. Node-valued
+    fields are not compared.
     """
     found = _DECLARED_DEFAULTS.get(cls)
     if found is None:

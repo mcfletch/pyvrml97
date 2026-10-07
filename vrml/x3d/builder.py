@@ -403,7 +403,7 @@ class SceneBuilder:
                 declared.fset(built, values[-1], notify=frame.notify)
             frame.set_fields.add(name)
         for name, value in dialect.declared_defaults(type(built), frame.type_name):
-            if name not in frame.set_fields:
+            if name not in frame.set_fields and self.dialect.has_field(frame.type_name, name):
                 declared = protofunctions.getField(built, name)
                 declared.fset(built, declared.copyValue(value), notify=False)
         for name, value in self.dialect.defaults(frame.type_name):
