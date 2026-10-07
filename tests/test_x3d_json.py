@@ -138,9 +138,6 @@ class TestScripts(unittest.TestCase):
         self.assertEqual(script.sourceCode, 'ecmascript:\nfunction initialize() {}')
 
 
-if __name__ == '__main__':
-    unittest.main()
-
 
 class TestOrder(unittest.TestCase):
     def test_a_use_before_its_def_is_the_same_node(self):
@@ -153,6 +150,25 @@ class TestOrder(unittest.TestCase):
         collision = scene.children[0]
         self.assertIs(collision.children[0], collision.proxy)
         self.assertEqual(list(collision.proxy.translation), [0, 1, 0])
+        self.assertEqual(scene.problems, [])
+
+    def test_a_node_used_before_its_def_keeps_a_field_called_name(self):
+        scene = read([{'MetadataSet': {
+            '-value': [{'MetadataString': {'@USE': 'M'}}],
+            '-metadata': {'MetadataString': {'@DEF': 'M', '@name': 'colour'}},
+        }}])
+        self.assertEqual(scene.getDEF('M').name, 'colour')
+        self.assertEqual(scene.problems, [])
+
+    def test_a_prototype_instance_used_before_its_def(self):
+        scene = read([DECLARATION, {'Collision': {
+            '-children': [{'ProtoInstance': {'@USE': 'L', '@name': 'Lamp'}}],
+            '-proxy': {'ProtoInstance': {'@DEF': 'L', '@name': 'Lamp', 'fieldValue': [
+                {'@name': 'lightColor', '@value': [0, 0, 1]}]}},
+        }}])
+        collision = scene.children[0]
+        self.assertIs(collision.children[0], collision.proxy)
+        self.assertEqual(list(collision.proxy.lightColor), [0, 0, 1])
         self.assertEqual(scene.problems, [])
 
 
@@ -172,3 +188,7 @@ class TestWhatWeb3DsConverterWrites(unittest.TestCase):
     def test_an_mfstring_field_given_booleans(self):
         scene = read([{'Text': {'@string': [True, 'x']}}])
         self.assertEqual(scene.children[0].string, ['true', 'x'])
+
+
+if __name__ == '__main__':
+    unittest.main()

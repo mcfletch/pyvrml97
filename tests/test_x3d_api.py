@@ -3,10 +3,11 @@
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 from vrml import protofunctions
 from vrml import x3d
-from vrml.x3d import nodes
+from vrml.x3d import nodes, readers
 
 
 class TestLoading(unittest.TestCase):
@@ -54,6 +55,20 @@ class TestLoading(unittest.TestCase):
                                        'EXTERNPROTO Self [ ] [ "self.x3dv#Self" ]\n')
         scene = x3d.load(path)
         self.assertEqual([p.severity for p in scene.problems], ['warning'])
+
+    def test_prototype_files_that_name_each_other_are_each_read_once(self):
+        for own in 'abc':
+            others = ''.join(
+                'EXTERNPROTO P%s [ ] [ "%s.x3dv#P%s" ]\n' % (other, other, other)
+                for other in 'abc' if other != own)
+            self.write('%s.x3dv' % own, '#X3D V4.0 utf8\nPROFILE Core\n%s'
+                       'PROTO P%s [ ] { Group { } }\n' % (others, own))
+        with mock.patch.object(readers, 'read', wraps=readers.read) as reading:
+            scene = x3d.load(os.path.join(self.directory, 'a.x3dv'))
+        self.assertEqual(sorted(os.path.basename(call.kwargs['name'])
+                                for call in reading.call_args_list),
+                         ['a.x3dv', 'b.x3dv', 'c.x3dv'])
+        self.assertIsNotNone(scene.getProto('Pb'))
 
 
 if __name__ == '__main__':

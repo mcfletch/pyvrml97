@@ -24,14 +24,20 @@ MAX_PROTOTYPE_DEPTH = 8
 class LocalPrototypes:
     """Resolves EXTERNPROTO URLs that name local files, relative to the document
 
-    Each file is read once per load, and a file being read is not read again
-    from within itself.
+    Each file is read once per load: the resolvers a load makes for the files
+    it reads share one table of them, by path. A file still being read is in
+    the table with no scene, so a file naming it does not read it again.
     """
 
-    def __init__(self, options: "dict[str, Any]", depth: int = 0) -> None:
+    def __init__(
+        self,
+        options: "dict[str, Any]",
+        depth: int = 0,
+        scenes: "dict[str, X3DScene | None] | None" = None,
+    ) -> None:
         self.options = options
         self.depth = depth
-        self.scenes: "dict[str, X3DScene | None]" = {}
+        self.scenes: "dict[str, X3DScene | None]" = {} if scenes is None else scenes
 
     def __call__(self, urls: Sequence[str], base: str, name: str) -> "type | None":
         if self.depth >= MAX_PROTOTYPE_DEPTH:
@@ -61,7 +67,7 @@ class LocalPrototypes:
         with open(path, 'rb') as stream:
             data = stream.read()
         options = dict(self.options)
-        options['extern_resolver'] = LocalPrototypes(self.options, self.depth + 1)
+        options['extern_resolver'] = LocalPrototypes(self.options, self.depth + 1, self.scenes)
         self.scenes[path] = readers.read(data, name=path, **options)
         return self.scenes[path]
 

@@ -209,6 +209,20 @@ class TestPrototypes(unittest.TestCase):
         self.assertEqual(scene.children[0].geometry.r, 2.0)
         self.assertEqual(scene.problems, [])
 
+    def test_declared_among_a_nodes_fields(self):
+        scene = x3d_document(
+            'Group {\n'
+            '  PROTO Outer [ inputOutput SFNode n Box { size 2 2 2 } ] {\n'
+            '    PROTO Inner [ ] { Group { } }\n'
+            '    Shape { geometry IS n }\n'
+            '  }\n'
+            '  children [ Outer { } ]\n'
+            '}', header='#X3D V4.0 utf8\nPROFILE Immersive\n')
+        group = scene.children[0]
+        self.assertEqual(len(group.children), 1)
+        self.assertEqual(list(group.children[0].n.size), [2, 2, 2])
+        self.assertEqual(scene.problems, [])
+
     def test_vrml97_declarations_in_an_x3d_file_are_a_warning(self):
         scene = x3d_document('PROTO Thing [ field SFFloat r 1.0 ] { Group {} }')
         self.assertEqual([p.severity for p in scene.problems], ['warning'])

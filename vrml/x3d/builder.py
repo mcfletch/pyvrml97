@@ -155,6 +155,8 @@ class _ProtoDefinition:
         #: (prototype field, body node, node field) for each IS connection.
         self.connections: "list[tuple[str, Any, str]]" = []
         self.body: "_Body | None" = None
+        #: The nodes open where the prototype is declared, put back when its body ends.
+        self.outside: "list[_Frame]" = []
 
 
 class _Body:
@@ -213,8 +215,9 @@ class SceneBuilder:
         self._bodies: "list[_Body]" = [self._body]
         self._frames: "list[_Frame]" = []
         self._protos: "list[_ProtoDefinition]" = []
-        #: Each prototype field whose default holds nodes, while it is read.
-        self._proto_field: "list[tuple[_ProtoDefinition, Any, list[Any]]]" = []
+        #: Each prototype field whose default holds nodes, while it is read:
+        #: (prototype, field, nodes, the number of nodes open where it began).
+        self._proto_field: "list[tuple[_ProtoDefinition, Any, list[Any], int]]" = []
         self._problems: "list[LoadProblem]" = []
         self._scripts = 0
         self._unknown_types: "set[str]" = set()
@@ -484,7 +487,7 @@ class SceneBuilder:
 
     def _place(self, built: Any, containerField: str) -> None:
         """Put a node in its parent's field, or among the body's roots"""
-        if self._proto_field and (not self._frames or self._frames[-1].node is None):
+        if self._proto_field and len(self._frames) == self._proto_field[-1][3]:
             self._proto_field[-1][2].append(built)
             return
         if not self._frames:
@@ -670,10 +673,10 @@ class SceneBuilder:
         """The nodes started until `end_proto_field_nodes` are field `name`'s default"""
         definition = self._protos[-1]
         declared = next((item for item in definition.fields if item.name == name), None)
-        self._proto_field.append((definition, declared, []))
+        self._proto_field.append((definition, declared, [], len(self._frames)))
 
     def end_proto_field_nodes(self) -> None:
-        definition, declared, nodes = self._proto_field.pop()
+        definition, declared, nodes, _depth = self._proto_field.pop()
         if declared is None:
             self.problem('error', 'Nodes given for an undeclared prototype field')
             return
@@ -689,13 +692,13 @@ class SceneBuilder:
         self._scope = scope
         self._bodies.append(definition.body)
         self._body = definition.body
-        self._frames_outside = self._frames
+        definition.outside = self._frames
         self._frames = []
 
     def end_proto_body(self) -> None:
         if self._frames:
             self.problem('error', 'Node %s is not closed' % self._frames[-1].type_name)
-        self._frames = self._frames_outside
+        self._frames = self._protos[-1].outside
         self._bodies.pop()
         self._body = self._bodies[-1]
         assert self._scope.parent is not None

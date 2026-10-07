@@ -18,6 +18,10 @@ from vrml.x3d.scene import X3DScene
 
 #: `@` keys of a node object that are the encoding's, not the node's.
 ENCODING_ATTRIBUTES = frozenset(('DEF', 'USE', 'containerField', 'class', 'id', 'style'))
+#: A ProtoInstance's member naming its prototype, which is not one of its fields.
+PROTOTYPE_NAME = frozenset(('@name',))
+#: A DEF's node type, the members that are not its fields, and its object.
+_Definition = tuple[str, frozenset[str], Mapping]
 
 
 class JSONReader:
@@ -26,9 +30,9 @@ class JSONReader:
     def __init__(self, builder: SceneBuilder) -> None:
         self.builder = builder
         #: For each open DEF scope (the scene, each prototype body): the
-        #: node objects its DEFs name, and the names built ahead of their
-        #: DEF because a USE came first.
-        self.scopes: "list[tuple[dict[str, tuple[str, Mapping]], set[str]]]" = []
+        #: node type and object each of its DEFs names, and the names built
+        #: ahead of their DEF because a USE came first.
+        self.scopes: "list[tuple[dict[str, _Definition], set[str]]]" = []
 
     def read(self, data: bytes) -> X3DScene:
         try:
@@ -57,7 +61,7 @@ class JSONReader:
 
     def _scope(self, items: Any) -> None:
         """Read the nodes of one DEF scope"""
-        definitions: "dict[str, tuple[str, Mapping]]" = {}
+        definitions: "dict[str, _Definition]" = {}
         self._prescan(items, definitions)
         self.scopes.append((definitions, set()))
         try:
@@ -65,7 +69,7 @@ class JSONReader:
         finally:
             self.scopes.pop()
 
-    def _prescan(self, items: Any, definitions: "dict[str, tuple[str, Mapping]]") -> None:
+    def _prescan(self, items: Any, definitions: "dict[str, _Definition]") -> None:
         """Find the node objects DEFs name in one scope, not entering prototypes
 
         Object members are grouped by field name rather than kept in
@@ -79,7 +83,7 @@ class JSONReader:
                         'ProtoDeclare', 'ExternProtoDeclare'):
                     continue
                 if '@DEF' in value:
-                    definitions.setdefault(str(value['@DEF']), (name, value))
+                    definitions.setdefault(str(value['@DEF']), self._started(name, value) + (value,))
                 for key, inner in value.items():
                     if key.startswith('-'):
                         self._prescan(inner, definitions)
@@ -87,6 +91,14 @@ class JSONReader:
                         for declaration in self._list(inner):
                             if isinstance(declaration, Mapping):
                                 self._prescan(declaration.get('-children'), definitions)
+
+    @staticmethod
+    def _started(name: str, value: Mapping) -> "tuple[str, frozenset[str]]":
+        """The node type an object under the member `name` starts, and the
+        members that are not its fields"""
+        if name == 'ProtoInstance':
+            return str(value.get('@name', '')), PROTOTYPE_NAME
+        return name, frozenset()
 
     @staticmethod
     def _list(value: Any) -> "list[Any]":
@@ -128,8 +140,8 @@ class JSONReader:
         if self.scopes:
             definitions, early = self.scopes[-1]
             if USE and not self.builder.defined(USE) and USE in definitions:
-                defined_type, defined = definitions[USE]
-                self._node(defined_type, defined, skip, containerField)
+                defined_type, defined_skip, defined = definitions[USE]
+                self._node(defined_type, defined, defined_skip, containerField)
                 early.add(USE)
                 return
             if DEF and DEF in early:
@@ -235,7 +247,8 @@ class JSONReader:
         self.builder.end_proto()
 
     def _statement_ProtoInstance(self, value: Mapping) -> None:
-        self._node(str(value.get('@name', '')), value, frozenset(('@name',)))
+        name, skip = self._started('ProtoInstance', value)
+        self._node(name, value, skip)
 
 
 def read(data: bytes, builder: SceneBuilder) -> X3DScene:

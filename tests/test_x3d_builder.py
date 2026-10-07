@@ -594,6 +594,48 @@ class TestPrototypes(unittest.TestCase):
         built.end_document()
         self.assertEqual(len(Holder().content), 1)
 
+    def test_prototypes_declared_inside_a_node(self):
+        """Classic VRML declares a PROTO among a node's fields; its body, and a
+        body inside that one, leave the node open for the rest of its fields"""
+        built = Built()
+        group = built.b.start_node('Group')
+        built.start_proto('Outer')
+        built.start_proto_body()
+        built.start_proto('Inner')
+        built.start_proto_body()
+        built.node('Group')
+        built.end_proto_body()
+        built.end_proto()
+        built.node('Inner')
+        built.end_proto_body()
+        built.end_proto()
+        built.node('Outer')
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(problems(scene), [])
+        self.assertEqual(scene.children, [group])
+        self.assertEqual(len(group.children), 1)
+
+    def test_a_node_valued_default_declared_inside_a_node(self):
+        built = Built()
+        group = built.b.start_node('Group')
+        built.start_proto('Holder')
+        built.proto_field('content', 'SFNode', 'inputOutput')
+        built.start_proto_field_nodes('content')
+        built.node('Box')
+        built.end_proto_field_nodes()
+        built.start_proto_body()
+        built.b.start_node('Shape')
+        built.connect('geometry', 'content')
+        built.end_node()
+        built.end_proto_body()
+        Holder = built.end_proto()
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(problems(scene), [])
+        self.assertEqual(group.children, [])
+        self.assertIsInstance(Holder().content, x3d.Box)
+
 
 class TestExternalPrototypes(unittest.TestCase):
     def test_an_unresolved_prototype_has_its_interface(self):
