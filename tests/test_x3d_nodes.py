@@ -203,6 +203,13 @@ class TestBehaviour(unittest.TestCase):
         forward, inverse = x3d.Transform(translation=(1, 2, 3)).localMatrices().data
         np.testing.assert_allclose(forward[3, :3], [1, 2, 3])
 
+    def test_a_cad_part_transforms_as_a_transform_does(self):
+        fields = dict(translation=(1, 2, 3), rotation=(0, 1, 0, 0.5), scale=(2, 2, 2))
+        part = x3d.CADPart(**fields)
+        self.assertIsInstance(part, nodetypes.Transforming)
+        np.testing.assert_allclose(part.localMatrices().data[0],
+                                   x3d.Transform(**fields).localMatrices().data[0])
+
 
 if __name__ == '__main__':
     unittest.main()

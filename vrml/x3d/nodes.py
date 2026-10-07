@@ -1143,7 +1143,7 @@ class CADLayer(X3DGroupingNode):
     name = field.newField('name', 'SFString', 1, '')
 
 
-class CADPart(X3DProductStructureChildNode, X3DGroupingNode):
+class CADPart(behaviours.LocalMatrices, nodetypes.Transforming, X3DProductStructureChildNode, X3DGroupingNode):
     """CADGeometry component, level 2
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/CADGeometry.html#CADPart

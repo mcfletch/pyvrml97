@@ -672,7 +672,7 @@ class CADLayer(X3DGroupingNode):
     name: _Field[str, str]
     def __init__(self, *, DEF: str = ..., bboxCenter: _Numbers = ..., bboxDisplay: bool | int = ..., bboxSize: _Numbers = ..., children: Sequence[X3DChildNode | nodetypes.Children] = ..., metadata: X3DMetadataObject | None = ..., name: str = ..., visible: bool | int = ..., **fields: Any) -> None: ...
 
-class CADPart(X3DProductStructureChildNode, X3DGroupingNode):
+class CADPart(behaviours.LocalMatrices, nodetypes.Transforming, X3DProductStructureChildNode, X3DGroupingNode):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]

@@ -122,12 +122,14 @@ MARKERS = {
     'X3DSoundNode': 'Auditory',
     'Transform': 'Transforming',
     'Billboard': 'Transforming',
+    'CADPart': 'Transforming',
     'Inline': 'Traversable',
 }
 
 #: Mix-ins from `vrml.x3d.behaviours` a declaration takes as its first bases.
 BEHAVIOURS = {
     'Transform': ('LocalMatrices',),
+    'CADPart': ('LocalMatrices',),
     'X3DBindableNode': ('Bindable',),
 }
 
