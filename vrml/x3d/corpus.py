@@ -7,8 +7,7 @@ laid out as Web3D publishes the examples, each archive's in
 `examples(name)`, so a scene naming a file of another archive reaches it;
 `with_references` adds the archives the named ones' scenes reach into. With
 `resources`, the images the scenes name and the render Web3D publishes of each
-scene from each of its viewpoints (`viewpoint_renders`) are extracted too,
-which is what a scene needs to be drawn and compared.
+scene from each of its viewpoints (`viewpoint_renders`) are extracted too.
 
 The examples are under the Web3D Consortium Open-Source License
 (https://www.web3d.org/x3d/content/examples/license.html), which is

@@ -9,8 +9,8 @@ each closing on the one before by `1 - exp(-dt / tau)` of the gap over a step
 of `dt` seconds, and comes to rest within `tolerance` (an automatic one where
 that is negative). Rotations are chased and damped as quaternions.
 
-Nothing here keeps time. :meth:`Follower.advance` takes the time, moves the
-value and sends it, and answers whether the follower is still moving;
+:meth:`Follower.advance` takes the time from its caller, moves the value and
+sends it, and answers whether the follower is still moving;
 `set_destination` stamps a change with :meth:`~vrml.x3d.timing.Timed.now`,
 the time of the follower's scene. :meth:`Follower.wake` is called when a
 follower starts to move, for whoever ticks it to begin.

@@ -2,10 +2,9 @@
 
 A `ProximitySensor` watches the viewer, a `TransformSensor` its
 `targetObject`, within the box of `size` about `center` (ISO/IEC 19775-1,
-22.4); a `VisibilitySensor` whether its box is in view. Nothing here watches
-anything: whoever draws the scene calls `observe` each frame with what the
-sensor senses, in the sensor's own coordinates, and the sensor sends its
-events.
+22.4); a `VisibilitySensor` whether its box is in view. Whoever draws the
+scene calls `observe` each frame with what the sensor senses, in the
+sensor's own coordinates, and the sensor sends its events.
 
 - Entering the box sends `isActive TRUE` and `enterTime`; leaving it sends
   `isActive FALSE` and `exitTime`.

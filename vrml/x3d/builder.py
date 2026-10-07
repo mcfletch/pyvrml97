@@ -4,8 +4,9 @@ Every encoding's reader turns its syntax into calls on a `SceneBuilder`;
 the builder owns everything the encodings share: node construction and
 where each node goes, `DEF`/`USE` and their scopes, prototypes and `IS`,
 routes, `IMPORT`/`EXPORT`, the document's units and dialect, and the
-problems found on the way. The readers know nothing about nodes; the builder
-knows nothing about syntax.
+problems found on the way. A reader passes names and text; the builder
+resolves the names to node classes and fields and decodes the text by the
+field's type.
 
 A reader sets `line` and `column` before each call it can place, and each
 problem is recorded at that position. Problems are `LoadProblem` nodes on

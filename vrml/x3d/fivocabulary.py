@@ -12,8 +12,8 @@ which no edition publishes. The attribute names a document adds are
 numbered from 1026, so that table has 1025 entries; none of the files refers
 to one past the published names. `attribute_names()` numbers them as the
 files do, with the entries no edition names unknown (None). The same
-numbering is used for every URI below, since no file to hold another to has
-been found.
+numbering is used for every URI below: no published file numbers one
+otherwise.
 
 The same files write some values a second time under other names (a meta's
 content as `key`, an Anchor's url as `load` and `visible`); a reader reports

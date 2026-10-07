@@ -1,8 +1,8 @@
 """X3D's pointing-device sensors, told where the pointer is -- NumPy only
 
 A pointing-device sensor (ISO/IEC 19775-1, 20) senses the pointer over the
-geometry that shares its parent. Nothing here reads a pointer: whoever has one
-calls, in the sensor's own coordinates,
+geometry that shares its parent. Whoever has a pointer calls, in the
+sensor's own coordinates,
 
 - :meth:`Pointing.pointerOver` as the pointer moves, with the :class:`Hit` on
   the sensor's geometry or None;

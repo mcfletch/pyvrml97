@@ -3,8 +3,8 @@
 The declarations in `vrml.x3d.nodes` carry fields only. The classes here add
 what each node sends for what it receives: setting an inputOnly event on a
 node calls its `on_<event>` method, and the outputs that method sets are
-forwarded along routes as any field change is. Nothing here draws or reads a
-device; :class:`KeySensor` is told of keys by whoever has a keyboard.
+forwarded along routes as any field change is. :class:`KeySensor` is told
+of keys by whoever has a keyboard.
 
 `PROTOTYPES` maps each X3D name to its class here; a reader builds these
 where its `prototypes=` gives no class of the name. A `TimeTrigger` sends the

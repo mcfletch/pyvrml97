@@ -1,4 +1,4 @@
-"""X3D's TimeSensor, advanced by whoever keeps time -- no clock of its own
+"""X3D's TimeSensor, advanced by whoever keeps time
 
 The sensor (ISO/IEC 19775-1, 8.4.1) runs from `startTime` for one
 `cycleInterval`, or cycle after cycle where `loop` is true, until `stopTime`
