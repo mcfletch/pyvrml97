@@ -346,6 +346,7 @@ class _SFNode(_FieldHost):
     #: empty tuple here must not fix the element type.
     requiredTypes: tuple[type, ...] = ()
     allowNULL = 1
+    DESCRIPTION = field.Field.DESCRIPTION + ('requiredTypes',)
     #: Whether a node set here is part of the holder's graph, and so takes
     #: the holder's scene root. A field that only refers to a node elsewhere
     #: (a route's ends) says no.
@@ -376,7 +377,7 @@ class _SFNode(_FieldHost):
         """Coerce value to an SFNode reference"""
         if self.requiredTypes and isinstance(value, self.requiredTypes):
             return value
-        elif value is None and self.allowNULL:
+        elif (value is None or isinstance(value, NullNode)) and self.allowNULL:
             return NULL
         elif isinstance(value, str):
             raise ValueError(
@@ -574,6 +575,10 @@ class _MFNode(_FieldHost):
     defaultDefault = olist.OList
     baseSFNode = SFNode('GeneralSFNode')
     baseObjectType = olist.OList
+    #: The types each node in the list must be one of, or empty to take
+    #: `baseSFNode`'s. Set per field, as an SFNode's is.
+    requiredTypes: tuple[type, ...] = ()
+    DESCRIPTION = field.Field.DESCRIPTION + ('requiredTypes',)
 
     def fset(self, client: Any, value: Any, notify: int=1) -> Any:
         """Set the client's value for this property
@@ -639,11 +644,20 @@ class _MFNode(_FieldHost):
     def coerce(self, value: Any) -> Any:
         """Coerce value to an MFNode list-of-objects"""
         SF = self.__class__.baseSFNode
-        if SF.requiredTypes and isinstance(value, SF.requiredTypes):
+        types = self.requiredTypes or SF.requiredTypes
+        if types and isinstance(value, types):
             return self.baseObjectType([value])
         elif not value:
             return self.baseObjectType([])
         elif isinstance(value, field.SEQUENCE_TYPES):
+            if self.requiredTypes:
+                for item in value:
+                    if not isinstance(item, types):
+                        raise ValueError(
+                            """%s holds %s nodes, not %r"""
+                            % (self.name, ', '.join(t.__name__ for t in types), item)
+                        )
+                return self.baseObjectType(value)
             return self.baseObjectType([SF.coerce(item) for item in value])
         else:
             raise ValueError(

@@ -12,7 +12,10 @@ until now no test imported these at all.
 import unittest
 
 from vrml import protofunctions
+from vrml.vrml97.parser import buildParser
 from vrml.vrml97 import basenodes, nodetypes, nurbs, shaders, tree
+from vrml.x3d import dialect
+from vrml.x3d import nodes as x3d
 
 
 def field_names(node_class):
@@ -174,17 +177,38 @@ if __name__ == '__main__':
 
 
 class TestTheVRML97Defaults(unittest.TestCase):
-    """Defaults the VRML97 specification (ISO/IEC 14772-1) gives."""
+    """Defaults the VRML97 specification (ISO/IEC 14772-1) gives.
+
+    The classes are the X3D 4.1 declarations; a VRML97 document is read in
+    the VRML97 dialect, which supplies VRML97's defaults where X3D's differ.
+    """
+
+    def read(self, text):
+        built = buildParser().parse('#VRML V2.0 utf8\n' + text + '\n')[1][1]
+        return built.children[0]
 
     def test_an_elevation_grid_is_spaced_one_unit_apart(self):
-        # 6.15 ElevationGrid: field SFFloat xSpacing 1.0, zSpacing 1.0
+        # 6.16 ElevationGrid: field SFFloat xSpacing 1.0, zSpacing 1.0
         grid = basenodes.ElevationGrid()
         self.assertEqual(grid.xSpacing, 1.0)
         self.assertEqual(grid.zSpacing, 1.0)
 
     def test_navigation_info_offers_walk_and_any(self):
-        # 6.29 NavigationInfo: exposedField MFString type ["WALK", "ANY"]
-        self.assertEqual(basenodes.NavigationInfo().type, ['WALK', 'ANY'])
+        # 6.28 NavigationInfo: exposedField MFString type ["WALK", "ANY"]
+        self.assertEqual(self.read('NavigationInfo {}').type, ['WALK', 'ANY'])
+
+    def test_a_spot_light_has_vrml97_angles(self):
+        # 6.44 SpotLight: beamWidth 1.570796, cutOffAngle 0.785398
+        light = self.read('SpotLight {}')
+        self.assertAlmostEqual(light.beamWidth, 1.570796, places=5)
+        self.assertAlmostEqual(light.cutOffAngle, 0.785398, places=5)
+
+    def test_a_value_in_the_file_wins_over_the_dialect_default(self):
+        self.assertEqual(self.read('NavigationInfo { type "FLY" }').type, ['FLY'])
+
+    def test_vrml97_field_names_are_read(self):
+        lod = self.read('LOD { level [ Group {} ] }')
+        self.assertEqual(len(lod.children), 1)
 
 
 class TestEverySensorIsAChild(unittest.TestCase):
@@ -200,3 +224,17 @@ class TestEverySensorIsAChild(unittest.TestCase):
             sensor = getattr(basenodes, name)
             self.assertTrue(issubclass(sensor, nodetypes.Sensor), name)
             self.assertTrue(issubclass(sensor, nodetypes.Children), name)
+
+
+class TestTheVRML97NodesAreTheX3DNodes(unittest.TestCase):
+    """VRML97 is a dialect of the X3D vocabulary: one class per node name."""
+
+    def test_each_vrml97_name_is_the_x3d_class(self):
+        for name in dialect.VRML97.nodeTypes:
+            if name == 'Script':
+                continue
+            self.assertIs(getattr(basenodes, name), x3d.CONCRETE_NODES[name], name)
+
+    def test_a_transform_still_computes_its_matrices(self):
+        forward, _inverse = basenodes.Transform(translation=(1, 0, 0)).localMatrices().data
+        self.assertEqual(list(forward[3, :3]), [1, 0, 0])

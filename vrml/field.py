@@ -265,7 +265,7 @@ class Field(BaseField):
     #: document's UNIT statement scales this field by, or empty.
     unitCategory = ''
     #: The keyword arguments a declaration may describe itself with.
-    DESCRIPTION = (
+    DESCRIPTION: "tuple[str, ...]" = (
         'minimum', 'minimumExclusive', 'maximum', 'maximumExclusive',
         'choices', 'choicesOpen', 'unitCategory',
     )
@@ -318,7 +318,9 @@ class Field(BaseField):
                     'A field declaration has no %r; it takes %s'
                     % (key, ', '.join(self.DESCRIPTION))
                 )
-            if key == 'choices':
+            if isinstance(value, type):
+                value = (value,)
+            elif key in ('choices', 'requiredTypes'):
                 value = tuple(value)
             setattr(self, key, value)
         self.__doc__ = str(self)
@@ -360,11 +362,13 @@ class Field(BaseField):
         """
         if isinstance(client, type):
             # copy the field definition itself...
+            # A default that is a factory (`list`) makes a new value each
+            # time already, and is not itself a value to copy.
+            default = self.defaultobj
+            if not self.call_default:
+                default = self.copyValue(default, copier)
             return self.__class__(
-                self.name,
-                self.exposure,
-                self.copyValue(self.defaultobj, copier),
-                **self.description(),
+                self.name, self.exposure, default, **self.description(),
             )
         elif self.fhas(client):
             return self.copyValue(self.fget(client), copier)
@@ -459,6 +463,32 @@ class Field(BaseField):
                 other.name,
             )
         return False
+
+
+class AliasField:
+    """Another name for a field of the same node
+
+    Reading, writing and deleting through the alias reach the named field,
+    and `protofunctions.getField` answers that field for the alias's name.
+    It is not a field itself, so `getFields` does not report it. Used for
+    the names a field had in VRML97 and earlier X3D versions.
+    """
+
+    def __init__(self, name: str, target: str) -> None:
+        self.name = name
+        self.target = target
+        self.__doc__ = '%s, another name for %s' % (name, target)
+
+    def __get__(self, client: Any, cls: Any=None) -> Any:
+        if client is None:
+            return self
+        return getattr(client, self.target)
+
+    def __set__(self, client: Any, value: Any) -> None:
+        setattr(client, self.target, value)
+
+    def __delete__(self, client: Any) -> None:
+        delattr(client, self.target)
 
 
 if TYPE_CHECKING:

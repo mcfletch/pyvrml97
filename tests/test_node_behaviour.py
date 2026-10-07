@@ -13,7 +13,7 @@ is filled so that anything put into a scene can reach the file it is in.
 
 import unittest
 
-from vrml import node, protofunctions
+from vrml import field, node, protofunctions
 from vrml.vrml97 import basenodes
 from vrml.vrml97.scenegraph import SceneGraph
 from vrml import fieldtypes
@@ -265,3 +265,77 @@ class TestWhatAPrototypeInstanceRenders(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Leaf(node.Node):
+    PROTO = 'Leaf'
+
+
+class Branch(node.Node):
+    PROTO = 'Branch'
+
+
+class Tree(node.Node):
+    """Node fields restricted to one type each, and a renamed field."""
+
+    PROTO = 'Tree'
+    trunk = node.SFNode('trunk', 1, node.NULL, requiredTypes=(Branch,))
+    leaves = node.MFNode('leaves', 1, list, requiredTypes=Leaf)
+    foliage = field.AliasField('foliage', 'leaves')
+
+
+class TestRestrictingANodeField(unittest.TestCase):
+    """Each node field may name the node types it holds."""
+
+    def test_a_single_node_field_takes_its_type(self):
+        self.assertIsInstance(Tree(trunk=Branch()).trunk, Branch)
+
+    def test_a_single_node_field_takes_null(self):
+        self.assertIs(Tree(trunk=None).trunk, node.NULL)
+        self.assertIs(Tree(trunk=node.NULL).trunk, node.NULL)
+
+    def test_a_single_node_field_refuses_another_type(self):
+        with self.assertRaises(ValueError):
+            Tree(trunk=Leaf())
+
+    def test_a_list_field_takes_its_type(self):
+        self.assertEqual(len(Tree(leaves=[Leaf(), Leaf()]).leaves), 2)
+
+    def test_a_list_field_refuses_another_type(self):
+        with self.assertRaises(ValueError):
+            Tree(leaves=[Leaf(), Branch()])
+
+    def test_one_field_restricted_leaves_others_of_its_class_alone(self):
+        self.assertEqual(node.MFNode('any').requiredTypes, ())
+        free = node.MFNode('any', 1, list)
+        self.assertEqual(len(free.coerce([Leaf(), Branch()])), 2)
+
+    def test_the_restriction_is_part_of_a_copied_declaration(self):
+        copy = Tree.leaves.copy(Tree)
+        self.assertEqual(copy.requiredTypes, (Leaf,))
+
+
+class TestARenamedField(unittest.TestCase):
+    """An alias reads and writes the field it names, and is not a field."""
+
+    def test_it_reads_the_field(self):
+        tree = Tree(leaves=[Leaf()])
+        self.assertIs(tree.foliage, tree.leaves)
+
+    def test_it_writes_the_field(self):
+        tree = Tree()
+        tree.foliage = [Leaf()]
+        self.assertEqual(len(tree.leaves), 1)
+
+    def test_it_may_be_given_when_the_node_is_built(self):
+        self.assertEqual(len(Tree(foliage=[Leaf()]).leaves), 1)
+
+    def test_looking_it_up_answers_the_field(self):
+        self.assertIs(protofunctions.getField(Tree, 'foliage'), Tree.leaves)
+
+    def test_it_is_not_listed_among_the_fields(self):
+        names = {f.name for f in protofunctions.getFields(Tree)}
+        self.assertNotIn('foliage', names)
+
+    def test_it_names_its_field(self):
+        self.assertEqual(Tree.foliage.target, 'leaves')

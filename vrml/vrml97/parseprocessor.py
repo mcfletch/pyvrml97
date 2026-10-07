@@ -19,6 +19,7 @@ from vrml import node, field
 from vrml.protofunctions import *
 from vrml.arrays import array
 from vrml.vrml97 import basenamespaces
+from vrml.x3d import dialect
 
 
 def as_str(value: Any, encoding: str='utf-8') -> str:
@@ -73,6 +74,8 @@ class ParseProcessor(DispatchProcessor):
         self.prototypeStack: "list[Any]" = []
         self.nodeStack: "list[Any]" = []
         self.fieldTypeStack: "list[Any]" = []
+        #: VRML97's defaults where they differ from the X3D vocabulary's.
+        self.dialect = dialect.VRML97.tables()
 
     ### High-level constructs in the grammar
     def header(self, table: Any, buffer: Any) -> None:
@@ -156,6 +159,8 @@ class ParseProcessor(DispatchProcessor):
                 )
             )
         newNode = prototype()
+        for fieldName, value in self.dialect.defaults(GI):
+            getField(newNode, fieldName).fset(newNode, value, notify=0)
         root(newNode, self.sceneGraphStack[0])
         if name:
             self.sceneGraphStack[-1].regDefName(name, newNode)

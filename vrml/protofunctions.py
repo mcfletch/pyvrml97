@@ -16,6 +16,7 @@ module.
 
 from typing import Any
 from vrml import field
+from vrml import field as fieldmodule
 def _getcls(cls: Any) -> type:
     """Utility function returns class when passed instance or class"""
     if type(cls) is type:
@@ -125,7 +126,7 @@ def getField(cls: Any, field: str) -> Any:
     """
     cls = _getcls(cls)
     try:
-        return getattr(cls, field)
+        found = getattr(cls, field)
     except (AttributeError, KeyError):
         # OK, may be a space-prefixed name...
         for fieldObject in getFields(cls):
@@ -141,6 +142,10 @@ def getField(cls: Any, field: str) -> Any:
             return getField(cls, field[4:])
         elif field.endswith("_changed"):
             return getField(cls, field[:-8])
+    else:
+        if isinstance(found, fieldmodule.AliasField):
+            return getField(cls, found.target)
+        return found
     raise AttributeError(
         """The prototype %s does not define a field named %s"""
         % (protoName(cls), field)

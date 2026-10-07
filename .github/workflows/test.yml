@@ -34,6 +34,8 @@ jobs:
         include:
           # What a consumer's own checker reads out of the shipped `py.typed`.
           - {python: '3.12', toxenv: typecheck}
+          # The generated X3D declarations against a fresh generation.
+          - {python: '3.12', toxenv: x3d-generated}
           # The floor, both ways round: a compiled extension built by the
           # oldest supported interpreter is where a Cython API that moved on
           # shows up.

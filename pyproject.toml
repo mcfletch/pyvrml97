@@ -59,7 +59,7 @@ include = ["vrml*"]
 # it `vrml.arrays` -- the abstraction OpenGLContext and its kin reach numpy
 # through -- resolves to nothing, and every `arrays.dot`, `arrays.zeros` and
 # their fellows becomes an error in code that is correct.
-vrml = ["py.typed"]
+vrml = ["py.typed", "x3d/*.pyi"]
 
 [tool.setuptools.dynamic]
 version = { attr = "vrml.__version__" }
