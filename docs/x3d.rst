@@ -53,7 +53,7 @@ A field's declaration carries its X3D interface:
 Fields named by a Python keyword (the lights' ``global``) are read with
 ``getattr(light, 'global')`` and set with ``Light(**{'global': True})``.
 
-A method on a node is camelCase, as pyvrml97's node methods have always been
+A method on a node is camelCase, as the rest of pyvrml97's node methods are
 (``keyDown``, ``pointerPress``, ``x3dEquivalent``); a module's functions are
 snake_case (``bind_imports``, ``first_difference``).
 
