@@ -175,7 +175,8 @@ class SceneBuilder:
     """Builds an `X3DScene` from the calls a reader makes
 
     prototypes -- node classes by X3D name; `vrml.x3d.nodes.CONCRETE_NODES`
-        if not given. An engine passes its implementations here.
+        if not given. An engine passes its implementations here, and its
+        `X3DScene` subclass under 'X3DScene' for the scene itself.
     baseURI -- where the document is, for resolving relative URLs
     strict -- raise `X3DLoadError` at the first error rather than recording
         it and carrying on
@@ -195,7 +196,10 @@ class SceneBuilder:
         self.extern_resolver = extern_resolver
         self.line = 0
         self.column = 0
-        self.scene = X3DScene(baseURI=baseURI)
+        scene_class = self.vocabulary.get('X3DScene', X3DScene)
+        if not (isinstance(scene_class, type) and issubclass(scene_class, X3DScene)):
+            scene_class = X3DScene
+        self.scene = scene_class(baseURI=baseURI)
         self.dialect: DialectTables = dialects.DIALECTS[x3d.X3D_VERSION].tables()
         #: The name of the document's version, for messages: 'VRML97', 'X3D 3.3'.
         self.version_name = dialects.DIALECTS[x3d.X3D_VERSION].name

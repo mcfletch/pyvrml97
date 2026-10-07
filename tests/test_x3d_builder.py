@@ -154,6 +154,19 @@ class TestNodes(unittest.TestCase):
         self.assertIsInstance(made, Engine)
         self.assertIn('Box', [p.message.split()[2] for p in problems(scene, 'info')])
 
+    def test_an_engine_scene_class(self):
+        from vrml.x3d.scene import X3DScene  # noqa: PLC0415 kept with its one use
+
+        class EngineScene(X3DScene):
+            pass
+
+        built = Built(prototypes={'X3DScene': EngineScene}, baseURI='here.x3d')
+        built.node('Group')
+        scene = built.end_document()
+        self.assertIsInstance(scene, EngineScene)
+        self.assertEqual(scene.baseURI, 'here.x3d')
+        self.assertEqual(len(scene.children), 1)
+
 
 class TestFields(unittest.TestCase):
     def test_an_unknown_field_is_a_warning(self):
