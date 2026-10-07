@@ -106,8 +106,17 @@ class TestSquad(unittest.TestCase):
     def test_it_passes_through_every_key(self):
         keys = [0.0, 0.3, 0.6, 1.0]
         for key, rotation in zip(keys, self.ROTATIONS):
-            found = ip.squad(keys, self.ROTATIONS, key)
-            self.assertAlmostEqual(abs(found[3]), rotation[3], places=4)
+            found = ip.quaternion_of(ip.squad(keys, self.ROTATIONS, key))
+            expected = ip.quaternion_of(rotation)
+            self.assertAlmostEqual(abs(float(np.dot(found, expected))), 1.0, places=6)
+
+    def test_it_passes_through_keys_about_different_axes(self):
+        keys = [0.0, 0.4, 0.7, 1.0]
+        rotations = [(1, 0, 0, 0.5), (0, 1, 0, 1.0), (0, 0, 1, 1.5), (1, 1, 0, 2.0)]
+        for key, rotation in zip(keys, rotations):
+            found = ip.quaternion_of(ip.squad(keys, rotations, key))
+            expected = ip.quaternion_of(rotation)
+            self.assertAlmostEqual(abs(float(np.dot(found, expected))), 1.0, places=6)
 
     def test_rotations_about_one_axis_turn_about_it(self):
         found = ip.squad([0.0, 1.0], self.ROTATIONS[:2], 0.5)

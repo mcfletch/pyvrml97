@@ -1,6 +1,7 @@
 """The package's front door: vrml.x3d.load and loads."""
 
 import os
+import shutil
 import tempfile
 import unittest
 from unittest import mock
@@ -13,6 +14,7 @@ from vrml.x3d import nodes, readers
 class TestLoading(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.directory, True)
 
     def write(self, name, text):
         path = os.path.join(self.directory, name)
@@ -77,13 +79,17 @@ class TestLoading(unittest.TestCase):
         path = self.write('scene.x3dv', '#X3D V4.0 utf8\nPROFILE Core\n'
                                         'EXTERNPROTO Lamp [ ] [ "https://example.com/l.x3dv" ]\n'
                                         'Lamp {}\n')
-        scene = x3d.load(path)
+        with mock.patch('urllib.request.urlopen',
+                        side_effect=AssertionError('a remote prototype was fetched')):
+            scene = x3d.load(path)
         self.assertEqual([p.severity for p in scene.problems], ['warning'])
 
     def test_a_prototype_file_that_names_itself_is_read_once(self):
         path = self.write('self.x3dv', '#X3D V4.0 utf8\nPROFILE Core\n'
                                        'EXTERNPROTO Self [ ] [ "self.x3dv#Self" ]\n')
-        scene = x3d.load(path)
+        with mock.patch.object(readers, 'read', wraps=readers.read) as reading:
+            scene = x3d.load(path)
+        self.assertEqual(reading.call_count, 1)
         self.assertEqual([p.severity for p in scene.problems], ['warning'])
 
     def test_prototype_files_that_name_each_other_are_each_read_once(self):

@@ -72,9 +72,6 @@ version = { attr = "vrml.__version__" }
 [tool.uv]
 cache-keys = [{ file = "pyproject.toml" }, { file = "vrml/__init__.py" }]
 
-# Named explicitly rather than left to ruff's default, which has widened
-# between releases: a gate whose meaning moves when a tool is upgraded is not a
-# gate. `E,W,F,B` is what the other pre-2010 projects here hold to.
 [tool.pytest.ini_options]
 markers = [
     "serial: a wall-clock comparison, whose margin shrinks while other tests run beside it; run alone with '-m serial' after a '-m \"not serial\"' pass.",
@@ -91,6 +88,9 @@ select = ["OGC101", "OGC102", "OGC111", "OGC121", "OGC141", "OGC161", "OGC221", 
 # OGC102 and OGC111 hold to checked values, sizes and paths.
 loader = ["vrml/vrml97/parser.py", "vrml/vrml97/parseprocessor.py"]
 
+# Named explicitly rather than left to ruff's default, which has widened
+# between releases: a gate whose meaning moves when a tool is upgraded is not a
+# gate. `E,W,F,B` is what the other pre-2010 projects here hold to.
 [tool.ruff.lint]
 select = [
     "E", "W", "F", "B", "PGH003", "PGH004", "PLE0604", "PLE0605",
