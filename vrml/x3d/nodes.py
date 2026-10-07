@@ -2081,7 +2081,7 @@ class FontStyle(X3DFontStyleNode):
     CONTAINER_FIELD = 'fontStyle'
     family = field.newField('family', 'MFString', 1, ['SERIF'], choices=('SANS', 'SERIF', 'TYPEWRITER'))
     horizontal = field.newField('horizontal', 'SFBool', 1, True)
-    justify = field.newField('justify', 'MFString', 1, ['BEGIN'], choices=('MIDDLE', 'MIDDLE" "BEGIN', 'MIDDLE" "END', 'MIDDLE" "FIRST', 'MIDDLE" "MIDDLE', 'BEGIN', 'BEGIN" "BEGIN', 'BEGIN" "END', 'BEGIN" "FIRST', 'BEGIN" "MIDDLE', 'END', 'END" "BEGIN', 'END" "END', 'END" "FIRST', 'END" "MIDDLE', 'FIRST', 'FIRST" "BEGIN', 'FIRST" "END', 'FIRST" "FIRST', 'FIRST" "MIDDLE'), choicesOpen=False)
+    justify = field.newField('justify', 'MFString', 1, ['BEGIN'], choices=('MIDDLE', 'BEGIN', 'END', 'FIRST'), choicesOpen=False)
     language = field.newField('language', 'SFString', 1, '')
     leftToRight = field.newField('leftToRight', 'SFBool', 1, True)
     size = field.newField('size', 'SFFloat', 1, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
@@ -2819,12 +2819,12 @@ class Layout(X3DLayoutNode):
     PROTO = 'Layout'
     COMPONENT = ('Layout', 1)
     CONTAINER_FIELD = 'layout'
-    align = field.newField('align', 'MFString', 1, ['CENTER', 'CENTER'], choices=('LEFT" "BOTTOM', 'LEFT" "CENTER', 'LEFT" "TOP', 'CENTER" "BOTTOM', 'CENTER" "CENTER', 'CENTER" "TOP', 'RIGHT" "BOTTOM', 'RIGHT" "CENTER', 'RIGHT" "TOP'), choicesOpen=False)
+    align = field.newField('align', 'MFString', 1, ['CENTER', 'CENTER'], choices=('LEFT', 'BOTTOM', 'CENTER', 'TOP', 'RIGHT'), choicesOpen=False)
     offset = field.newField('offset', 'MFFloat', 1, [0.0, 0.0])
-    offsetUnits = field.newField('offsetUnits', 'MFString', 1, ['WORLD', 'WORLD'], choices=('WORLD" "WORLD', 'WORLD" "FRACTION', 'WORLD" "PIXEL', 'FRACTION" "WORLD', 'FRACTION" "FRACTION', 'FRACTION" "PIXEL', 'PIXEL" "WORLD', 'PIXEL" "FRACTION', 'PIXEL" "PIXEL'), choicesOpen=False)
-    scaleMode = field.newField('scaleMode', 'MFString', 1, ['NONE', 'NONE'], choices=('NONE" "NONE', 'NONE" "FRACTION', 'NONE" "STRETCH', 'NONE" "PIXEL', 'FRACTION" "NONE', 'FRACTION" "FRACTION', 'FRACTION" "STRETCH', 'FRACTION" "PIXEL', 'STRETCH" "NONE', 'STRETCH" "FRACTION', 'STRETCH" "STRETCH', 'STRETCH" "PIXEL', 'PIXEL" "NONE', 'PIXEL" "FRACTION', 'PIXEL" "STRETCH', 'PIXEL" "PIXEL'), choicesOpen=False)
+    offsetUnits = field.newField('offsetUnits', 'MFString', 1, ['WORLD', 'WORLD'], choices=('WORLD', 'FRACTION', 'PIXEL'), choicesOpen=False)
+    scaleMode = field.newField('scaleMode', 'MFString', 1, ['NONE', 'NONE'], choices=('NONE', 'FRACTION', 'STRETCH', 'PIXEL'), choicesOpen=False)
     size = field.newField('size', 'MFFloat', 1, [1.0, 1.0])
-    sizeUnits = field.newField('sizeUnits', 'MFString', 1, ['WORLD', 'WORLD'], choices=('WORLD" "WORLD', 'WORLD" "FRACTION', 'WORLD" "PIXEL', 'FRACTION" "WORLD', 'FRACTION" "FRACTION', 'FRACTION" "PIXEL', 'PIXEL" "WORLD', 'PIXEL" "FRACTION', 'PIXEL" "PIXEL'), choicesOpen=False)
+    sizeUnits = field.newField('sizeUnits', 'MFString', 1, ['WORLD', 'WORLD'], choices=('WORLD', 'FRACTION', 'PIXEL'), choicesOpen=False)
 
 
 class LayoutGroup(X3DGroupingNode):
@@ -4070,7 +4070,7 @@ class ScreenFontStyle(X3DFontStyleNode):
     CONTAINER_FIELD = 'fontStyle'
     family = field.newField('family', 'MFString', 1, ['SERIF'], choices=('SANS', 'SERIF', 'TYPEWRITER'))
     horizontal = field.newField('horizontal', 'SFBool', 1, True)
-    justify = field.newField('justify', 'MFString', 1, ['BEGIN'], choices=('MIDDLE', 'MIDDLE" "BEGIN', 'MIDDLE" "END', 'MIDDLE" "FIRST', 'MIDDLE" "MIDDLE', 'BEGIN', 'BEGIN" "BEGIN', 'BEGIN" "END', 'BEGIN" "FIRST', 'BEGIN" "MIDDLE', 'END', 'END" "BEGIN', 'END" "END', 'END" "FIRST', 'END" "MIDDLE', 'FIRST', 'FIRST" "BEGIN', 'FIRST" "END', 'FIRST" "FIRST', 'FIRST" "MIDDLE'), choicesOpen=False)
+    justify = field.newField('justify', 'MFString', 1, ['BEGIN'], choices=('MIDDLE', 'BEGIN', 'END', 'FIRST'), choicesOpen=False)
     language = field.newField('language', 'SFString', 1, '')
     leftToRight = field.newField('leftToRight', 'SFBool', 1, True)
     pointSize = field.newField('pointSize', 'SFFloat', 1, 12.0, minimum=0.0, minimumExclusive=True)

@@ -430,13 +430,26 @@ class Model:
             minimumExclusive=minimum_exclusive is not None,
             maximum=maximum if maximum is not None else maximum_exclusive,
             maximumExclusive=maximum_exclusive is not None,
-            choices=tuple(
-                (child.get('value') or '').strip('"')
-                for child in element.findall('enumeration')
-            ),
+            choices=enumeration(type_name, element),
             choicesOpen=element.get('additionalEnumerationValuesAllowed', 'true') != 'false',
             synonym=element.get('synonym') or '',
         )
+
+
+def enumeration(type_name: str, element: Any) -> "tuple[str, ...]":
+    """A field's enumerated values
+
+    For an MFString field the X3DUOM lists whole values in their XML text
+    form (`"MIDDLE" "BEGIN"`); the choices are the strings they are made of.
+    """
+    values = [child.get('value') or '' for child in element.findall('enumeration')]
+    if type_name != 'MFString':
+        return tuple(values)
+    strings: "list[str]" = []
+    for value in values:
+        decoded = codecs.decode('MFString', value) if value.lstrip().startswith('"') else [value]
+        strings.extend(item for item in decoded if item not in strings)
+    return tuple(strings)
 
 
 def default_literal(spec: FieldSpec) -> str:
