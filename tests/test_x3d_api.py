@@ -26,6 +26,14 @@ class TestLoading(unittest.TestCase):
         self.assertIsInstance(scene.children[0], nodes.Group)
         self.assertEqual(scene.baseURI, path)
 
+    def test_what_a_reader_handles_is_in_the_package(self):
+        from vrml.x3d import builder, scene  # noqa: PLC0415 kept with its use
+        self.assertIs(x3d.X3DLoadError, builder.X3DLoadError)
+        self.assertIs(x3d.X3DScene, scene.X3DScene)
+        self.assertIs(x3d.LoadProblem, scene.LoadProblem)
+        with self.assertRaises(x3d.X3DLoadError):
+            x3d.loads('#X3D V4.0 utf8\nNoSuchNode {}', strict=True)
+
     def test_loads_reads_bytes_or_text(self):
         self.assertIsInstance(x3d.loads(b'#X3D V4.0 utf8\nGroup {}').children[0], nodes.Group)
         self.assertIsInstance(x3d.loads('#VRML V2.0 utf8\nGroup {}').children[0], nodes.Group)

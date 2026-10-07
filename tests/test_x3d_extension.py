@@ -33,6 +33,7 @@ class Glossy(nodes.Material):
     weights = field.newField('weights', 'MFFloat', 1, list)
     path = field.newField('path', 'MFVec3f', 1, list)
     overlay = field.newField('overlay', 'SFNode', 1, node.NULL)
+    layers = field.newField('layers', 'MFNode', 1, list)
 
 
 class Plain(nodes.Material):
@@ -126,6 +127,21 @@ class TestReading(unittest.TestCase):
                 self.assertEqual(list(overlay.url), ['a.png'])
                 self.assertFalse(overlay.repeatT)
                 self.assertEqual(overlay.textureProperties.boundaryModeS, 'CLAMP_TO_EDGE')
+
+    def test_a_list_of_nodes_comes_back(self):
+        written = Glossy(layers=[nodes.ImageTexture(url=['a.png']),
+                                 nodes.ImageTexture(url=['b.png'], repeatS=False)])
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                layers = material_of(round_trip(scene_of(written), encoding)[0]).layers
+                self.assertEqual([list(layer.url) for layer in layers], [['a.png'], ['b.png']])
+                self.assertFalse(layers[1].repeatS)
+
+    def test_a_list_of_nodes_inside_a_node_value_comes_back(self):
+        group = nodes.Group(children=[nodes.Shape(geometry=nodes.Sphere(radius=2))])
+        written = Glossy(overlay=group)
+        overlay = material_of(round_trip(scene_of(written))[0]).overlay
+        self.assertEqual(overlay.children[0].geometry.radius, 2.0)
 
     def test_the_nodes_own_metadata_is_kept(self):
         written = Glossy(sheen=0.5, metadata=nodes.MetadataString(name='author', value=['me']))

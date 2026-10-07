@@ -154,6 +154,24 @@ class TestNodes(unittest.TestCase):
         self.assertIsInstance(made, Engine)
         self.assertIn('Box', [p.message.split()[2] for p in problems(scene, 'info')])
 
+    def test_an_engine_vocabulary_is_laid_over_the_runtime(self):
+        """A node the engine does not supply keeps the behaviour pyvrml97 gives it"""
+        from vrml.x3d import runtime  # noqa: PLC0415 kept with its use
+
+        class Engine(x3d.Sphere):
+            pass
+
+        built = Built(prototypes={'Sphere': Engine})
+        clock = built.node('TimeSensor')
+        scene = built.end_document()
+        self.assertIsInstance(clock, runtime.PROTOTYPES['TimeSensor'])
+        self.assertNotIn('TimeSensor', [p.message.split()[2] for p in problems(scene, 'info')])
+
+    def test_without_a_vocabulary_nothing_is_reported_unimplemented(self):
+        built = Built()
+        built.node('Box')
+        self.assertEqual(problems(built.end_document(), 'info'), [])
+
     def test_a_node_is_in_the_scene_before_its_fields_are_set(self):
         """A field that reads the node's document (a url) finds it while it is read."""
         from vrml import fieldtypes  # noqa: PLC0415 kept with its one use

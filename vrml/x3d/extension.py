@@ -13,7 +13,8 @@ Each field is one metadata node named after it: the boolean types as
 double-precision types as `MetadataDouble`, the strings as `MetadataString`,
 and the other types as `MetadataFloat` with their components in order. A node
 value is a `MetadataSet` whose `reference` is the node's type and whose
-entries are its fields, by the same rules. An MFNode field is not carried.
+entries are its fields, by the same rules, and a list of nodes is a
+`MetadataSet` holding one such set for each.
 
 A node with no X3D type of its own may give `x3dEquivalent()`, the X3D node
 the writers write in its place.
@@ -85,6 +86,8 @@ def encode(name: str, declared: Any, value: Any,
     type_name = str(declared.typeName())
     if type_name == 'SFNode':
         return node_metadata(name, written_as(value), written_as)
+    if type_name == 'MFNode':
+        return nodes_metadata(name, value, written_as)
     if type_name in _BOOLEAN:
         cls: type = x3d.MetadataBoolean
     elif type_name in _INTEGER:
@@ -105,9 +108,11 @@ def node_metadata(name: str, target: Any,
     for declared in protofunctions.getFields(target):
         if declared.name.startswith(' ') or declared.name == 'metadata':
             continue
-        if isinstance(declared, node.MFNode):
-            continue
         value = declared.fget(target)
+        if isinstance(declared, node.MFNode):
+            if len(value):
+                entries.append(nodes_metadata(declared.name, value, written_as))
+            continue
         if isinstance(declared, node.SFNode):
             if value:
                 entries.append(node_metadata(declared.name, written_as(value), written_as))
@@ -117,6 +122,13 @@ def node_metadata(name: str, target: Any,
         entries.append(encode(declared.name, declared, value))
     return x3d.MetadataSet(name=name, reference=str(protofunctions.protoName(target)),
                            value=entries)
+
+
+def nodes_metadata(name: str, targets: Iterable[Any],
+                   written_as: "Callable[[Any], Any]" = _itself) -> Any:
+    """A `MetadataSet` named `name` holding a :func:`node_metadata` set for each node"""
+    return x3d.MetadataSet(name=name, value=[
+        node_metadata(name, written_as(target), written_as) for target in targets])
 
 
 def extension_set(target: Any, added: "Iterable[tuple[Any, Any]]",
@@ -138,6 +150,9 @@ def decode(declared: Any, entry: Any, make: "Callable[[str], Optional[type]]") -
     type_name = str(declared.typeName())
     if type_name == 'SFNode':
         return node_from(entry, make)
+    if type_name == 'MFNode':
+        built = [node_from(item, make) for item in getattr(entry, 'value', ())]
+        return [item for item in built if item]
     values = list(entry.value)
     if type_name in _SCALAR:
         return declared.coerce(values[0]) if values else declared.getDefault()

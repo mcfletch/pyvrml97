@@ -142,8 +142,9 @@ What reading does:
 
 - A version's old field names and defaults are applied, so the scene holds
   X3D 4.1 names and values. A node type or field the document's version does
-  not have is read, with a warning. A node ``prototypes=`` supplies that X3D
-  does not declare (an engine's own) is read without one.
+  not have is read, with a warning. A node type that X3D does not declare
+  is read without a warning where ``prototypes=`` supplies a class for it
+  (an engine's own).
 - ``UNIT`` statements (X3D 3.3 and later) scale each field in the unit's
   category, and its derived categories, into base units (metres, radians,
   kilograms, newtons). ``scene.units`` records them.
@@ -164,9 +165,11 @@ What reading does:
   wait in ``scene.pendingRoutes`` until ``builder.bind_imports`` is called
   with the loaded inline scene.
 
-``prototypes=`` gives the node classes to build by X3D name, so an engine
-reads documents into its own implementations of the nodes, and its
-``X3DScene`` subclass under ``'X3DScene'``. A field the document leaves out
+``prototypes=`` gives the node classes to build by X3D name, laid over
+pyvrml97's own, so an engine reads documents into its own implementations of
+the nodes, and its ``X3DScene`` subclass under ``'X3DScene'``. A node type it
+does not supply is built from pyvrml97's class, and one with no behaviour
+there either is reported once in ``scene.problems`` (``info``). A field the document leaves out
 has the X3D declaration's default, also where the engine's class defaults it
 otherwise for a node made in code; a field the document's version does not
 have keeps the engine's default. The VRML97 reader does the same for the
@@ -344,20 +347,28 @@ Classes of an engine's own
 A node class that subclasses an X3D node and adds fields names a metadata set
 for them with a class attribute::
 
+    from vrml import field
+    from vrml.x3d import load
+    from vrml.x3d import nodes as x3d
+
     class Glossy(x3d.Material):
         x3dExtension = 'Glossy'
         sheen = field.newField('sheen', 'SFFloat', 1, 0.0)
+
+    scene = load('shop.x3d', prototypes={'Material': Glossy})
 
 The writers put each added field whose value differs from its default in a
 ``MetadataSet`` of that name on the node's ``metadata``, one metadata node per
 field, named after it: ``MetadataBoolean``, ``MetadataInteger``,
 ``MetadataDouble``, ``MetadataString``, or ``MetadataFloat`` with a vector's
 components in order. A node value is a ``MetadataSet`` whose ``reference`` is
-the node's type and whose entries are its own fields. MFNode fields are not
-carried. The node's own metadata becomes the set's ``metadata``. A class that
+the node's type and whose entries are its own fields, and a list of nodes is a
+``MetadataSet`` holding one such set for each. The node's own metadata becomes
+the set's ``metadata``. A class that
 adds fields and names no set raises ``X3DWriteError``.
 
-Read with the class among ``prototypes=``, the builder sets the fields back
+Read with the class among ``prototypes=``, under the name of the X3D node it
+extends (``'Material'``), the builder sets the fields back
 from the set and gives the node its own metadata again; an entry naming no
 field is a warning in ``scene.problems``. Read without it, the set is the
 node's metadata. ``vrml.x3d.extension`` holds the encoding.

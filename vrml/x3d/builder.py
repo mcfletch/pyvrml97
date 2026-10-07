@@ -180,9 +180,12 @@ DEFAULT_VOCABULARY: "Mapping[str, type]" = {**x3d.CONCRETE_NODES, **runtime.PROT
 class SceneBuilder:
     """Builds an `X3DScene` from the calls a reader makes
 
-    prototypes -- node classes by X3D name; the declarations in
-        `vrml.x3d.nodes`, with `vrml.x3d.runtime`'s behaviours, if not given. An engine passes its implementations here, and its
-        `X3DScene` subclass under 'X3DScene' for the scene itself.
+    prototypes -- node classes by X3D name, laid over the declarations in
+        `vrml.x3d.nodes` with `vrml.x3d.runtime`'s behaviours. An engine
+        passes its implementations here, and its `X3DScene` subclass under
+        'X3DScene' for the scene itself; each node type it does not supply
+        and the runtime gives no behaviour is reported once, as an `info`
+        problem.
     baseURI -- where the document is, for resolving relative URLs
     strict -- raise `X3DLoadError` at the first error rather than recording
         it and carrying on
@@ -197,7 +200,11 @@ class SceneBuilder:
         strict: bool = False,
         extern_resolver: "ExternResolver | None" = None,
     ) -> None:
-        self.vocabulary = prototypes if prototypes is not None else DEFAULT_VOCABULARY
+        self.vocabulary: "Mapping[str, type]" = (
+            {**DEFAULT_VOCABULARY, **prototypes} if prototypes else DEFAULT_VOCABULARY)
+        #: Whether an engine gave its own classes, so a type built from its
+        #: bare declaration is one the engine does not implement.
+        self._engine = bool(prototypes)
         self.strict = strict
         self.extern_resolver = extern_resolver
         self.line = 0
@@ -335,10 +342,8 @@ class SceneBuilder:
         found = self._scope.proto(type_name)
         if found is None:
             found = self.vocabulary.get(type_name)
-            if found is None:
-                found = x3d.CONCRETE_NODES.get(type_name)
-                if found is not None:
-                    self._unknown_types.add(type_name)
+            if self._engine and found is not None and found is x3d.CONCRETE_NODES.get(type_name):
+                self._unknown_types.add(type_name)
         return found
 
     def start_node(
