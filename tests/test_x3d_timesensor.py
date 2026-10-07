@@ -34,7 +34,7 @@ class TestStarting(unittest.TestCase):
         self.assertFalse(sensor.advance(9.0))
         sensor.advance(10.5)
         self.assertIs(sent(sensor, 'isActive'), True)
-        self.assertEqual(sent(sensor, 'cycleTime'), 10.5)
+        self.assertEqual(sent(sensor, 'cycleTime'), 10.0, 'the time the cycle began')
         self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.25)
 
     def test_a_single_cycle_ends_at_one(self):
@@ -42,6 +42,8 @@ class TestStarting(unittest.TestCase):
         sensor.advance(11.0)
         sensor.advance(13.0)
         self.assertEqual(sent(sensor, 'fraction_changed'), 1.0)
+        self.assertEqual(sent(sensor, 'time'), 12.0, 'the time the cycle ended')
+        self.assertAlmostEqual(sent(sensor, 'elapsedTime'), 2.0)
         self.assertIs(sent(sensor, 'isActive'), False)
         sensor.__dict__.pop('fraction_changed')
         self.assertFalse(sensor.advance(14.0))
@@ -51,9 +53,16 @@ class TestStarting(unittest.TestCase):
         sensor = TimeSensor(cycleInterval=2.0, loop=True, startTime=10.0)
         sensor.advance(10.5)
         sensor.advance(11.0)
-        self.assertEqual(sent(sensor, 'cycleTime'), 10.5)
+        self.assertEqual(sent(sensor, 'cycleTime'), 10.0)
         sensor.advance(12.5)
-        self.assertEqual(sent(sensor, 'cycleTime'), 12.5)
+        self.assertEqual(sent(sensor, 'cycleTime'), 12.0)
+
+    def test_a_cycle_reached_exactly_ends_at_one(self):
+        """8.4.1: a fraction of 0 after the start is sent as 1"""
+        sensor = TimeSensor(cycleInterval=2.0, loop=True, startTime=10.0)
+        sensor.advance(11.0)
+        sensor.advance(12.0)
+        self.assertEqual(sent(sensor, 'fraction_changed'), 1.0)
 
     def test_elapsed_time_counts_from_the_start(self):
         sensor = TimeSensor(cycleInterval=2.0, loop=True, startTime=10.0)
@@ -94,6 +103,72 @@ class TestStopping(unittest.TestCase):
         sensor.advance(20.5)
         self.assertIs(sent(sensor, 'isActive'), True)
         self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.25)
+
+
+class TestWhileActive(unittest.TestCase):
+    """ISO/IEC 19775-1 8.2.4 and 8.4.1: what an active sensor does with its fields"""
+
+    def test_a_start_time_set_while_active_is_ignored(self):
+        sensor = TimeSensor(cycleInterval=1.0, startTime=0.0)
+        sensor.advance(0.5)
+        sensor.startTime = 1.0
+        self.assertEqual(sensor.startTime, 0.0)
+        sensor.advance(1.5)
+        self.assertIs(sent(sensor, 'isActive'), False)
+        self.assertFalse(sensor.advance(1.6))
+
+    def test_the_start_time_is_an_sftime(self):
+        from vrml import protofunctions  # noqa: PLC0415 kept with its use
+        self.assertEqual(protofunctions.getField(TimeSensor, 'startTime').typeName(), 'SFTime')
+
+    def test_a_start_time_set_when_inactive_is_taken(self):
+        sensor = TimeSensor(cycleInterval=1.0, startTime=5.0)
+        sensor.startTime = 6.0
+        self.assertEqual(sensor.startTime, 6.0)
+
+    def test_loop_turned_off_runs_to_the_end_of_the_cycle(self):
+        sensor = TimeSensor(cycleInterval=1.0, loop=True)
+        sensor.advance(2.5)
+        sensor.loop = False
+        sensor.advance(2.9)
+        self.assertIs(sent(sensor, 'isActive'), True)
+        sensor.advance(3.2)
+        self.assertIs(sent(sensor, 'isActive'), False)
+        self.assertEqual(sent(sensor, 'fraction_changed'), 1.0)
+        self.assertEqual(sent(sensor, 'time'), 3.0)
+
+    def test_loop_turned_on_again_before_the_cycle_ends_carries_on(self):
+        sensor = TimeSensor(cycleInterval=1.0, loop=True)
+        sensor.advance(2.5)
+        sensor.loop = False
+        sensor.advance(2.9)
+        sensor.loop = True
+        sensor.advance(3.2)
+        self.assertIs(sent(sensor, 'isActive'), True)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.2)
+
+    def test_a_longer_cycle_slows_the_fraction(self):
+        sensor = TimeSensor(cycleInterval=4.0, loop=True)
+        sensor.advance(1.0)
+        sensor.cycleInterval = 8.0
+        sensor.advance(2.0)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.25)
+
+    def test_a_cycle_shorter_than_its_time_run_is_complete(self):
+        sensor = TimeSensor(cycleInterval=4.0, loop=True)
+        sensor.advance(1.5)
+        sensor.cycleInterval = 1.0
+        sensor.advance(1.75)
+        self.assertEqual(sent(sensor, 'cycleTime'), 1.0)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.75)
+
+    def test_a_stop_time_already_passed_stops_it_now(self):
+        sensor = TimeSensor(cycleInterval=4.0, loop=True, startTime=10.0)
+        sensor.advance(11.0)
+        sensor.stopTime = 11.5
+        sensor.advance(12.0)
+        self.assertIs(sent(sensor, 'isActive'), False)
+        self.assertEqual(sent(sensor, 'time'), 11.5)
 
 
 class TestPausing(unittest.TestCase):
@@ -167,6 +242,14 @@ class TestRate(unittest.TestCase):
         sensor.advance(11.0)
         self.assertIs(sent(sensor, 'isActive'), False)
         self.assertEqual(sent(sensor, 'fraction_changed'), 1.0)
+        self.assertEqual(sent(sensor, 'time'), 11.0)
+
+    def test_a_negative_rate_runs_a_cycle_backwards(self):
+        sensor = TimeSensor(cycleInterval=4.0, loop=True, startTime=10.0)
+        sensor.rate = -1.0
+        sensor.advance(10.0)
+        sensor.advance(11.0)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.75)
 
     def test_the_rate_is_not_written_as_a_field(self):
         from vrml import protofunctions  # noqa: PLC0415 kept with its use

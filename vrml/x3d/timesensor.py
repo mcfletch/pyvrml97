@@ -7,18 +7,23 @@ time and sends what the sensor sends then:
 
 - `isActive` as it starts and stops; a sensor whose single cycle ended before
   it was first advanced does not start.
-- `cycleTime` at the start of each cycle, the first included.
-- `fraction_changed` (the part of the current cycle gone by, 1 at the end of a
-  single cycle), `time` and `elapsedTime` (the time it has run, pauses left
-  out) while it runs.
+- `cycleTime`, the time the cycle began, at the start of each cycle, the
+  first included.
+- `fraction_changed` (the part of the current cycle gone by; 1 where a cycle
+  has just ended), `time` and `elapsedTime` (the time it has run, pauses left
+  out) while it runs. The last it sends are at the time it stopped: the end
+  of its last cycle, or `stopTime`.
 - `isPaused` as it pauses at `pauseTime` and resumes at `resumeTime`, each
   taking effect when it is the later of the two and has passed. Nothing else
   is sent while it is paused. :meth:`TimeSensor.pause` and
   :meth:`TimeSensor.resume` set those fields to the sensor's time.
 
-`startTime`, `cycleInterval` and `loop` are read as it starts; changing them
-while it runs changes nothing until it starts again. A sensor that is not
-`enabled` stops.
+While it runs, a `startTime` set is dropped (8.2.4.4). `loop` and
+`cycleInterval` are read at each advance: with `loop` false it stops at the
+end of the cycle under way, and a new `cycleInterval` carries the cycle on
+from the time it has run, completing it where that is already longer. A
+`stopTime` set between `startTime` and now stops it at `stopTime`. A sensor
+that is not `enabled` stops.
 
 :attr:`TimeSensor.rate`, which is not an X3D field, is how fast the cycles
 run against the clock: 2 runs them at twice the speed, 0 holds them, and a
@@ -29,9 +34,9 @@ the cycle is. `elapsedTime` stays the clock time the sensor has run.
 from __future__ import annotations
 
 import dataclasses
-import math
-from typing import Optional
+from typing import Any, Optional
 
+from vrml import fieldtypes
 from vrml.x3d import nodes as x3d
 from vrml.x3d import timing
 
@@ -40,21 +45,23 @@ __all__ = ['Run', 'TimeSensor']
 
 @dataclasses.dataclass
 class Run:
-    """One run of a sensor: the fields it started with, and how far it has got"""
+    """One run of a sensor: when it started, and how far it has got"""
 
     start: float
-    cycle: float
-    loop: bool
     #: The clock time accounted for so far.
     last: float
     #: The cycle time run, in seconds: the clock time at the sensor's rate.
     progress: float = 0.0
     #: The clock time run, pauses left out.
     ran: float = 0.0
+    #: The cycle time at which the cycle under way began.
+    began: float = 0.0
+    #: The rate the cycle time last ran at.
+    rate: float = 1.0
     #: When the pause in progress began, or None.
     pausedAt: Optional[float] = None
-    #: The cycle last begun.
-    count: int = -1
+    #: Whether the first cycle's `cycleTime` has been sent.
+    counted: bool = False
 
     def account(self, now: float, rate: float) -> None:
         """Run on to clock time `now` at `rate`"""
@@ -62,11 +69,34 @@ class Run:
         self.progress += step * rate
         self.ran += step
         self.last = now
+        self.rate = rate
+
+    def clock(self, progress: float) -> float:
+        """The clock time at which the run reached cycle time `progress`"""
+        if not self.rate:
+            return self.last
+        return self.last - (self.progress - progress) / self.rate
+
+
+class _IgnoredWhileActive(fieldtypes.SFTime):
+    """`startTime`, which keeps its value while the sensor runs (8.2.4.4)"""
+
+    fieldType = 'SFTime'
+
+    def __set__(self, client: Any, value: Any) -> None:
+        if not client.running():
+            super().__set__(client, value)
+
+    def fset(self, client: Any, value: Any, notify: bool = True) -> Any:
+        if client.running():
+            return self.fget(client)
+        return super().fset(client, value, notify)
 
 
 class TimeSensor(timing.Timed, x3d.TimeSensor):
     """A TimeSensor that runs as :meth:`advance` is called"""
 
+    startTime = _IgnoredWhileActive('startTime', 1, 0.0)
     #: How fast the cycles run against the clock; not an X3D field.
     rate: float = 1.0
 
@@ -105,7 +135,7 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
             if not self._starts(now):
                 return False
             start = float(self.startTime)
-            self.__dict__['_run'] = Run(start, float(self.cycleInterval), bool(self.loop), start)
+            self.__dict__['_run'] = Run(start, start)
             self.isActive = True
         run: Run = self.__dict__['_run']
         if not self.enabled:
@@ -118,13 +148,26 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
         if run.pausedAt is not None:
             return False
         run.account(now, float(self.rate))
-        if not run.loop and not 0.0 <= run.progress < run.cycle:
-            return self._stop(now, run, 1.0 if run.progress > 0 else 0.0)
-        count = int(math.floor(run.progress / run.cycle))
-        if count != run.count:
-            run.count = count
-            self.cycleTime = now
-        self._send(now, run.ran, run.progress / run.cycle - count)
+        if not run.counted:
+            run.counted = True
+            self.cycleTime = run.start
+        cycle = float(self.cycleInterval)
+        ended = False
+        while cycle > 0 and run.progress - run.began >= cycle:
+            if not self.loop:
+                return self._stop(run.clock(run.began + cycle), run, 1.0)
+            run.began += cycle
+            self.cycleTime = run.clock(run.began)
+            ended = True
+        while cycle > 0 and run.progress < run.began:
+            if not self.loop:
+                return self._stop(run.clock(run.began), run, 0.0)
+            run.began -= cycle
+            self.cycleTime = run.clock(run.began + cycle)
+        fraction = (run.progress - run.began) / cycle if cycle > 0 else 0.0
+        if fraction == 0.0 and ended:
+            fraction = 1.0
+        self._send(now, run.ran, fraction)
         return True
 
     def _pausing(self, now: float, run: Run) -> bool:
@@ -147,12 +190,17 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
         self.elapsedTime = elapsed
 
     def _stop(self, now: float, run: Run, fraction: Optional[float]) -> bool:
-        """Stop at `now`, sending `fraction` (or the running one) as the last"""
+        """Stop at clock time `now`, sending `fraction` (or the running one) as the last"""
         if run.pausedAt is None:
-            run.account(max(now, run.last), float(self.rate))
+            if now >= run.last:
+                run.account(now, float(self.rate))
+                ran = run.ran
+            else:
+                ran = run.ran - (run.last - now)
             if fraction is None:
-                fraction = run.progress / run.cycle - math.floor(run.progress / run.cycle)
-            self._send(now, run.ran, fraction)
+                cycle = float(self.cycleInterval)
+                fraction = (run.progress - run.began) / cycle % 1.0 if cycle > 0 else 0.0
+            self._send(now, ran, fraction)
         del self.__dict__['_run']
         self.__dict__['_ended'] = run.start
         self.isActive = False

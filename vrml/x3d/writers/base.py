@@ -196,21 +196,39 @@ class SceneWriter:
         for each in graph.routes:
             routed.add(each.source)
             routed.add(each.destination)
+        # The names a node is given come first, then the names the scene's
+        # imports, exports and waiting routes use, and only then those made
+        # up for shared and routed nodes, so a made-up name never takes one
+        # of the others.
         taken: "set[str]" = set()
+        given = [target for target in order if protofunctions.defName(target)]
+        for target in given:
+            self._name(scope, target, protofunctions.defName(target), taken)
+        taken.update(self._names_used(graph))
         for target in order:
-            wanted = protofunctions.defName(target) or ''
-            if not wanted and (counts[target] > 1 or target in routed):
-                wanted = protofunctions.protoName(target)
-            if not wanted:
-                continue
-            name, number = wanted, 1
-            while name in taken:
-                number += 1
-                name = '%s_%d' % (wanted, number)
-            taken.add(name)
-            scope.names[target] = name
+            if target not in scope.names and (counts[target] > 1 or target in routed):
+                self._name(scope, target, protofunctions.protoName(target), taken)
         self._scopes.append(scope)
         return scope
+
+    @staticmethod
+    def _name(scope: _Scope, target: Any, wanted: str, taken: "set[str]") -> None:
+        """Name `target` `wanted`, or `wanted` numbered where that is taken"""
+        name, number = wanted, 1
+        while name in taken:
+            number += 1
+            name = '%s_%d' % (wanted, number)
+        taken.add(name)
+        scope.names[target] = name
+
+    @staticmethod
+    def _names_used(graph: Any) -> "set[str]":
+        """The DEF names `graph`'s IMPORT, EXPORT and waiting ROUTE statements use"""
+        used = {str(item.localDEF) for item in getattr(graph, 'imports', ())}
+        used.update(str(item.localDEF) for item in getattr(graph, 'exports', ()))
+        for waiting in getattr(graph, 'pendingRoutes', ()):
+            used.update((str(waiting.fromNode), str(waiting.toNode)))
+        return used
 
     def leave(self) -> None:
         self._scopes.pop()

@@ -165,6 +165,33 @@ class TestRoundTrip(unittest.TestCase):
                 self.assertIsNot(again.children[0], again.children[1])
                 self.assertIs(again.children[1], again.children[2].children[0])
 
+    def test_a_given_name_is_kept_where_a_shared_node_would_take_it(self):
+        shape = nodes.Shape()
+        mover = nodes.Transform()
+        protofunctions.defName(mover, 'Shape')
+        scene = X3DScene(children=[shape, shape, mover])
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding))
+                self.assertIsInstance(again.getDEF('Shape'), nodes.Transform)
+                self.assertIs(again.children[0], again.children[1])
+
+    def test_a_name_an_import_or_export_uses_is_not_given_to_a_shared_node(self):
+        scene = x3d.loads(
+            '<X3D profile="Immersive" version="4.0"><Scene>'
+            '<Inline DEF="House" url=\'"house.x3d"\'/>'
+            '<IMPORT inlineDEF="House" importedDEF="Door" AS="Box"/>'
+            '<TimeSensor DEF="Clock"/>'
+            '<ROUTE fromNode="Clock" fromField="fraction_changed" toNode="Box" toField="set_fraction"/>'
+            '</Scene></X3D>')
+        box = nodes.Box()
+        scene.children.extend([nodes.Shape(geometry=box), nodes.Shape(geometry=box)])
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding))
+                self.assertIsNone(again.getDEF('Box'))
+                self.assertEqual(len(again.pendingRoutes), 1)
+
     def test_values_in_document_units_are_written_back_in_them(self):
         scene = everything()
         self.assertAlmostEqual(scene.getDEF('Top').translation[0], 1.0)

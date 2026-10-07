@@ -229,12 +229,15 @@ is reached at most once, so routes that loop end:
   ``vrml.x3d.interpolation``.
 - ``TimeSensor``, ``vrml.x3d.timesensor``: whoever keeps time calls
   ``advance(now)``, which sends ``isActive`` as the sensor starts and stops,
-  ``cycleTime`` at the start of each cycle, ``fraction_changed``, ``time``
-  and ``elapsedTime`` while it runs, and ``isPaused`` at ``pauseTime`` and
-  ``resumeTime``. It runs from ``startTime`` for one ``cycleInterval``, or
-  cycle after cycle where ``loop`` is true, until a ``stopTime`` later than
-  ``startTime``; a single cycle that ended before the first ``advance`` does
-  not run. ``TimeSensor.rate``, which is not an X3D field, is how fast its cycles run
+  ``cycleTime`` (the time the cycle began) at the start of each cycle,
+  ``fraction_changed``, ``time`` and ``elapsedTime`` while it runs, and
+  ``isPaused`` at ``pauseTime`` and ``resumeTime``. It runs from
+  ``startTime`` for one ``cycleInterval``, or cycle after cycle where
+  ``loop`` is true, until a ``stopTime`` later than ``startTime``; a single
+  cycle that ended before the first ``advance`` does not run. While it runs a
+  ``startTime`` set is dropped, ``loop`` set false stops it at the end of the
+  cycle under way, and a new ``cycleInterval`` carries the cycle on from the
+  time it has run. ``TimeSensor.rate``, which is not an X3D field, is how fast its cycles run
   against the clock (2 twice as fast, 0 held, negative backwards); a change
   carries on from where the cycle is.
 - ``LoadSensor``, ``vrml.x3d.loadsensor``: a node reading a url records its
