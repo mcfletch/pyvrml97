@@ -110,7 +110,8 @@ application can build its own.
 
 ``vrml.vrml97.basenodes`` exports the 53 VRML97 node classes, which are the
 X3D classes of the same names; a VRML97 document is read with VRML97's
-defaults where they differ.
+defaults where they differ, and a node built in code has X3D 4.1's.
+``RELEASE-NOTES-2.4.0.md`` lists the fields whose defaults differ.
 
 Reading
 -------
