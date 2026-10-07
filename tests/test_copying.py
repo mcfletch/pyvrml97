@@ -164,3 +164,20 @@ class TestInstantiatingAPrototype(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestACycle(unittest.TestCase):
+    """A node reached again while it is being copied is the copy already begun
+
+    A prototype instance's body holds IS routes back to the instance, so
+    copying a body that holds an instance reaches the instance again.
+    """
+
+    def test_a_node_reached_again_is_its_one_copy(self):
+        from vrml.vrml97 import basenodes  # noqa: PLC0415 kept with its use
+        outer, inner = basenodes.Group(), basenodes.Group()
+        outer.children = [inner]
+        inner.children = [outer]
+        copied = outer.copy()
+        self.assertIsNot(copied, outer)
+        self.assertIs(copied.children[0].children[0], copied)

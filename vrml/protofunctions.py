@@ -196,6 +196,26 @@ def getFields(cls: Any, events: int=0) -> "list[Any]":
 ##	)
 
 
+def stands_for(node: Any) -> Any:
+    """The node `node` is used as
+
+    A prototype instance stands for the first node of its body (VRML97 4.8.3,
+    X3D 4.4.4), followed through an instance there; any other node, and an
+    instance whose body is empty, stands for itself.
+    """
+    from vrml import node as nodes  # noqa: PLC0415 cycle: vrml.node star-imports this module
+
+    followed: "list[Any]" = []
+    while isinstance(node, nodes.PrototypedNode) and not any(node is seen for seen in followed):
+        followed.append(node)
+        body = nodes.PrototypedNode.scenegraph.fget(node)
+        children = getattr(body, 'children', None) or ()
+        if not children:
+            break
+        node = children[0]
+    return node
+
+
 def setSceneGraph(cls: Any, sg: Any) -> Any:
     """Set the scenegraph associated with a prototype"""
     from vrml import node  # noqa: PLC0415 cycle: vrml.node star-imports this module

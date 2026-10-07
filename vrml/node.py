@@ -139,13 +139,14 @@ class Node(object):
         previous = copier.use(self)
         if previous is not None:
             return previous
-        dictionary = {}
+        # Recorded before its fields are copied, so a field that leads back
+        # here -- a prototype instance's IS routes, inside its own body -- finds
+        # this copy rather than starting another.
+        newNode = type(self).__new__(type(self))
+        copier.use(self, newNode)
         for each_field in getFields(self):
             if each_field.fhas(self):
-                dictionary[each_field.name] = each_field.copy(self, copier)
-        newNode = type(self).__new__(type(self))
-        newNode.__dict__.update(dictionary)
-        copier.use(self, newNode)
+                newNode.__dict__[each_field.name] = each_field.copy(self, copier)
         return newNode
 
     def toString(self, **namedargs: Any) -> Any:
@@ -244,6 +245,22 @@ class PrototypedNode(object):
                     except AttributeError:
                         pass
         PrototypedNode.scenegraph.fset(self, sg)
+
+    def __getattr__(self, name: str) -> Any:
+        """What the node this instance stands for has, for a name the instance lacks
+
+        An instance is used where the first node of its body would be
+        (`stands_for`), so reading that node's fields and methods through the
+        instance reads them from that node. The instance's own interface comes
+        first, being found before this is asked. Private and special names
+        are not looked for there.
+        """
+        if name.startswith(('_', ' ')):
+            raise AttributeError(name)
+        stood = stands_for(self)
+        if stood is self:
+            raise AttributeError('%s has no attribute %r' % (type(self).__name__, name))
+        return getattr(stood, name)
 
     def renderedChildren(self, types: Any=None) -> Any:
         """Get the rendered children of the scenegraph"""

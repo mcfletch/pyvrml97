@@ -151,7 +151,9 @@ class CacheHolder( object ):
         """Add a dependency on given node's field value
 
         source -- the node being watched
-        field -- the field on the node being watched
+        field -- the field on the node being watched; named, on a
+            prototype instance whose interface lacks it, the field of the
+            node the instance stands for (`protofunctions.stands_for`)
 
         Dependency on the node means that this cache
         holder will be invalidated if the field value
@@ -168,7 +170,15 @@ class CacheHolder( object ):
             if isinstance( field, bytes ):
                 field = field.decode( 'utf-8' )
             if isinstance( field, str ):
-                field = protofunctions.getField(node, field)
+                try:
+                    field = protofunctions.getField(node, field)
+                except AttributeError:
+                    # A prototype instance's interface lacks it: the field is
+                    # the node's it stands for, which is what signals its change.
+                    stood = protofunctions.stands_for(node)
+                    if stood is node:
+                        raise
+                    node, field = stood, protofunctions.getField(stood, field)
             self.depend_signal(
                 ('set', field),#signal
                 node, # sender

@@ -154,6 +154,10 @@ What reading does:
   application supply prototypes from elsewhere. An unresolved
   ``EXTERNPROTO`` has its declared interface and no body, and is completed
   when ``builder.complete_extern_proto`` is given its definition.
+- A prototype instance is used where the first node of its body would be
+  (``protofunctions.stands_for``): a field or method its interface lacks is
+  read from that node, and a cache depending on such a field
+  (``CacheHolder.depend``) watches that node's.
 - A ``Script`` keeps its declared fields, ``url`` and ``sourceCode`` and is
   not run.
 - An ``IMPORT`` names a node an ``Inline``'s scene exports; routes to it
@@ -374,6 +378,20 @@ Validating
 outside a closed enumeration, and a node whose component level the profile
 and ``COMPONENT`` statements do not give. It is separate from reading, which
 does none of these checks.
+
+Web3D's example corpus
+----------------------
+
+``vrml.x3d.corpus`` fetches Web3D's X3D example archives, which publish every
+scene in each encoding, into ``directory()`` (``PYVRML97_X3D_CORPUS``, else
+``pyvrml97/x3d-corpus`` in the user's cache). ``fetch(names)`` downloads and
+extracts the scene files and the licence; with ``resources=True`` also the
+images the scenes name and the render Web3D publishes of each scene from each
+of its viewpoints, which ``viewpoint_renders(path)`` finds by viewpoint
+(``render_name(description)``). ``tools/fetch_x3d_corpus.py`` is the same
+from the command line, and ``tests/test_x3d_corpus.py`` reads every scene of
+the fetched archives in each encoding. OpenGLContext's ``oglc-x3d-regression``
+renders them.
 
 Regenerating the vocabulary
 ---------------------------

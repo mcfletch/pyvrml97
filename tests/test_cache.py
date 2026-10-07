@@ -286,3 +286,32 @@ class TestTheProcessWideCache(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestAPrototypeInstance(unittest.TestCase):
+    """A holder depending on a field an instance's interface lacks depends on
+    that field of the node the instance stands for"""
+
+    def test_a_field_of_the_body(self):
+        from vrml import protofunctions  # noqa: PLC0415 kept with its use
+        from vrml.x3d import readers  # noqa: PLC0415 kept with its use
+        scene = readers.read(
+            b'#X3D V3.3 utf8\nPROFILE Immersive\n'
+            b'PROTO Paint [ inputOutput SFColor tint 1 0 0 ] {\n'
+            b'  Appearance { material Material { diffuseColor IS tint } } }\n'
+            b'Shape { appearance Paint { } }\n', encoding='classic')
+        paint = scene.children[0].appearance
+        holder = cache.CACHE.holder(paint, 'computed', key='test-instance')
+        holder.depend(paint, 'material')
+        protofunctions.stands_for(paint).material = None
+        self.assertIsNone(cache.CACHE.getData(paint, key='test-instance'))
+
+    def test_a_field_neither_has(self):
+        from vrml.x3d import readers  # noqa: PLC0415 kept with its use
+        scene = readers.read(
+            b'#X3D V3.3 utf8\nPROFILE Immersive\nPROTO Nothing [ ] { }\n'
+            b'Group { children Nothing { } }\n', encoding='classic')
+        nothing = scene.children[0].children[0]
+        holder = cache.CACHE.holder(nothing, 'computed', key='test-instance')
+        with self.assertRaises(AttributeError):
+            holder.depend(nothing, 'material')

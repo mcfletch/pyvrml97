@@ -13,17 +13,14 @@ The examples are under the Web3D Consortium Open-Source License
 
 import glob
 import os
-import sys
 import unittest
 
-from vrml.x3d import readers, writers
+from vrml.x3d import corpus, readers, writers
 from vrml.x3d.compare import first_difference
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SUBSET = os.path.join(HERE, 'fixtures', 'x3d-corpus')
 SCHEMA = os.path.join(HERE, 'fixtures', 'x3d-schema', 'x3d-4.1.xsd')
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'tools'))
-import fetch_x3d_corpus  # noqa: E402 the tools directory is put on the path above
 
 #: The encodings compared with the XML encoding's graph, by file suffix,
 #: with the fields each does not carry: Web3D's ClassicVRML converter writes
@@ -182,7 +179,7 @@ class TestTheCommittedSubset(CorpusTests, unittest.TestCase):
 
 
 class TestTheFetchedCorpus(CorpusTests, unittest.TestCase):
-    directory = fetch_x3d_corpus.corpus_directory()
+    directory = corpus.directory()
 
 
 if __name__ == '__main__':

@@ -269,3 +269,52 @@ class TestTheSceneGraphAndUrlOfAPrototype(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestWhatAnInstanceStandsFor(unittest.TestCase):
+    """A prototype instance is used where its body's first node would be
+
+    VRML97 4.8.3 and X3D 4.4.4: the instance has the type of that node, so
+    it is read as that node wherever its own interface does not answer.
+    """
+
+    WORLD = (b'#X3D V3.3 utf8\nPROFILE Immersive\n'
+             b'PROTO Wood [ inputOutput SFColor tint 1 0 0 ] {\n'
+             b'  Appearance { material Material { diffuseColor IS tint } } }\n'
+             b'PROTO Varnished [ ] { Wood { } }\n'
+             b'PROTO Nothing [ ] { }\n'
+             b'Shape { appearance Wood { tint 0 1 0 } geometry Box { } }\n'
+             b'Shape { appearance Varnished { } }\n'
+             b'Group { children Nothing { } }\n')
+
+    def setUp(self):
+        from vrml.x3d import readers  # noqa: PLC0415 kept with its use
+        self.scene = readers.read(self.WORLD, encoding='classic')
+        self.wood = self.scene.children[0].appearance
+        self.varnished = self.scene.children[1].appearance
+        self.nothing = self.scene.children[2].children[0]
+
+    def test_the_body_s_first_node(self):
+        appearance = protofunctions.stands_for(self.wood)
+        self.assertEqual(type(appearance).__name__, 'Appearance')
+        self.assertIs(protofunctions.stands_for(appearance), appearance)
+
+    def test_through_an_instance_in_another_s_body(self):
+        self.assertEqual(type(protofunctions.stands_for(self.varnished)).__name__, 'Appearance')
+
+    def test_an_instance_with_no_body_stands_for_itself(self):
+        self.assertIs(protofunctions.stands_for(self.nothing), self.nothing)
+        with self.assertRaises(AttributeError):
+            self.nothing.material  # noqa: B018 the read is what is tested
+
+    def test_what_the_instance_lacks_is_read_from_that_node(self):
+        material = self.wood.material
+        self.assertEqual(type(material).__name__, 'Material')
+        self.assertEqual(list(material.diffuseColor), [0, 1, 0])
+
+    def test_its_own_interface_comes_first(self):
+        self.assertEqual(list(self.wood.tint), [0, 1, 0])
+
+    def test_a_name_neither_has(self):
+        with self.assertRaises(AttributeError):
+            self.wood.noSuchThing  # noqa: B018 the read is what is tested
