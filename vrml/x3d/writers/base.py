@@ -10,6 +10,7 @@ Node types, fields and field types the target version lacks are collected
 as problems, and `write()` raises `X3DWriteError` listing all of them.
 """
 
+import re
 from collections.abc import Iterable, Sequence
 from typing import Any, NamedTuple
 
@@ -35,6 +36,11 @@ VRML97_ACCESS = {
 
 #: The url schemes that mark a Script's program written inline.
 INLINE_SCHEMES = ('ecmascript:', 'javascript:', 'vrmlscript:')
+
+#: A DEF name in the XML and JSON encodings: an XML NCName, which is what the
+#: schema's xs:ID is -- a letter or underscore, then letters, digits, '_', '-'
+#: and '.'.
+XML_NAME = re.compile(r'[^\W\d][\w.\-]*\Z')
 
 #: Fields every prototype has that are pyvrml97's, not its interface's.
 _PROTOTYPE_FIELDS = frozenset(
@@ -125,6 +131,8 @@ class SceneWriter:
     """
 
     encoding = ''
+    #: What a DEF name written in this encoding matches.
+    name_pattern = XML_NAME
 
     def __init__(self, scene: Any, version: "str | None" = None, canonical: bool = False) -> None:
         self.scene = scene
@@ -203,7 +211,11 @@ class SceneWriter:
         taken: "set[str]" = set()
         given = [target for target in order if protofunctions.defName(target)]
         for target in given:
-            self._name(scope, target, protofunctions.defName(target), taken)
+            name = protofunctions.defName(target)
+            if not self.name_pattern.match(name):
+                self.problem('DEF name %r cannot be written in the %s encoding'
+                             % (name, self.encoding))
+            self._name(scope, target, name, taken)
         taken.update(self._names_used(graph))
         for target in order:
             if target not in scope.names and (counts[target] > 1 or target in routed):

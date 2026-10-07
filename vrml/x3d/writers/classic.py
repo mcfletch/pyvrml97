@@ -6,6 +6,7 @@ META statements. A program's source goes in the `sourceCode` field where the
 version has one, and first in the `url` field where it does not.
 """
 
+import re
 from typing import Any
 
 from vrml import protofunctions
@@ -34,6 +35,11 @@ class ClassicWriter(SceneWriter):
     """Writes a scene as a ClassicVRML or VRML97 document"""
 
     encoding = 'classic'
+    #: A DEF name as the reader's grammar reads one: no space, control
+    #: character or one of ``[]{}"'#,\`` anywhere, and not a digit, '.',
+    #: '+', '-' or ':' first. The '.' later on is the reader's, not
+    #: ClassicVRML's identifier; Web3D's translations write it.
+    name_pattern = re.compile(r'''[^\][{}\x00-\x20"'#,.\\:+0-9\x7f-][^\][{}\x00-\x20"'#,\\\x7f]*\Z''')
 
     def document(self) -> str:
         self.out: "list[str]" = []

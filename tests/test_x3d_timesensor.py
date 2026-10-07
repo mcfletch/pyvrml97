@@ -8,6 +8,9 @@ answers whether it sent anything.
 
 import unittest
 
+from pydispatch import dispatcher
+
+from vrml import protofunctions
 from vrml.x3d import runtime
 from vrml.x3d.timesensor import TimeSensor
 
@@ -56,6 +59,19 @@ class TestStarting(unittest.TestCase):
         self.assertEqual(sent(sensor, 'cycleTime'), 10.0)
         sensor.advance(12.5)
         self.assertEqual(sent(sensor, 'cycleTime'), 12.0)
+
+    def test_cycles_passed_between_advances_send_one_cycle_time(self):
+        sensor = TimeSensor(cycleInterval=4.0, loop=True)
+        times = []
+        cycleTime = protofunctions.getField(TimeSensor, 'cycleTime')
+
+        def heard(value):
+            times.append(value)
+        dispatcher.connect(heard, signal=('set', cycleTime), sender=sensor)
+        sensor.advance(10.0)
+        self.assertEqual(times, [8.0])
+        sensor.advance(13.0)
+        self.assertEqual(times, [8.0, 12.0])
 
     def test_a_cycle_reached_exactly_ends_at_one(self):
         """8.4.1: a fraction of 0 after the start is sent as 1"""
@@ -118,7 +134,6 @@ class TestWhileActive(unittest.TestCase):
         self.assertFalse(sensor.advance(1.6))
 
     def test_the_start_time_is_an_sftime(self):
-        from vrml import protofunctions  # noqa: PLC0415 kept with its use
         self.assertEqual(protofunctions.getField(TimeSensor, 'startTime').typeName(), 'SFTime')
 
     def test_a_start_time_set_when_inactive_is_taken(self):

@@ -192,6 +192,27 @@ class TestRoundTrip(unittest.TestCase):
                 self.assertIsNone(again.getDEF('Box'))
                 self.assertEqual(len(again.pendingRoutes), 1)
 
+    def test_a_name_the_encoding_cannot_hold_is_refused(self):
+        cases = [('classic', 'my mat#1'), ('classic', '1st'), ('classic', '+ab'), ('classic', '.a'),
+                 ('xml', 'a b'), ('xml', '1st'), ('xml', 'a:b'), ('json', 'a b')]
+        for encoding, name in cases:
+            group = nodes.Group()
+            protofunctions.defName(group, name)
+            with self.subTest(encoding=encoding, name=name):
+                with self.assertRaises(X3DWriteError) as raised:
+                    x3d.dumps(X3DScene(children=[group]), encoding=encoding)
+                self.assertIn(repr(name), str(raised.exception))
+
+    def test_names_each_encoding_holds(self):
+        cases = [('classic', 'a-b'), ('classic', 'Box.3.6.9'), ('classic', 'Caf\u00e9'), ('xml', 'a-b.c'),
+                 ('xml', '_1'), ('json', 'Caf\u00e9')]
+        for encoding, name in cases:
+            group = nodes.Group()
+            protofunctions.defName(group, name)
+            with self.subTest(encoding=encoding, name=name):
+                again = x3d.loads(x3d.dumps(X3DScene(children=[group]), encoding=encoding))
+                self.assertIsInstance(again.getDEF(name), nodes.Group)
+
     def test_values_in_document_units_are_written_back_in_them(self):
         scene = everything()
         self.assertAlmostEqual(scene.getDEF('Top').translation[0], 1.0)

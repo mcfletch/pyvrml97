@@ -7,8 +7,9 @@ time and sends what the sensor sends then:
 
 - `isActive` as it starts and stops; a sensor whose single cycle ended before
   it was first advanced does not start.
-- `cycleTime`, the time the cycle began, at the start of each cycle, the
-  first included.
+- `cycleTime`, the time the cycle under way began, when an advance finds a
+  new cycle under way, the first included; one, however many cycles passed
+  since the last advance.
 - `fraction_changed` (the part of the current cycle gone by; 1 where a cycle
   has just ended), `time` and `elapsedTime` (the time it has run, pauses left
   out) while it runs. The last it sends are at the time it stopped: the end
@@ -60,7 +61,7 @@ class Run:
     rate: float = 1.0
     #: When the pause in progress began, or None.
     pausedAt: Optional[float] = None
-    #: Whether the first cycle's `cycleTime` has been sent.
+    #: Whether a `cycleTime` has been sent.
     counted: bool = False
 
     def account(self, now: float, rate: float) -> None:
@@ -148,22 +149,23 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
         if run.pausedAt is not None:
             return False
         run.account(now, float(self.rate))
-        if not run.counted:
-            run.counted = True
-            self.cycleTime = run.start
         cycle = float(self.cycleInterval)
+        under_way = run.began if run.counted else None
         ended = False
         while cycle > 0 and run.progress - run.began >= cycle:
             if not self.loop:
                 return self._stop(run.clock(run.began + cycle), run, 1.0)
             run.began += cycle
-            self.cycleTime = run.clock(run.began)
             ended = True
         while cycle > 0 and run.progress < run.began:
             if not self.loop:
                 return self._stop(run.clock(run.began), run, 0.0)
             run.began -= cycle
-            self.cycleTime = run.clock(run.began + cycle)
+        if run.began != under_way:
+            # One cycleTime for the cycle under way, however many have passed
+            # since the last advance; a cycle run backwards begins at its end.
+            run.counted = True
+            self.cycleTime = run.clock(run.began if run.rate >= 0 else run.began + cycle)
         fraction = (run.progress - run.began) / cycle if cycle > 0 else 0.0
         if fraction == 0.0 and ended:
             fraction = 1.0
