@@ -36,22 +36,17 @@ class _Element:
         self.cdata: "list[str]" = []
 
 
-class XMLReader:
-    """Turns expat's events into builder calls"""
+class ElementReader:
+    """Turns the elements of an X3D document into builder calls
+
+    An encoding's reader calls `_start`, `_end` and `_characters` in
+    document order, setting `in_cdata` around the text of a CDATA section.
+    """
 
     def __init__(self, builder: SceneBuilder) -> None:
         self.builder = builder
         self.stack: "list[_Element]" = []
         self.in_cdata = False
-        self.parser = expat.ParserCreate()
-        self.parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
-        self.parser.ExternalEntityRefHandler = self._external_entity
-        self.parser.StartElementHandler = self._start
-        self.parser.EndElementHandler = self._end
-        self.parser.CharacterDataHandler = self._characters
-        self.parser.StartCdataSectionHandler = self._start_cdata
-        self.parser.EndCdataSectionHandler = self._end_cdata
-        self.parser.buffer_text = True
         self.statements: "dict[str, Callable[[dict[str, str]], _Element]]" = {
             'X3D': self._x3d,
             'component': self._component,
@@ -69,24 +64,8 @@ class XMLReader:
             'fieldValue': self._field_value,
         }
 
-    def read(self, data: bytes) -> X3DScene:
-        try:
-            self.parser.Parse(data, True)
-        except expat.ExpatError as error:
-            self.builder.line = error.lineno
-            self.builder.column = error.offset + 1
-            self.builder.problem('error', 'XML: %s' % expat.errors.messages[error.code])
-            return self.builder.end_document(complete=False)
-        return self.builder.end_document()
-
-    @staticmethod
-    def _external_entity(*_arguments: Any) -> int:
-        """Refuse every external entity: nothing a document names is read"""
-        return 1
-
     def _position(self) -> None:
-        self.builder.line = self.parser.CurrentLineNumber
-        self.builder.column = self.parser.CurrentColumnNumber + 1
+        """Tell the builder where in the document the reader is"""
 
     def _start(self, name: str, attributes: "dict[str, str]") -> None:
         self._position()
@@ -111,12 +90,6 @@ class XMLReader:
     def _characters(self, data: str) -> None:
         if self.stack and self.stack[-1].kind == 'node':
             (self.stack[-1].cdata if self.in_cdata else self.stack[-1].text).append(data)
-
-    def _start_cdata(self) -> None:
-        self.in_cdata = True
-
-    def _end_cdata(self) -> None:
-        self.in_cdata = False
 
     def _parent_kind(self) -> str:
         return self.stack[-1].kind if self.stack else ''
@@ -231,8 +204,53 @@ class XMLReader:
         for key, value in attributes.items():
             if key in ENCODING_ATTRIBUTES and not (key == 'style' and style_is_a_field):
                 continue
-            self.builder.field_text(key, value)
+            self._value(key, value)
         return _Element('node', self.builder.end_node)
+
+    def _value(self, name: str, value: Any) -> None:
+        """A node's field value, as the encoding gives it"""
+        self.builder.field_text(name, value)
+
+
+class XMLReader(ElementReader):
+    """Turns expat's events into builder calls"""
+
+    def __init__(self, builder: SceneBuilder) -> None:
+        super().__init__(builder)
+        self.parser = expat.ParserCreate()
+        self.parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
+        self.parser.ExternalEntityRefHandler = self._external_entity
+        self.parser.StartElementHandler = self._start
+        self.parser.EndElementHandler = self._end
+        self.parser.CharacterDataHandler = self._characters
+        self.parser.StartCdataSectionHandler = self._start_cdata
+        self.parser.EndCdataSectionHandler = self._end_cdata
+        self.parser.buffer_text = True
+
+    def read(self, data: bytes) -> X3DScene:
+        try:
+            self.parser.Parse(data, True)
+        except expat.ExpatError as error:
+            self.builder.line = error.lineno
+            self.builder.column = error.offset + 1
+            self.builder.problem('error', 'XML: %s' % expat.errors.messages[error.code])
+            return self.builder.end_document(complete=False)
+        return self.builder.end_document()
+
+    @staticmethod
+    def _external_entity(*_arguments: Any) -> int:
+        """Refuse every external entity: nothing a document names is read"""
+        return 1
+
+    def _position(self) -> None:
+        self.builder.line = self.parser.CurrentLineNumber
+        self.builder.column = self.parser.CurrentColumnNumber + 1
+
+    def _start_cdata(self) -> None:
+        self.in_cdata = True
+
+    def _end_cdata(self) -> None:
+        self.in_cdata = False
 
 
 def read(data: bytes, builder: SceneBuilder) -> X3DScene:

@@ -12,7 +12,7 @@ from collections.abc import Callable
 from typing import Any
 
 from vrml.x3d.builder import SceneBuilder
-from vrml.x3d.readers import classic, json, xml
+from vrml.x3d.readers import classic, fastinfoset, json, xml
 from vrml.x3d.scene import X3DScene
 
 #: The largest document, compressed or not, a read will hold: 2 GiB.
@@ -65,6 +65,7 @@ READERS: "dict[str, Callable[[bytes, SceneBuilder], X3DScene]]" = {
     'xml': xml.read,
     'json': json.read,
     'classic': classic.read,
+    'fastinfoset': fastinfoset.read,
 }
 
 

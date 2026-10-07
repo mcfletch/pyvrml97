@@ -120,7 +120,7 @@ Reading
 
     from vrml import x3d
 
-    scene = x3d.load('world.x3d')      # .x3dv, .wrl, .json, .x3dz, .x3dvz, .wrz
+    scene = x3d.load('world.x3d')      # .x3dv, .wrl, .json, .x3db, .x3dz, .x3dvz, .wrz
     scene.profile, scene.version       # ('Immersive', '3.3')
     scene.getDEF('Gold').translation
     for problem in scene.problems:
@@ -169,8 +169,32 @@ fields VRML97 has, and then sets VRML97's own defaults where they differ
 from X3D's.
 
 The readers are ``vrml.x3d.readers.xml`` (expat; external entities are not
-read), ``json`` and ``classic`` (a SimpleParse grammar for ClassicVRML and
-VRML97). Each turns its syntax into calls on one ``SceneBuilder``.
+read), ``json``, ``classic`` (a SimpleParse grammar for ClassicVRML and
+VRML97) and ``fastinfoset``. Each turns its syntax into calls on one
+``SceneBuilder``.
+
+The compressed binary encoding (``.x3db``, ISO/IEC 19776-3) is the XML
+encoding written as Fast Infoset (ITU-T X.891). ``vrml.x3d.fastinfoset``
+decodes a Fast Infoset document into XML events, and
+``vrml.x3d.fivocabulary`` holds the X3D vocabulary the document's indexes
+refer to (``urn:web3d:x3d:fi-vocabulary-3.2``, ``-3.3`` and ``-4.0``). A value
+given by an encoding algorithm reaches its field as numbers or booleans, not
+as text. Its limits:
+
+- The vocabulary numbers attribute names as Web3D's own ``.x3db`` files do:
+  as table A.3 up to 53 and one past it from 57. The name at 54, 55 or 56
+  that no edition publishes is unknown; an attribute given by that index is
+  skipped with a warning.
+- Of the X3D encoding algorithms, delta-zlib integers are read, as Web3D's
+  files write them (index 34). A value in any other (the quantized and zlib
+  float encoders, the range integer encoder) is reported as an error naming
+  the algorithm, and its field is left unset.
+- Web3D's files write some values a second time under a name their node
+  does not take (an Anchor's url as ``load`` and ``visible``, an Inline's
+  bboxSize as ``visible``); those are reported as errors and not set.
+
+``specs/x3d/fast-infoset.md`` records the bit layouts, the tables and what
+the sample files showed.
 
 Behaviour
 ---------

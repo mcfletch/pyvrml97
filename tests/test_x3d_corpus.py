@@ -46,6 +46,14 @@ CONVERTED_DIFFERENTLY = {
     ),
 }
 
+#: The values Web3D's .x3db files write a second time under a name their
+#: node does not take: an Anchor's url, an Inline's bboxSize, a LOD's range
+#: and a Viewpoint's centerOfRotation.
+DOUBLED_IN_BINARY = (
+    'Anchor.autoRefresh', 'Anchor.load', 'Anchor.visible', 'Inline.visible',
+    'LOD.forceTransitions', 'Viewpoint.retainUserOffsets',
+)
+
 #: VRML97 files with errors the reader reports: the STEP translations move
 #: a metadata field out of its node, and script.wrl routes from names it
 #: never defines.
@@ -119,6 +127,19 @@ class CorpusTests:
                 self.assertEqual(scene.version, '2.0')
                 self.assertEqual([str(p) for p in scene.problems if p.severity == 'error'], [])
 
+
+    def test_each_binary_scene_reads(self):
+        """The .x3db files are earlier revisions of their scenes than the
+        .x3d beside them, so are held to reading rather than to its graph"""
+        for path in glob.glob(os.path.join(self.directory, '**', '*.x3db'), recursive=True):
+            with open(path, 'rb') as stream:
+                data = stream.read()
+            if not data:
+                continue                        # published empty
+            with self.subTest(scene=os.path.relpath(path, self.directory)):
+                scene = readers.read(data, name=path)
+                self.assertEqual([message for message in errors(scene)
+                                  if not any(name in message for name in DOUBLED_IN_BINARY)], [])
 
     def test_each_scene_written_in_each_encoding_reads_back_as_itself(self):
         for path in self.paths:

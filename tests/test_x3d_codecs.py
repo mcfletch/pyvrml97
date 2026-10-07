@@ -128,6 +128,36 @@ class TestNodes(unittest.TestCase):
             codecs.decode('SFNode', 'Box')
 
 
+class TestDecodedValues(unittest.TestCase):
+    """`from_values` gives the value `decode` would, from numbers or booleans"""
+
+    def test_each_kind_takes_the_shape_decode_gives(self):
+        for type_name, values, text in (
+                ('SFFloat', np.array([1.5], 'f'), '1.5'),
+                ('SFTime', np.array([2.0]), '2'),
+                ('SFInt32', np.array([7], 'i4'), '7'),
+                ('MFInt32', np.array([1, -1], 'i4'), '1 -1'),
+                ('SFImage', np.array([1, 1, 1, 255], 'i8'), '1 1 1 255'),
+                ('SFVec3f', np.array([1, 2, 3], 'f8'), '1 2 3'),
+                ('MFDouble', np.array([0.5], 'f'), '0.5'),
+                ('SFBool', [True], 'true'),
+                ('MFBool', [False, True], 'false true')):
+            with self.subTest(type_name=type_name):
+                found, expected = codecs.from_values(type_name, values), codecs.decode(type_name, text)
+                self.assertEqual(type(found), type(expected))
+                if isinstance(found, np.ndarray):
+                    self.assertEqual(found.dtype, expected.dtype)
+                self.assertTrue(codecs.same(found, expected))
+
+    def test_values_a_type_does_not_take(self):
+        for type_name, values in (
+                ('SFFloat', [True]), ('SFBool', [True, False]), ('SFBool', np.array([1.0])),
+                ('SFFloat', np.array([1.0, 2.0])), ('SFInt32', np.array([1.5])),
+                ('MFInt32', np.array([0.5])), ('SFString', np.array([1.0]))):
+            with self.subTest(type_name=type_name), self.assertRaises(ValueError):
+                codecs.from_values(type_name, values)
+
+
 class TestWriting(unittest.TestCase):
     """`encode` writes what `decode` reads back to the same value."""
 

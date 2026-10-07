@@ -164,6 +164,44 @@ def decode(type_name: str, text: str) -> Any:
     return DECODERS[type_name](text)
 
 
+def from_values(type_name: str, values: Any) -> Any:
+    """The value a field of type `type_name` takes from decoded numbers or
+    booleans, in the shape `decode` gives it
+
+    values -- a NumPy array of numbers, or a list of bools (the Fast Infoset
+        encoding algorithms' results)
+
+    Raises ValueError where `values` are not of the type: booleans for a
+    numeric field, numbers for any other, fractions for an integer one, or
+    other than one value for a single number or boolean.
+    """
+    if isinstance(values, list):
+        if type_name == 'MFBool':
+            return values
+        if type_name == 'SFBool' and len(values) == 1:
+            return values[0]
+        raise ValueError('%d booleans are not an %s' % (len(values), type_name))
+    array = np.asarray(values).ravel()
+    integral = np.issubdtype(array.dtype, np.integer)
+    if type_name in SCALAR_FLOAT_TYPES or type_name == 'SFInt32':
+        if len(array) != 1:
+            raise ValueError('%d numbers are not an %s' % (len(array), type_name))
+        if type_name == 'SFInt32':
+            if not integral:
+                raise ValueError('%r is not an integer' % (array[0],))
+            return int(array[0])
+        return float(array[0])
+    if type_name in INTEGER_LIST_TYPES:
+        if not integral:
+            raise ValueError('Numbers that are not integers are not an %s' % type_name)
+        return array.astype(np.int64)
+    if type_name in FLOAT32_TYPES:
+        return array.astype(np.float32)
+    if type_name in FLOAT64_TYPES:
+        return array.astype(np.float64)
+    raise ValueError('Numbers are not an %s' % type_name)
+
+
 def number_text(value: Any) -> str:
     """The shortest text that reads back as `value` at its own precision"""
     if not math.isfinite(value):
