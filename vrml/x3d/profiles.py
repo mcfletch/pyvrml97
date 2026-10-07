@@ -2,7 +2,9 @@
 
 Transcribed from ISO/IEC 19775-1:2023 (X3D 4.0), Annexes A to F, H and M,
 "Components and levels" tables; the X3D 4.1 committee draft gives the same
-tables. `specs/x3d/profiles.md` records the transcription.
+tables. `specs/x3d/profiles.md` records the transcription. One set of tables
+serves every version: a document of an X3D 3.x version is checked against
+4.0's.
 """
 
 from vrml import field, node
