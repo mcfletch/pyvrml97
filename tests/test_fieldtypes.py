@@ -127,10 +127,10 @@ class TestCheckingAValue(unittest.TestCase):
     def test_a_string_list_field_rejects_a_bare_string(self):
         self.assertEqual(fieldtypes.MFString(name="s").check('a'), 0)
 
-    def test_a_bool_field_accepts_zero_and_one(self):
+    def test_a_bool_field_accepts_true_and_false(self):
         field = fieldtypes.SFBool(name="b")
-        self.assertEqual(field.check(0), 1)
-        self.assertEqual(field.check(1), 1)
+        self.assertEqual(field.check(False), 1)
+        self.assertEqual(field.check(True), 1)
 
     def test_a_bool_field_rejects_anything_else(self):
         self.assertEqual(fieldtypes.SFBool(name="b").check(7), 0)

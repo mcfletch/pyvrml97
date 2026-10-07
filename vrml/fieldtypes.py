@@ -231,14 +231,15 @@ class _MFString(_FieldHost):
 
 
 class _SFBool(_FieldHost):
-    """SFBool field/event type base-class"""
+    """SFBool field/event type base-class, held as a Python bool"""
 
-    defaultDefault = 0
+    defaultDefault = False
 
     def coerce(self, value: Any) -> Any:
         """Coerce the given value to our type
         Allowable types:
-            any object with true/false protocol
+            the words true and false in either case, a number written as
+            text, or any object with true/false protocol
         """
         if isinstance(value, str):
             try:
@@ -248,14 +249,11 @@ class _SFBool(_FieldHost):
                     value = True
                 elif value.lower() == 'false':
                     value = False
-        if value:
-            return 1
-        else:
-            return 0
+        return bool(value)
 
     def check(self, value: Any) -> int:
         """Check that the given value is of exactly expected type"""
-        if value in (0, 1):
+        if isinstance(value, bool):
             return 1
         return 0
 

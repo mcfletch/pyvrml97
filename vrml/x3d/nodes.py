@@ -23,9 +23,9 @@ class X3DBoundedObject:
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/grouping.html#X3DBoundedObject
     """
 
-    bboxCenter = field.newField('bboxCenter', 'SFVec3f', 0, [0.0, 0.0, 0.0])
+    bboxCenter = field.newField('bboxCenter', 'SFVec3f', 0, [0.0, 0.0, 0.0], unitCategory='length')
     bboxDisplay = field.newField('bboxDisplay', 'SFBool', 1, False)
-    bboxSize = field.newField('bboxSize', 'SFVec3f', 0, [-1.0, -1.0, -1.0])
+    bboxSize = field.newField('bboxSize', 'SFVec3f', 0, [-1.0, -1.0, -1.0], unitCategory='length')
     visible = field.newField('visible', 'SFBool', 1, True)
 
 
@@ -37,7 +37,7 @@ class X3DFogObject:
 
     color = field.newField('color', 'SFColor', 1, [1.0, 1.0, 1.0], minimum=0.0, maximum=1.0)
     fogType = field.newField('fogType', 'SFString', 1, 'LINEAR', choices=('LINEAR', 'EXPONENTIAL'), choicesOpen=False)
-    visibilityRange = field.newField('visibilityRange', 'SFFloat', 1, 0.0, minimum=0.0)
+    visibilityRange = field.newField('visibilityRange', 'SFFloat', 1, 0.0, minimum=0.0, unitCategory='length')
 
 
 class X3DMetadataObject:
@@ -376,8 +376,10 @@ class X3DNBodyCollidableNode(X3DChildNode, X3DBoundedObject):
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/rigidBodyPhysics.html#X3DNBodyCollidableNode
     """
 
+    bboxCenter = field.newField('bboxCenter', 'SFVec3f', 0, [0.0, 0.0, 0.0])
+    bboxSize = field.newField('bboxSize', 'SFVec3f', 0, [-1.0, -1.0, -1.0])
     enabled = field.newField('enabled', 'SFBool', 1, True)
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
 
 
@@ -387,6 +389,8 @@ class X3DNBodyCollisionSpaceNode(X3DNode, X3DBoundedObject):
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/rigidBodyPhysics.html#X3DNBodyCollisionSpaceNode
     """
 
+    bboxCenter = field.newField('bboxCenter', 'SFVec3f', 0, [0.0, 0.0, 0.0])
+    bboxSize = field.newField('bboxSize', 'SFVec3f', 0, [-1.0, -1.0, -1.0])
     enabled = field.newField('enabled', 'SFBool', 1, True)
 
 
@@ -459,10 +463,10 @@ class X3DParticleEmitterNode(X3DNode):
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/particleSystems.html#X3DParticleEmitterNode
     """
 
-    mass = field.newField('mass', 'SFFloat', 1, 0.0, minimum=0.0)
+    mass = field.newField('mass', 'SFFloat', 1, 0.0, minimum=0.0, unitCategory='mass')
     on = field.newField('on', 'SFBool', 1, True)
-    speed = field.newField('speed', 'SFFloat', 1, 0.0, minimum=0.0)
-    surfaceArea = field.newField('surfaceArea', 'SFFloat', 1, 0.0, minimum=0.0)
+    speed = field.newField('speed', 'SFFloat', 1, 0.0, minimum=0.0, unitCategory='speed')
+    surfaceArea = field.newField('surfaceArea', 'SFFloat', 1, 0.0, minimum=0.0, unitCategory='area')
     variation = field.newField('variation', 'SFFloat', 1, 0.25, minimum=0.0)
 
 
@@ -758,7 +762,7 @@ class X3DViewpointNode(nodetypes.Viewpoint, X3DBindableNode):
     jump = field.newField('jump', 'SFBool', 1, True)
     navigationInfo = field.newField('navigationInfo', 'SFNode', 1, node.NULL)
     nearDistance = field.newField('nearDistance', 'SFFloat', 1, -1.0)
-    orientation = field.newField('orientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    orientation = field.newField('orientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     retainUserOffsets = field.newField('retainUserOffsets', 'SFBool', 1, False)
     viewAll = field.newField('viewAll', 'SFBool', 1, False)
 
@@ -776,6 +780,8 @@ class X3DVolumeDataNode(X3DChildNode, X3DBoundedObject):
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/volume.html#X3DVolumeDataNode
     """
 
+    bboxCenter = field.newField('bboxCenter', 'SFVec3f', 0, [0.0, 0.0, 0.0])
+    bboxSize = field.newField('bboxSize', 'SFVec3f', 0, [-1.0, -1.0, -1.0])
     dimensions = field.newField('dimensions', 'SFVec3f', 1, [1.0, 1.0, 1.0], minimum=0.0, minimumExclusive=True)
 
 
@@ -856,9 +862,9 @@ class Arc2D(X3DGeometryNode):
     PROTO = 'Arc2D'
     COMPONENT = ('Geometry2D', 2)
     CONTAINER_FIELD = 'geometry'
-    endAngle = field.newField('endAngle', 'SFFloat', 0, 1.570796, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True)
-    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
-    startAngle = field.newField('startAngle', 'SFFloat', 0, 0.0, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True)
+    endAngle = field.newField('endAngle', 'SFFloat', 0, 1.570796, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True, unitCategory='angle')
+    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
+    startAngle = field.newField('startAngle', 'SFFloat', 0, 0.0, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True, unitCategory='angle')
 
 
 class ArcClose2D(X3DGeometryNode):
@@ -871,10 +877,10 @@ class ArcClose2D(X3DGeometryNode):
     COMPONENT = ('Geometry2D', 2)
     CONTAINER_FIELD = 'geometry'
     closureType = field.newField('closureType', 'SFString', 0, 'PIE', choices=('PIE', 'CHORD'), choicesOpen=False)
-    endAngle = field.newField('endAngle', 'SFFloat', 0, 1.570796, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True)
-    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
+    endAngle = field.newField('endAngle', 'SFFloat', 0, 1.570796, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True, unitCategory='angle')
+    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
     solid = field.newField('solid', 'SFBool', 0, False)
-    startAngle = field.newField('startAngle', 'SFFloat', 0, 0.0, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True)
+    startAngle = field.newField('startAngle', 'SFFloat', 0, 0.0, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True, unitCategory='angle')
 
 
 class AudioClip(X3DSoundSourceNode, X3DUrlObject):
@@ -916,8 +922,10 @@ class Background(X3DBackgroundNode):
     backUrl = field.newField('backUrl', 'MFString', 1, list)
     bottomUrl = field.newField('bottomUrl', 'MFString', 1, list)
     frontUrl = field.newField('frontUrl', 'MFString', 1, list)
+    groundAngle = field.newField('groundAngle', 'MFFloat', 1, list, minimum=0.0, maximum=1.5708, unitCategory='angle')
     leftUrl = field.newField('leftUrl', 'MFString', 1, list)
     rightUrl = field.newField('rightUrl', 'MFString', 1, list)
+    skyAngle = field.newField('skyAngle', 'MFFloat', 1, list, minimum=0.0, maximum=3.1416, unitCategory='angle')
     topUrl = field.newField('topUrl', 'MFString', 1, list)
 
 
@@ -930,7 +938,7 @@ class BallJoint(X3DRigidJointNode):
     PROTO = 'BallJoint'
     COMPONENT = ('RigidBodyPhysics', 2)
     CONTAINER_FIELD = 'joints'
-    anchorPoint = field.newField('anchorPoint', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    anchorPoint = field.newField('anchorPoint', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     body1AnchorPoint = field.newEvent('body1AnchorPoint', 'SFVec3f', 1)
     body2AnchorPoint = field.newEvent('body2AnchorPoint', 'SFVec3f', 1)
 
@@ -1071,7 +1079,7 @@ class Box(X3DGeometryNode):
     PROTO = 'Box'
     COMPONENT = ('Geometry3D', 1)
     CONTAINER_FIELD = 'geometry'
-    size = field.newField('size', 'SFVec3f', 0, [2.0, 2.0, 2.0])
+    size = field.newField('size', 'SFVec3f', 0, [2.0, 2.0, 2.0], unitCategory='length')
     solid = field.newField('solid', 'SFBool', 0, True)
 
 
@@ -1148,9 +1156,9 @@ class CADPart(X3DProductStructureChildNode, X3DGroupingNode):
     center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
     children = field.newField('children', 'MFNode', 1, list)
     removeChildren = field.newEvent('removeChildren', 'MFNode', 0)
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     scale = field.newField('scale', 'SFVec3f', 1, [1.0, 1.0, 1.0])
-    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
 
 
@@ -1216,7 +1224,7 @@ class Circle2D(X3DGeometryNode):
     PROTO = 'Circle2D'
     COMPONENT = ('Geometry2D', 2)
     CONTAINER_FIELD = 'geometry'
-    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
+    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
 
 
 class ClipPlane(X3DChildNode):
@@ -1285,11 +1293,11 @@ class CollisionCollection(X3DChildNode, X3DBoundedObject):
     description = field.newField('description', 'SFString', 1, '')
     enabled = field.newField('enabled', 'SFBool', 1, True)
     frictionCoefficients = field.newField('frictionCoefficients', 'SFVec2f', 1, [0.0, 0.0], minimum=0.0)
-    minBounceSpeed = field.newField('minBounceSpeed', 'SFFloat', 1, 0.1, minimum=0.0)
+    minBounceSpeed = field.newField('minBounceSpeed', 'SFFloat', 1, 0.1, minimum=0.0, unitCategory='speed')
     slipFactors = field.newField('slipFactors', 'SFVec2f', 1, [0.0, 0.0])
     softnessConstantForceMix = field.newField('softnessConstantForceMix', 'SFFloat', 1, 0.0001, minimum=0.0, maximum=1.0)
     softnessErrorCorrection = field.newField('softnessErrorCorrection', 'SFFloat', 1, 0.8, minimum=0.0, maximum=1.0)
-    surfaceSpeed = field.newField('surfaceSpeed', 'SFVec2f', 1, [0.0, 0.0])
+    surfaceSpeed = field.newField('surfaceSpeed', 'SFVec2f', 1, [0.0, 0.0], unitCategory='speed')
 
 
 class CollisionSensor(X3DSensorNode):
@@ -1458,8 +1466,8 @@ class Cone(X3DGeometryNode):
     COMPONENT = ('Geometry3D', 1)
     CONTAINER_FIELD = 'geometry'
     bottom = field.newField('bottom', 'SFBool', 1, True)
-    bottomRadius = field.newField('bottomRadius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
-    height = field.newField('height', 'SFFloat', 0, 2.0, minimum=0.0, minimumExclusive=True)
+    bottomRadius = field.newField('bottomRadius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
+    height = field.newField('height', 'SFFloat', 0, 2.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
     side = field.newField('side', 'SFBool', 1, True)
     solid = field.newField('solid', 'SFBool', 0, True)
 
@@ -1473,9 +1481,9 @@ class ConeEmitter(X3DParticleEmitterNode):
     PROTO = 'ConeEmitter'
     COMPONENT = ('ParticleSystems', 1)
     CONTAINER_FIELD = 'emitter'
-    angle = field.newField('angle', 'SFFloat', 1, 0.7854, minimum=0.0, maximum=3.1416)
+    angle = field.newField('angle', 'SFFloat', 1, 0.7854, minimum=0.0, maximum=3.1416, unitCategory='angle')
     direction = field.newField('direction', 'SFVec3f', 1, [0.0, 1.0, 0.0], minimum=-1.0, maximum=1.0)
-    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
 
 
 class Contact(X3DNode):
@@ -1497,12 +1505,12 @@ class Contact(X3DNode):
     frictionDirection = field.newField('frictionDirection', 'SFVec3f', 1, [0.0, 1.0, 0.0])
     geometry1 = field.newField('geometry1', 'SFNode', 1, node.NULL)
     geometry2 = field.newField('geometry2', 'SFNode', 1, node.NULL)
-    minBounceSpeed = field.newField('minBounceSpeed', 'SFFloat', 1, 0.0, minimum=0.0)
-    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    minBounceSpeed = field.newField('minBounceSpeed', 'SFFloat', 1, 0.0, minimum=0.0, unitCategory='speed')
+    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     slipCoefficients = field.newField('slipCoefficients', 'SFVec2f', 1, [0.0, 0.0])
     softnessConstantForceMix = field.newField('softnessConstantForceMix', 'SFFloat', 1, 0.0001, minimum=0.0, maximum=1.0)
     softnessErrorCorrection = field.newField('softnessErrorCorrection', 'SFFloat', 1, 0.8, minimum=0.0, maximum=1.0)
-    surfaceSpeed = field.newField('surfaceSpeed', 'SFVec2f', 1, [0.0, 0.0])
+    surfaceSpeed = field.newField('surfaceSpeed', 'SFVec2f', 1, [0.0, 0.0], unitCategory='speed')
 
 
 class Contour2D(X3DNode):
@@ -1553,7 +1561,7 @@ class Coordinate(X3DCoordinateNode):
     PROTO = 'Coordinate'
     COMPONENT = ('Rendering', 1)
     CONTAINER_FIELD = 'coord'
-    point = field.newField('point', 'MFVec3f', 1, list)
+    point = field.newField('point', 'MFVec3f', 1, list, unitCategory='length')
 
 
 class CoordinateChaser(X3DChaserNode):
@@ -1597,7 +1605,7 @@ class CoordinateDouble(X3DCoordinateNode):
     PROTO = 'CoordinateDouble'
     COMPONENT = ('Rendering', 1)
     CONTAINER_FIELD = 'coord'
-    point = field.newField('point', 'MFVec3d', 1, list)
+    point = field.newField('point', 'MFVec3d', 1, list, unitCategory='length')
 
 
 class CoordinateInterpolator(X3DInterpolatorNode):
@@ -1609,7 +1617,7 @@ class CoordinateInterpolator(X3DInterpolatorNode):
     PROTO = 'CoordinateInterpolator'
     COMPONENT = ('Interpolation', 1)
     CONTAINER_FIELD = 'children'
-    keyValue = field.newField('keyValue', 'MFVec3f', 1, list)
+    keyValue = field.newField('keyValue', 'MFVec3f', 1, list, unitCategory='length')
     value_changed = field.newEvent('value_changed', 'MFVec3f', 1)
 
 
@@ -1622,7 +1630,7 @@ class CoordinateInterpolator2D(X3DInterpolatorNode):
     PROTO = 'CoordinateInterpolator2D'
     COMPONENT = ('Interpolation', 3)
     CONTAINER_FIELD = 'children'
-    keyValue = field.newField('keyValue', 'MFVec2f', 1, list)
+    keyValue = field.newField('keyValue', 'MFVec2f', 1, list, unitCategory='length')
     value_changed = field.newEvent('value_changed', 'MFVec2f', 1)
 
 
@@ -1636,8 +1644,8 @@ class Cylinder(X3DGeometryNode):
     COMPONENT = ('Geometry3D', 1)
     CONTAINER_FIELD = 'geometry'
     bottom = field.newField('bottom', 'SFBool', 1, True)
-    height = field.newField('height', 'SFFloat', 0, 2.0, minimum=0.0, minimumExclusive=True)
-    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
+    height = field.newField('height', 'SFFloat', 0, 2.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
+    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
     side = field.newField('side', 'SFBool', 1, True)
     solid = field.newField('solid', 'SFBool', 0, True)
     top = field.newField('top', 'SFBool', 1, True)
@@ -1652,11 +1660,11 @@ class CylinderSensor(X3DDragSensorNode):
     PROTO = 'CylinderSensor'
     COMPONENT = ('PointingDeviceSensor', 1)
     CONTAINER_FIELD = 'children'
-    axisRotation = field.newField('axisRotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
-    diskAngle = field.newField('diskAngle', 'SFFloat', 1, 0.26179167, minimum=0.0, maximum=1.5708)
-    maxAngle = field.newField('maxAngle', 'SFFloat', 1, -1.0, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True)
-    minAngle = field.newField('minAngle', 'SFFloat', 1, 0.0, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True)
-    offset = field.newField('offset', 'SFFloat', 1, 0.0)
+    axisRotation = field.newField('axisRotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
+    diskAngle = field.newField('diskAngle', 'SFFloat', 1, 0.26179167, minimum=0.0, maximum=1.5708, unitCategory='angle')
+    maxAngle = field.newField('maxAngle', 'SFFloat', 1, -1.0, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True, unitCategory='angle')
+    minAngle = field.newField('minAngle', 'SFFloat', 1, 0.0, minimum=-6.2832, minimumExclusive=True, maximum=6.2832, maximumExclusive=True, unitCategory='angle')
+    offset = field.newField('offset', 'SFFloat', 1, 0.0, unitCategory='angle')
     rotation_changed = field.newEvent('rotation_changed', 'SFRotation', 1)
 
 
@@ -1736,8 +1744,8 @@ class Disk2D(X3DGeometryNode):
     PROTO = 'Disk2D'
     COMPONENT = ('Geometry2D', 2)
     CONTAINER_FIELD = 'geometry'
-    innerRadius = field.newField('innerRadius', 'SFFloat', 0, 0.0, minimum=0.0)
-    outerRadius = field.newField('outerRadius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
+    innerRadius = field.newField('innerRadius', 'SFFloat', 0, 0.0, minimum=0.0, unitCategory='length')
+    outerRadius = field.newField('outerRadius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
     solid = field.newField('solid', 'SFBool', 0, False)
 
 
@@ -1750,23 +1758,23 @@ class DoubleAxisHingeJoint(X3DRigidJointNode):
     PROTO = 'DoubleAxisHingeJoint'
     COMPONENT = ('RigidBodyPhysics', 2)
     CONTAINER_FIELD = 'joints'
-    anchorPoint = field.newField('anchorPoint', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    anchorPoint = field.newField('anchorPoint', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     axis1 = field.newField('axis1', 'SFVec3f', 1, [1.0, 0.0, 0.0])
     axis2 = field.newField('axis2', 'SFVec3f', 1, [0.0, 1.0, 0.0])
     body1AnchorPoint = field.newEvent('body1AnchorPoint', 'SFVec3f', 1)
     body1Axis = field.newEvent('body1Axis', 'SFVec3f', 1)
     body2AnchorPoint = field.newEvent('body2AnchorPoint', 'SFVec3f', 1)
     body2Axis = field.newEvent('body2Axis', 'SFVec3f', 1)
-    desiredAngularVelocity1 = field.newField('desiredAngularVelocity1', 'SFFloat', 1, 0.0)
-    desiredAngularVelocity2 = field.newField('desiredAngularVelocity2', 'SFFloat', 1, 0.0)
+    desiredAngularVelocity1 = field.newField('desiredAngularVelocity1', 'SFFloat', 1, 0.0, unitCategory='angular_velocity')
+    desiredAngularVelocity2 = field.newField('desiredAngularVelocity2', 'SFFloat', 1, 0.0, unitCategory='angular_velocity')
     hinge1Angle = field.newEvent('hinge1Angle', 'SFFloat', 1)
     hinge1AngleRate = field.newEvent('hinge1AngleRate', 'SFFloat', 1)
     hinge2Angle = field.newEvent('hinge2Angle', 'SFFloat', 1)
     hinge2AngleRate = field.newEvent('hinge2AngleRate', 'SFFloat', 1)
-    maxAngle1 = field.newField('maxAngle1', 'SFFloat', 1, 3.141592653)
+    maxAngle1 = field.newField('maxAngle1', 'SFFloat', 1, 3.141592653, unitCategory='angle')
     maxTorque1 = field.newField('maxTorque1', 'SFFloat', 1, 0.0)
     maxTorque2 = field.newField('maxTorque2', 'SFFloat', 1, 0.0)
-    minAngle1 = field.newField('minAngle1', 'SFFloat', 1, -3.141592653)
+    minAngle1 = field.newField('minAngle1', 'SFFloat', 1, -3.141592653, unitCategory='angle')
     stop1Bounce = field.newField('stop1Bounce', 'SFFloat', 1, 0.0)
     stop1ConstantForceMix = field.newField('stop1ConstantForceMix', 'SFFloat', 1, 0.001)
     stop1ErrorCorrection = field.newField('stop1ErrorCorrection', 'SFFloat', 1, 0.8)
@@ -1834,18 +1842,18 @@ class ElevationGrid(X3DGeometryNode):
     ccw = field.newField('ccw', 'SFBool', 0, True)
     color = field.newField('color', 'SFNode', 1, node.NULL)
     colorPerVertex = field.newField('colorPerVertex', 'SFBool', 0, True)
-    creaseAngle = field.newField('creaseAngle', 'SFFloat', 0, 0.0, minimum=0.0)
+    creaseAngle = field.newField('creaseAngle', 'SFFloat', 0, 0.0, minimum=0.0, unitCategory='angle')
     fogCoord = field.newField('fogCoord', 'SFNode', 1, node.NULL)
-    height = field.newField('height', 'MFFloat', 0, list)
+    height = field.newField('height', 'MFFloat', 0, list, unitCategory='length')
     normal = field.newField('normal', 'SFNode', 1, node.NULL)
     normalPerVertex = field.newField('normalPerVertex', 'SFBool', 0, True)
     set_height = field.newEvent('set_height', 'MFFloat', 0)
     solid = field.newField('solid', 'SFBool', 0, True)
     texCoord = field.newField('texCoord', 'SFNode', 1, node.NULL)
     xDimension = field.newField('xDimension', 'SFInt32', 0, 0, minimum=0.0)
-    xSpacing = field.newField('xSpacing', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
+    xSpacing = field.newField('xSpacing', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
     zDimension = field.newField('zDimension', 'SFInt32', 0, 0, minimum=0.0)
-    zSpacing = field.newField('zSpacing', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
+    zSpacing = field.newField('zSpacing', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
 
 
 class EnvironmentLight(X3DLightNode):
@@ -1860,7 +1868,7 @@ class EnvironmentLight(X3DLightNode):
     diffuseCoefficients = field.newField('diffuseCoefficients', 'MFFloat', 1, list)
     diffuseTexture = field.newField('diffuseTexture', 'SFNode', 1, node.NULL)
     origin = field.newField('origin', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     specularTexture = field.newField('specularTexture', 'SFNode', 1, node.NULL)
 
 
@@ -1943,10 +1951,10 @@ class EspduTransform(X3DGroupingNode, X3DNetworkSensorNode):
     networkMode = field.newField('networkMode', 'SFString', 1, 'standAlone', choices=('standAlone', 'networkReader', 'networkWriter'), choicesOpen=False)
     port = field.newField('port', 'SFInt32', 1, 0)
     readInterval = field.newField('readInterval', 'SFTime', 1, 0.1, minimum=0.0)
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     rtpHeaderExpected = field.newField('rtpHeaderExpected', 'SFBool', 1, False)
     scale = field.newField('scale', 'SFVec3f', 1, [1.0, 1.0, 1.0])
-    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     set_articulationParameterValue0 = field.newEvent('set_articulationParameterValue0', 'SFFloat', 0)
     set_articulationParameterValue1 = field.newEvent('set_articulationParameterValue1', 'SFFloat', 0)
     set_articulationParameterValue2 = field.newEvent('set_articulationParameterValue2', 'SFFloat', 0)
@@ -1971,7 +1979,7 @@ class ExplosionEmitter(X3DParticleEmitterNode):
     PROTO = 'ExplosionEmitter'
     COMPONENT = ('ParticleSystems', 1)
     CONTAINER_FIELD = 'emitter'
-    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
 
 
 class Extrusion(X3DGeometryNode):
@@ -1986,17 +1994,17 @@ class Extrusion(X3DGeometryNode):
     beginCap = field.newField('beginCap', 'SFBool', 0, True)
     ccw = field.newField('ccw', 'SFBool', 0, True)
     convex = field.newField('convex', 'SFBool', 0, True)
-    creaseAngle = field.newField('creaseAngle', 'SFFloat', 0, 0.0, minimum=0.0)
-    crossSection = field.newField('crossSection', 'MFVec2f', 0, [1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, 1.0, 1.0])
+    creaseAngle = field.newField('creaseAngle', 'SFFloat', 0, 0.0, minimum=0.0, unitCategory='angle')
+    crossSection = field.newField('crossSection', 'MFVec2f', 0, [1.0, 1.0, 1.0, -1.0, -1.0, -1.0, -1.0, 1.0, 1.0, 1.0], unitCategory='length')
     endCap = field.newField('endCap', 'SFBool', 0, True)
-    orientation = field.newField('orientation', 'MFRotation', 0, [0.0, 0.0, 1.0, 0.0])
+    orientation = field.newField('orientation', 'MFRotation', 0, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     scale = field.newField('scale', 'MFVec2f', 0, [1.0, 1.0])
     set_crossSection = field.newEvent('set_crossSection', 'MFVec2f', 0)
     set_orientation = field.newEvent('set_orientation', 'MFRotation', 0)
     set_scale = field.newEvent('set_scale', 'MFVec2f', 0)
     set_spine = field.newEvent('set_spine', 'MFVec3f', 0)
     solid = field.newField('solid', 'SFBool', 0, True)
-    spine = field.newField('spine', 'MFVec3f', 0, [0.0, 0.0, 0.0, 0.0, 1.0, 0.0])
+    spine = field.newField('spine', 'MFVec3f', 0, [0.0, 0.0, 0.0, 0.0, 1.0, 0.0], unitCategory='length')
 
 
 class FillProperties(X3DAppearanceChildNode):
@@ -2076,7 +2084,7 @@ class FontStyle(X3DFontStyleNode):
     justify = field.newField('justify', 'MFString', 1, ['BEGIN'], choices=('MIDDLE', 'MIDDLE" "BEGIN', 'MIDDLE" "END', 'MIDDLE" "FIRST', 'MIDDLE" "MIDDLE', 'BEGIN', 'BEGIN" "BEGIN', 'BEGIN" "END', 'BEGIN" "FIRST', 'BEGIN" "MIDDLE', 'END', 'END" "BEGIN', 'END" "END', 'END" "FIRST', 'END" "MIDDLE', 'FIRST', 'FIRST" "BEGIN', 'FIRST" "END', 'FIRST" "FIRST', 'FIRST" "MIDDLE'), choicesOpen=False)
     language = field.newField('language', 'SFString', 1, '')
     leftToRight = field.newField('leftToRight', 'SFBool', 1, True)
-    size = field.newField('size', 'SFFloat', 1, 1.0, minimum=0.0, minimumExclusive=True)
+    size = field.newField('size', 'SFFloat', 1, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
     spacing = field.newField('spacing', 'SFFloat', 1, 1.0, minimum=0.0)
     style = field.newField('style', 'SFString', 1, 'PLAIN', choices=('PLAIN', 'BOLD', 'ITALIC', 'BOLDITALIC'), choicesOpen=False)
     topToBottom = field.newField('topToBottom', 'SFBool', 1, True)
@@ -2091,7 +2099,7 @@ class ForcePhysicsModel(X3DParticlePhysicsModelNode):
     PROTO = 'ForcePhysicsModel'
     COMPONENT = ('ParticleSystems', 1)
     CONTAINER_FIELD = 'physics'
-    force = field.newField('force', 'SFVec3f', 1, [0.0, -9.8, 0.0])
+    force = field.newField('force', 'SFVec3f', 1, [0.0, -9.8, 0.0], unitCategory='force')
 
 
 class Gain(X3DSoundProcessingNode):
@@ -2327,9 +2335,9 @@ class GeoTransform(X3DGroupingNode):
     geoCenter = field.newField('geoCenter', 'SFVec3d', 1, [0.0, 0.0, 0.0])
     geoOrigin = field.newField('geoOrigin', 'SFNode', 0, node.NULL)
     geoSystem = field.newField('geoSystem', 'MFString', 0, ['GD', 'WE'])
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     scale = field.newField('scale', 'SFVec3f', 1, [1.0, 1.0, 1.0])
-    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
 
 
@@ -2386,22 +2394,22 @@ class HAnimHumanoid(X3DChildNode, X3DBoundedObject):
     PROTO = 'HAnimHumanoid'
     COMPONENT = ('HAnim', 1)
     CONTAINER_FIELD = 'children'
-    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     children = field.newField('children', 'MFNode', 1, list)
     description = field.newField('description', 'SFString', 1, '')
     displacers = field.newField('displacers', 'MFNode', 1, list)
     info = field.newField('info', 'MFString', 1, list)
     jointBindingPositions = field.newField('jointBindingPositions', 'MFVec3f', 1, list)
-    jointBindingRotations = field.newField('jointBindingRotations', 'MFRotation', 1, list)
+    jointBindingRotations = field.newField('jointBindingRotations', 'MFRotation', 1, list, unitCategory='angle')
     jointBindingScales = field.newField('jointBindingScales', 'MFVec3f', 1, list)
     joints = field.newField('joints', 'MFNode', 1, list)
     loa = field.newField('loa', 'SFInt32', 1, -1, minimum=-1.0, maximum=5.0)
     motions = field.newField('motions', 'MFNode', 1, list)
     motionsEnabled = field.newField('motionsEnabled', 'MFBool', 1, list)
     name = field.newField('name', 'SFString', 1, '')
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     scale = field.newField('scale', 'SFVec3f', 1, [1.0, 1.0, 1.0], minimum=0.0, minimumExclusive=True)
-    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     segments = field.newField('segments', 'MFNode', 1, list)
     sites = field.newField('sites', 'MFNode', 1, list)
     skeletalConfiguration = field.newField('skeletalConfiguration', 'SFString', 1, 'BASIC')
@@ -2411,7 +2419,7 @@ class HAnimHumanoid(X3DChildNode, X3DBoundedObject):
     skinBindingNormals = field.newField('skinBindingNormals', 'SFNode', 1, node.NULL)
     skinCoord = field.newField('skinCoord', 'SFNode', 1, node.NULL)
     skinNormal = field.newField('skinNormal', 'SFNode', 1, node.NULL)
-    translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     version = field.newField('version', 'SFString', 1, '', choices=('2.0', '2.1'), choicesOpen=False)
     viewpoints = field.newField('viewpoints', 'MFNode', 1, list)
 
@@ -2426,21 +2434,21 @@ class HAnimJoint(X3DChildNode, X3DBoundedObject):
     COMPONENT = ('HAnim', 1)
     CONTAINER_FIELD = 'children'
     addChildren = field.newEvent('addChildren', 'MFNode', 0)
-    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     children = field.newField('children', 'MFNode', 1, list)
     description = field.newField('description', 'SFString', 1, '')
     displacers = field.newField('displacers', 'MFNode', 1, list)
-    limitOrientation = field.newField('limitOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    limitOrientation = field.newField('limitOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     llimit = field.newField('llimit', 'MFFloat', 1, [0.0, 0.0, 0.0])
     name = field.newField('name', 'SFString', 1, '', choices=('humanoid_root', 'sacroiliac', 'l_hip', 'l_knee', 'l_talocrural', 'l_talocalcaneonavicular', 'l_cuneonavicular_1', 'l_tarsometatarsal_1', 'l_metatarsophalangeal_1', 'l_tarsal_interphalangeal_1', 'l_cuneonavicular_2', 'l_tarsometatarsal_2', 'l_metatarsophalangeal_2', 'l_tarsal_proximal_interphalangeal_2', 'l_tarsal_distal_interphalangeal_2', 'l_cuneonavicular_3', 'l_tarsometatarsal_3', 'l_metatarsophalangeal_3', 'l_tarsal_proximal_interphalangeal_3', 'l_tarsal_distal_interphalangeal_3', 'l_calcaneocuboid', 'l_transversetarsal', 'l_tarsometatarsal_4', 'l_metatarsophalangeal_4', 'l_tarsal_proximal_interphalangeal_4', 'l_tarsal_distal_interphalangeal_4', 'l_tarsometatarsal_5', 'l_metatarsophalangeal_5', 'l_tarsal_proximal_interphalangeal_5', 'l_tarsal_distal_interphalangeal_5', 'r_hip', 'r_knee', 'r_talocrural', 'r_talocalcaneonavicular', 'r_cuneonavicular_1', 'r_tarsometatarsal_1', 'r_metatarsophalangeal_1', 'r_tarsal_interphalangeal_1', 'r_cuneonavicular_2', 'r_tarsometatarsal_2', 'r_metatarsophalangeal_2', 'r_tarsal_proximal_interphalangeal_2', 'r_tarsal_distal_interphalangeal_2', 'r_cuneonavicular_3', 'r_tarsometatarsal_3', 'r_metatarsophalangeal_3', 'r_tarsal_proximal_interphalangeal_3', 'r_tarsal_distal_interphalangeal_3', 'r_calcaneocuboid', 'r_transversetarsal', 'r_tarsometatarsal_4', 'r_metatarsophalangeal_4', 'r_tarsal_proximal_interphalangeal_4', 'r_tarsal_distal_interphalangeal_4', 'r_tarsometatarsal_5', 'r_metatarsophalangeal_5', 'r_tarsal_proximal_interphalangeal_5', 'r_tarsal_distal_interphalangeal_5', 'vl5', 'vl4', 'vl3', 'vl2', 'vl1', 'vt12', 'vt11', 'vt10', 'vt9', 'vt8', 'vt7', 'vt6', 'vt5', 'vt4', 'vt3', 'vt2', 'vt1', 'vc7', 'vc6', 'vc5', 'vc4', 'vc3', 'vc2', 'vc1', 'skullbase', 'l_eyelid_joint', 'r_eyelid_joint', 'l_eyeball_joint', 'r_eyeball_joint', 'l_eyebrow_joint', 'r_eyebrow_joint', 'temporomandibular', 'l_sternoclavicular', 'l_acromioclavicular', 'l_shoulder', 'l_elbow', 'l_radiocarpal', 'l_midcarpal_1', 'l_carpometacarpal_1', 'l_metacarpophalangeal_1', 'l_carpal_interphalangeal_1', 'l_midcarpal_2', 'l_carpometacarpal_2', 'l_metacarpophalangeal_2', 'l_carpal_proximal_interphalangeal_2', 'l_carpal_distal_interphalangeal_2', 'l_midcarpal_3', 'l_carpometacarpal_3', 'l_metacarpophalangeal_3', 'l_carpal_proximal_interphalangeal_3', 'l_carpal_distal_interphalangeal_3', 'l_midcarpal_4_5', 'l_carpometacarpal_4', 'l_metacarpophalangeal_4', 'l_carpal_proximal_interphalangeal_4', 'l_carpal_distal_interphalangeal_4', 'l_carpometacarpal_5', 'l_metacarpophalangeal_5', 'l_carpal_proximal_interphalangeal_5', 'l_carpal_distal_interphalangeal_5', 'r_sternoclavicular', 'r_acromioclavicular', 'r_shoulder', 'r_elbow', 'r_radiocarpal', 'r_midcarpal_1', 'r_carpometacarpal_1', 'r_metacarpophalangeal_1', 'r_carpal_interphalangeal_1', 'r_midcarpal_2', 'r_carpometacarpal_2', 'r_metacarpophalangeal_2', 'r_carpal_proximal_interphalangeal_2', 'r_carpal_distal_interphalangeal_2', 'r_midcarpal_3', 'r_carpometacarpal_3', 'r_metacarpophalangeal_3', 'r_carpal_proximal_interphalangeal_3', 'r_carpal_distal_interphalangeal_3', 'r_midcarpal_4_5', 'r_carpometacarpal_4', 'r_metacarpophalangeal_4', 'r_carpal_proximal_interphalangeal_4', 'r_carpal_distal_interphalangeal_4', 'r_carpometacarpal_5', 'r_metacarpophalangeal_5', 'r_carpal_proximal_interphalangeal_5', 'r_carpal_distal_interphalangeal_5'))
     removeChildren = field.newEvent('removeChildren', 'MFNode', 0)
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     scale = field.newField('scale', 'SFVec3f', 1, [1.0, 1.0, 1.0], minimum=0.0, minimumExclusive=True)
-    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     skinCoordIndex = field.newField('skinCoordIndex', 'MFInt32', 1, list, minimum=0.0)
     skinCoordWeight = field.newField('skinCoordWeight', 'MFFloat', 1, list)
     stiffness = field.newField('stiffness', 'MFFloat', 1, [0.0, 0.0, 0.0], minimum=0.0, maximum=1.0)
-    translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     ulimit = field.newField('ulimit', 'MFFloat', 1, [0.0, 0.0, 0.0])
 
 
@@ -2505,11 +2513,11 @@ class HAnimSegment(X3DGroupingNode):
     PROTO = 'HAnimSegment'
     COMPONENT = ('HAnim', 1)
     CONTAINER_FIELD = 'children'
-    centerOfMass = field.newField('centerOfMass', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    centerOfMass = field.newField('centerOfMass', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     coord = field.newField('coord', 'SFNode', 1, node.NULL)
     description = field.newField('description', 'SFString', 1, '')
     displacers = field.newField('displacers', 'MFNode', 1, list)
-    mass = field.newField('mass', 'SFFloat', 1, 0.0, minimum=0.0)
+    mass = field.newField('mass', 'SFFloat', 1, 0.0, minimum=0.0, unitCategory='mass')
     momentsOfInertia = field.newField('momentsOfInertia', 'MFFloat', 1, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], minimum=0.0)
     name = field.newField('name', 'SFString', 1, '', choices=('sacrum', 'pelvis', 'l_thigh', 'l_calf', 'l_talus', 'l_navicular', 'l_cuneiform_1', 'l_metatarsal_1', 'l_tarsal_proximal_phalanx_1', 'l_tarsal_distal_phalanx_1', 'l_cuneiform_2', 'l_metatarsal_2', 'l_tarsal_proximal_phalanx_2', 'l_tarsal_middle_phalanx_2', 'l_tarsal_distal_phalanx_2', 'l_cuneiform_3', 'l_metatarsal_3', 'l_tarsal_proximal_phalanx_3', 'l_tarsal_middle_phalanx_3', 'l_tarsal_distal_phalanx_3', 'l_calcaneus', 'l_cuboid', 'l_metatarsal_4', 'l_tarsal_proximal_phalanx_4', 'l_tarsal_middle_phalanx_4', 'l_tarsal_distal_phalanx_4', 'l_metatarsal_5', 'l_tarsal_proximal_phalanx_5', 'l_tarsal_middle_phalanx_5', 'l_tarsal_distal_phalanx_5', 'r_thigh', 'r_calf', 'r_talus', 'r_navicular', 'r_cuneiform_1', 'r_metatarsal_1', 'r_tarsal_proximal_phalanx_1', 'r_tarsal_distal_phalanx_1', 'r_cuneiform_2', 'r_metatarsal_2', 'r_tarsal_proximal_phalanx_2', 'r_tarsal_middle_phalanx_2', 'r_tarsal_distal_phalanx_2', 'r_cuneiform_3', 'r_metatarsal_3', 'r_tarsal_proximal_phalanx_3', 'r_tarsal_middle_phalanx_3', 'r_tarsal_distal_phalanx_3', 'r_calcaneus', 'r_cuboid', 'r_metatarsal_4', 'r_tarsal_proximal_phalanx_4', 'r_tarsal_middle_phalanx_4', 'r_tarsal_distal_phalanx_4', 'r_metatarsal_5', 'r_tarsal_proximal_phalanx_5', 'r_tarsal_middle_phalanx_5', 'r_tarsal_distal_phalanx_5', 'l5', 'l4', 'l3', 'l2', 'l1', 't12', 't11', 't10', 't9', 't8', 't7', 't6', 't5', 't4', 't3', 't2', 't1', 'c7', 'c6', 'c5', 'c4', 'c3', 'c2', 'c1', 'skull', 'l_eyelid', 'r_eyelid', 'l_eyeball', 'r_eyeball', 'l_eyebrow', 'r_eyebrow', 'jaw', 'l_clavicle', 'l_scapula', 'l_upperarm', 'l_forearm', 'l_carpal', 'l_trapezium', 'l_metacarpal_1', 'l_carpal_proximal_phalanx_1', 'l_carpal_distal_phalanx_1', 'l_trapezoid', 'l_metacarpal_2', 'l_carpal_proximal_phalanx_2', 'l_carpal_middle_phalanx_2', 'l_carpal_distal_phalanx_2', 'l_capitate', 'l_metacarpal_3', 'l_carpal_proximal_phalanx_3', 'l_carpal_middle_phalanx_3', 'l_carpal_distal_phalanx_3', 'l_hamate', 'l_metacarpal_4', 'l_carpal_proximal_phalanx_4', 'l_carpal_middle_phalanx_4', 'l_carpal_distal_phalanx_4', 'l_metacarpal_5', 'l_carpal_proximal_phalanx_5', 'l_carpal_middle_phalanx_5', 'l_carpal_distal_phalanx_5', 'r_clavicle', 'r_scapula', 'r_upperarm', 'r_forearm', 'r_carpal', 'r_trapezium', 'r_metacarpal_1', 'r_carpal_proximal_phalanx_1', 'r_carpal_distal_phalanx_1', 'r_trapezoid', 'r_metacarpal_2', 'r_carpal_proximal_phalanx_2', 'r_carpal_middle_phalanx_2', 'r_carpal_distal_phalanx_2', 'r_capitate', 'r_metacarpal_3', 'r_carpal_proximal_phalanx_3', 'r_carpal_middle_phalanx_3', 'r_carpal_distal_phalanx_3', 'r_hamate', 'r_metacarpal_4', 'r_carpal_proximal_phalanx_4', 'r_carpal_middle_phalanx_4', 'r_carpal_distal_phalanx_4', 'r_metacarpal_5', 'r_carpal_proximal_phalanx_5', 'r_carpal_middle_phalanx_5', 'r_carpal_distal_phalanx_5'))
 
@@ -2523,13 +2531,13 @@ class HAnimSite(X3DGroupingNode):
     PROTO = 'HAnimSite'
     COMPONENT = ('HAnim', 1)
     CONTAINER_FIELD = 'children'
-    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     description = field.newField('description', 'SFString', 1, '')
     name = field.newField('name', 'SFString', 1, '', choices=('skull_vertex', 'glabella', 'sellion', 'l_infraorbitale', 'l_tragion', 'l_gonion', 'r_infraorbitale', 'r_tragion', 'r_gonion', 'supramenton', 'cervicale', 'adams_apple', 'suprasternale', 'substernale', 'l_clavicle', 'l_acromion', 'l_axilla_proximal', 'l_axilla_distal', 'l_axilla_posterior_folds', 'r_clavicle', 'r_acromion', 'r_axilla_proximal', 'r_axilla_distal', 'r_axilla_posterior_folds', 'spine_1_middle_back', 'spine_2_lower_back', 'waist_preferred_anterior', 'waist_preferred_posterior', 'l_rib10', 'l_thelion', 'r_rib10', 'r_thelion', 'l_asis', 'l_iliocristale', 'l_psis', 'r_asis', 'r_iliocristale', 'r_psis', 'crotch', 'l_femoral_lateral_epicondyle', 'l_femoral_medial_epicondyle', 'l_suprapatella', 'l_trochanterion', 'r_femoral_lateral_epicondyle', 'r_femoral_medial_epicondyle', 'r_suprapatella', 'r_trochanterion', 'l_tibiale', 'l_medial_malleolus', 'l_lateral_malleolus', 'l_sphyrion', 'r_tibiale', 'r_medial_malleolus', 'r_lateral_malleolus', 'r_sphyrion', 'l_metatarsal_phalanx_1', 'l_metatarsal_phalanx_5', 'l_dactylion', 'l_calcaneus_posterior', 'r_metatarsal_phalanx_1', 'r_metatarsal_phalanx_5', 'r_dactylion', 'r_calcaneus_posterior', 'l_humeral_lateral_epicondyle', 'l_humeral_medial_epicondyle', 'l_olecranon', 'r_humeral_lateral_epicondyle', 'r_humeral_medial_epicondyle', 'r_olecranon', 'l_radiale', 'l_ulnar_styloid', 'l_radial_styloid', 'r_radiale', 'r_ulnar_styloid', 'r_radial_styloid', 'l_metacarpal_phalanx_2', 'l_metacarpal_phalanx_3', 'l_metacarpal_phalanx_5', 'r_metacarpal_phalanx_2', 'r_metacarpal_phalanx_3', 'r_metacarpal_phalanx_5', 'nuchale', 'l_neck_base', 'r_neck_base', 'navel', 'l_ectocanthus', 'r_ectocanthus', 'menton', 'mesosternale', 'opisthocranion', 'l_knee_crease', 'r_knee_crease', 'rear_center_midsagittal_plane', 'buttocks_standing_wall_contact_point', 'l_chest_midsagittal_plane', 'r_chest_midsagittal_plane', 'l_bideltoid', 'r_bideltoid', 'l_carpal_distal_phalanx_1', 'l_carpal_distal_phalanx_2', 'l_carpal_distal_phalanx_3', 'l_carpal_distal_phalanx_4', 'l_carpal_distal_phalanx_5', 'r_carpal_distal_phalanx_1', 'r_carpal_distal_phalanx_2', 'r_carpal_distal_phalanx_3', 'r_carpal_distal_phalanx_4', 'r_carpal_distal_phalanx_5', 'l_tarsal_distal_phalanx_1', 'l_tarsal_distal_phalanx_2', 'l_tarsal_distal_phalanx_3', 'l_tarsal_distal_phalanx_4', 'l_tarsal_distal_phalanx_5', 'r_tarsal_distal_phalanx_1', 'r_tarsal_distal_phalanx_2', 'r_tarsal_distal_phalanx_3', 'r_tarsal_distal_phalanx_4', 'r_tarsal_distal_phalanx_5'))
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     scale = field.newField('scale', 'SFVec3f', 1, [1.0, 1.0, 1.0], minimum=0.0, minimumExclusive=True)
-    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
-    translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
+    translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
 
 
 class ImageCubeMapTexture(X3DEnvironmentTextureNode, X3DUrlObject):
@@ -2585,7 +2593,7 @@ class IndexedFaceSet(X3DComposedGeometryNode):
     colorIndex = field.newField('colorIndex', 'MFInt32', 0, list, minimum=-1.0)
     convex = field.newField('convex', 'SFBool', 0, True)
     coordIndex = field.newField('coordIndex', 'MFInt32', 0, list, minimum=-1.0)
-    creaseAngle = field.newField('creaseAngle', 'SFFloat', 0, 0.0, minimum=0.0)
+    creaseAngle = field.newField('creaseAngle', 'SFFloat', 0, 0.0, minimum=0.0, unitCategory='angle')
     normalIndex = field.newField('normalIndex', 'MFInt32', 0, list, minimum=-1.0)
     set_colorIndex = field.newEvent('set_colorIndex', 'MFInt32', 0)
     set_coordIndex = field.newEvent('set_coordIndex', 'MFInt32', 0)
@@ -2766,10 +2774,10 @@ class LOD(X3DGroupingNode):
     PROTO = 'LOD'
     COMPONENT = ('Navigation', 2)
     CONTAINER_FIELD = 'children'
-    center = field.newField('center', 'SFVec3f', 0, [0.0, 0.0, 0.0])
+    center = field.newField('center', 'SFVec3f', 0, [0.0, 0.0, 0.0], unitCategory='length')
     forceTransitions = field.newField('forceTransitions', 'SFBool', 0, False)
     level_changed = field.newEvent('level_changed', 'SFInt32', 1)
-    range = field.newField('range', 'MFFloat', 0, list)
+    range = field.newField('range', 'MFFloat', 0, list, unitCategory='length')
     level = field.AliasField('level', 'children')
 
 
@@ -2904,7 +2912,7 @@ class ListenerPointSource(X3DSoundSourceNode):
     CONTAINER_FIELD = 'children'
     dopplerEnabled = field.newField('dopplerEnabled', 'SFBool', 1, False)
     interauralDistance = field.newField('interauralDistance', 'SFFloat', 1, 0.0, minimum=0.0)
-    orientation = field.newField('orientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    orientation = field.newField('orientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0])
     trackCurrentView = field.newField('trackCurrentView', 'SFBool', 1, False)
 
@@ -3086,11 +3094,11 @@ class MotorJoint(X3DRigidJointNode):
     COMPONENT = ('RigidBodyPhysics', 2)
     CONTAINER_FIELD = 'joints'
     autoCalc = field.newField('autoCalc', 'SFBool', 0, False)
-    axis1Angle = field.newField('axis1Angle', 'SFFloat', 1, 0.0)
+    axis1Angle = field.newField('axis1Angle', 'SFFloat', 1, 0.0, unitCategory='angle')
     axis1Torque = field.newField('axis1Torque', 'SFFloat', 1, 0.0)
-    axis2Angle = field.newField('axis2Angle', 'SFFloat', 1, 0.0)
+    axis2Angle = field.newField('axis2Angle', 'SFFloat', 1, 0.0, unitCategory='angle')
     axis2Torque = field.newField('axis2Torque', 'SFFloat', 1, 0.0)
-    axis3Angle = field.newField('axis3Angle', 'SFFloat', 1, 0.0)
+    axis3Angle = field.newField('axis3Angle', 'SFFloat', 1, 0.0, unitCategory='angle')
     axis3Torque = field.newField('axis3Torque', 'SFFloat', 1, 0.0)
     enabledAxes = field.newField('enabledAxes', 'SFInt32', 1, 1, minimum=0.0, maximum=3.0)
     motor1Angle = field.newEvent('motor1Angle', 'SFFloat', 1)
@@ -3179,14 +3187,14 @@ class NavigationInfo(nodetypes.NavigationInfo, X3DBindableNode):
     PROTO = 'NavigationInfo'
     COMPONENT = ('Navigation', 1)
     CONTAINER_FIELD = 'children'
-    avatarSize = field.newField('avatarSize', 'MFFloat', 1, [0.25, 1.6, 0.75], minimum=0.0)
+    avatarSize = field.newField('avatarSize', 'MFFloat', 1, [0.25, 1.6, 0.75], minimum=0.0, unitCategory='length')
     headlight = field.newField('headlight', 'SFBool', 1, True)
-    speed = field.newField('speed', 'SFFloat', 1, 1.0, minimum=0.0)
+    speed = field.newField('speed', 'SFFloat', 1, 1.0, minimum=0.0, unitCategory='speed')
     transitionComplete = field.newEvent('transitionComplete', 'SFBool', 1)
     transitionTime = field.newField('transitionTime', 'SFTime', 1, 1.0, minimum=0.0)
     transitionType = field.newField('transitionType', 'MFString', 1, ['LINEAR'], choices=('TELEPORT', 'LINEAR', 'ANIMATE'))
     type = field.newField('type', 'MFString', 1, ['EXAMINE', 'ANY'], choices=('ANY', 'WALK', 'EXAMINE', 'FLY', 'LOOKAT', 'NONE', 'EXPLORE'))
-    visibilityLimit = field.newField('visibilityLimit', 'SFFloat', 1, 0.0, minimum=0.0)
+    visibilityLimit = field.newField('visibilityLimit', 'SFFloat', 1, 0.0, minimum=0.0, unitCategory='length')
 
 
 class Normal(X3DNormalNode):
@@ -3413,8 +3421,8 @@ class OrientationChaser(X3DChaserNode):
     PROTO = 'OrientationChaser'
     COMPONENT = ('Followers', 1)
     CONTAINER_FIELD = 'children'
-    initialDestination = field.newField('initialDestination', 'SFRotation', 0, [0.0, 1.0, 0.0, 0.0])
-    initialValue = field.newField('initialValue', 'SFRotation', 0, [0.0, 1.0, 0.0, 0.0])
+    initialDestination = field.newField('initialDestination', 'SFRotation', 0, [0.0, 1.0, 0.0, 0.0], unitCategory='angle')
+    initialValue = field.newField('initialValue', 'SFRotation', 0, [0.0, 1.0, 0.0, 0.0], unitCategory='angle')
     set_destination = field.newEvent('set_destination', 'SFRotation', 0)
     set_value = field.newEvent('set_value', 'SFRotation', 0)
     value_changed = field.newEvent('value_changed', 'SFRotation', 1)
@@ -3429,8 +3437,8 @@ class OrientationDamper(X3DDamperNode):
     PROTO = 'OrientationDamper'
     COMPONENT = ('Followers', 1)
     CONTAINER_FIELD = 'children'
-    initialDestination = field.newField('initialDestination', 'SFRotation', 0, [0.0, 1.0, 0.0, 0.0])
-    initialValue = field.newField('initialValue', 'SFRotation', 0, [0.0, 1.0, 0.0, 0.0])
+    initialDestination = field.newField('initialDestination', 'SFRotation', 0, [0.0, 1.0, 0.0, 0.0], unitCategory='angle')
+    initialValue = field.newField('initialValue', 'SFRotation', 0, [0.0, 1.0, 0.0, 0.0], unitCategory='angle')
     set_destination = field.newEvent('set_destination', 'SFRotation', 0)
     set_value = field.newEvent('set_value', 'SFRotation', 0)
     value_changed = field.newEvent('value_changed', 'SFRotation', 1)
@@ -3445,7 +3453,7 @@ class OrientationInterpolator(X3DInterpolatorNode):
     PROTO = 'OrientationInterpolator'
     COMPONENT = ('Interpolation', 1)
     CONTAINER_FIELD = 'children'
-    keyValue = field.newField('keyValue', 'MFRotation', 1, list)
+    keyValue = field.newField('keyValue', 'MFRotation', 1, list, unitCategory='angle')
     value_changed = field.newEvent('value_changed', 'SFRotation', 1)
 
 
@@ -3458,9 +3466,9 @@ class OrthoViewpoint(X3DViewpointNode):
     PROTO = 'OrthoViewpoint'
     COMPONENT = ('Navigation', 3)
     CONTAINER_FIELD = 'children'
-    centerOfRotation = field.newField('centerOfRotation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    fieldOfView = field.newField('fieldOfView', 'MFFloat', 1, [-1.0, -1.0, 1.0, 1.0])
-    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 10.0])
+    centerOfRotation = field.newField('centerOfRotation', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
+    fieldOfView = field.newField('fieldOfView', 'MFFloat', 1, [-1.0, -1.0, 1.0, 1.0], unitCategory='length')
+    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 10.0], unitCategory='length')
 
 
 class OscillatorSource(X3DSoundSourceNode):
@@ -3507,7 +3515,7 @@ class ParticleSystem(X3DShapeNode):
     lifetimeVariation = field.newField('lifetimeVariation', 'SFFloat', 1, 0.25, minimum=0.0, maximum=1.0)
     maxParticles = field.newField('maxParticles', 'SFInt32', 1, 200, minimum=0.0)
     particleLifetime = field.newField('particleLifetime', 'SFFloat', 1, 5.0, minimum=0.0)
-    particleSize = field.newField('particleSize', 'SFVec2f', 1, [0.02, 0.02], minimum=0.0)
+    particleSize = field.newField('particleSize', 'SFVec2f', 1, [0.02, 0.02], minimum=0.0, unitCategory='length')
     physics = field.newField('physics', 'MFNode', 0, list)
     texCoord = field.newField('texCoord', 'SFNode', 0, node.NULL)
     texCoordKey = field.newField('texCoordKey', 'MFFloat', 0, list, minimum=0.0)
@@ -3600,10 +3608,10 @@ class PlaneSensor(X3DDragSensorNode):
     PROTO = 'PlaneSensor'
     COMPONENT = ('PointingDeviceSensor', 1)
     CONTAINER_FIELD = 'children'
-    axisRotation = field.newField('axisRotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
-    maxPosition = field.newField('maxPosition', 'SFVec2f', 1, [-1.0, -1.0])
-    minPosition = field.newField('minPosition', 'SFVec2f', 1, [0.0, 0.0])
-    offset = field.newField('offset', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    axisRotation = field.newField('axisRotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
+    maxPosition = field.newField('maxPosition', 'SFVec2f', 1, [-1.0, -1.0], unitCategory='length')
+    minPosition = field.newField('minPosition', 'SFVec2f', 1, [0.0, 0.0], unitCategory='length')
+    offset = field.newField('offset', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     translation_changed = field.newEvent('translation_changed', 'SFVec3f', 1)
 
 
@@ -3617,7 +3625,7 @@ class PointEmitter(X3DParticleEmitterNode):
     COMPONENT = ('ParticleSystems', 1)
     CONTAINER_FIELD = 'emitter'
     direction = field.newField('direction', 'SFVec3f', 1, [0.0, 1.0, 0.0])
-    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
 
 
 class PointLight(X3DLightNode):
@@ -3630,8 +3638,8 @@ class PointLight(X3DLightNode):
     COMPONENT = ('Lighting', 2)
     CONTAINER_FIELD = 'children'
     attenuation = field.newField('attenuation', 'SFVec3f', 1, [1.0, 0.0, 0.0], minimum=0.0)
-    location = field.newField('location', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    radius = field.newField('radius', 'SFFloat', 1, 100.0, minimum=0.0)
+    location = field.newField('location', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
+    radius = field.newField('radius', 'SFFloat', 1, 100.0, minimum=0.0, unitCategory='length')
 
 
 # 'global' is a Python keyword, so it is set on the class.
@@ -3690,7 +3698,7 @@ class Polyline2D(X3DGeometryNode):
     PROTO = 'Polyline2D'
     COMPONENT = ('Geometry2D', 1)
     CONTAINER_FIELD = 'geometry'
-    lineSegments = field.newField('lineSegments', 'MFVec2f', 0, list)
+    lineSegments = field.newField('lineSegments', 'MFVec2f', 0, list, unitCategory='length')
 
 
 class PolylineEmitter(X3DParticleEmitterNode):
@@ -3717,7 +3725,7 @@ class Polypoint2D(X3DGeometryNode):
     PROTO = 'Polypoint2D'
     COMPONENT = ('Geometry2D', 1)
     CONTAINER_FIELD = 'geometry'
-    point = field.newField('point', 'MFVec2f', 1, list)
+    point = field.newField('point', 'MFVec2f', 1, list, unitCategory='length')
 
 
 class PositionChaser(X3DChaserNode):
@@ -3793,7 +3801,7 @@ class PositionInterpolator(X3DInterpolatorNode):
     PROTO = 'PositionInterpolator'
     COMPONENT = ('Interpolation', 1)
     CONTAINER_FIELD = 'children'
-    keyValue = field.newField('keyValue', 'MFVec3f', 1, list)
+    keyValue = field.newField('keyValue', 'MFVec3f', 1, list, unitCategory='length')
     value_changed = field.newEvent('value_changed', 'SFVec3f', 1)
 
 
@@ -3806,7 +3814,7 @@ class PositionInterpolator2D(X3DInterpolatorNode):
     PROTO = 'PositionInterpolator2D'
     COMPONENT = ('Interpolation', 3)
     CONTAINER_FIELD = 'children'
-    keyValue = field.newField('keyValue', 'MFVec2f', 1, list)
+    keyValue = field.newField('keyValue', 'MFVec2f', 1, list, unitCategory='length')
     value_changed = field.newEvent('value_changed', 'SFVec2f', 1)
 
 
@@ -3855,12 +3863,13 @@ class ProximitySensor(X3DEnvironmentalSensorNode):
     PROTO = 'ProximitySensor'
     COMPONENT = ('EnvironmentalSensor', 1)
     CONTAINER_FIELD = 'children'
-    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     centerOfRotation_changed = field.newEvent('centerOfRotation_changed', 'SFVec3f', 1)
     enterTime = field.newEvent('enterTime', 'SFTime', 1)
     exitTime = field.newEvent('exitTime', 'SFTime', 1)
     orientation_changed = field.newEvent('orientation_changed', 'SFRotation', 1)
     position_changed = field.newEvent('position_changed', 'SFVec3f', 1)
+    size = field.newField('size', 'SFVec3f', 1, [0.0, 0.0, 0.0], minimum=0.0, unitCategory='length')
 
 
 class QuadSet(X3DComposedGeometryNode):
@@ -3920,7 +3929,7 @@ class Rectangle2D(X3DGeometryNode):
     PROTO = 'Rectangle2D'
     COMPONENT = ('Geometry2D', 1)
     CONTAINER_FIELD = 'geometry'
-    size = field.newField('size', 'SFVec2f', 0, [2.0, 2.0])
+    size = field.newField('size', 'SFVec2f', 0, [2.0, 2.0], unitCategory='length')
     solid = field.newField('solid', 'SFBool', 0, False)
 
 
@@ -3954,25 +3963,25 @@ class RigidBody(X3DChildNode, X3DBoundedObject):
     COMPONENT = ('RigidBodyPhysics', 2)
     CONTAINER_FIELD = 'bodies'
     angularDampingFactor = field.newField('angularDampingFactor', 'SFFloat', 1, 0.001)
-    angularVelocity = field.newField('angularVelocity', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    angularVelocity = field.newField('angularVelocity', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='angular_velocity')
     autoDamp = field.newField('autoDamp', 'SFBool', 1, False)
     autoDisable = field.newField('autoDisable', 'SFBool', 1, False)
-    centerOfMass = field.newField('centerOfMass', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    centerOfMass = field.newField('centerOfMass', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     disableAngularSpeed = field.newField('disableAngularSpeed', 'SFFloat', 1, 0.0)
     disableLinearSpeed = field.newField('disableLinearSpeed', 'SFFloat', 1, 0.0)
     disableTime = field.newField('disableTime', 'SFTime', 1, 0.0, minimum=0.0)
     enabled = field.newField('enabled', 'SFBool', 1, True)
     finiteRotationAxis = field.newField('finiteRotationAxis', 'SFVec3f', 1, [0.0, 1.0, 0.0])
     fixed = field.newField('fixed', 'SFBool', 1, False)
-    forces = field.newField('forces', 'MFVec3f', 1, list)
+    forces = field.newField('forces', 'MFVec3f', 1, list, unitCategory='force')
     geometry = field.newField('geometry', 'MFNode', 1, list)
     inertia = field.newField('inertia', 'SFMatrix3f', 1, [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0])
     linearDampingFactor = field.newField('linearDampingFactor', 'SFFloat', 1, 0.001)
-    linearVelocity = field.newField('linearVelocity', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    mass = field.newField('mass', 'SFFloat', 1, 1.0)
+    linearVelocity = field.newField('linearVelocity', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='speed')
+    mass = field.newField('mass', 'SFFloat', 1, 1.0, unitCategory='mass')
     massDensityModel = field.newField('massDensityModel', 'SFNode', 1, node.NULL)
-    orientation = field.newField('orientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
-    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    orientation = field.newField('orientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
+    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     torques = field.newField('torques', 'MFVec3f', 1, list)
     useFiniteRotation = field.newField('useFiniteRotation', 'SFBool', 1, False)
     useGlobalGravity = field.newField('useGlobalGravity', 'SFBool', 1, True)
@@ -3991,16 +4000,16 @@ class RigidBodyCollection(X3DChildNode, X3DBoundedObject):
     bodies = field.newField('bodies', 'MFNode', 1, list)
     collider = field.newField('collider', 'SFNode', 0, node.NULL)
     constantForceMix = field.newField('constantForceMix', 'SFFloat', 1, 0.0001)
-    contactSurfaceThickness = field.newField('contactSurfaceThickness', 'SFFloat', 1, 0.0)
+    contactSurfaceThickness = field.newField('contactSurfaceThickness', 'SFFloat', 1, 0.0, unitCategory='length')
     disableAngularSpeed = field.newField('disableAngularSpeed', 'SFFloat', 1, 0.0)
     disableLinearSpeed = field.newField('disableLinearSpeed', 'SFFloat', 1, 0.0)
     disableTime = field.newField('disableTime', 'SFTime', 1, 0.0, minimum=0.0)
     enabled = field.newField('enabled', 'SFBool', 1, True)
     errorCorrection = field.newField('errorCorrection', 'SFFloat', 1, 0.8)
-    gravity = field.newField('gravity', 'SFVec3f', 1, [0.0, -9.8, 0.0])
+    gravity = field.newField('gravity', 'SFVec3f', 1, [0.0, -9.8, 0.0], unitCategory='acceleration')
     iterations = field.newField('iterations', 'SFInt32', 1, 10)
     joints = field.newField('joints', 'MFNode', 1, list)
-    maxCorrectionSpeed = field.newField('maxCorrectionSpeed', 'SFFloat', 1, -1.0)
+    maxCorrectionSpeed = field.newField('maxCorrectionSpeed', 'SFFloat', 1, -1.0, unitCategory='speed')
     preferAccuracy = field.newField('preferAccuracy', 'SFBool', 1, False)
     set_contacts = field.newEvent('set_contacts', 'MFNode', 0)
 
@@ -4224,14 +4233,14 @@ class SingleAxisHingeJoint(X3DRigidJointNode):
     PROTO = 'SingleAxisHingeJoint'
     COMPONENT = ('RigidBodyPhysics', 2)
     CONTAINER_FIELD = 'joints'
-    anchorPoint = field.newField('anchorPoint', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    anchorPoint = field.newField('anchorPoint', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     angle = field.newEvent('angle', 'SFFloat', 1)
     angleRate = field.newEvent('angleRate', 'SFFloat', 1)
     axis = field.newField('axis', 'SFVec3f', 1, [0.0, 1.0, 0.0])
     body1AnchorPoint = field.newEvent('body1AnchorPoint', 'SFVec3f', 1)
     body2AnchorPoint = field.newEvent('body2AnchorPoint', 'SFVec3f', 1)
-    maxAngle = field.newField('maxAngle', 'SFFloat', 1, 3.141592653)
-    minAngle = field.newField('minAngle', 'SFFloat', 1, -3.141592653)
+    maxAngle = field.newField('maxAngle', 'SFFloat', 1, 3.141592653, unitCategory='angle')
+    minAngle = field.newField('minAngle', 'SFFloat', 1, -3.141592653, unitCategory='angle')
     stopBounce = field.newField('stopBounce', 'SFFloat', 1, 0.0)
     stopErrorCorrection = field.newField('stopErrorCorrection', 'SFFloat', 1, 0.8)
 
@@ -4246,11 +4255,11 @@ class SliderJoint(X3DRigidJointNode):
     COMPONENT = ('RigidBodyPhysics', 2)
     CONTAINER_FIELD = 'joints'
     axis = field.newField('axis', 'SFVec3f', 1, [0.0, 1.0, 0.0])
-    maxSeparation = field.newField('maxSeparation', 'SFFloat', 1, 1.0)
-    minSeparation = field.newField('minSeparation', 'SFFloat', 1, 0.0)
+    maxSeparation = field.newField('maxSeparation', 'SFFloat', 1, 1.0, unitCategory='length')
+    minSeparation = field.newField('minSeparation', 'SFFloat', 1, 0.0, unitCategory='length')
     separation = field.newEvent('separation', 'SFFloat', 1)
     separationRate = field.newEvent('separationRate', 'SFFloat', 1)
-    sliderForce = field.newField('sliderForce', 'SFFloat', 1, 0.0)
+    sliderForce = field.newField('sliderForce', 'SFFloat', 1, 0.0, unitCategory='force')
     stopBounce = field.newField('stopBounce', 'SFFloat', 1, 0.0)
     stopErrorCorrection = field.newField('stopErrorCorrection', 'SFFloat', 1, 1.0)
 
@@ -4266,11 +4275,11 @@ class Sound(X3DSoundNode):
     CONTAINER_FIELD = 'children'
     direction = field.newField('direction', 'SFVec3f', 1, [0.0, 0.0, 1.0])
     intensity = field.newField('intensity', 'SFFloat', 1, 1.0, minimum=0.0, maximum=1.0)
-    location = field.newField('location', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    maxBack = field.newField('maxBack', 'SFFloat', 1, 10.0, minimum=0.0)
-    maxFront = field.newField('maxFront', 'SFFloat', 1, 10.0, minimum=0.0)
-    minBack = field.newField('minBack', 'SFFloat', 1, 1.0, minimum=0.0)
-    minFront = field.newField('minFront', 'SFFloat', 1, 1.0, minimum=0.0)
+    location = field.newField('location', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
+    maxBack = field.newField('maxBack', 'SFFloat', 1, 10.0, minimum=0.0, unitCategory='length')
+    maxFront = field.newField('maxFront', 'SFFloat', 1, 10.0, minimum=0.0, unitCategory='length')
+    minBack = field.newField('minBack', 'SFFloat', 1, 1.0, minimum=0.0, unitCategory='length')
+    minFront = field.newField('minFront', 'SFFloat', 1, 1.0, minimum=0.0, unitCategory='length')
     priority = field.newField('priority', 'SFFloat', 1, 0.0, minimum=0.0, maximum=1.0)
     source = field.newField('source', 'SFNode', 1, node.NULL)
     spatialize = field.newField('spatialize', 'SFBool', 0, True)
@@ -4312,7 +4321,7 @@ class Sphere(X3DGeometryNode):
     PROTO = 'Sphere'
     COMPONENT = ('Geometry3D', 1)
     CONTAINER_FIELD = 'geometry'
-    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True)
+    radius = field.newField('radius', 'SFFloat', 0, 1.0, minimum=0.0, minimumExclusive=True, unitCategory='length')
     solid = field.newField('solid', 'SFBool', 0, True)
 
 
@@ -4325,7 +4334,7 @@ class SphereSensor(X3DDragSensorNode):
     PROTO = 'SphereSensor'
     COMPONENT = ('PointingDeviceSensor', 1)
     CONTAINER_FIELD = 'children'
-    offset = field.newField('offset', 'SFRotation', 1, [0.0, 1.0, 0.0, 0.0])
+    offset = field.newField('offset', 'SFRotation', 1, [0.0, 1.0, 0.0, 0.0], unitCategory='angle')
     rotation_changed = field.newEvent('rotation_changed', 'SFRotation', 1)
 
 
@@ -4339,7 +4348,7 @@ class SplinePositionInterpolator(X3DInterpolatorNode):
     COMPONENT = ('Interpolation', 4)
     CONTAINER_FIELD = 'children'
     closed = field.newField('closed', 'SFBool', 1, False)
-    keyValue = field.newField('keyValue', 'MFVec3f', 1, list)
+    keyValue = field.newField('keyValue', 'MFVec3f', 1, list, unitCategory='length')
     keyVelocity = field.newField('keyVelocity', 'MFVec3f', 1, list)
     normalizeVelocity = field.newField('normalizeVelocity', 'SFBool', 1, False)
     value_changed = field.newEvent('value_changed', 'SFVec3f', 1)
@@ -4355,7 +4364,7 @@ class SplinePositionInterpolator2D(X3DInterpolatorNode):
     COMPONENT = ('Interpolation', 4)
     CONTAINER_FIELD = 'children'
     closed = field.newField('closed', 'SFBool', 1, False)
-    keyValue = field.newField('keyValue', 'MFVec2f', 1, list)
+    keyValue = field.newField('keyValue', 'MFVec2f', 1, list, unitCategory='length')
     keyVelocity = field.newField('keyVelocity', 'MFVec2f', 1, list)
     normalizeVelocity = field.newField('normalizeVelocity', 'SFBool', 1, False)
     value_changed = field.newEvent('value_changed', 'SFVec2f', 1)
@@ -4387,11 +4396,11 @@ class SpotLight(X3DLightNode):
     COMPONENT = ('Lighting', 2)
     CONTAINER_FIELD = 'children'
     attenuation = field.newField('attenuation', 'SFVec3f', 1, [1.0, 0.0, 0.0], minimum=0.0)
-    beamWidth = field.newField('beamWidth', 'SFFloat', 1, 0.589049, minimum=0.0, minimumExclusive=True, maximum=1.570796)
-    cutOffAngle = field.newField('cutOffAngle', 'SFFloat', 1, 1.570796, minimum=0.0, minimumExclusive=True, maximum=1.570796)
+    beamWidth = field.newField('beamWidth', 'SFFloat', 1, 0.589049, minimum=0.0, minimumExclusive=True, maximum=1.570796, unitCategory='angle')
+    cutOffAngle = field.newField('cutOffAngle', 'SFFloat', 1, 1.570796, minimum=0.0, minimumExclusive=True, maximum=1.570796, unitCategory='angle')
     direction = field.newField('direction', 'SFVec3f', 1, [0.0, 0.0, -1.0])
-    location = field.newField('location', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    radius = field.newField('radius', 'SFFloat', 1, 100.0, minimum=0.0)
+    location = field.newField('location', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
+    radius = field.newField('radius', 'SFFloat', 1, 100.0, minimum=0.0, unitCategory='length')
 
 
 # 'global' is a Python keyword, so it is set on the class.
@@ -4407,7 +4416,7 @@ class SquadOrientationInterpolator(X3DInterpolatorNode):
     PROTO = 'SquadOrientationInterpolator'
     COMPONENT = ('Interpolation', 5)
     CONTAINER_FIELD = 'children'
-    keyValue = field.newField('keyValue', 'MFRotation', 1, list)
+    keyValue = field.newField('keyValue', 'MFRotation', 1, list, unitCategory='angle')
     normalizeVelocity = field.newField('normalizeVelocity', 'SFBool', 1, False)
     value_changed = field.newEvent('value_changed', 'SFRotation', 1)
 
@@ -4544,9 +4553,9 @@ class Text(X3DGeometryNode):
     COMPONENT = ('Text', 1)
     CONTAINER_FIELD = 'geometry'
     fontStyle = field.newField('fontStyle', 'SFNode', 1, node.NULL)
-    length = field.newField('length', 'MFFloat', 1, list, minimum=0.0)
+    length = field.newField('length', 'MFFloat', 1, list, minimum=0.0, unitCategory='length')
     lineBounds = field.newEvent('lineBounds', 'MFVec2f', 1)
-    maxExtent = field.newField('maxExtent', 'SFFloat', 1, 0.0, minimum=0.0)
+    maxExtent = field.newField('maxExtent', 'SFFloat', 1, 0.0, minimum=0.0, unitCategory='length')
     origin = field.newEvent('origin', 'SFVec3f', 1)
     solid = field.newField('solid', 'SFBool', 0, False)
     string = field.newField('string', 'MFString', 1, list)
@@ -4565,8 +4574,10 @@ class TextureBackground(X3DBackgroundNode):
     backTexture = field.newField('backTexture', 'SFNode', 1, node.NULL)
     bottomTexture = field.newField('bottomTexture', 'SFNode', 1, node.NULL)
     frontTexture = field.newField('frontTexture', 'SFNode', 1, node.NULL)
+    groundAngle = field.newField('groundAngle', 'MFFloat', 1, list, minimum=0.0, maximum=1.5708, unitCategory='angle')
     leftTexture = field.newField('leftTexture', 'SFNode', 1, node.NULL)
     rightTexture = field.newField('rightTexture', 'SFNode', 1, node.NULL)
+    skyAngle = field.newField('skyAngle', 'MFFloat', 1, list, minimum=0.0, maximum=3.1416, unitCategory='angle')
     topTexture = field.newField('topTexture', 'SFNode', 1, node.NULL)
 
 
@@ -4675,7 +4686,7 @@ class TextureTransform(X3DSingleTextureTransformNode):
     COMPONENT = ('Texturing', 1)
     CONTAINER_FIELD = 'textureTransform'
     center = field.newField('center', 'SFVec2f', 1, [0.0, 0.0])
-    rotation = field.newField('rotation', 'SFFloat', 1, 0.0)
+    rotation = field.newField('rotation', 'SFFloat', 1, 0.0, unitCategory='angle')
     scale = field.newField('scale', 'SFVec2f', 1, [1.0, 1.0])
     translation = field.newField('translation', 'SFVec2f', 1, [0.0, 0.0])
 
@@ -4690,7 +4701,7 @@ class TextureTransform3D(X3DSingleTextureTransformNode):
     COMPONENT = ('Texturing3D', 1)
     CONTAINER_FIELD = 'textureTransform'
     center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     scale = field.newField('scale', 'SFVec3f', 1, [1.0, 1.0, 1.0])
     translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
 
@@ -4773,11 +4784,11 @@ class Transform(behaviours.LocalMatrices, nodetypes.Transforming, X3DGroupingNod
     PROTO = 'Transform'
     COMPONENT = ('Grouping', 1)
     CONTAINER_FIELD = 'children'
-    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
+    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
+    rotation = field.newField('rotation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
     scale = field.newField('scale', 'SFVec3f', 1, [1.0, 1.0, 1.0])
-    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0])
-    translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    scaleOrientation = field.newField('scaleOrientation', 'SFRotation', 1, [0.0, 0.0, 1.0, 0.0], unitCategory='angle')
+    translation = field.newField('translation', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
 
 
 class TransformSensor(X3DEnvironmentalSensorNode):
@@ -4789,11 +4800,12 @@ class TransformSensor(X3DEnvironmentalSensorNode):
     PROTO = 'TransformSensor'
     COMPONENT = ('EnvironmentalSensor', 3)
     CONTAINER_FIELD = 'children'
-    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     enterTime = field.newEvent('enterTime', 'SFTime', 1)
     exitTime = field.newEvent('exitTime', 'SFTime', 1)
     orientation_changed = field.newEvent('orientation_changed', 'SFRotation', 1)
     position_changed = field.newEvent('position_changed', 'SFVec3f', 1)
+    size = field.newField('size', 'SFVec3f', 1, [0.0, 0.0, 0.0], minimum=0.0, unitCategory='length')
     targetObject = field.newField('targetObject', 'SFNode', 1, node.NULL)
 
 
@@ -4883,7 +4895,7 @@ class TriangleSet2D(X3DGeometryNode):
     COMPONENT = ('Geometry2D', 1)
     CONTAINER_FIELD = 'geometry'
     solid = field.newField('solid', 'SFBool', 0, False)
-    vertices = field.newField('vertices', 'MFVec2f', 1, list)
+    vertices = field.newField('vertices', 'MFVec2f', 1, list, unitCategory='length')
 
 
 class TriangleStripSet(X3DComposedGeometryNode):
@@ -4931,7 +4943,7 @@ class UniversalJoint(X3DRigidJointNode):
     PROTO = 'UniversalJoint'
     COMPONENT = ('RigidBodyPhysics', 2)
     CONTAINER_FIELD = 'joints'
-    anchorPoint = field.newField('anchorPoint', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    anchorPoint = field.newField('anchorPoint', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     axis1 = field.newField('axis1', 'SFVec3f', 1, [1.0, 0.0, 0.0])
     axis2 = field.newField('axis2', 'SFVec3f', 1, [0.0, 1.0, 0.0])
     body1AnchorPoint = field.newEvent('body1AnchorPoint', 'SFVec3f', 1)
@@ -4968,9 +4980,9 @@ class Viewpoint(X3DViewpointNode):
     PROTO = 'Viewpoint'
     COMPONENT = ('Navigation', 1)
     CONTAINER_FIELD = 'children'
-    centerOfRotation = field.newField('centerOfRotation', 'SFVec3f', 1, [0.0, 0.0, 0.0])
-    fieldOfView = field.newField('fieldOfView', 'SFFloat', 1, 0.7854, minimum=0.0, minimumExclusive=True, maximum=3.1416, maximumExclusive=True)
-    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 10.0])
+    centerOfRotation = field.newField('centerOfRotation', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
+    fieldOfView = field.newField('fieldOfView', 'SFFloat', 1, 0.7854, minimum=0.0, minimumExclusive=True, maximum=3.1416, maximumExclusive=True, unitCategory='angle')
+    position = field.newField('position', 'SFVec3f', 1, [0.0, 0.0, 10.0], unitCategory='length')
 
 
 class ViewpointGroup(X3DChildNode):
@@ -5011,9 +5023,10 @@ class VisibilitySensor(X3DEnvironmentalSensorNode):
     PROTO = 'VisibilitySensor'
     COMPONENT = ('EnvironmentalSensor', 2)
     CONTAINER_FIELD = 'children'
-    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0])
+    center = field.newField('center', 'SFVec3f', 1, [0.0, 0.0, 0.0], unitCategory='length')
     enterTime = field.newEvent('enterTime', 'SFTime', 1)
     exitTime = field.newEvent('exitTime', 'SFTime', 1)
+    size = field.newField('size', 'SFVec3f', 1, [0.0, 0.0, 0.0], minimum=0.0, unitCategory='length')
 
 
 class VolumeData(X3DVolumeDataNode):
@@ -5081,7 +5094,7 @@ class WindPhysicsModel(X3DParticlePhysicsModelNode):
     CONTAINER_FIELD = 'physics'
     direction = field.newField('direction', 'SFVec3f', 1, [1.0, 0.0, 0.0])
     gustiness = field.newField('gustiness', 'SFFloat', 1, 0.1, minimum=0.0)
-    speed = field.newField('speed', 'SFFloat', 1, 0.1, minimum=0.0)
+    speed = field.newField('speed', 'SFFloat', 1, 0.1, minimum=0.0, unitCategory='speed')
     turbulence = field.newField('turbulence', 'SFFloat', 1, 0.0, minimum=0.0, maximum=1.0)
 
 

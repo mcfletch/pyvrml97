@@ -54,7 +54,10 @@ Fields named by a Python keyword (the lights' ``global``) are read with
 ``getattr(light, 'global')`` and set with ``Light(**{'global': True})``.
 
 ``vrml/x3d/nodes.pyi`` types every constructor and field, so a type checker
-reports ``x3d.Shape(geometry=x3d.Appearance())`` and a misspelt field name.
+reports ``x3d.Shape(geometry=x3d.Appearance())``. Constructors also take
+``**fields``, for the fields an engine's implementation of a node adds; a
+name the class does not have raises ``AttributeError`` when the node is
+made. Reading a node field is typed ``Any``: it answers the node or ``NULL``.
 
 Field types
 -----------

@@ -100,9 +100,15 @@ class TestABool(unittest.TestCase):
         self.assertEqual(self.field().vrmlstr(0), 'FALSE')
 
     def test_it_checks_for_one_of_the_two_values(self):
-        self.assertTrue(self.field().check(1))
-        self.assertTrue(self.field().check(0))
+        self.assertTrue(self.field().check(True))
+        self.assertTrue(self.field().check(False))
         self.assertFalse(self.field().check(2))
+
+    def test_it_holds_a_python_bool(self):
+        self.assertIs(self.field().coerce(1), True)
+        self.assertIs(self.field().coerce(0), False)
+        self.assertIs(self.field().coerce('TRUE'), True)
+        self.assertIs(self.field().coerce('false'), False)
 
 
 class TestAnInteger(unittest.TestCase):

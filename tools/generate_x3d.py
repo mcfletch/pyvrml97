@@ -142,6 +142,104 @@ RENAMES = {
     'LayoutLayer': {'isPickable': 'pickable'},
 }
 
+#: The unit category (ISO/IEC 19775-1, 4.3.6, Tables 4.2 and 4.3) of each
+#: field whose value the specification describes as a length, angle, mass,
+#: force or a unit derived from them, by the type that declares the field.
+#: The X3DUOM does not record units. Every SFRotation and MFRotation field is
+#: in the angle category as well; its angle is scaled.
+UNIT_CATEGORIES: "dict[str, dict[str, str]]" = {
+    'X3DBoundedObject': {'bboxCenter': 'length', 'bboxSize': 'length'},
+    'X3DGroupingNode': {'bboxCenter': 'length', 'bboxSize': 'length'},
+    'X3DShapeNode': {'bboxCenter': 'length', 'bboxSize': 'length'},
+    'Transform': {'translation': 'length', 'center': 'length'},
+    'HAnimHumanoid': {'translation': 'length', 'center': 'length'},
+    'HAnimJoint': {'translation': 'length', 'center': 'length'},
+    'HAnimSite': {'translation': 'length', 'center': 'length'},
+    'HAnimSegment': {'centerOfMass': 'length', 'mass': 'mass'},
+    'Viewpoint': {'centerOfRotation': 'length', 'position': 'length',
+                  'fieldOfView': 'angle'},
+    'OrthoViewpoint': {'centerOfRotation': 'length', 'position': 'length',
+                       'fieldOfView': 'length'},
+    'NavigationInfo': {'avatarSize': 'length', 'visibilityLimit': 'length',
+                       'speed': 'speed'},
+    'LOD': {'center': 'length', 'range': 'length'},
+    'Coordinate': {'point': 'length'},
+    'CoordinateDouble': {'point': 'length'},
+    'Box': {'size': 'length'},
+    'Cone': {'bottomRadius': 'length', 'height': 'length'},
+    'Cylinder': {'radius': 'length', 'height': 'length'},
+    'Sphere': {'radius': 'length'},
+    'ElevationGrid': {'xSpacing': 'length', 'zSpacing': 'length',
+                      'height': 'length', 'creaseAngle': 'angle'},
+    'Extrusion': {'spine': 'length', 'crossSection': 'length', 'creaseAngle': 'angle'},
+    'IndexedFaceSet': {'creaseAngle': 'angle'},
+    'Arc2D': {'radius': 'length', 'startAngle': 'angle', 'endAngle': 'angle'},
+    'ArcClose2D': {'radius': 'length', 'startAngle': 'angle', 'endAngle': 'angle'},
+    'Circle2D': {'radius': 'length'},
+    'Disk2D': {'innerRadius': 'length', 'outerRadius': 'length'},
+    'Polyline2D': {'lineSegments': 'length'},
+    'Polypoint2D': {'point': 'length'},
+    'Rectangle2D': {'size': 'length'},
+    'TriangleSet2D': {'vertices': 'length'},
+    'Text': {'length': 'length', 'maxExtent': 'length'},
+    'FontStyle': {'size': 'length'},
+    'PointLight': {'location': 'length', 'radius': 'length'},
+    'SpotLight': {'location': 'length', 'radius': 'length',
+                  'beamWidth': 'angle', 'cutOffAngle': 'angle'},
+    'Sound': {'location': 'length', 'minBack': 'length', 'minFront': 'length',
+              'maxBack': 'length', 'maxFront': 'length'},
+    'X3DFogObject': {'visibilityRange': 'length'},
+    'Background': {'skyAngle': 'angle', 'groundAngle': 'angle'},
+    'TextureBackground': {'skyAngle': 'angle', 'groundAngle': 'angle'},
+    'ProximitySensor': {'center': 'length', 'size': 'length'},
+    'VisibilitySensor': {'center': 'length', 'size': 'length'},
+    'TransformSensor': {'center': 'length', 'size': 'length'},
+    'PlaneSensor': {'offset': 'length', 'minPosition': 'length',
+                    'maxPosition': 'length'},
+    'CylinderSensor': {'diskAngle': 'angle', 'minAngle': 'angle',
+                       'maxAngle': 'angle', 'offset': 'angle'},
+    'PositionInterpolator': {'keyValue': 'length'},
+    'PositionInterpolator2D': {'keyValue': 'length'},
+    'CoordinateInterpolator': {'keyValue': 'length'},
+    'CoordinateInterpolator2D': {'keyValue': 'length'},
+    'SplinePositionInterpolator': {'keyValue': 'length'},
+    'SplinePositionInterpolator2D': {'keyValue': 'length'},
+    'TextureTransform': {'rotation': 'angle'},
+    'RigidBody': {'mass': 'mass', 'position': 'length', 'centerOfMass': 'length',
+                  'linearVelocity': 'speed', 'angularVelocity': 'angular_velocity',
+                  'forces': 'force'},
+    'RigidBodyCollection': {'gravity': 'acceleration',
+                            'contactSurfaceThickness': 'length',
+                            'maxCorrectionSpeed': 'speed'},
+    'CollisionCollection': {'minBounceSpeed': 'speed', 'surfaceSpeed': 'speed'},
+    'Contact': {'minBounceSpeed': 'speed', 'surfaceSpeed': 'speed',
+                'position': 'length'},
+    'BallJoint': {'anchorPoint': 'length'},
+    'DoubleAxisHingeJoint': {'anchorPoint': 'length', 'minAngle1': 'angle',
+                             'maxAngle1': 'angle',
+                             'desiredAngularVelocity1': 'angular_velocity',
+                             'desiredAngularVelocity2': 'angular_velocity'},
+    'SingleAxisHingeJoint': {'anchorPoint': 'length', 'minAngle': 'angle',
+                             'maxAngle': 'angle'},
+    'UniversalJoint': {'anchorPoint': 'length'},
+    'SliderJoint': {'minSeparation': 'length', 'maxSeparation': 'length',
+                    'sliderForce': 'force'},
+    'MotorJoint': {'axis1Angle': 'angle', 'axis2Angle': 'angle', 'axis3Angle': 'angle'},
+    'ParticleSystem': {'particleSize': 'length'},
+    'X3DParticleEmitterNode': {'speed': 'speed', 'mass': 'mass', 'surfaceArea': 'area'},
+    'ConeEmitter': {'position': 'length', 'angle': 'angle'},
+    'ExplosionEmitter': {'position': 'length'},
+    'PointEmitter': {'position': 'length'},
+    'ForcePhysicsModel': {'force': 'force'},
+    'WindPhysicsModel': {'speed': 'speed'},
+}
+
+#: The unit categories of ISO/IEC 19775-1 Tables 4.2 and 4.3.
+UNIT_CATEGORY_NAMES = frozenset((
+    'angle', 'force', 'length', 'mass',
+    'acceleration', 'angular_velocity', 'area', 'speed', 'volume',
+))
+
 #: The attributes of `node.Node` and its prototype machinery a field must not
 #: take the name of.
 RESERVED = frozenset((
@@ -203,6 +301,7 @@ class FieldSpec:
     choices: "tuple[str, ...]"
     choicesOpen: bool
     synonym: str
+    unitCategory: str = ''
 
     @property
     def is_event(self) -> bool:
@@ -214,6 +313,7 @@ class FieldSpec:
             self.type, self.access, default_literal(self), self.acceptable,
             self.minimum, self.minimumExclusive, self.maximum,
             self.maximumExclusive, self.choices, self.choicesOpen,
+            self.unitCategory,
         )
 
 
@@ -268,7 +368,8 @@ class Model:
         # A field whose values are statements (a Script's `field` children)
         # is the XML form of a declaration, which the builder reads.
         fields = [
-            self._field(name, item) for item in interface.findall('field')
+            self._with_unit(name, item, self._field(name, item))
+            for item in interface.findall('field')
             if not is_encoding_attribute(item)
             and not set((item.get('acceptableNodeTypes') or '').split('|')) & STATEMENTS
         ]
@@ -284,6 +385,18 @@ class Model:
             container=container.get('default') if container is not None else '',
             url=interface.get('specificationUrl') or '',
         )
+
+    @staticmethod
+    def _with_unit(owner: str, element: Any, spec: FieldSpec) -> FieldSpec:
+        """The field with the unit category UNIT_CATEGORIES gives it"""
+        declarer = element.get('inheritedFrom') or owner
+        category = (UNIT_CATEGORIES.get(owner, {}).get(spec.name)
+                    or UNIT_CATEGORIES.get(declarer, {}).get(spec.name))
+        if not category and spec.type in ('SFRotation', 'MFRotation'):
+            category = 'angle'
+        if not category:
+            return spec
+        return dataclasses.replace(spec, unitCategory=category)
 
     def _field(self, owner: str, element: Any) -> FieldSpec:
         unknown = set(element.attrib) - FIELD_ATTRIBUTES
@@ -395,6 +508,15 @@ class Vocabulary:
         self.mro: "dict[str, list[str]]" = {}
         for spec in self.order:
             self._plan(spec)
+        for type_name, units in UNIT_CATEGORIES.items():
+            for field_name, category in units.items():
+                found = self.resolve(type_name, field_name) if type_name in self.declared else None
+                if found is None:
+                    raise GenerationError('UNIT_CATEGORIES names %s.%s, which is not a field'
+                                          % (type_name, field_name))
+                if category not in UNIT_CATEGORY_NAMES:
+                    raise GenerationError('%s.%s has unknown unit category %s'
+                                          % (type_name, field_name, category))
         for type_name, renames in RENAMES.items():
             for old, new in renames.items():
                 if not self.resolve(type_name, new):
@@ -515,6 +637,8 @@ def description(spec: FieldSpec) -> str:
         items.append('choices=%r' % (spec.choices,))
         if not spec.choicesOpen:
             items.append('choicesOpen=False')
+    if spec.unitCategory:
+        items.append('unitCategory=%r' % spec.unitCategory)
     return ''.join(', ' + item for item in items)
 
 
@@ -626,34 +750,34 @@ def generate_nodes(vocabulary: Vocabulary) -> str:
 #: What reading each field type answers, and what setting one accepts, as
 #: the stubs declare them.
 STUB_TYPES = {
-    'SFBool': ('int', 'bool | int'),
+    'SFBool': ('bool', 'bool | int'),
     'SFInt32': ('int', 'int'),
     'SFFloat': ('float', 'float'),
     'SFDouble': ('float', 'float'),
     'SFTime': ('float', 'float'),
     'SFString': ('str', 'str'),
-    'MFString': ('list[str]', 'str | Sequence[str]'),
-    'SFImage': ('_U32', 'ArrayLike'),
-    'MFImage': ('list[_U32]', 'Sequence[ArrayLike] | ArrayLike'),
-    'MFBool': ('NDArray[np.bool_]', 'ArrayLike'),
-    'MFInt32': ('_I32', 'ArrayLike'),
+    'MFString': ('list[str]', 'str | Iterable[str]'),
+    'SFImage': ('_U32', '_Numbers'),
+    'MFImage': ('list[_U32]', 'Iterable[_Numbers] | _Numbers'),
+    'MFBool': ('NDArray[np.bool_]', '_Numbers'),
+    'MFInt32': ('_I32', '_Numbers'),
 }
 for _name in codecs.FLOAT32_TYPES:
-    STUB_TYPES[_name] = ('_F32', 'ArrayLike')
+    STUB_TYPES[_name] = ('_F32', '_Numbers')
 for _name in codecs.FLOAT64_TYPES:
-    STUB_TYPES[_name] = ('_F64', 'ArrayLike')
+    STUB_TYPES[_name] = ('_F64', '_Numbers')
 
 STUB_HEADER = '''"""The X3D {version} node declarations: typed interface
 
 Generated by tools/generate_x3d.py; regenerate rather than edit.
 """
-from collections.abc import Sequence
-from typing import ClassVar, Generic, TypeVar, overload
+from collections.abc import Iterable, Sequence
+from typing import Any, ClassVar, Generic, TypeVar, overload
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
-from vrml import node
+from vrml import field, node
 from vrml.vrml97 import nodetypes
 from vrml.x3d import behaviours
 
@@ -663,11 +787,13 @@ _F32 = NDArray[np.float32]
 _F64 = NDArray[np.float64]
 _I32 = NDArray[np.int32]
 _U32 = NDArray[np.uint32]
+#: What a numeric field takes: an array, nested sequences, or any iterable
+#: of numbers (a `zip` or `map` is drawn out).
+_Numbers = ArrayLike | Iterable[Any]
 
-class _Field(Generic[_Get, _Set]):
+class _Field(field.Field, Generic[_Get, _Set]):
     """A field: reads answer `_Get`, assignment takes `_Set`"""
 
-    name: str
     @overload
     def __get__(self, client: None, cls: type | None = None) -> _Field[_Get, _Set]: ...
     @overload
@@ -681,11 +807,18 @@ FIELD_TYPES: dict[str, tuple[int, bool, str, str]]
 
 
 def stub_types(vocabulary: Vocabulary, spec: FieldSpec) -> "tuple[str, str]":
+    """The read and assignment types of a field
+
+    A node field's read is `Any`: it answers the node or NULL, which a
+    checker cannot tell apart by truthiness, and code reading one asks for
+    the attributes of the concrete node it expects there. Assignment takes
+    the types the field holds.
+    """
     if spec.type in ('SFNode', 'MFNode'):
         held = ' | '.join(vocabulary.required(spec)) or 'node.Node'
         if spec.type == 'SFNode':
-            return ('%s | node.NullNode' % held, '%s | None' % held)
-        return ('list[%s]' % held, 'Sequence[%s]' % held)
+            return ('Any', '%s | None' % held)
+        return ('list[Any]', 'Sequence[%s]' % held)
     return STUB_TYPES[spec.type]
 
 
@@ -706,11 +839,7 @@ def generate_stubs(vocabulary: Vocabulary) -> str:
             if keyword.iskeyword(item.name):
                 continue
             get, put = stub_types(vocabulary, item)
-            line = '%s: _Field[%s, %s]' % (item.name, get, put)
-            inherited = vocabulary.resolve_from_bases(spec.name, item.name)
-            if inherited is not None and stub_types(vocabulary, inherited) != (get, put):
-                line += '  # type: ignore[assignment]  # X3D narrows the inherited field here'
-            body.append(line)
+            body.append('%s: _Field[%s, %s]' % (item.name, get, put))
         for old, new in sorted(vocabulary.aliases.get(spec.name, ())):
             target = vocabulary.resolve(spec.name, new)
             assert target is not None
@@ -722,6 +851,15 @@ def generate_stubs(vocabulary: Vocabulary) -> str:
                 if item.is_event or keyword.iskeyword(item.name):
                     continue
                 parameters.append('%s: %s = ...' % (item.name, stub_types(vocabulary, item)[1]))
+            for owner in [spec.name] + vocabulary.mro[spec.name]:
+                for old, new in sorted(vocabulary.aliases.get(owner, ())):
+                    target = vocabulary.resolve(spec.name, new)
+                    assert target is not None
+                    parameters.append('%s: %s = ...' % (old, stub_types(vocabulary, target)[1]))
+            # An engine's implementation adds fields of its own to the
+            # declaration it implements; Node.__init__ refuses a name the
+            # class does not have.
+            parameters.append('**fields: Any')
             body.append('def __init__(self, *, %s) -> None: ...' % ', '.join(parameters))
         if not body:
             body.append('...')

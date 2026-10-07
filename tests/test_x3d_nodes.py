@@ -124,6 +124,15 @@ class TestFields(unittest.TestCase):
         self.assertEqual(x3d.PhysicalMaterial.metallic.minimum, 0.0)
         self.assertEqual(x3d.PhysicalMaterial.metallic.maximum, 1.0)
 
+    def test_unit_categories(self):
+        self.assertEqual(x3d.Transform.translation.unitCategory, 'length')
+        self.assertEqual(x3d.Transform.rotation.unitCategory, 'angle')
+        self.assertEqual(x3d.Group.bboxSize.unitCategory, 'length')
+        self.assertEqual(x3d.SpotLight.cutOffAngle.unitCategory, 'angle')
+        self.assertEqual(x3d.NavigationInfo.speed.unitCategory, 'speed')
+        self.assertEqual(x3d.RigidBody.mass.unitCategory, 'mass')
+        self.assertEqual(x3d.Transform.scale.unitCategory, '')
+
     def test_a_closed_enumeration(self):
         self.assertEqual(set(x3d.Appearance.alphaMode.choices),
                          {'AUTO', 'OPAQUE', 'MASK', 'BLEND'})
@@ -138,10 +147,10 @@ class TestFields(unittest.TestCase):
                          np.float64)
 
     def test_a_field_named_by_a_python_keyword(self):
-        self.assertIs(getattr(x3d.PointLight(), 'global'), 1)
-        self.assertEqual(getattr(x3d.DirectionalLight(), 'global'), 0)
+        self.assertIs(getattr(x3d.PointLight(), 'global'), True)
+        self.assertIs(getattr(x3d.DirectionalLight(), 'global'), False)
         light = x3d.DirectionalLight(**{'global': True})
-        self.assertEqual(getattr(light, 'global'), 1)
+        self.assertIs(getattr(light, 'global'), True)
 
 
 class TestTheContentModel(unittest.TestCase):
