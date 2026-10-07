@@ -160,7 +160,10 @@ What reading does:
   with the loaded inline scene.
 
 ``prototypes=`` gives the node classes to build by X3D name, so an engine
-reads documents into its own implementations of the nodes.
+reads documents into its own implementations of the nodes, and its
+``X3DScene`` subclass under ``'X3DScene'``. A field the document leaves out
+has the X3D declaration's default, also where the engine's class defaults it
+otherwise for a node made in code.
 
 The readers are ``vrml.x3d.readers.xml`` (expat; external entities are not
 read), ``json`` and ``classic`` (a SimpleParse grammar for ClassicVRML and

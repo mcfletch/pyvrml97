@@ -177,6 +177,19 @@ class TestNodes(unittest.TestCase):
         self.assertTrue(seen)
         self.assertIs(seen[0], scene)
 
+    def test_an_engine_default_gives_way_to_the_declarations_in_a_document(self):
+        """A document means X3D's defaults, whatever an engine's class says for code."""
+        class Engine(x3d.PointLight):
+            shadows = buildermodule.field.newField('shadows', 'SFBool', 1, True)
+
+        built = Built(prototypes={'PointLight': Engine})
+        quiet = built.node('PointLight')
+        loud = built.node('PointLight', shadows='true')
+        built.end_document()
+        self.assertTrue(Engine().shadows)
+        self.assertFalse(quiet.shadows)
+        self.assertTrue(loud.shadows)
+
     def test_an_engine_scene_class(self):
         from vrml.x3d.scene import X3DScene  # noqa: PLC0415 kept with its one use
 
