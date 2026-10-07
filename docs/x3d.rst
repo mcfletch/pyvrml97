@@ -203,7 +203,9 @@ is reached at most once, so routes that loop end:
   ``resumeTime``. It runs from ``startTime`` for one ``cycleInterval``, or
   cycle after cycle where ``loop`` is true, until a ``stopTime`` later than
   ``startTime``; a single cycle that ended before the first ``advance`` does
-  not run.
+  not run. ``TimeSensor.rate``, which is not an X3D field, is how fast its cycles run
+  against the clock (2 twice as fast, 0 held, negative backwards); a change
+  carries on from where the cycle is.
 - ``LoadSensor``, ``vrml.x3d.loadsensor``: a node reading a url records its
   state with ``loadsensor.set_load_state`` (``LOADING``, ``LOADED`` or
   ``FAILED``), and ``observe()`` reads the sensor's children's states,

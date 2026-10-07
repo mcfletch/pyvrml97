@@ -140,6 +140,39 @@ class TestPauseAndResume(unittest.TestCase):
             timing.clock = saved
 
 
+class TestRate(unittest.TestCase):
+    """`rate`, not an X3D field: how fast the cycles run against the clock"""
+
+    def test_twice_the_rate_is_twice_as_far_through(self):
+        sensor = TimeSensor(cycleInterval=4.0, loop=True, startTime=10.0)
+        sensor.rate = 2.0
+        sensor.advance(10.0)
+        sensor.advance(11.0)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.5)
+        self.assertAlmostEqual(sent(sensor, 'elapsedTime'), 1.0)
+
+    def test_a_change_of_rate_carries_on_from_where_it_is(self):
+        sensor = TimeSensor(cycleInterval=4.0, loop=True, startTime=10.0)
+        sensor.advance(10.0)
+        sensor.advance(11.0)
+        sensor.rate = 0.5
+        sensor.advance(13.0)
+        # One second at 1, then two at a half.
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.5)
+
+    def test_a_single_cycle_at_a_higher_rate_ends_sooner(self):
+        sensor = TimeSensor(cycleInterval=4.0, startTime=10.0)
+        sensor.rate = 4.0
+        sensor.advance(10.0)
+        sensor.advance(11.0)
+        self.assertIs(sent(sensor, 'isActive'), False)
+        self.assertEqual(sent(sensor, 'fraction_changed'), 1.0)
+
+    def test_the_rate_is_not_written_as_a_field(self):
+        from vrml import protofunctions  # noqa: PLC0415 kept with its use
+        self.assertNotIn('rate', [field.name for field in protofunctions.getFields(TimeSensor)])
+
+
 class TestRegistered(unittest.TestCase):
     def test_it_is_in_the_runtime(self):
         self.assertIs(runtime.PROTOTYPES['TimeSensor'], TimeSensor)

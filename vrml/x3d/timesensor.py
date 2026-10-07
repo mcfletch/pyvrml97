@@ -19,6 +19,11 @@ time and sends what the sensor sends then:
 `startTime`, `cycleInterval` and `loop` are read as it starts; changing them
 while it runs changes nothing until it starts again. A sensor that is not
 `enabled` stops.
+
+:attr:`TimeSensor.rate`, which is not an X3D field, is how fast the cycles
+run against the clock: 2 runs them at twice the speed, 0 holds them, and a
+negative rate runs them backwards. A change of rate carries on from where
+the cycle is. `elapsedTime` stays the clock time the sensor has run.
 """
 
 from __future__ import annotations
@@ -35,21 +40,35 @@ __all__ = ['Run', 'TimeSensor']
 
 @dataclasses.dataclass
 class Run:
-    """One run of a sensor: the fields it started with, and its pauses"""
+    """One run of a sensor: the fields it started with, and how far it has got"""
 
     start: float
     cycle: float
     loop: bool
-    #: The time spent paused so far.
-    paused: float = 0.0
+    #: The clock time accounted for so far.
+    last: float
+    #: The cycle time run, in seconds: the clock time at the sensor's rate.
+    progress: float = 0.0
+    #: The clock time run, pauses left out.
+    ran: float = 0.0
     #: When the pause in progress began, or None.
     pausedAt: Optional[float] = None
     #: The cycle last begun.
     count: int = -1
 
+    def account(self, now: float, rate: float) -> None:
+        """Run on to clock time `now` at `rate`"""
+        step = now - self.last
+        self.progress += step * rate
+        self.ran += step
+        self.last = now
+
 
 class TimeSensor(timing.Timed, x3d.TimeSensor):
     """A TimeSensor that runs as :meth:`advance` is called"""
+
+    #: How fast the cycles run against the clock; not an X3D field.
+    rate: float = 1.0
 
     def running(self) -> bool:
         """Whether the sensor is active"""
@@ -85,8 +104,8 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
         if not self.running():
             if not self._starts(now):
                 return False
-            self.__dict__['_run'] = Run(float(self.startTime), float(self.cycleInterval),
-                                        bool(self.loop))
+            start = float(self.startTime)
+            self.__dict__['_run'] = Run(start, float(self.cycleInterval), bool(self.loop), start)
             self.isActive = True
         run: Run = self.__dict__['_run']
         if not self.enabled:
@@ -98,25 +117,26 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
             return True
         if run.pausedAt is not None:
             return False
-        elapsed = now - run.start - run.paused
-        if not run.loop and elapsed >= run.cycle:
-            return self._stop(now, run, 1.0)
-        count = int(math.floor(elapsed / run.cycle))
+        run.account(now, float(self.rate))
+        if not run.loop and not 0.0 <= run.progress < run.cycle:
+            return self._stop(now, run, 1.0 if run.progress > 0 else 0.0)
+        count = int(math.floor(run.progress / run.cycle))
         if count != run.count:
             run.count = count
             self.cycleTime = now
-        self._send(now, elapsed, elapsed / run.cycle - count)
+        self._send(now, run.ran, run.progress / run.cycle - count)
         return True
 
     def _pausing(self, now: float, run: Run) -> bool:
         """Pause or resume as `pauseTime` and `resumeTime` say; whether either happened"""
         pause, resume = float(self.pauseTime), float(self.resumeTime)
         if run.pausedAt is None and pause > resume and run.start < pause <= now:
+            run.account(max(pause, run.last), float(self.rate))
             run.pausedAt = pause
             self.isPaused = True
             return True
         if run.pausedAt is not None and resume > pause and resume <= now:
-            run.paused += resume - run.pausedAt
+            run.last = max(resume, run.last)
             run.pausedAt = None
             self.isPaused = False
         return False
@@ -128,11 +148,11 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
 
     def _stop(self, now: float, run: Run, fraction: Optional[float]) -> bool:
         """Stop at `now`, sending `fraction` (or the running one) as the last"""
-        elapsed = now - run.start - run.paused
-        if fraction is None:
-            fraction = elapsed / run.cycle - math.floor(elapsed / run.cycle)
         if run.pausedAt is None:
-            self._send(now, elapsed, fraction)
+            run.account(max(now, run.last), float(self.rate))
+            if fraction is None:
+                fraction = run.progress / run.cycle - math.floor(run.progress / run.cycle)
+            self._send(now, run.ran, fraction)
         del self.__dict__['_run']
         self.__dict__['_ended'] = run.start
         self.isActive = False
