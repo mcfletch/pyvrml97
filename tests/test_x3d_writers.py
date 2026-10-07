@@ -407,9 +407,20 @@ class TestVRML97(unittest.TestCase):
         self.assertIn('exposedField SFFloat b 1', text)
 
     def test_program_source_is_written_as_an_inline_url(self):
+        """14772-1 Annex C: VRML97's inline scheme is javascript: (or vrmlscript:)"""
         script = nodes.Script(sourceCode='ecmascript: function f() {}', url=['f.js'])
         text = x3d.dumps(X3DScene(children=[script]), encoding='classic', version='2.0')
-        self.assertIn('url [ "ecmascript: function f() {}" "f.js" ]', text)
+        self.assertIn('url [ "javascript: function f() {}" "f.js" ]', text)
+        bare = nodes.Script(sourceCode='function g() {}')
+        text = x3d.dumps(X3DScene(children=[bare]), encoding='classic', version='2.0')
+        self.assertIn('url [ "javascript:function g() {}" ]', text)
+
+    def test_meta_is_kept_as_comments(self):
+        from vrml.x3d.scene import MetaInfo  # noqa: PLC0415 kept with its use
+        scene = X3DScene(meta=[MetaInfo(name='title', content='A world')])
+        text = x3d.dumps(scene, encoding='classic', version='2.0')
+        self.assertIn('# META "title" "A world"', text.splitlines())
+        self.assertEqual(x3d.loads(text).problems, [])
 
     def test_a_node_vrml97_lacks_is_refused(self):
         scene = X3DScene(children=[nodes.Shape(appearance=nodes.Appearance(

@@ -45,6 +45,9 @@ class ClassicWriter(SceneWriter):
         self.out: "list[str]" = []
         if self.vrml97:
             self.out.append('#VRML V2.0 utf8')
+            # VRML97 has no META statement: a comment keeps the text.
+            for item in self.scene.meta:
+                self.out.append('# META %s' % codecs.encode('MFString', [item.name, item.content]))
         else:
             self.out.append('#X3D V%s utf8' % self.version)
             self.out.append('PROFILE %s' % self.profile)

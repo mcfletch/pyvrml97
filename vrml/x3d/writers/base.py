@@ -105,10 +105,17 @@ def target_version(scene: Any, encoding: str, version: "str | None") -> str:
     return version
 
 
-def _inline_program(source: str, type_name: str) -> str:
-    """Script source text as an inline url entry"""
-    if type_name == 'Script' and not source.lstrip().lower().startswith(INLINE_SCHEMES):
-        return 'ecmascript:' + source
+def _inline_program(source: str, type_name: str, vrml97: bool = False) -> str:
+    """Script source text as an inline url entry: X3D's ecmascript: scheme, or
+    for VRML97 the javascript: of ISO/IEC 14772-1 Annex C"""
+    if type_name != 'Script':
+        return source
+    scheme = 'javascript:' if vrml97 else 'ecmascript:'
+    stripped = source.lstrip()
+    if stripped.lower().startswith('ecmascript:'):
+        return scheme + stripped[len('ecmascript:'):]
+    if not stripped.lower().startswith(INLINE_SCHEMES):
+        return scheme + source
     return source
 
 
@@ -435,7 +442,7 @@ class SceneWriter:
                 if source != 'field' or not value:
                     continue
             elif name == 'url' and source == 'url' and program and not prototype:
-                value = [_inline_program(program, type_name)] + list(value)
+                value = [_inline_program(program, type_name, self.vrml97)] + list(value)
             elif isinstance(declared, node.MFNode):
                 if not len(value):
                     continue

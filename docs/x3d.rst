@@ -361,8 +361,12 @@ What is written:
   statements. A version with ``UNIT`` statements has them written and its
   values written in those units; an earlier one has values in base units.
 - A program's source as CDATA (XML), ``#sourceCode`` (JSON), the
-  ``sourceCode`` field (ClassicVRML) or, for VRML97, an ``ecmascript:`` entry
-  first in ``url``.
+  ``sourceCode`` field (ClassicVRML) or, for VRML97, a ``javascript:`` entry
+  first in ``url`` (ISO/IEC 14772-1, Annex C).
+- ``META`` statements; ClassicVRML's hold a name and content only, so a
+  meta's ``lang``, ``dir``, ``scheme`` and ``http-equiv`` are written in the
+  XML and JSON encodings alone. VRML97 has no ``META`` statement, and each is
+  written as a ``# META`` comment.
 - Numbers in their shortest form at the field's precision, with no exponent
   below 10\ :sup:`16`.
 
