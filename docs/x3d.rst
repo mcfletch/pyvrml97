@@ -205,6 +205,35 @@ A node type, field or field type the target version does not have raises
 version lacks is written only if its value differs from the default.
 Nothing is written to a file then. ``scene.problems`` is not written.
 
+Classes of an engine's own
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A node class that subclasses an X3D node and adds fields names a metadata set
+for them with a class attribute::
+
+    class Glossy(x3d.Material):
+        x3dExtension = 'Glossy'
+        sheen = field.newField('sheen', 'SFFloat', 1, 0.0)
+
+The writers put each added field whose value differs from its default in a
+``MetadataSet`` of that name on the node's ``metadata``, one metadata node per
+field, named after it: ``MetadataBoolean``, ``MetadataInteger``,
+``MetadataDouble``, ``MetadataString``, or ``MetadataFloat`` with a vector's
+components in order. A node value is a ``MetadataSet`` whose ``reference`` is
+the node's type and whose entries are its own fields. MFNode fields are not
+carried. The node's own metadata becomes the set's ``metadata``. A class that
+adds fields and names no set raises ``X3DWriteError``.
+
+Read with the class among ``prototypes=``, the builder sets the fields back
+from the set and gives the node its own metadata again; an entry naming no
+field is a warning in ``scene.problems``. Read without it, the set is the
+node's metadata. ``vrml.x3d.extension`` holds the encoding.
+
+A node with no X3D type of its own gives ``x3dEquivalent()``, which returns
+the X3D node to write in its place: an image held in memory as an
+``ImageTexture`` with a ``data:`` URL, say. A node reached more than once has
+one equivalent, written once and used thereafter.
+
 The XML writer orders attributes as X3D canonical form does (``DEF``,
 ``USE``, a ``containerField`` the reader would not infer, then
 alphabetically) and delimits MFString attributes with single quotes.

@@ -233,3 +233,16 @@ def encode(type_name: str, value: Any) -> str:
     no text form for (infinities and NaN).
     """
     return ENCODERS[type_name](value)
+
+
+def same(a: Any, b: Any) -> bool:
+    """True if two field values are exactly equal"""
+    if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
+        a, b = np.asarray(a), np.asarray(b)
+        return a.shape == b.shape and bool(np.array_equal(a, b))
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
+    try:
+        return bool(a == b)
+    except ValueError:
+        return False

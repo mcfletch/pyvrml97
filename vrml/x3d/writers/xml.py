@@ -175,6 +175,7 @@ class XMLWriter(SceneWriter):
     # Nodes
 
     def node(self, target: Any, depth: int, parent: Any = None, field_name: str = '') -> None:
+        target = self.written_as(target)
         indent = INDENT * depth
         type_name, prototype = self.type_of(target)
         name, use = self.reference(target)

@@ -114,6 +114,7 @@ class ClassicWriter(SceneWriter):
 
     def node(self, target: Any, depth: int) -> str:
         """The ClassicVRML text of a node, without leading indentation"""
+        target = self.written_as(target)
         type_name, _prototype = self.type_of(target)
         name, use = self.reference(target)
         if use:

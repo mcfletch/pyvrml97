@@ -13,10 +13,9 @@ as problems, and `write()` raises `X3DWriteError` listing all of them.
 from collections.abc import Iterable, Sequence
 from typing import Any, NamedTuple
 
-import numpy as np
-
 from vrml import field, node, protofunctions
-from vrml.x3d import dialects
+from vrml.x3d import dialects, extension
+from vrml.x3d.codecs import same
 from vrml.x3d import nodes as x3d
 from vrml.x3d.builder import implied_container, scaled, unit_factor
 
@@ -97,19 +96,6 @@ def target_version(scene: Any, encoding: str, version: "str | None") -> str:
     return version
 
 
-def same(a: Any, b: Any) -> bool:
-    """True if two field values are exactly equal"""
-    if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
-        a, b = np.asarray(a), np.asarray(b)
-        return a.shape == b.shape and bool(np.array_equal(a, b))
-    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
-        return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
-    try:
-        return bool(a == b)
-    except ValueError:
-        return False
-
-
 def _inline_program(source: str, type_name: str) -> str:
     """Script source text as an inline url entry"""
     if type_name == 'Script' and not source.lstrip().lower().startswith(INLINE_SCHEMES):
@@ -154,6 +140,8 @@ class SceneWriter:
         } if self.writes_units else {}
         self._scopes: "list[_Scope]" = []
         self._open: "set[Any]" = set()
+        self._equivalents: "dict[Any, Any]" = {}
+        self._extension_sets: "dict[Any, Any]" = {}
 
     @property
     def writes_units(self) -> bool:
@@ -237,6 +225,7 @@ class SceneWriter:
             current = stack.pop()
             if not current or not isinstance(current, node.Node):
                 continue
+            current = self.written_as(current)
             if current in counts:
                 counts[current] += 1
                 continue
@@ -268,6 +257,16 @@ class SceneWriter:
         return found
 
     # Nodes
+
+    def written_as(self, target: Any) -> Any:
+        """The node written for `target`: its `x3dEquivalent()`, made once, or itself"""
+        make = getattr(target, 'x3dEquivalent', None)
+        if not callable(make):
+            return target
+        found = self._equivalents.get(target)
+        if found is None:
+            found = self._equivalents[target] = make()
+        return found
 
     def type_of(self, target: Any) -> "tuple[str, bool]":
         """A node's type name, and whether it is a prototype instance"""
@@ -376,6 +375,9 @@ class SceneWriter:
         connected = self._scopes[-1].connections.get(target, {})
         own = self.own_names(target)
         defaults = dict(self.dialect.defaults(type_name)) if not prototype else {}
+        known = extension.vocabulary_fields(type_name) if not prototype else frozenset()
+        carries = getattr(type(target), 'x3dExtension', None)
+        added: "list[tuple[Any, Any]]" = []
         program = self.source(target)
         result = []
         for declared in protofunctions.getFields(target):
@@ -395,9 +397,11 @@ class SceneWriter:
             elif isinstance(declared, node.MFNode):
                 if not len(value):
                     continue
+                value = [self.written_as(child) for child in value]
             elif isinstance(declared, node.SFNode):
                 if not value:
                     continue
+                value = self.written_as(value)
             else:
                 default = defaults[name] if name in defaults else declared.getDefault()
                 try:
@@ -407,11 +411,30 @@ class SceneWriter:
                 if same(value, default):
                     continue
                 value = self.scaled_out(declared, value)
+            if not prototype and name not in known:
+                if carries:
+                    added.append((declared, declared.fget(target)))
+                else:
+                    self.problem('%s is not a field of X3D\'s %s, and %s names no '
+                                 'x3dExtension to carry it'
+                                 % (name, type_name, type(target).__name__))
+                continue
             if not prototype and not self.dialect.has_field(type_name, name):
                 self.problem('%s has no field %s.%s' % (self.version_name, type_name, name))
                 continue
             written = name if prototype else self.dialect.dialect_name(type_name, name)
             result.append(Value(written, type_name_of, value))
+        if added:
+            result = [item for item in result if item.name != 'metadata']
+            if not self.dialect.has_field(type_name, 'metadata'):
+                self.problem('%s has no metadata to carry %s' % (self.version_name, ', '.join(
+                    declared.name for declared, _value in added)))
+            else:
+                found = self._extension_sets.get(target)
+                if found is None:
+                    found = self._extension_sets[target] = extension.extension_set(
+                        target, added, self.written_as)
+                result.append(Value('metadata', 'SFNode', found))
         return sorted(result, key=lambda item: item.name)
 
     def scaled_out(self, declared: Any, value: Any) -> Any:
@@ -464,6 +487,7 @@ class SceneWriter:
             ends = []
             for target, name in ((each.source, each.sourceField),
                                  (each.destination, each.destinationField)):
+                target = self.written_as(target)
                 if target not in names:
                     self.problem('ROUTE names a %s that is not in the scene'
                                  % protofunctions.protoName(target))

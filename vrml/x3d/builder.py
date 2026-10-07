@@ -20,7 +20,7 @@ from typing import Any, cast
 
 from vrml import field, node, protofunctions, route
 from vrml.vrml97.scenegraph import SceneGraph
-from vrml.x3d import codecs, dialects, profiles
+from vrml.x3d import codecs, dialects, extension, profiles
 from vrml.x3d import nodes as x3d
 from vrml.x3d.dialect import DialectTables
 from vrml.x3d.scene import (
@@ -397,6 +397,8 @@ class SceneBuilder:
             if name not in frame.set_fields:
                 declared = protofunctions.getField(built, name)
                 declared.fset(built, declared.copyValue(value), notify=False)
+        extension.restore(built, self._resolve_type,
+                          lambda message: self.problem('warning', message, built))
         return built
 
     def defined(self, name: str) -> bool:

@@ -146,6 +146,7 @@ class JSONWriter(SceneWriter):
     # Nodes
 
     def node(self, target: Any) -> "dict[str, Any]":
+        target = self.written_as(target)
         type_name, prototype = self.type_of(target)
         name, use = self.reference(target)
         record: "dict[str, Any]" = {}
