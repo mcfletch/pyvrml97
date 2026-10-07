@@ -446,6 +446,16 @@ class ParseProcessor(DispatchProcessor):
     #: is what knows how wide each row is.
     MFColor = MFRotation = MFVec2f = MFVec3f = MFTime = MFFloat32 = MFFloat
     MFVec4f = MFVec2d = MFVec3d = MFVec4d = MFFloat
+    MFDouble = MFColorRGBA = MFQuaternion = MFFloat
+    SFDouble = SFFloat
+    SFColorRGBA = SFQuaternion = SFRotation
+
+    #: An MFImage is a flat run of integers; the field divides it into images
+    #: by each one's header.
+    MFImage = MFInt32
+
+    def MFBool(self, tuples: Any, buffer: Any) -> Any:
+        return [getString(item, buffer) == 'TRUE' for item in tuples]
 
     def MFString(self, tuples: Any, buffer: Any) -> Any:
         bigresult = []

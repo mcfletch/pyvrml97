@@ -12,7 +12,7 @@ until now no test imported these at all.
 import unittest
 
 from vrml import protofunctions
-from vrml.vrml97 import basenodes, nurbs, shaders, tree
+from vrml.vrml97 import basenodes, nodetypes, nurbs, shaders, tree
 
 
 def field_names(node_class):
@@ -171,3 +171,32 @@ class TestTheseDoNotDisturbTheBaseNodes(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestTheVRML97Defaults(unittest.TestCase):
+    """Defaults the VRML97 specification (ISO/IEC 14772-1) gives."""
+
+    def test_an_elevation_grid_is_spaced_one_unit_apart(self):
+        # 6.15 ElevationGrid: field SFFloat xSpacing 1.0, zSpacing 1.0
+        grid = basenodes.ElevationGrid()
+        self.assertEqual(grid.xSpacing, 1.0)
+        self.assertEqual(grid.zSpacing, 1.0)
+
+    def test_navigation_info_offers_walk_and_any(self):
+        # 6.29 NavigationInfo: exposedField MFString type ["WALK", "ANY"]
+        self.assertEqual(basenodes.NavigationInfo().type, ['WALK', 'ANY'])
+
+
+class TestEverySensorIsAChild(unittest.TestCase):
+    """X3D puts every sensor among a grouping node's children."""
+
+    def test_the_sensor_type_is_a_child_type(self):
+        self.assertTrue(issubclass(nodetypes.Sensor, nodetypes.Children))
+
+    def test_each_vrml97_sensor_is_a_child(self):
+        for name in ('CylinderSensor', 'PlaneSensor', 'ProximitySensor',
+                     'SphereSensor', 'TimeSensor', 'TouchSensor',
+                     'VisibilitySensor'):
+            sensor = getattr(basenodes, name)
+            self.assertTrue(issubclass(sensor, nodetypes.Sensor), name)
+            self.assertTrue(issubclass(sensor, nodetypes.Children), name)

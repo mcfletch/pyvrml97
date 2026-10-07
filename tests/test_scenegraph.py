@@ -10,6 +10,7 @@ program asks back, so each has an accessor with several shapes.
 """
 
 import gc
+from unittest import mock
 import unittest
 
 from vrml import copier as copiermodule
@@ -247,3 +248,60 @@ class TestCopyingAGraph(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestRootingIsLinear(unittest.TestCase):
+    """Giving nodes their scene root visits each node once.
+
+    A subtree already rooted in the scene is not walked again, and a route
+    roots nothing: both its ends are already in the graph it belongs to.
+    """
+
+    def setUp(self):
+        self.visits = 0
+        original = node.RootScenegraphNode.fset
+
+        def counting(field, client, value, notify=1):
+            self.visits += 1
+            return original(field, client, value, notify)
+
+        patcher = mock.patch.object(node.RootScenegraphNode, 'fset', counting)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_a_large_subtree_and_its_routes_are_rooted_once(self):
+        scene = SceneGraph()
+        leaves = [Clock(DEF='clock%d' % i) for i in range(1000)]
+        groups = [basenodes.Group(children=leaves[i:i + 10])
+                  for i in range(0, 1000, 10)]
+        self.visits = 0
+        scene.children.append(basenodes.Group(children=groups))
+        nodes = 1 + len(groups) + len(leaves)
+        self.assertLessEqual(self.visits, nodes)
+        self.assertIs(scene.getDEF('clock999'), leaves[999])
+
+        self.visits = 0
+        for i in range(100):
+            scene.addRoute(leaves[i], 'isActive', leaves[i + 1], 'enabled')
+        self.assertLessEqual(self.visits, 100)
+
+    def test_a_rooted_subtree_used_again_is_not_walked_again(self):
+        scene = SceneGraph()
+        shared = basenodes.Group(children=[
+            basenodes.Group(children=[Clock() for _ in range(10)])
+            for _ in range(100)
+        ])
+        scene.children.append(shared)
+        self.visits = 0
+        scene.children.append(basenodes.Group(children=[shared]))
+        self.assertLessEqual(self.visits, 2)
+
+    def test_a_route_leaves_the_roots_of_its_ends_alone(self):
+        inner = SceneGraph()
+        source = Clock()
+        inner.children.append(source)
+        outer = SceneGraph()
+        destination = Clock()
+        outer.children.append(destination)
+        outer.addRoute(source, 'isActive', destination, 'enabled')
+        self.assertIs(protofunctions.root(source), inner)

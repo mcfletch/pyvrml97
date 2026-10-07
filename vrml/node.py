@@ -346,6 +346,10 @@ class _SFNode(_FieldHost):
     #: empty tuple here must not fix the element type.
     requiredTypes: tuple[type, ...] = ()
     allowNULL = 1
+    #: Whether a node set here is part of the holder's graph, and so takes
+    #: the holder's scene root. A field that only refers to a node elsewhere
+    #: (a route's ends) says no.
+    adopts = True
 
     def fset(self, client: Any, value: Any, notify: int=1) -> Any:
         """Set the client's value for this property
@@ -360,7 +364,7 @@ class _SFNode(_FieldHost):
         without sending notify events.
         """
         value = super(_SFNode, self).fset(client, value, notify)
-        if value:
+        if value and self.adopts:
             _passRootDown(client, [value])
         return value
 
@@ -425,6 +429,17 @@ class SFNode(_SFNode, field.Field):
 SFNode.requiredTypes = (Node,)
 
 
+class SFNodeReference(SFNode):
+    """An SFNode field that refers to a node rather than containing it
+
+    The node keeps whatever scene root it has: setting the field roots
+    nothing, and rooting the holder does not walk through it.
+    """
+
+    fieldType = 'SFNode'
+    adopts = False
+
+
 class SFNodeEvt(_SFNode, field.Event):
     fieldType = 'SFNode'
 
@@ -455,15 +470,17 @@ class RootScenegraphNode(WeakSFNode):
     fieldType = 'RootScenegraphNode'
 
     def fset(self, client: Any, value: Any, notify: int=1) -> Any:
-        """Set the root scenegraph node (recursively)
+        """Set the root scenegraph node of `client` and its subtree
 
-        TODO: this will blow up on cyclic graphs!
+        A node already rooted in `value` is not walked: its subtree was
+        rooted when it was, so each node is visited once however often the
+        graph reaches it.
         """
         result = super(RootScenegraphNode, self).fset(client, value, notify)
         for each_field in getFields(client.__class__):
             if (
                 isinstance(each_field, SFNode)
-                and not isinstance(each_field, RootScenegraphNode)
+                and each_field.adopts
                 and each_field is not PrototypedNode.scenegraph
             ):
                 try:
@@ -471,11 +488,11 @@ class RootScenegraphNode(WeakSFNode):
                 except ValueError:
                     pass
                 else:
-                    self.fset(child, value, notify=False)
+                    self._adopt(child, value)
             elif isinstance(each_field, MFNode):
                 try:
                     for child in each_field.__get__(client):
-                        self.fset(child, value, notify=False)
+                        self._adopt(child, value)
                 except AttributeError:
                     pass
             elif each_field.name == ' DEF':
@@ -489,6 +506,11 @@ class RootScenegraphNode(WeakSFNode):
                 except AttributeError:
                     pass
         return result
+
+    def _adopt(self, child: Any, value: Any) -> None:
+        """Root `child` in `value` unless it is a node rooted there already"""
+        if isinstance(child, Node) and child and self.fget(child) is not value:
+            self.fset(child, value, notify=False)
 
 
 field.register(WeakSFNode)

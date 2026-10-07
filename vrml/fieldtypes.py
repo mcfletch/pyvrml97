@@ -924,6 +924,152 @@ class _MFMatrix4d(_MFVec):
     dimension = (4, 4)
 
 
+class _SFDouble(_SFFloat):
+    """SFDouble field/event type base-class
+
+    A Python float, which is double precision.
+    """
+
+
+class _MFDouble(_MFFloat):
+    """MFDouble field/event type base-class, a flat float64 array"""
+
+
+class _SFColorRGBA(_Color, _SFVec4f):
+    """SFColorRGBA field/event type base-class: red, green, blue, alpha"""
+
+
+class _MFColorRGBA(_Color, _MFVec4f):
+    """MFColorRGBA field/event type base-class, rows of four"""
+
+
+class _SFQuaternion(_SFVec32):
+    """SFQuaternion field/event type base-class: x, y, z, w"""
+
+    dimension = (4,)
+
+
+class _MFQuaternion(_MFVec32):
+    """MFQuaternion field/event type base-class, rows of four"""
+
+    dimension = (4,)
+
+
+#: The words a boolean is written as, in VRML97's spelling and X3D's.
+_BOOLEAN_WORDS = {'true': True, 'false': False}
+
+
+def _boolean(value: Any) -> bool:
+    """One boolean from a word or anything with a truth value"""
+    if isinstance(value, (str, bytes)):
+        word = value.decode('ascii') if isinstance(value, bytes) else value
+        try:
+            return _BOOLEAN_WORDS[word.strip().lower()]
+        except KeyError:
+            raise ValueError('%r is not a boolean' % (value,)) from None
+    return bool(value)
+
+
+class _MFBool(_FieldHost):
+    """MFBool field/event type base-class, a numpy bool array"""
+
+    defaultDefault = list
+
+    def coerce(self, value: Any) -> Any:
+        """A bool array from words, numbers, booleans or an array"""
+        if isinstance(value, str):
+            value = value.replace(',', ' ').split()
+        if isinstance(value, arrays.ArrayType):
+            return arrays.contiguous(arrays.ravel(value)).astype(bool)
+        if isinstance(value, (bool, int, float)):
+            value = [value]
+        try:
+            return arrays.array([_boolean(item) for item in value], bool)
+        except TypeError as error:
+            raise ValueError(
+                """Attempted to set value for an %s field which is not compatible: %r"""
+                % (self.typeName(), value)
+            ) from error
+
+    def check(self, value: Any) -> int:
+        """Whether the value is already a bool array"""
+        return int(isinstance(value, arrays.ArrayType) and value.dtype == bool)
+
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:  # noqa: ARG002 the field-type protocol vrmlstr(value, lineariser)
+        """Convert the given value to a VRML97 representation"""
+        if not len(value):
+            return '[ ]'
+        return '[ %s ]' % ' '.join(['TRUE' if item else 'FALSE' for item in value])
+
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
+        """Copy a value for copier"""
+        return arrays.array(value, bool)
+
+
+class _MFImage(_FieldHost):
+    """MFImage field/event type base-class, a list of SFImage arrays
+
+    Text and flat sequences of numbers are divided into images by each
+    image's own header: width, height, components, then width x height
+    pixels.
+    """
+
+    defaultDefault = list
+
+    def coerce(self, value: Any) -> Any:
+        """A list of uint32 image arrays"""
+        if isinstance(value, str):
+            value = [int(item, 0) for item in value.replace(',', ' ').split()]
+        if isinstance(value, arrays.ArrayType) and len(value.shape) == 1:
+            value = value.tolist()
+        if isinstance(value, field.UNPACK_TYPES):
+            value = list(value)
+        if not value:
+            return []
+        if isinstance(value[0], field.NUMERIC_TYPES):
+            return self._divide([int(item) for item in value])
+        return [_SFIMAGE_TOOL.coerce(image) for image in value]
+
+    def _divide(self, numbers: "list[int]") -> "list[Any]":
+        """The images a flat run of numbers holds, each by its header"""
+        images = []
+        start = 0
+        while start < len(numbers):
+            header = numbers[start : start + 3]
+            if len(header) < 3:
+                raise ValueError(
+                    """%s ends inside an image header: %r""" % (self.typeName(), header)
+                )
+            end = start + 3 + header[0] * header[1]
+            if end > len(numbers):
+                raise ValueError(
+                    """%s image of %sx%s needs %s pixels, has %s"""
+                    % (self.typeName(), header[0], header[1],
+                       header[0] * header[1], len(numbers) - start - 3)
+                )
+            images.append(arrays.array(numbers[start:end], _SFImage.arrayDataType))
+            start = end
+        return images
+
+    def check(self, value: Any) -> int:
+        """Whether the value is already a list of image arrays"""
+        return int(isinstance(value, list) and all(
+            isinstance(image, arrays.ArrayType) for image in value
+        ))
+
+    def vrmlstr(self, value: Any, lineariser: Any=None) -> Any:  # noqa: ARG002 the field-type protocol vrmlstr(value, lineariser)
+        """Convert the given value to a VRML97 representation"""
+        if not value:
+            return '[ ]'
+        return '[ %s ]' % ', '.join(
+            ' '.join([str(int(item)) for item in image]) for image in value
+        )
+
+    def copyValue(self, value: Any, copier: Any=None) -> Any:  # noqa: ARG002 the field-type protocol copyValue(value, copier)
+        """Copy a value for copier"""
+        return [arrays.array(image, arrays.typeCode(image)) for image in value]
+
+
 ### The concrete field and event classes (auto-generated).
 class MFColor(_MFColor, field.Field):
     """MFColor Field class"""
@@ -1062,7 +1208,7 @@ class MFVec2fEvt(
     fieldType = 'MFVec2f'
 
 
-class MFVec2d(_MFVec2f, field.Field):
+class MFVec2d(_MFVec2d, field.Field):
     """MFVec2d Field class"""
 
 
@@ -1402,6 +1548,89 @@ class SFMatrix4dEvt(_SFMatrix4d, field.Event):
     fieldType = 'SFMatrix4d'
 
 
+class SFDouble(_SFDouble, field.Field):
+    """SFDouble Field class"""
+
+
+class SFDoubleEvt(_SFDouble, field.Event):
+    """SFDouble Event class"""
+
+    fieldType = 'SFDouble'
+
+
+class MFDouble(_MFDouble, field.Field):
+    """MFDouble Field class"""
+
+
+class MFDoubleEvt(_MFDouble, field.Event):
+    """MFDouble Event class"""
+
+    fieldType = 'MFDouble'
+
+
+class SFColorRGBA(_SFColorRGBA, field.Field):
+    """SFColorRGBA Field class"""
+
+
+class SFColorRGBAEvt(_SFColorRGBA, field.Event):
+    """SFColorRGBA Event class"""
+
+    fieldType = 'SFColorRGBA'
+
+
+class MFColorRGBA(_MFColorRGBA, field.Field):
+    """MFColorRGBA Field class"""
+
+
+class MFColorRGBAEvt(_MFColorRGBA, field.Event):
+    """MFColorRGBA Event class"""
+
+    fieldType = 'MFColorRGBA'
+
+
+class SFQuaternion(_SFQuaternion, field.Field):
+    """SFQuaternion Field class"""
+
+
+class SFQuaternionEvt(_SFQuaternion, field.Event):
+    """SFQuaternion Event class"""
+
+    fieldType = 'SFQuaternion'
+
+
+class MFQuaternion(_MFQuaternion, field.Field):
+    """MFQuaternion Field class"""
+
+
+class MFQuaternionEvt(_MFQuaternion, field.Event):
+    """MFQuaternion Event class"""
+
+    fieldType = 'MFQuaternion'
+
+
+class MFBool(_MFBool, field.Field):
+    """MFBool Field class"""
+
+
+class MFBoolEvt(_MFBool, field.Event):
+    """MFBool Event class"""
+
+    fieldType = 'MFBool'
+
+
+class MFImage(_MFImage, field.Field):
+    """MFImage Field class"""
+
+
+class MFImageEvt(_MFImage, field.Event):
+    """MFImage Event class"""
+
+    fieldType = 'MFImage'
+
+
+#: Reads each image of an MFImage given as a list of images.
+_SFIMAGE_TOOL = SFImage('image')
+
 ### Now register everything
 field.register(MFFloat)
 field.register(MFFloat32)
@@ -1479,3 +1708,21 @@ field.register(MFVec3dEvt)
 field.register(MFVec4dEvt)
 field.register(MFMatrix3dEvt)
 field.register(MFMatrix4dEvt)
+
+## X3D field types
+field.register(SFDouble)
+field.register(SFDoubleEvt)
+field.register(MFDouble)
+field.register(MFDoubleEvt)
+field.register(SFColorRGBA)
+field.register(SFColorRGBAEvt)
+field.register(MFColorRGBA)
+field.register(MFColorRGBAEvt)
+field.register(SFQuaternion)
+field.register(SFQuaternionEvt)
+field.register(MFQuaternion)
+field.register(MFQuaternionEvt)
+field.register(MFBool)
+field.register(MFBoolEvt)
+field.register(MFImage)
+field.register(MFImageEvt)

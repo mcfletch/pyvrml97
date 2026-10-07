@@ -61,17 +61,21 @@ def typeName(cls: Any) -> str:
         return cls.__name__.split('.')[-1]
 
 
-def newField(name: str, dataType: Any, exposure: int=1, default: Any=_NULL) -> Any:
+def newField(
+    name: str, dataType: Any, exposure: int=1, default: Any=_NULL,
+    **description: Any,
+) -> Any:
     """Create a new field with support for using strings to specify type
 
     name -- string name
     dataType -- string (or Field sub-class) specifying datatype
     exposure -- boolean (0/1) indicating whether this is an exposed field
     default -- default value for the field
+    description -- the interface metadata `Field.DESCRIPTION` names
     """
     if isinstance(dataType, (bytes, str)):
         dataType = baseFieldTypes[dataType]
-    return dataType(name, exposure, default)
+    return dataType(name, exposure, default, **description)
 
 
 def newEvent(name: str, dataType: Any, direction: int=1) -> Any:
@@ -245,6 +249,26 @@ class Field(BaseField):
     """
 
     nodes = 0
+    #: The least value the field holds, or None; exclusive if
+    #: `minimumExclusive`.
+    minimum: Any = None
+    minimumExclusive = False
+    #: The greatest value the field holds, or None; exclusive if
+    #: `maximumExclusive`.
+    maximum: Any = None
+    maximumExclusive = False
+    #: The values an enumerated string field names, and whether a value
+    #: outside them is allowed.
+    choices: "tuple[str, ...]" = ()
+    choicesOpen = True
+    #: The X3D unit category (`angle`, `length`, `mass`, `force`) a
+    #: document's UNIT statement scales this field by, or empty.
+    unitCategory = ''
+    #: The keyword arguments a declaration may describe itself with.
+    DESCRIPTION = (
+        'minimum', 'minimumExclusive', 'maximum', 'maximumExclusive',
+        'choices', 'choicesOpen', 'unitCategory',
+    )
     #: What `default` becomes when a field is declared without one. Each field
     #: type supplies its own -- `0` for an SFInt32, `""` for an SFString, the
     #: `list` constructor for a multi-valued one -- so the base says `Any`
@@ -275,18 +299,41 @@ class Field(BaseField):
         name: str,
         exposure: int=1,
         default: Any=_NULL,
+        **description: Any,
     ) -> None:
         """Initialise the field object
 
         name -- string name
         exposure -- boolean (0/1) indicating whether this is an exposed field
         default -- default value for the field
+        description -- any of `DESCRIPTION`, set on the declaration
         """
         self.exposure = exposure
         if default is _NULL:
             default = self.defaultDefault
         super(Field, self).__init__(name, default)
+        for key, value in description.items():
+            if key not in self.DESCRIPTION:
+                raise TypeError(
+                    'A field declaration has no %r; it takes %s'
+                    % (key, ', '.join(self.DESCRIPTION))
+                )
+            if key == 'choices':
+                value = tuple(value)
+            setattr(self, key, value)
         self.__doc__ = str(self)
+
+    @property
+    def accessType(self) -> str:
+        """The X3D access type: `inputOutput` if exposed, else `initializeOnly`"""
+        return 'inputOutput' if self.exposure else 'initializeOnly'
+
+    def description(self) -> "dict[str, Any]":
+        """The `DESCRIPTION` values this declaration sets for itself"""
+        return {
+            key: self.__dict__[key] for key in self.DESCRIPTION
+            if key in self.__dict__
+        }
 
     def fhas(self, client: Any) -> bool:
         """Whether the client has a value of its own, rather than the default
@@ -317,6 +364,7 @@ class Field(BaseField):
                 self.name,
                 self.exposure,
                 self.copyValue(self.defaultobj, copier),
+                **self.description(),
             )
         elif self.fhas(client):
             return self.copyValue(self.fget(client), copier)
@@ -491,6 +539,11 @@ class Event(object):
         """
         self.name = name
         self.direction = direction
+
+    @property
+    def accessType(self) -> str:
+        """The X3D access type: `outputOnly` or `inputOnly`"""
+        return 'outputOnly' if self.direction else 'inputOnly'
 
     def __set__(self, client: Any, value: Any, notify: int=1) -> None:
         """Set an event value"""

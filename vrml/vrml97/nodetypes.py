@@ -49,11 +49,8 @@ class Texture( object ):
     """
 
 
-class Sensor( object ):
-    """Sensor nodes
-
-    Note: All Sensors are also Children, though
-        that isn't represented here.
+class Sensor( Children ):
+    """Sensor nodes, which are all children of a grouping node
     """
 class PointingSensor( Sensor ):
     """Pointing-Device Sensor nodes

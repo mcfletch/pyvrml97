@@ -14,9 +14,9 @@ class ROUTE( node.Node ):
     event cycles.
     """
     PROTO = "ROUTE"
-    source = node.SFNode('source',)
+    source = node.SFNodeReference('source',)
     sourceField = fieldtypes.SFString('sourceField',)
-    destination = node.SFNode('destination',)
+    destination = node.SFNodeReference('destination',)
     destinationField = fieldtypes.SFString( 'destinationField',)
     #: Destination field names already reported as missing, so a route that
     #: names one does not say so on every change.

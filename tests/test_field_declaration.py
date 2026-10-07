@@ -465,3 +465,55 @@ class TestAWeakField(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestWhatAFieldSaysOfItself(unittest.TestCase):
+    """The X3D interface a declaration describes: its access type, the
+    range and the choices its values are held to, and the unit category a
+    document's UNIT statement scales it by."""
+
+    def test_each_access_type_has_its_x3d_name(self):
+        self.assertEqual(field.newField('a', 'SFFloat', 1).accessType, 'inputOutput')
+        self.assertEqual(field.newField('a', 'SFFloat', 0).accessType, 'initializeOnly')
+        self.assertEqual(field.newEvent('a', 'SFFloat', 0).accessType, 'inputOnly')
+        self.assertEqual(field.newEvent('a', 'SFFloat', 1).accessType, 'outputOnly')
+
+    def test_a_plain_declaration_has_no_bounds_choices_or_unit(self):
+        declared = field.newField('a', 'SFFloat', 1, 0.0)
+        self.assertIsNone(declared.minimum)
+        self.assertIsNone(declared.maximum)
+        self.assertEqual(declared.choices, ())
+        self.assertEqual(declared.unitCategory, '')
+
+    def test_bounds_and_their_kind_are_kept(self):
+        declared = field.newField('a', 'SFFloat', 1, 0.5, minimum=0.0,
+                                  maximum=1.0, maximumExclusive=True)
+        self.assertEqual((declared.minimum, declared.minimumExclusive),
+                         (0.0, False))
+        self.assertEqual((declared.maximum, declared.maximumExclusive),
+                         (1.0, True))
+
+    def test_choices_and_whether_others_are_allowed_are_kept(self):
+        declared = field.newField('a', 'SFString', 1, 'OPAQUE',
+                                  choices=('OPAQUE', 'MASK'), choicesOpen=False)
+        self.assertEqual(declared.choices, ('OPAQUE', 'MASK'))
+        self.assertFalse(declared.choicesOpen)
+
+    def test_a_unit_category_is_kept(self):
+        declared = field.newField('a', 'SFFloat', 1, 0.0, unitCategory='angle')
+        self.assertEqual(declared.unitCategory, 'angle')
+
+    def test_a_copied_declaration_keeps_all_of_it(self):
+        declared = field.newField('a', 'SFFloat', 1, 0.5, minimum=0.0,
+                                  maximum=1.0, unitCategory='length')
+
+        class Holder:
+            pass
+
+        copy = declared.copy(Holder)
+        self.assertEqual((copy.minimum, copy.maximum, copy.unitCategory),
+                         (0.0, 1.0, 'length'))
+
+    def test_an_unknown_description_is_refused(self):
+        with self.assertRaises(TypeError):
+            field.newField('a', 'SFFloat', 1, 0.0, minimun=0.0)

@@ -142,3 +142,14 @@ class TestCheckingAValue(unittest.TestCase):
     def test_a_float_field_accepts_a_float(self):
         self.assertEqual(fieldtypes.SFFloat(name="f").check(3.5), 1)
         self.assertEqual(fieldtypes.SFFloat(name="f").check('x'), 0)
+
+
+class TestDoublePrecision(unittest.TestCase):
+    """The `d` types hold float64, as their names say."""
+
+    def test_an_mfvec2d_keeps_digits_a_float32_loses(self):
+        field = fieldtypes.MFVec2d(name="points")
+        value = field.coerce([[1.0000000001, 2.0]])
+        self.assertEqual(value.dtype.char, 'd')
+        self.assertEqual(value.shape, (1, 2))
+        self.assertEqual(value[0, 0], 1.0000000001)

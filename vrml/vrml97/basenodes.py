@@ -138,7 +138,7 @@ class Cylinder( nodetypes.Geometry, node.Node ):
     #Events
 
 
-class CylinderSensor( nodetypes.Children, nodetypes.PointingSensor, node.Node ):
+class CylinderSensor( nodetypes.PointingSensor, node.Node ):
     PROTO = 'CylinderSensor'
     #Fields
     minAngle = field.newField( 'minAngle', 'SFFloat', 1, 0.0)
@@ -167,7 +167,7 @@ class ElevationGrid( nodetypes.Geometry, node.Node ):
     PROTO = 'ElevationGrid'
     #Fields
     zDimension = field.newField( 'zDimension', 'SFInt32', 0, 0)
-    xSpacing = field.newField( 'xSpacing', 'SFFloat', 0, 0.0)
+    xSpacing = field.newField( 'xSpacing', 'SFFloat', 0, 1.0)
     creaseAngle = field.newField( 'creaseAngle', 'SFFloat', 0, 0.0)
     normal = field.newField( 'normal', 'SFNode', 1, node.NULL)
     solid = field.newField( 'solid', 'SFBool', 0, 1)
@@ -177,7 +177,7 @@ class ElevationGrid( nodetypes.Geometry, node.Node ):
     color = field.newField( 'color', 'SFNode', 1, node.NULL)
     colorPerVertex = field.newField( 'colorPerVertex', 'SFBool', 0, 1)
     xDimension = field.newField( 'xDimension', 'SFInt32', 0, 0)
-    zSpacing = field.newField( 'zSpacing', 'SFFloat', 0, 0.0)
+    zSpacing = field.newField( 'zSpacing', 'SFFloat', 0, 1.0)
     normalPerVertex = field.newField( 'normalPerVertex', 'SFBool', 0, 1)
     #Events
     set_height = field.newEvent( 'set_height', 'MFFloat', 0)
@@ -331,7 +331,7 @@ class NavigationInfo( nodetypes.Children, nodetypes.NavigationInfo, node.Node ):
     speed = field.newField( 'speed', 'SFFloat', 1, 1.0)
     avatarSize = field.newField( 'avatarSize', 'MFFloat', 1, [0.25, 1.6000000000000001, 0.75])
     headlight = field.newField( 'headlight', 'SFBool', 1, 1)
-    type = field.newField( 'type', 'MFString', 1, ['WALK'])
+    type = field.newField( 'type', 'MFString', 1, ['WALK', 'ANY'])
     visibilityLimit = field.newField( 'visibilityLimit', 'SFFloat', 1, 0.0)
     #Events
     set_bind = field.newEvent( 'set_bind', 'SFBool', 0)
@@ -371,7 +371,7 @@ class PixelTexture( nodetypes.Texture, node.Node ):
     #Events
 
 
-class PlaneSensor( nodetypes.Children, nodetypes.PointingSensor, node.Node ):
+class PlaneSensor( nodetypes.PointingSensor, node.Node ):
     PROTO = 'PlaneSensor'
     #Fields
     maxPosition = field.newField( 'maxPosition', 'SFVec2f', 1, [-1.0, -1.0])
@@ -418,7 +418,7 @@ class PositionInterpolator( nodetypes.Children, nodetypes.Interpolator, node.Nod
     set_fraction = field.newEvent( 'set_fraction', 'SFFloat', 0)
     value_changed = field.newEvent( 'value_changed', 'SFVec3f', 1)
 
-class ProximitySensor( nodetypes.Sensor, nodetypes.Children, node.Node ):
+class ProximitySensor( nodetypes.Sensor, node.Node ):
     PROTO = 'ProximitySensor'
     #Fields
     enabled = field.newField( 'enabled', 'SFBool', 1, 1)
@@ -471,7 +471,7 @@ class Sphere( nodetypes.Geometry, node.Node ):
     #Events
 
 
-class SphereSensor( nodetypes.Children, nodetypes.PointingSensor, node.Node ):
+class SphereSensor( nodetypes.PointingSensor, node.Node ):
     PROTO = 'SphereSensor'
     #Fields
     enabled = field.newField( 'enabled', 'SFBool', 1, 1)
@@ -533,7 +533,7 @@ class TextureTransform( node.Node ):
     #Events
 
 
-class TimeSensor( nodetypes.Sensor, nodetypes.Children, nodetypes.TimeDependent, node.Node ):
+class TimeSensor( nodetypes.Sensor, nodetypes.TimeDependent, node.Node ):
     PROTO = 'TimeSensor'
     #Fields
     cycleInterval = field.newField( 'cycleInterval', 'SFTime', 1, 1.0)
@@ -547,7 +547,7 @@ class TimeSensor( nodetypes.Sensor, nodetypes.Children, nodetypes.TimeDependent,
     isActive = field.newEvent( 'isActive', 'SFBool', 1)
     time = field.newEvent( 'time', 'SFTime', 1)
 
-class TouchSensor( nodetypes.Children, nodetypes.PointingSensor, node.Node ):
+class TouchSensor( nodetypes.PointingSensor, node.Node ):
     PROTO = 'TouchSensor'
     #Fields
     enabled = field.newField( 'enabled', 'SFBool', 1, 1)
@@ -627,7 +627,7 @@ class Viewpoint( nodetypes.Children, nodetypes.Viewpoint, node.Node ):
     bindTime = field.newEvent( 'bindTime', 'SFTime', 1)
     isBound = field.newEvent( 'isBound', 'SFBool', 1)
 
-class VisibilitySensor( nodetypes.Sensor, nodetypes.Children, node.Node ):
+class VisibilitySensor( nodetypes.Sensor, node.Node ):
     PROTO = 'VisibilitySensor'
     #Fields
     enabled = field.newField( 'enabled', 'SFBool', 1, 1)
