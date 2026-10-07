@@ -193,6 +193,14 @@ outputs the handler sets are forwarded along routes as any field change is:
   ``normalizeVelocity`` and ``closed``; ``SquadOrientationInterpolator`` by
   spherical cubic interpolation; and ``EaseInEaseOut``. The arithmetic is
   ``vrml.x3d.interpolation``.
+- ``TimeSensor``, ``vrml.x3d.timesensor``: whoever keeps time calls
+  ``advance(now)``, which sends ``isActive`` as the sensor starts and stops,
+  ``cycleTime`` at the start of each cycle, ``fraction_changed``, ``time``
+  and ``elapsedTime`` while it runs, and ``isPaused`` at ``pauseTime`` and
+  ``resumeTime``. It runs from ``startTime`` for one ``cycleInterval``, or
+  cycle after cycle where ``loop`` is true, until a ``stopTime`` later than
+  ``startTime``; a single cycle that ended before the first ``advance`` does
+  not run.
 - The environmental sensors, ``vrml.x3d.sensors``: ``ProximitySensor``,
   ``TransformSensor`` and ``VisibilitySensor``. Whoever draws the scene calls
   ``observe`` each frame with what the sensor senses in its own coordinates

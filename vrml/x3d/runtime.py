@@ -16,7 +16,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from vrml.x3d import followers, interpolation, pointing, sensors, timing
+from vrml.x3d import followers, interpolation, pointing, sensors, timesensor, timing
 from vrml.x3d import nodes as x3d
 
 __all__ = ['ACTION_KEYS', 'MODIFIER_KEYS', 'PROTOTYPES']
@@ -296,3 +296,4 @@ PROTOTYPES: "dict[str, type]" = {
 PROTOTYPES.update(followers.FOLLOWERS)
 PROTOTYPES.update(sensors.SENSORS)
 PROTOTYPES.update(pointing.POINTING)
+PROTOTYPES['TimeSensor'] = timesensor.TimeSensor
