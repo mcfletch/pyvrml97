@@ -92,7 +92,7 @@ class JSONWriter(SceneWriter):
                 for key, value in (('name', item.name), ('content', item.content),
                                    ('dir', item.dir), ('http-equiv', item.httpEquiv),
                                    ('lang', item.lang), ('scheme', item.scheme)):
-                    if value:
+                    if value or key == 'content':
                         record['@' + key] = value
                 head['meta'].append(record)
         return head

@@ -14,8 +14,11 @@ import re
 from collections.abc import Iterable, Sequence
 from typing import Any, NamedTuple
 
+import numpy as np
+
 from vrml import field, node, protofunctions
 from vrml.x3d import dialects, extension
+from vrml.x3d import codecs
 from vrml.x3d.codecs import same
 from vrml.x3d import nodes as x3d
 from vrml.x3d.builder import implied_container, scaled, unit_factor
@@ -107,6 +110,16 @@ def _inline_program(source: str, type_name: str) -> str:
     if type_name == 'Script' and not source.lstrip().lower().startswith(INLINE_SCHEMES):
         return 'ecmascript:' + source
     return source
+
+
+def _finite(type_name: str, value: Any) -> bool:
+    """Whether every number in a value of `type_name` has a text form"""
+    if type_name not in codecs.FLOAT32_TYPES | codecs.FLOAT64_TYPES | codecs.SCALAR_FLOAT_TYPES:
+        return True
+    try:
+        return bool(np.isfinite(np.asarray(value, dtype=np.float64)).all())
+    except (TypeError, ValueError):
+        return True
 
 
 class _Scope:
@@ -439,6 +452,10 @@ class SceneWriter:
                 except (TypeError, ValueError):
                     pass
                 if same(value, default):
+                    continue
+                if not _finite(type_name_of, value):
+                    self.problem('%s.%s holds %r, which X3D has no text for'
+                                 % (type_name, name, value))
                     continue
                 value = self.scaled_out(declared, value)
             if not prototype and name not in known:

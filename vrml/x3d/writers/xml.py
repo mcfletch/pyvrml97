@@ -9,6 +9,7 @@ names. Within a value, an apostrophe is written `&apos;`, which reads back as
 the same character, where the canonical form gives `&#8242;`, which does not.
 """
 
+import re
 from typing import Any
 
 from vrml import node, protofunctions
@@ -24,6 +25,9 @@ SCHEMA_ATTRIBUTES = (
 INDENT = '  '
 
 _ESCAPES = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '\n': '&#10;', '\r': '&#13;', '\t': '&#9;'}
+#: The characters XML 1.0 has no form for, escaped or not, once tab, newline
+#: and carriage return are written as references.
+UNWRITABLE = re.compile('[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff\ud800-\udfff]')
 
 
 def attribute(name: str, text: str, quote: str = '"') -> str:
@@ -74,7 +78,12 @@ class XMLWriter(SceneWriter):
         else:
             lines.append(INDENT + '<Scene/>')
         lines.append('</X3D>')
-        return '\n'.join(lines) + '\n'
+        text = '\n'.join(lines) + '\n'
+        for found in UNWRITABLE.finditer(text):
+            line = text.count('\n', 0, found.start()) + 1
+            self.problem('%r, on line %d, is a character XML 1.0 cannot carry: %s'
+                         % (found.group(), line, text.splitlines()[line - 1].strip()[:60]))
+        return text
 
     def head(self) -> "list[str]":
         found = []
@@ -91,7 +100,7 @@ class XMLWriter(SceneWriter):
             pairs = [('content', item.content), ('dir', item.dir), ('http-equiv', item.httpEquiv),
                      ('lang', item.lang), ('name', item.name), ('scheme', item.scheme)]
             found.append('<meta%s/>' % ''.join(
-                attribute(name, value) for name, value in pairs if value))
+                attribute(name, value) for name, value in pairs if value or name == 'content'))
         return found
 
     def element(self, depth: int, tag: str, pairs: "list[tuple[str, str]]") -> None:

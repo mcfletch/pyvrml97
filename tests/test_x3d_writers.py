@@ -265,6 +265,33 @@ class TestFieldsWritten(unittest.TestCase):
         self.assertEqual(again.children[0].sourceCode.strip(), script.sourceCode)
 
 
+class TestWhatCannotBeWritten(unittest.TestCase):
+    def test_a_number_with_no_text_form_names_its_field(self):
+        for value in (float('nan'), float('inf')):
+            scene = X3DScene(children=[nodes.Transform(translation=(1, value, 0))])
+            for encoding in ENCODINGS:
+                with self.subTest(encoding=encoding, value=value):
+                    with self.assertRaises(X3DWriteError) as raised:
+                        x3d.dumps(scene, encoding=encoding)
+                    self.assertIn('Transform.translation', str(raised.exception))
+
+    def test_a_character_xml_cannot_carry(self):
+        scene = X3DScene(children=[nodes.WorldInfo(title='a\x01b')])
+        with self.assertRaises(X3DWriteError) as raised:
+            x3d.dumps(scene, encoding='xml')
+        self.assertIn('\\x01', str(raised.exception))
+        for encoding in ('classic', 'json'):
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding))
+                self.assertEqual(again.children[0].title, 'a\x01b')
+
+    def test_a_meta_with_no_content_keeps_the_attribute(self):
+        from vrml.x3d.scene import MetaInfo  # noqa: PLC0415 kept with its use
+        scene = X3DScene(meta=[MetaInfo(name='title', content='')])
+        self.assertIn('content=""', x3d.dumps(scene, encoding='xml'))
+        self.assertIn('"@content": ""', x3d.dumps(scene, encoding='json'))
+
+
 class TestXML(unittest.TestCase):
     def test_the_header(self):
         text = x3d.dumps(everything(), encoding='xml')
