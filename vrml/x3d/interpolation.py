@@ -18,14 +18,13 @@ Rotations are X3D's (axis x, y, z, angle in radians); quaternions are
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
 from typing import Any, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-__all__ = ['ease', 'linear', 'quaternion_of', 'rotation_of', 'segment', 'spline', 'squad',
-           'tangents']
+__all__ = ['ease', 'linear', 'quaternion_of', 'rotation_of', 'segment', 'slerp', 'spline',
+           'squad', 'tangents']
 
 
 def segment(keys: ArrayLike, fraction: float) -> "tuple[int, float]":
@@ -167,12 +166,13 @@ def ease(keys: ArrayLike, pairs: ArrayLike, fraction: float) -> float:
     return float(key[index] + (key[index + 1] - key[index]) * modified)
 
 
-def quaternion_of(rotation: Sequence[float]) -> np.ndarray:
+def quaternion_of(rotation: ArrayLike) -> np.ndarray:
     """A rotation (axis, angle) as a unit quaternion (x, y, z, w)"""
-    axis = np.asarray(rotation[:3], dtype=np.float64)
+    found = np.asarray(rotation, dtype=np.float64).ravel()
+    axis = found[:3]
     length = np.linalg.norm(axis)
     axis = axis / length if length > 0 else np.array([0.0, 0.0, 1.0])
-    half = float(rotation[3]) / 2.0
+    half = float(found[3]) / 2.0
     return np.concatenate([axis * math.sin(half), [math.cos(half)]])
 
 
@@ -218,7 +218,8 @@ def _exp(v: np.ndarray) -> np.ndarray:
     return np.concatenate([v[:3] / angle * math.sin(angle), [math.cos(angle)]])
 
 
-def _slerp(a: np.ndarray, b: np.ndarray, t: float) -> np.ndarray:
+def slerp(a: np.ndarray, b: np.ndarray, t: float) -> np.ndarray:
+    """The unit quaternion `t` of the way from `a` to `b` along the shorter arc"""
     cosine = float(np.dot(a, b))
     if cosine < 0:
         b, cosine = -b, -cosine
@@ -255,6 +256,6 @@ def squad(keys: ArrayLike, rotations: ArrayLike, fraction: float) -> np.ndarray:
                    + _log(_multiply(back, quaternions[index - 1]))) / -4.0
         inner.append(_multiply(q, _exp(tangent)))
     index, h = segment(key, fraction)
-    outer = _slerp(quaternions[index], quaternions[index + 1], h)
-    middle = _slerp(inner[index], inner[index + 1], h)
-    return rotation_of(_slerp(outer, middle, 2.0 * h * (1.0 - h)))
+    outer = slerp(quaternions[index], quaternions[index + 1], h)
+    middle = slerp(inner[index], inner[index + 1], h)
+    return rotation_of(slerp(outer, middle, 2.0 * h * (1.0 - h)))

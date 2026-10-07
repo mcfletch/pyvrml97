@@ -194,6 +194,13 @@ outputs the handler sets are forwarded along routes as any field change is:
   ``normalizeVelocity`` and ``closed``; ``SquadOrientationInterpolator`` by
   spherical cubic interpolation; and ``EaseInEaseOut``. The arithmetic is
   ``vrml.x3d.interpolation``.
+- The followers, ``vrml.x3d.followers``: each chaser reaches a destination
+  ``duration`` seconds after it is set, along a smooth step, and each damper
+  approaches it through ``order`` first-order filters of time constant
+  ``tau``, resting within ``tolerance``. ``advance(now)`` moves one and sends
+  its value; it answers whether the follower is still moving, and ``isActive``
+  says the same. ``wake()`` is called when one starts moving, for whoever
+  calls ``advance`` each frame.
 
 A document read with no ``prototypes=`` is built from these classes where they
 exist; ``runtime.PROTOTYPES`` maps them by name for merging with an engine's.

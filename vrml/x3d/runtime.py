@@ -17,7 +17,7 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from vrml.x3d import interpolation
+from vrml.x3d import followers, interpolation
 from vrml.x3d import nodes as x3d
 
 __all__ = ['ACTION_KEYS', 'MODIFIER_KEYS', 'PROTOTYPES', 'clock']
@@ -297,3 +297,4 @@ PROTOTYPES: "dict[str, type]" = {
         EaseInEaseOut,
     )
 }
+PROTOTYPES.update(followers.FOLLOWERS)
