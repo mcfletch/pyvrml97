@@ -8,7 +8,7 @@ forwarded along routes as any field change is.
 import unittest
 
 from vrml import x3d
-from vrml.x3d import nodes, runtime
+from vrml.x3d import nodes, runtime, timing
 
 
 def outputs(node, name):
@@ -57,14 +57,14 @@ class TestTriggers(unittest.TestCase):
         self.assertEqual(outputs(made, 'triggerValue'), 7)
 
     def test_a_time_trigger_sends_the_time_now(self):
-        saved = runtime.clock
-        runtime.clock = lambda: 1234.5
+        saved = timing.clock
+        timing.clock = lambda: 1234.5
         try:
             made = runtime.TimeTrigger()
             made.set_boolean = False
             self.assertEqual(outputs(made, 'triggerTime'), 1234.5)
         finally:
-            runtime.clock = saved
+            timing.clock = saved
 
 
 class TestSequencers(unittest.TestCase):

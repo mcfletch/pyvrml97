@@ -7,23 +7,19 @@ forwarded along routes as any field change is. Nothing here draws or reads a
 device; :class:`KeySensor` is told of keys by whoever has a keyboard.
 
 `PROTOTYPES` maps each X3D name to its class here, to pass as a reader's
-`prototypes=` (merged with an engine's own). `clock` gives the time
-`TimeTrigger` sends; an engine sets it to the clock its frames run on.
+`prototypes=` (merged with an engine's own). A `TimeTrigger` sends the time
+of its scene (:func:`~vrml.x3d.timing.now_for`).
 """
 
 from __future__ import annotations
 
-import time
 from collections.abc import Callable
 from typing import Any
 
-from vrml.x3d import followers, interpolation
+from vrml.x3d import followers, interpolation, timing
 from vrml.x3d import nodes as x3d
 
-__all__ = ['ACTION_KEYS', 'MODIFIER_KEYS', 'PROTOTYPES', 'clock']
-
-#: The time `TimeTrigger` sends, in seconds.
-clock: Callable[[], float] = time.time
+__all__ = ['ACTION_KEYS', 'MODIFIER_KEYS', 'PROTOTYPES']
 
 #: The action keys X3D numbers (ISO/IEC 19775-1, 21.4.1).
 ACTION_KEYS = {
@@ -70,10 +66,10 @@ class IntegerTrigger(x3d.IntegerTrigger):
 
 
 class TimeTrigger(x3d.TimeTrigger):
-    """Sends the time (:data:`clock`) for each boolean it receives"""
+    """Sends the time of its scene for each boolean it receives"""
 
     def on_set_boolean(self, _value: Any) -> None:
-        self.triggerTime = clock()
+        self.triggerTime = timing.now_for(self)
 
 
 class Sequencer:

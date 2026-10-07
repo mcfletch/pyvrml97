@@ -178,8 +178,7 @@ behaviour. Setting an ``inputOnly`` event on a node calls its handler, and the
 outputs the handler sets are forwarded along routes as any field change is:
 
 - ``BooleanFilter``, ``BooleanToggle``, ``BooleanTrigger``, ``IntegerTrigger``
-  and ``TimeTrigger``, which sends ``runtime.clock()``, ``time.time`` unless an
-  engine sets it to its own clock.
+  and ``TimeTrigger``, which sends the time of its scene.
 - ``BooleanSequencer`` and ``IntegerSequencer``: the value of the last key a
   ``set_fraction`` has reached, sent when that key changes; ``next`` and
   ``previous`` step through the keys, wrapping at the ends.
@@ -201,6 +200,13 @@ outputs the handler sets are forwarded along routes as any field change is:
   its value; it answers whether the follower is still moving, and ``isActive``
   says the same. ``wake()`` is called when one starts moving, for whoever
   calls ``advance`` each frame.
+
+The time a node is at is its scene's: ``vrml.x3d.timing.now_for(node)`` calls
+the ``clock()`` of the scene the node is rooted in, and ``timing.clock``
+(``time.time``) for a node in no scene with one. An engine gives its scene
+class a ``clock`` method returning the time its frames run on, so a
+``TimeTrigger``, a follower's change of destination and a frame's ``advance``
+agree.
 
 A document read with no ``prototypes=`` is built from these classes where they
 exist; ``runtime.PROTOTYPES`` maps them by name for merging with an engine's.

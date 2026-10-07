@@ -11,29 +11,25 @@ that is negative). Rotations are chased and damped as quaternions.
 
 Nothing here keeps time. :meth:`Follower.advance` takes the time, moves the
 value and sends it, and answers whether the follower is still moving;
-`set_destination` stamps a change with :data:`clock`. :meth:`Follower.wake`
-is called when a follower starts to move, for whoever ticks it to begin.
+`set_destination` stamps a change with the time of the follower's scene
+(:func:`~vrml.x3d.timing.now_for`). :meth:`Follower.wake` is called when a
+follower starts to move, for whoever ticks it to begin.
 """
 
 from __future__ import annotations
 
 import math
-import time
-from collections.abc import Callable
 from typing import Any, ClassVar
 
 import numpy as np
 
-from vrml.x3d import interpolation
+from vrml.x3d import interpolation, timing
 from vrml.x3d import nodes as x3d
 
 __all__ = ['FOLLOWERS', 'Chaser', 'ColorChaser', 'ColorDamper', 'CoordinateChaser',
            'CoordinateDamper', 'Damper', 'Follower', 'OrientationChaser', 'OrientationDamper',
            'PositionChaser', 'PositionChaser2D', 'PositionDamper', 'PositionDamper2D',
-           'ScalarChaser', 'ScalarDamper', 'TexCoordChaser2D', 'TexCoordDamper2D', 'clock']
-
-#: The time a change of destination is stamped with, in seconds.
-clock: Callable[[], float] = time.time
+           'ScalarChaser', 'ScalarDamper', 'TexCoordChaser2D', 'TexCoordDamper2D']
 
 _IDENTITY = np.array([0.0, 0.0, 0.0, 1.0])
 
@@ -96,7 +92,7 @@ class Follower:
         self._reset(self._held(self.initialValue))
         destination = self._held(self.initialDestination)
         if not self._same(destination, self._current()):
-            self._retarget(destination, clock())
+            self._retarget(destination, timing.now_for(self))
 
     def _same(self, a: np.ndarray, b: np.ndarray) -> bool:
         if self.rotation:
@@ -135,7 +131,7 @@ class Follower:
 
     def on_set_destination(self, value: Any) -> None:
         self._ready()
-        self._retarget(self._held(value), clock())
+        self._retarget(self._held(value), timing.now_for(self))
         self._moved(True)
 
     def on_set_value(self, value: Any) -> None:

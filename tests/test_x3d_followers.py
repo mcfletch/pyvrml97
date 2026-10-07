@@ -11,7 +11,7 @@ import unittest
 
 import numpy as np
 
-from vrml.x3d import followers, runtime
+from vrml.x3d import followers, runtime, timing
 
 
 class Clock:
@@ -25,11 +25,11 @@ class Clock:
 class FollowerCase(unittest.TestCase):
     def setUp(self):
         self.clock = Clock()
-        self.saved = followers.clock
-        followers.clock = self.clock
+        self.saved = timing.clock
+        timing.clock = self.clock
 
     def tearDown(self):
-        followers.clock = self.saved
+        timing.clock = self.saved
 
     def at(self, made, seconds):
         self.clock.now = 100.0 + seconds
