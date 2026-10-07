@@ -277,9 +277,9 @@ if __name__ == '__main__':
 
 
 class TestAnEnginesDefaults(unittest.TestCase):
-    """A world's nodes have the specification's defaults, whatever an engine's class says."""
+    """VRML97's own defaults hold in a world; an engine's hold for what VRML97 does not have."""
 
-    def test_a_directional_light_is_scoped_unless_it_says_otherwise(self):
+    def test_a_directional_light_is_scoped(self):
         from vrml import field  # noqa: PLC0415 kept with its use
         from vrml.vrml97 import basenamespaces, parseprocessor  # noqa: PLC0415 kept with its use
         from vrml.x3d import nodes  # noqa: PLC0415 kept with its use
@@ -288,12 +288,24 @@ class TestAnEnginesDefaults(unittest.TestCase):
             pass
         setattr(Engine, 'global', field.newField('global', 'SFBool', 1, True))
         prototypes = dict(basenamespaces.basePrototypes, DirectionalLight=Engine)
-        source = HEADER + 'DirectionalLight { } DirectionalLight { global TRUE }\n'
+        source = HEADER + 'DirectionalLight { }\n'
         success, results, _consumed = PARSER.parse(
             source, processor=parseprocessor.ParseProcessor(basePrototypes=prototypes))
-        quiet, loud = results[1].children
+        quiet, = results[1].children
         self.assertTrue(success)
         self.assertIsInstance(quiet, Engine)
         self.assertFalse(getattr(quiet, 'global'))
-        self.assertTrue(getattr(loud, 'global'))
         self.assertTrue(getattr(Engine(), 'global'))
+
+    def test_a_field_vrml97_does_not_have_keeps_the_engines_default(self):
+        from vrml import field  # noqa: PLC0415 kept with its use
+        from vrml.vrml97 import basenamespaces, parseprocessor  # noqa: PLC0415 kept with its use
+        from vrml.x3d import nodes  # noqa: PLC0415 kept with its use
+
+        class Engine(nodes.PointLight):
+            shadows = field.newField('shadows', 'SFBool', 1, True)
+        prototypes = dict(basenamespaces.basePrototypes, PointLight=Engine)
+        success, results, _consumed = PARSER.parse(
+            HEADER + 'PointLight { }\n',
+            processor=parseprocessor.ParseProcessor(basePrototypes=prototypes))
+        self.assertTrue(results[1].children[0].shadows)

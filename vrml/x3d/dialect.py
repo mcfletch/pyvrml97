@@ -158,6 +158,9 @@ VRML97 = Dialect(
     defaults=[
         # 6.14 CylinderSensor: exposedField SFFloat diskAngle 0.262
         FieldDefault(nodeType='CylinderSensor', fieldName='diskAngle', value='0.262'),
+        # 6.16 DirectionalLight: illuminates only the objects descended from
+        # its parent grouping node, which is X3D's global FALSE
+        FieldDefault(nodeType='DirectionalLight', fieldName='global', value='FALSE'),
         # 6.28 NavigationInfo: exposedField MFString type ["WALK", "ANY"]
         FieldDefault(nodeType='NavigationInfo', fieldName='type', value='"WALK" "ANY"'),
         # 6.44 SpotLight: exposedField SFFloat beamWidth 1.570796

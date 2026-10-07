@@ -159,8 +159,6 @@ class ParseProcessor(DispatchProcessor):
                 )
             )
         newNode = prototype()
-        for fieldName, value in dialect.declared_defaults(type(newNode), GI):
-            getField(newNode, fieldName).fset(newNode, value, notify=0)
         for fieldName, value in self.dialect.defaults(GI):
             getField(newNode, fieldName).fset(newNode, value, notify=0)
         root(newNode, self.sceneGraphStack[0])
