@@ -43,20 +43,6 @@ def _step(x: float) -> float:
     return (1.0 - math.cos(math.pi * x)) / 2.0
 
 
-def _compose(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """The quaternion turning by `b` and then by `a`"""
-    ax, ay, az, aw = a
-    bx, by, bz, bw = b
-    return np.array([aw * bx + ax * bw + ay * bz - az * by,
-                     aw * by - ax * bz + ay * bw + az * bx,
-                     aw * bz + ax * by - ay * bx + az * bw,
-                     aw * bw - ax * bx - ay * by - az * bz])
-
-
-def _inverse(q: np.ndarray) -> np.ndarray:
-    return np.array([-q[0], -q[1], -q[2], q[3]])
-
-
 class Follower(timing.Timed):
     """What every follower does: start from its initial fields, retarget, advance
 
@@ -164,7 +150,7 @@ class Chaser(Follower):
 
     def _retarget(self, destination: np.ndarray, now: float) -> None:
         last = self.__dict__['_destination']
-        change = (_compose(destination, _inverse(last)) if self.rotation
+        change = (interpolation.compose(destination, interpolation.inverse(last)) if self.rotation
                   else destination - last)
         self.__dict__['_changes'].append((now, change))
         self.__dict__['_destination'] = destination
@@ -175,13 +161,13 @@ class Chaser(Follower):
         pending = []
         for start, change in self.__dict__['_changes']:
             if now - start >= duration:
-                base = _compose(change, base) if self.rotation else base + change
+                base = interpolation.compose(change, base) if self.rotation else base + change
             else:
                 pending.append((start, change))
         value = base
         for start, change in pending:
             share = _step((now - start) / duration)
-            value = (_compose(interpolation.slerp(_IDENTITY, change, share), value) if self.rotation
+            value = (interpolation.compose(interpolation.slerp(_IDENTITY, change, share), value) if self.rotation
                      else value + change * share)
         self.__dict__.update(_base=base, _changes=pending, _value=value)
         return bool(pending)

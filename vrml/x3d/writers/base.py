@@ -125,8 +125,7 @@ def _finite(type_name: str, value: Any) -> bool:
 class _Scope:
     """DEF names and IS connections for one scene or prototype body"""
 
-    def __init__(self, graph: Any, protos: "list[type]") -> None:
-        self.graph = graph
+    def __init__(self, protos: "list[type]") -> None:
         self.protos = protos
         self.names: "dict[Any, str]" = {}
         self.written: "set[Any]" = set()
@@ -200,7 +199,7 @@ class SceneWriter:
         for proto in list(extra) + list(graph.protoTypes.values()):
             if id(proto) not in {id(item) for item in protos}:
                 protos.append(proto)
-        scope = _Scope(graph, protos)
+        scope = _Scope(protos)
         counts: "dict[Any, int]" = {}
         order: "list[Any]" = []
         undeclared: "list[type]" = []

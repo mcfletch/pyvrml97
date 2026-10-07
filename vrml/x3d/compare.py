@@ -21,6 +21,7 @@ from typing import Any
 import numpy as np
 
 from vrml import field, node, protofunctions
+from vrml.x3d.writers.base import INLINE_SCHEMES
 
 #: Relative and absolute tolerance for numbers: what float32 resolves.
 TOLERANCE = 1e-6
@@ -33,8 +34,6 @@ DOUBLE_TYPES = frozenset((
     'SFMatrix3d', 'MFMatrix3d', 'SFMatrix4d', 'MFMatrix4d',
 ))
 
-#: The url schemes of a program written inline.
-INLINE_SCHEMES = ('ecmascript:', 'javascript:', 'vrmlscript:')
 
 
 def _inline(url: str) -> bool:

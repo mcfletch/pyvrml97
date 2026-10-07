@@ -264,16 +264,6 @@ def _quaternion_between(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.asarray(found / np.linalg.norm(found))
 
 
-def _compose(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """The quaternion turning by `b` and then by `a`"""
-    ax, ay, az, aw = a
-    bx, by, bz, bw = b
-    return np.array([aw * bx + ax * bw + ay * bz - az * by,
-                     aw * by - ax * bz + ay * bw + az * bx,
-                     aw * bz + ax * by - ay * bx + az * bw,
-                     aw * bw - ax * bx - ay * by - az * bz])
-
-
 class SphereSensor(Dragging, x3d.SphereSensor):
     """A drag over the sphere about the sensor's origin through the first hit"""
 
@@ -294,7 +284,7 @@ class SphereSensor(Dragging, x3d.SphereSensor):
             track = origin + direction * (along - math.sqrt(gap))
         else:
             track = nearest * (radius / np.linalg.norm(nearest))
-        turned = _compose(_quaternion_between(self.__dict__['_first'], track),
+        turned = interpolation.compose(_quaternion_between(self.__dict__['_first'], track),
                           interpolation.quaternion_of(self.offset))
         self.trackPoint_changed = track
         self.rotation_changed = interpolation.rotation_of(turned)

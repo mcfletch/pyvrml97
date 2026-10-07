@@ -274,7 +274,7 @@ class SceneBuilder:
 
     def unit(self, category: str, name: str, conversionFactor: float) -> None:
         """A `unit` statement: values in `category` are scaled from here on"""
-        if self.dialect is not None and self.scene.version in ('2.0', '3.0', '3.1', '3.2'):
+        if self.scene.version in ('2.0', '3.0', '3.1', '3.2'):
             # 7.2.5.5: UNIT statements are for X3D 3.3 and later.
             self.problem('error', 'UNIT statements need X3D 3.3 or later, not %s'
                          % self.scene.version)

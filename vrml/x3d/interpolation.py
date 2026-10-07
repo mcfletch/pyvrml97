@@ -28,8 +28,8 @@ from typing import Any, Optional
 import numpy as np
 from numpy.typing import ArrayLike
 
-__all__ = ['colour', 'directions', 'ease', 'linear', 'orientation', 'quaternion_of',
-           'rotation_of', 'segment', 'slerp', 'spline', 'squad', 'tangents']
+__all__ = ['colour', 'compose', 'directions', 'ease', 'inverse', 'linear', 'orientation',
+           'quaternion_of', 'rotation_of', 'segment', 'slerp', 'spline', 'squad', 'tangents']
 
 
 def segment(keys: ArrayLike, fraction: float) -> "tuple[int, float]":
@@ -249,7 +249,8 @@ def rotation_of(quaternion: ArrayLike) -> np.ndarray:
     return np.concatenate([axis / length, [angle]])
 
 
-def _multiply(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+def compose(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """The quaternion turning by `b` and then by `a`"""
     ax, ay, az, aw = a
     bx, by, bz, bw = b
     return np.array([aw * bx + ax * bw + ay * bz - az * by,
@@ -258,7 +259,8 @@ def _multiply(a: np.ndarray, b: np.ndarray) -> np.ndarray:
                      aw * bw - ax * bx - ay * by - az * bz])
 
 
-def _inverse(q: np.ndarray) -> np.ndarray:
+def inverse(q: np.ndarray) -> np.ndarray:
+    """The quaternion turning back what unit quaternion `q` turns"""
     return np.array([-q[0], -q[1], -q[2], q[3]])
 
 
@@ -310,10 +312,10 @@ def squad(keys: ArrayLike, rotations: ArrayLike, fraction: float) -> np.ndarray:
         if index == 0 or index == len(quaternions) - 1:
             inner.append(q)
             continue
-        back = _inverse(q)
-        tangent = (_log(_multiply(back, quaternions[index + 1]))
-                   + _log(_multiply(back, quaternions[index - 1]))) / -4.0
-        inner.append(_multiply(q, _exp(tangent)))
+        back = inverse(q)
+        tangent = (_log(compose(back, quaternions[index + 1]))
+                   + _log(compose(back, quaternions[index - 1]))) / -4.0
+        inner.append(compose(q, _exp(tangent)))
     index, h = segment(key, fraction)
     outer = slerp(quaternions[index], quaternions[index + 1], h)
     middle = slerp(inner[index], inner[index + 1], h)
