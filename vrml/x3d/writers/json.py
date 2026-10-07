@@ -15,6 +15,7 @@ import numpy as np
 
 from vrml import protofunctions
 from vrml.x3d import codecs
+from vrml.x3d.scene import X3DScene
 from vrml.x3d.writers.base import NODE_TYPES, Declaration, SceneWriter
 
 SCHEMA = 'https://www.web3d.org/specifications/x3d-%s.xsd'
@@ -194,6 +195,6 @@ class JSONWriter(SceneWriter):
         return [self.node(child) for child in value]
 
 
-def write(scene: Any, version: "str | None" = None, canonical: bool = False) -> str:
+def write(scene: X3DScene, version: "str | None" = None, canonical: bool = False) -> str:
     """Write a scene as an X3D JSON document"""
     return JSONWriter(scene, version, canonical).write()

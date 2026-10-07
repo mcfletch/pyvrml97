@@ -14,6 +14,7 @@ from typing import Any
 
 from vrml import node, protofunctions
 from vrml.x3d import codecs
+from vrml.x3d.scene import X3DScene
 from vrml.x3d.writers.base import NODE_TYPES, Declaration, SceneWriter, Value
 
 DOCTYPE = ('<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D %(version)s//EN" '
@@ -254,6 +255,6 @@ class XMLWriter(SceneWriter):
         self.out.append('%s</fieldValue>' % indent)
 
 
-def write(scene: Any, version: "str | None" = None, canonical: bool = False) -> str:
+def write(scene: X3DScene, version: "str | None" = None, canonical: bool = False) -> str:
     """Write a scene as an X3D XML document"""
     return XMLWriter(scene, version, canonical).write()

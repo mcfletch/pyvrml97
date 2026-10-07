@@ -416,7 +416,10 @@ The XML writer orders attributes as X3D canonical form does (``DEF``,
 ``USE``, a ``containerField`` the reader would not infer, then
 alphabetically) and delimits MFString attributes with single quotes.
 ``canonical=True`` adds the DTD and the schema attributes. Written XML
-validates against the X3D 4.1 XML Schema.
+validates against the X3D 4.1 XML Schema. A JSON document names its XML and
+JSON schemas whether or not ``canonical`` is given, as Web3D's X3D JSON
+documents do; ClassicVRML has no canonical form, and ``canonical`` changes
+nothing there.
 
 Comparing
 ---------

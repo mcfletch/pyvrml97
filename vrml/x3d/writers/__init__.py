@@ -6,16 +6,24 @@ one named. A version's field names and defaults apply on the way out; a node
 type, field or field type the version lacks raises `X3DWriteError`.
 """
 
-from collections.abc import Callable
-from typing import Any
+from typing import Protocol
 
+from vrml.x3d.scene import X3DScene
 from vrml.x3d.writers import classic, json, xml
 from vrml.x3d.writers.base import X3DWriteError
 
-__all__ = ['WRITERS', 'X3DWriteError', 'write']
+__all__ = ['WRITERS', 'Writer', 'X3DWriteError', 'write']
+
+
+class Writer(Protocol):
+    """One encoding's writer: the scene's text"""
+
+    def __call__(self, scene: X3DScene, version: "str | None" = None,
+                 canonical: bool = False) -> str: ...
+
 
 #: The writer of each encoding.
-WRITERS: "dict[str, Callable[..., str]]" = {
+WRITERS: "dict[str, Writer]" = {
     'xml': xml.write,
     'classic': classic.write,
     'json': json.write,
@@ -23,7 +31,7 @@ WRITERS: "dict[str, Callable[..., str]]" = {
 
 
 def write(
-    scene: Any,
+    scene: X3DScene,
     encoding: str = 'xml',
     version: "str | None" = None,
     canonical: bool = False,

@@ -11,6 +11,7 @@ from typing import Any
 
 from vrml import protofunctions
 from vrml.x3d import codecs
+from vrml.x3d.scene import X3DScene
 from vrml.x3d.writers.base import NODE_TYPES, Declaration, SceneWriter
 
 INDENT = '  '
@@ -160,6 +161,6 @@ class ClassicWriter(SceneWriter):
         return '[\n%s\n%s]' % (items, INDENT * depth)
 
 
-def write(scene: Any, version: "str | None" = None, canonical: bool = False) -> str:
+def write(scene: X3DScene, version: "str | None" = None, canonical: bool = False) -> str:
     """Write a scene as a ClassicVRML or VRML97 document"""
     return ClassicWriter(scene, version, canonical).write()
