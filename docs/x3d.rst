@@ -53,6 +53,10 @@ A field's declaration carries its X3D interface:
 Fields named by a Python keyword (the lights' ``global``) are read with
 ``getattr(light, 'global')`` and set with ``Light(**{'global': True})``.
 
+A method on a node is camelCase, as pyvrml97's node methods have always been
+(``keyDown``, ``pointerPress``, ``x3dEquivalent``); a module's functions are
+snake_case (``bind_imports``, ``first_difference``).
+
 ``vrml/x3d/nodes.pyi`` types every constructor and field, so a type checker
 reports ``x3d.Shape(geometry=x3d.Appearance())``. Constructors also take
 ``**fields``, for the fields an engine's implementation of a node adds, so
@@ -129,7 +133,16 @@ Reading
 
 The encoding is recognised from the content, then from the file suffix; a
 gzip-compressed document is decompressed first. A document of more than
-2 GiB, compressed or not, is refused.
+2 GiB, compressed or not, is refused. ``loads`` reads a ``str`` as the
+characters it is, whatever an XML declaration in it names.
+
+``vrml.x3d.readers.read(data, encoding=None, name='', charset=None)`` reads
+bytes already in hand: ``encoding`` (``'xml'``, ``'classic'``, ``'json'`` or
+``'fastinfoset'``) names the encoding rather than recognising it, ``name``
+is the base for relative URLs, and ``charset`` is the bytes' character
+encoding where it is known outside the document, such as an HTTP
+``charset``. ``load``, ``loads`` and ``read`` take ``prototypes=``,
+``strict=`` and ``extern_resolver=`` as keywords.
 
 ``X3DScene`` is a ``SceneGraph`` with the document's ``profile``,
 ``version``, ``components``, ``units``, ``meta``, ``imports``, ``exports``
@@ -137,7 +150,8 @@ and ``problems``. Reading does not stop at an error: each problem is a
 ``LoadProblem`` node with ``severity`` (``error``, ``warning`` or ``info``),
 ``line``, ``column`` (0 where the encoding gives none), ``message`` and the
 ``node`` concerned. ``load(path, strict=True)`` raises ``X3DLoadError`` at
-the first error instead.
+the first error instead. ``X3DScene``, ``LoadProblem``, ``X3DLoadError``
+and ``X3DWriteError`` are all in ``vrml.x3d``.
 
 What reading does:
 
@@ -155,7 +169,9 @@ What reading does:
   most). Nothing is fetched over a network; ``extern_resolver`` lets an
   application supply prototypes from elsewhere. An unresolved
   ``EXTERNPROTO`` has its declared interface and no body, and is completed
-  when ``builder.complete_extern_proto`` is given its definition.
+  when ``builder.complete_extern_proto(extern, definition)`` is given the
+  prototype class that defines it; it returns a message for each field the
+  two declare differently.
 - A prototype instance is used where the first node of its body would be
   (``protofunctions.stands_for``): a field or method its interface lacks is
   read from that node, and a cache depending on such a field
@@ -163,15 +179,23 @@ What reading does:
 - A ``Script`` keeps its declared fields, ``url`` and ``sourceCode`` and is
   not run.
 - An ``IMPORT`` names a node an ``Inline``'s scene exports; routes to it
-  wait in ``scene.pendingRoutes`` until ``builder.bind_imports`` is called
-  with the loaded inline scene.
+  wait in ``scene.pendingRoutes`` until
+  ``builder.bind_imports(scene, inline, inlined)`` is called with the
+  ``Inline`` node and the scene it loaded. It binds each import that scene
+  exports, makes the routes whose ends are all known, and returns the local
+  names bound::
+
+      from vrml.x3d import builder
+
+      inlined = x3d.load(inline_path)
+      builder.bind_imports(scene, scene.getDEF('House'), inlined)
 
 ``prototypes=`` gives the node classes to build by X3D name, laid over
 pyvrml97's own, so an engine reads documents into its own implementations of
 the nodes, and its ``X3DScene`` subclass under ``'X3DScene'``. A node type it
 does not supply is built from pyvrml97's class, and one with no behaviour
-there either is reported once in ``scene.problems`` (``info``). A field the document leaves out
-has the X3D declaration's default, also where the engine's class defaults it
+there either is reported once in ``scene.problems`` (``info``). A field the
+document leaves out has the X3D declaration's default, also where the engine's class defaults it
 otherwise for a node made in code; a field the document's version does not
 have keeps the engine's default. The VRML97 reader does the same for the
 fields VRML97 has, and then sets VRML97's own defaults where they differ
@@ -389,6 +413,20 @@ The XML writer orders attributes as X3D canonical form does (``DEF``,
 alphabetically) and delimits MFString attributes with single quotes.
 ``canonical=True`` adds the DTD and the schema attributes. Written XML
 validates against the X3D 4.1 XML Schema.
+
+Comparing
+---------
+
+``vrml.x3d.compare.first_difference(a, b, ignore=(), header=True)`` returns
+where two scenes first differ, as a path such as
+``children[0].geometry.radius: 1.0 != 2.0``, or None where their graphs are
+equal: node types, field values (to float32 precision for the
+single-precision types, float64 for the double ones), which nodes are
+shared, routes by the nodes they join, prototypes by interface, body and IS
+connections, and the header statements. ``ignore`` names ``(node type,
+field)`` pairs not to compare; ``header=False`` leaves out the profile,
+version, components and units, which a VRML97 file has none of. A program
+compares as one text, whether written inline or as a ``url``.
 
 Validating
 ----------
