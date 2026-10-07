@@ -297,6 +297,23 @@ class TestAnEnginesDefaults(unittest.TestCase):
         self.assertFalse(getattr(quiet, 'global'))
         self.assertTrue(getattr(Engine(), 'global'))
 
+    def test_a_field_vrml97_has_takes_its_declared_default(self):
+        from vrml import field  # noqa: PLC0415 kept with its use
+        from vrml.vrml97 import basenamespaces, parseprocessor  # noqa: PLC0415 kept with its use
+        from vrml.x3d import nodes  # noqa: PLC0415 kept with its use
+
+        class Engine(nodes.PointLight):
+            radius = field.newField('radius', 'SFFloat', 1, float('inf'))
+        prototypes = dict(basenamespaces.basePrototypes, PointLight=Engine)
+        source = HEADER + 'PointLight { } PointLight { radius 4 }\n'
+        success, results, _consumed = PARSER.parse(
+            source, processor=parseprocessor.ParseProcessor(basePrototypes=prototypes))
+        plain, given = results[1].children
+        self.assertTrue(success)
+        self.assertEqual(plain.radius, 100.0)
+        self.assertEqual(given.radius, 4.0)
+        self.assertEqual(Engine().radius, float('inf'))
+
     def test_a_field_vrml97_does_not_have_keeps_the_engines_default(self):
         from vrml import field  # noqa: PLC0415 kept with its use
         from vrml.vrml97 import basenamespaces, parseprocessor  # noqa: PLC0415 kept with its use

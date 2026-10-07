@@ -159,6 +159,11 @@ class ParseProcessor(DispatchProcessor):
                 )
             )
         newNode = prototype()
+        # The declaration's default where the class gives another, for the
+        # fields VRML97 has; then VRML97's own where it differs from X3D's.
+        for fieldName, value in dialect.declared_defaults(type(newNode), GI):
+            if self.dialect.has_field(GI, fieldName):
+                getField(newNode, fieldName).fset(newNode, value, notify=0)
         for fieldName, value in self.dialect.defaults(GI):
             getField(newNode, fieldName).fset(newNode, value, notify=0)
         root(newNode, self.sceneGraphStack[0])
