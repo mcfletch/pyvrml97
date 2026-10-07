@@ -33,19 +33,20 @@ ENCODINGS = {
 #: Scenes whose translation into an encoding says something else, by suffix.
 #: The ClassicVRML converter writes a nested MetadataSet's children twice (the
 #: STEP scenes) or before the nodes they USE (MetadataNodeExamples), gives a
-#: declared MFString with no value one empty string (speed_*, the fish
-#: prototypes), and splits an unquoted MFString differently (XmpMetadata).
+#: declared MFString with no value one empty string (speed_*, the fish,
+#: TextString and CircleFishLod prototypes), and splits an unquoted MFString differently (XmpMetadata).
 #: The JSON converter collapses runs of spaces in strings and empties the
 #: blank lines of Script source.
 CONVERTED_DIFFERENTLY = {
     '.x3dv': (
         'STEP/', 'speed_range', 'speed_scaling', 'FishPrototype', 'SeaStarPrototype',
         'PositionInterpolatorPrototype', 'MetadataNodeExamplesX3D', 'XmpMetadataEmbedded',
+        'TextStringPrototype', 'CircleFishLodPrototype',
     ),
     '.json': (
         'TextHaveFunWithX3D', 'TextSpecialCharacters', 'IntroductionMessage',
         'ElevationGridSimpleWaveAnimation', 'ChangingFog', 'BindingOperations',
-        'MaterialModulatorPrototypeExpanded',
+        'MaterialModulatorPrototypeExpanded', 'Chapter14Prototypes/MaterialModulator.',
     ),
 }
 

@@ -1,9 +1,13 @@
 """Comparing scenes: where two graphs first differ
 
 `first_difference(a, b)` walks two scenes together and answers a path to
-the first node type, field value, route or statement that differs, or None
-where the graphs are equal. Numbers compare to float32 precision. A node
-shared in one graph has to be shared at the same places in the other.
+the first node type, field value, route, prototype or statement that
+differs, or None where the graphs are equal. Numbers compare to the
+precision of their type: float32 for the single-precision types, float64
+for the double ones. A node shared in one graph has to be shared at the
+same places in the other, and a route joins the same nodes in both. A
+prototype compares by its interface -- each field's type, access and
+default -- and its body.
 Comments and `meta` statements are not compared. A Script's or shader's
 program is compared as one text without the whitespace around it, whether a
 document carries it inline (XML's character data, the `sourceCode` field) or
@@ -20,6 +24,14 @@ from vrml import field, node, protofunctions
 
 #: Relative and absolute tolerance for numbers: what float32 resolves.
 TOLERANCE = 1e-6
+#: The same for the double-precision types: what float64 resolves.
+DOUBLE_TOLERANCE = 1e-15
+#: X3D's double-precision field types.
+DOUBLE_TYPES = frozenset((
+    'SFDouble', 'MFDouble', 'SFTime', 'MFTime',
+    'SFVec2d', 'MFVec2d', 'SFVec3d', 'MFVec3d', 'SFVec4d', 'MFVec4d',
+    'SFMatrix3d', 'MFMatrix3d', 'SFMatrix4d', 'MFMatrix4d',
+))
 
 #: The url schemes of a program written inline.
 INLINE_SCHEMES = ('ecmascript:', 'javascript:', 'vrmlscript:')
@@ -38,7 +50,7 @@ def _program(target: Any) -> "tuple[str, list[str]]":
     return source, [url for url in urls if not _inline(url)]
 
 
-def _values_differ(a: Any, b: Any) -> "str | None":
+def _values_differ(a: Any, b: Any, tolerance: float = TOLERANCE) -> "str | None":
     """Why two field values differ, or None"""
     if isinstance(a, np.ndarray) or isinstance(b, np.ndarray):
         a, b = np.asarray(a), np.asarray(b)
@@ -47,11 +59,11 @@ def _values_differ(a: Any, b: Any) -> "str | None":
         if a.dtype == bool or b.dtype == bool or a.dtype.kind in 'iu':
             equal = bool(np.array_equal(a, b))
         else:
-            equal = bool(np.allclose(a, b, rtol=TOLERANCE, atol=TOLERANCE))
+            equal = bool(np.allclose(a, b, rtol=tolerance, atol=tolerance))
         return None if equal else '%s != %s' % (a.tolist()[:6], b.tolist()[:6])
     if isinstance(a, float) or isinstance(b, float):
         try:
-            same = abs(float(a) - float(b)) <= TOLERANCE * max(1.0, abs(float(a)))
+            same = abs(float(a) - float(b)) <= tolerance * max(1.0, abs(float(a)))
         except (TypeError, ValueError):
             same = False
         return None if same else '%r != %r' % (a, b)
@@ -59,16 +71,25 @@ def _values_differ(a: Any, b: Any) -> "str | None":
         if len(a) != len(b):
             return 'length %d != %d' % (len(a), len(b))
         for index, (left, right) in enumerate(zip(a, b)):
-            found = _values_differ(left, right)
+            found = _values_differ(left, right, tolerance)
             if found:
                 return '[%d] %s' % (index, found)
         return None
     return None if a == b else '%r != %r' % (a, b)
 
 
+def _tolerance(declared: Any) -> float:
+    """The tolerance a field's numbers compare to, by its type"""
+    return DOUBLE_TOLERANCE if str(declared.typeName()) in DOUBLE_TYPES else TOLERANCE
+
+
 class _Comparison:
-    def __init__(self, ignore: "frozenset[tuple[str, str]]") -> None:
+    def __init__(self, ignore: "frozenset[tuple[str, str]]",
+                 connected: "dict[Any, set[str]] | None" = None) -> None:
         self.ignore = ignore
+        #: For each node of a prototype body, its fields an IS connection
+        #: gives a value: the template's own value is not one an instance has.
+        self.connected = connected or {}
         self.pairs: "dict[Any, Any]" = {}
         self.reverse: "dict[Any, Any]" = {}
 
@@ -96,8 +117,11 @@ class _Comparison:
             if left[1] != right[1]:
                 return '%s.url: %r != %r' % (path, left[1], right[1])
             names -= {'sourceCode', 'url'}
+        connected = self.connected.get(a, ())
         for name in sorted(names):
             if name.startswith(' ') or name == 'externalURL' or (type_name, name) in self.ignore:
+                continue
+            if name in connected:
                 continue
             found = self.fields(a, b, name, '%s.%s' % (path, name))
             if found:
@@ -116,7 +140,7 @@ class _Comparison:
             return self.node_lists(list(left or []), list(right or []), path)
         if isinstance(left_field, node.SFNode):
             return self.nodes(left, right, path)
-        found = _values_differ(left, right)
+        found = _values_differ(left, right, _tolerance(left_field))
         return '%s: %s' % (path, found) if found else None
 
     def node_lists(self, a: Sequence[Any], b: Sequence[Any], path: str) -> "str | None":
@@ -129,12 +153,77 @@ class _Comparison:
         return None
 
 
-def _routes(scene: Any) -> "list[tuple[str, str, str, str]]":
-    result = []
-    for each in scene.routes:
-        result.append((protofunctions.defName(each.source), each.sourceField,
-                       protofunctions.defName(each.destination), each.destinationField))
-    return sorted(result)
+    def routes(self, a: Any, b: Any, path: str) -> "str | None":
+        """Whether `a`'s routes join the nodes paired with those `b`'s join"""
+        def ends(scene: Any, pair: "dict[Any, Any]") -> "list[tuple[int, str, int, str]]":
+            return sorted((id(pair.get(each.source, each.source)), str(each.sourceField),
+                           id(pair.get(each.destination, each.destination)),
+                           str(each.destinationField)) for each in scene.routes)
+        if ends(a, self.pairs) != ends(b, {}):
+            return '%s: %s != %s' % (path, _named_routes(a), _named_routes(b))
+        return None
+
+    def connections(self, a: type, b: type, path: str) -> "str | None":
+        """Whether prototype `a`'s IS connections join the body nodes paired with `b`'s"""
+        def joined(proto: type, pair: "dict[Any, Any]") -> "list[tuple[str, int, str]]":
+            return sorted((str(proto_field), id(pair.get(target, target)), str(node_field))
+                          for proto_field, targets in node.ismaps(proto).items()
+                          for target, node_field in targets)
+        if joined(a, self.pairs) != joined(b, {}):
+            return '%s: the connections differ' % path
+        return None
+
+    def prototypes(self, a: Any, b: Any, path: str) -> "str | None":
+        """Where two scenes' prototypes of one name differ: interface, then body"""
+        for name in sorted(a.protoTypes):
+            left, right = a.protoTypes[name], b.protoTypes[name]
+            found = _interface_differs(left, right)
+            if found:
+                return '%s.%s: %s' % (path, name, found)
+            left_body = protofunctions.getSceneGraph(left)
+            right_body = protofunctions.getSceneGraph(right)
+            if bool(left_body) != bool(right_body):
+                return '%s.%s: a body in only one' % (path, name)
+            if left_body:
+                connected: "dict[Any, set[str]]" = {}
+                for targets in node.ismaps(left).values():
+                    for target, node_field in targets:
+                        connected.setdefault(target, set()).add(node_field)
+                body = _Comparison(self.ignore, connected)
+                found = (body.node_lists(list(left_body.children), list(right_body.children),
+                                         '%s.%s' % (path, name))
+                         or body.routes(left_body, right_body, '%s.%s.routes' % (path, name))
+                         or body.connections(left, right, '%s.%s.IS' % (path, name)))
+                if found:
+                    return found
+        return None
+
+
+def _interface_differs(a: type, b: type) -> "str | None":
+    """Where two prototypes' declared fields differ: name, type, access, default"""
+    def declared(proto: type) -> "dict[str, Any]":
+        return {item.name: item for item in protofunctions.getFields(proto)
+                if not item.name.startswith(' ') and item.name not in ('externalURL',)}
+    left, right = declared(a), declared(b)
+    if sorted(left) != sorted(right):
+        return 'fields %s != %s' % (sorted(left), sorted(right))
+    for name in sorted(left):
+        first, second = left[name], right[name]
+        if (first.typeName(), first.accessType) != (second.typeName(), second.accessType):
+            return '%s: %s %s != %s %s' % (name, first.accessType, first.typeName(),
+                                           second.accessType, second.typeName())
+        if isinstance(first, (node.SFNode, node.MFNode)):
+            continue
+        found = _values_differ(first.getDefault(), second.getDefault(), _tolerance(first))
+        if found:
+            return '%s default: %s' % (name, found)
+    return None
+
+
+def _named_routes(scene: Any) -> "list[tuple[str, str, str, str]]":
+    return sorted((protofunctions.defName(each.source), str(each.sourceField),
+                   protofunctions.defName(each.destination), str(each.destinationField))
+                  for each in scene.routes)
 
 
 def _records(nodes: Sequence[Any], names: Sequence[str]) -> "list[tuple[Any, ...]]":
@@ -169,9 +258,6 @@ def first_difference(
     if sorted(a.protoTypes) != sorted(b.protoTypes):
         return 'prototypes: %s != %s' % (sorted(a.protoTypes), sorted(b.protoTypes))
     comparison = _Comparison(frozenset(ignore))
-    found = comparison.node_lists(list(a.children), list(b.children), 'children')
-    if found:
-        return found
-    if _routes(a) != _routes(b):
-        return 'routes: %s != %s' % (_routes(a), _routes(b))
-    return None
+    return (comparison.prototypes(a, b, 'prototypes')
+            or comparison.node_lists(list(a.children), list(b.children), 'children')
+            or comparison.routes(a, b, 'routes'))

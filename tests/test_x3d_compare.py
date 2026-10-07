@@ -2,6 +2,7 @@
 
 import unittest
 
+from vrml import protofunctions
 from vrml.x3d import nodes as x3d
 from vrml.x3d.compare import first_difference
 from vrml.x3d.scene import X3DScene
@@ -77,6 +78,43 @@ class TestIgnoring(unittest.TestCase):
         right = scene(x3d.FontStyle())
         self.assertIsNotNone(first_difference(left, right))
         self.assertIsNone(first_difference(left, right, ignore=[('FontStyle', 'style')]))
+
+
+class TestWhatIsCompared(unittest.TestCase):
+    def test_times_are_compared_at_double_precision(self):
+        found = first_difference(scene(x3d.TimeSensor(startTime=1.7e9 + 0.25)),
+                                 scene(x3d.TimeSensor(startTime=1.7e9)))
+        self.assertIn('startTime', found)
+
+    def test_a_prototypes_interface_is_compared(self):
+        from vrml.x3d import files  # noqa: PLC0415 kept with its use
+        text = '#X3D V4.0 utf8\nPROFILE Immersive\nPROTO P [ initializeOnly SFFloat r %s ] { Group {} }\n'
+        found = first_difference(files.loads(text % '1'), files.loads(text % '2'))
+        self.assertIn('P', found)
+
+    def test_a_prototypes_body_is_compared(self):
+        from vrml.x3d import files  # noqa: PLC0415 kept with its use
+        text = '#X3D V4.0 utf8\nPROFILE Immersive\nPROTO P [ ] { %s {} }\n'
+        found = first_difference(files.loads(text % 'Group'), files.loads(text % 'Transform'))
+        self.assertIn('P', found)
+
+    def test_a_body_field_given_by_is_is_not_compared_and_the_connection_is(self):
+        from vrml.x3d import files  # noqa: PLC0415 kept with its use
+        text = ('#X3D V4.0 utf8\nPROFILE Immersive\n'
+                'PROTO P [ initializeOnly SFFloat r 1 ] { Sphere { radius %s } }\n')
+        connected = files.loads(text % 'IS r')
+        protofunctions.getSceneGraph(connected.protoTypes['P']).children[0].radius = 5.0
+        self.assertIsNone(first_difference(connected, files.loads(text % 'IS r')))
+        self.assertIn('P', first_difference(connected, files.loads(text % '1')))
+
+    def test_routes_between_unnamed_nodes_are_compared_by_node(self):
+        def routed(which):
+            clocks, light = [x3d.TimeSensor(), x3d.TimeSensor(loop=True)], x3d.PointLight()
+            made = scene(clocks[0], clocks[1], light)
+            made.addRoute(clocks[which], 'isActive', light, 'on')
+            return made
+        self.assertIsNone(first_difference(routed(0), routed(0)))
+        self.assertIn('routes', first_difference(routed(0), routed(1)))
 
 
 if __name__ == '__main__':
