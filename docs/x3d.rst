@@ -209,7 +209,8 @@ from the node it covers; ``set_bind FALSE`` on the top node takes it off and
 binds the one beneath again, and on any other node takes it off and sends
 nothing. ``binding.bound(node)`` is the node on top of ``node``'s stack, and
 ``binding.current(nodes)`` the bound one of a scene's nodes of one kind,
-binding the first where none is. A node in no scene is a stack of its own.
+binding the first where none is; ``binding.current_path(paths)`` is the same
+over node-paths. A node in no scene is a stack of its own.
 Layers share their scene's stacks.
 
 The time a node is at is its scene's. Each node that stamps time is a

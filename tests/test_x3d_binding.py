@@ -121,6 +121,17 @@ class TestCurrent(BindCase):
 
     def test_no_candidates_is_none(self):
         self.assertIsNone(binding.current([]))
+        self.assertIsNone(binding.current_path([]))
+
+    def test_the_path_to_the_current_node(self):
+        paths = [(self.scene, self.first), (self.scene, self.second)]
+        self.assertIs(binding.current_path(paths), paths[0])
+        self.second.set_bind = True
+        self.assertIs(binding.current_path(paths), paths[1])
+
+    def test_a_bound_node_with_no_path_here_is_no_path(self):
+        self.third.set_bind = True
+        self.assertIsNone(binding.current_path([(self.scene, self.first)]))
 
 
 class TestVRML97(unittest.TestCase):

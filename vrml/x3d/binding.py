@@ -20,14 +20,14 @@ scene's stacks.
 from __future__ import annotations
 
 import weakref
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import Any, Optional
 
 from vrml import field, protofunctions
 from vrml.vrml97 import nodetypes
 from vrml.x3d import timing
 
-__all__ = ['KINDS', 'Bindable', 'bound', 'current', 'kind_of']
+__all__ = ['KINDS', 'Bindable', 'bound', 'current', 'current_path', 'kind_of']
 
 #: The kinds of bindable node, each with a stack of its own.
 KINDS: "tuple[type, ...]" = (nodetypes.Viewpoint, nodetypes.Background, nodetypes.Fog,
@@ -82,6 +82,19 @@ def current(candidates: Iterable[Any]) -> Any:
         return top
     found[0].set_bind = True
     return found[0]
+
+
+def current_path(paths: Sequence[Any]) -> Any:
+    """The path of `paths` ending at the :func:`current` node, or None
+
+    Each path is a sequence ending at a bindable node; a bound node no path
+    reaches is no path.
+    """
+    found = current([path[-1] for path in paths])
+    for path in paths:
+        if path[-1] is found:
+            return path
+    return None
 
 
 class Bindable(timing.Timed):
