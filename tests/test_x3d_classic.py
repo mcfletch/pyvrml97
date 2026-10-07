@@ -1,12 +1,15 @@
 """Reading the ClassicVRML encoding (ISO/IEC 19776-2) and VRML97."""
 
+import time
 import unittest
 
 import numpy as np
+import pytest
 
 from vrml import protofunctions
+from vrml.x3d import codecs, readers
 from vrml.x3d import nodes as x3d
-from vrml.x3d import readers
+from vrml.x3d.readers import classic
 
 
 def read(text, **options):
@@ -110,6 +113,53 @@ class TestNodes(unittest.TestCase):
         scene = x3d_document('Group {\n children [\n Shape { ]\n')
         self.assertTrue(errors(scene))
         self.assertEqual(errors(scene)[0].line, 5)
+
+
+class TestNumberLists(unittest.TestCase):
+    """A bracketed list of numbers is read as one span, which its field type decodes"""
+
+    def test_signs_exponents_commas_and_hex(self):
+        scene = x3d_document('Shape { geometry IndexedFaceSet { coordIndex [ 0x2, 1, -1 ]\n'
+                             'coord Coordinate { point [ 1, -2.5e1 +3, .5 0. 4E0\n 7 8 9 ] } } }')
+        faces = scene.children[0].geometry
+        self.assertEqual(list(faces.coordIndex), [2, 1, -1])
+        np.testing.assert_allclose(faces.coord.point, [[1, -25, 3], [0.5, 0, 4], [7, 8, 9]])
+        self.assertEqual(scene.problems, [])
+
+    def test_empty_lists_of_nodes(self):
+        scene = x3d_document('Group { children [ ] } Group { children [] }')
+        self.assertEqual([group.children for group in scene.children], [[], []])
+        self.assertEqual(scene.problems, [])
+
+    def test_comments_strings_and_words_among_the_values(self):
+        scene = x3d_document('Coordinate { point [ 1 2 3 # the first\n 4 5 6 ] }\n'
+                             'WorldInfo { info [ "1", "2" ] }\n'
+                             'Switch { }')
+        np.testing.assert_allclose(scene.children[0].point, [[1, 2, 3], [4, 5, 6]])
+        self.assertEqual(scene.children[1].info, ['1', '2'])
+        self.assertEqual(scene.problems, [])
+
+    def test_a_malformed_number_is_an_error(self):
+        scene = x3d_document('Coordinate { point [ 1.2.3 0 0 ] }')
+        self.assertEqual(len(errors(scene)), 1)
+        self.assertIn('Coordinate.point', errors(scene)[0].message)
+
+    @pytest.mark.serial
+    def test_parsing_a_list_costs_less_than_decoding_it(self):
+        """The grammar does not take the numbers of a list one by one"""
+        body = ' '.join('%.6f' % value for value in np.random.default_rng(1).normal(size=200000))
+        document = '#X3D V3.3 utf8\nCoordinate { point [ %s ] }\n' % body
+
+        def fastest(call):
+            times = []
+            for _ in range(5):
+                start = time.perf_counter()
+                call()
+                times.append(time.perf_counter() - start)
+            return min(times)
+        parsing = fastest(lambda: classic.PARSER.parse(document))
+        decoding = fastest(lambda: codecs.decode('MFVec3f', body))
+        self.assertLess(parsing, 0.75 * decoding)
 
 
 class TestStatements(unittest.TestCase):

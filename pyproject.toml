@@ -75,6 +75,11 @@ cache-keys = [{ file = "pyproject.toml" }, { file = "vrml/__init__.py" }]
 # Named explicitly rather than left to ruff's default, which has widened
 # between releases: a gate whose meaning moves when a tool is upgraded is not a
 # gate. `E,W,F,B` is what the other pre-2010 projects here hold to.
+[tool.pytest.ini_options]
+markers = [
+    "serial: a wall-clock comparison, whose margin shrinks while other tests run beside it; run alone with '-m serial' after a '-m \"not serial\"' pass.",
+]
+
 [tool.openglcontext-checks]
 # The OGC rules (openglcontext-checks) this project is clean of, held by
 # the workspace preflight. The others join as the project reaches zero of

@@ -5,7 +5,9 @@ utf8` or `#VRML V2.0 utf8`), and the VRML97 dialect applies to the second.
 The grammar finds a document's structure; a field's value is reported as one
 span, which the processor decodes by the type of the field it is for, so a
 list of numbers is converted by the field's codec in one step rather than
-number by number.
+number by number. A bracketed list holding only the characters of numbers
+is matched as one run of them (`numberRun`); one holding anything else
+(a comment, a string, a word) is read value by value.
 
 A file with an X3D header that declares fields with VRML97's words
 (`field`, `exposedField`, `eventIn`, `eventOut`) is read with a warning,
@@ -68,7 +70,8 @@ fieldValue     := id, ts, value
 >value<        := listValue / null / nodeStatement / scalars
 null           := 'NULL', ?(delimiter / EOF)
 listValue      := '[', ts, (scalarList / nodeList), ts, ']'!
-scalarList     := scalar, (ts, scalar)*
+scalarList     := numberRun / (scalar, (ts, scalar)*)
+<numberRun>    := [-+0-9.], [-+0-9.eExXa-fA-F \t\r\n,]*, ?']'
 nodeList       := (ts, listItem)*
 >listItem<     := proto / externProto / route / nodeStatement
 scalars        := scalar, (ts, scalar)*
