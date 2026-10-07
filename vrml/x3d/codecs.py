@@ -164,7 +164,7 @@ def decode(type_name: str, text: str) -> Any:
     return DECODERS[type_name](text)
 
 
-def _number(value: Any) -> str:
+def number_text(value: Any) -> str:
     """The shortest text that reads back as `value` at its own precision"""
     if not math.isfinite(value):
         raise ValueError('X3D has no text form for %r' % (value,))
@@ -172,8 +172,9 @@ def _number(value: Any) -> str:
         return str(int(value))
     if not isinstance(value, np.floating):
         value = np.float64(value)
-    magnitude = abs(float(value))
-    if magnitude == 0 or 1e-4 <= magnitude < 1e16:
+    # Positional below 1e16: the schema's patterns for ranged types allow an
+    # exponent only on a mantissa in [0, 1].
+    if abs(float(value)) < 1e16:
         return np.format_float_positional(value, unique=True, trim='-')
     return np.format_float_scientific(value, unique=True, trim='-')
 
@@ -181,7 +182,7 @@ def _number(value: Any) -> str:
 def _numbers(values: Iterable[Any]) -> str:
     if isinstance(values, np.ndarray):
         values = values.ravel()
-    return ' '.join([_number(value) for value in values])
+    return ' '.join([number_text(value) for value in values])
 
 
 def _vectors(size: int) -> "Callable[[Any], str]":
@@ -217,7 +218,7 @@ ENCODERS: "dict[str, Callable[[Any], str]]" = {
     'SFNode': _null,
     'MFNode': _null,
 }
-ENCODERS.update({name: _number for name in SCALAR_FLOAT_TYPES})
+ENCODERS.update({name: number_text for name in SCALAR_FLOAT_TYPES})
 ENCODERS.update({name: _numbers for name in ('MFFloat', 'MFDouble', 'MFTime')})
 ENCODERS.update({
     name: _vectors(size) if name.startswith('MF') else _numbers

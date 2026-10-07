@@ -73,6 +73,32 @@ def _typed(type_name: str, value: Any) -> Any:
     return value
 
 
+def unit_factor(category: str, units: "Mapping[str, float]") -> float:
+    """What a value of a field in unit `category` is multiplied by
+
+    units -- each base category's conversion factor, as `unit` statements give
+    """
+    factor = 1.0
+    for base, power in DERIVED_UNITS[category].items():
+        factor *= units.get(base, 1.0) ** power
+    return factor
+
+
+def scaled(declared: Any, value: Any, factor: float) -> Any:
+    """`value` of the field `declared`, multiplied by `factor`
+
+    A rotation's angle is scaled and its axis is not.
+    """
+    if factor == 1.0:
+        return value
+    value = declared.coerce(value)
+    if declared.typeName() in ('SFRotation', 'MFRotation'):
+        value = value.copy()
+        value[..., 3] *= factor
+        return value
+    return value * factor
+
+
 class X3DLoadError(ValueError):
     """A document has an error, raised in strict mode"""
 
@@ -452,44 +478,22 @@ class SceneBuilder:
             parent.children.setdefault(name, []).append(built)
 
     def _container(self, parent: _Frame, built: Any, explicit: str) -> "str | None":
-        """The parent field a node goes into
-
-        The explicit containerField, else the node type's default, else the
-        first of the parent's node fields that accepts the node.
-        """
-        candidates = []
+        """The parent field a node goes into: the explicit one, else the implied one"""
+        name: "str | None"
         if explicit:
-            candidates.append(self.dialect.current_name(parent.type_name, explicit))
-        default = getattr(built, 'CONTAINER_FIELD', '') or getattr(
-            getattr(built, 'nodeType', None), 'CONTAINER_FIELD', '')
-        if default:
-            candidates.append(default)
-        for name in candidates:
-            declared = self._node_field(parent.node, name)
+            name = self.dialect.current_name(parent.type_name, explicit)
+            declared = _node_field(parent.node, name)
             if declared is not None and node.accepts(_field_types(declared), built):
                 return name
-            if name == explicit or (explicit and name == candidates[0]):
-                why = 'has no node field' if declared is None else 'does not accept a %s in field' % (
-                    protofunctions.protoName(built))
-                self.problem('error', '%s %s %s' % (parent.type_name, why, name), built)
-                return None
-        for declared in sorted(protofunctions.getFields(parent.node), key=lambda f: f.name):
-            if isinstance(declared, (node.SFNode, node.MFNode)) and not declared.name.startswith(' '):
-                if node.accepts(_field_types(declared), built):
-                    return declared.name
-        self.problem('error', '%s has no field that holds a %s'
-                     % (parent.type_name, protofunctions.protoName(built)), built)
-        return None
-
-    @staticmethod
-    def _node_field(target: Any, name: str) -> Any:
-        try:
-            declared = protofunctions.getField(target, name)
-        except AttributeError:
+            why = 'has no node field' if declared is None else 'does not accept a %s in field' % (
+                protofunctions.protoName(built))
+            self.problem('error', '%s %s %s' % (parent.type_name, why, name), built)
             return None
-        if isinstance(declared, (node.SFNode, node.MFNode)):
-            return declared
-        return None
+        name = implied_container(parent.node, built)
+        if name is None:
+            self.problem('error', '%s has no field that holds a %s'
+                         % (parent.type_name, protofunctions.protoName(built)), built)
+        return name
 
     # Field values
 
@@ -536,6 +540,10 @@ class SceneBuilder:
             self.problem('warning', '%s.%s is an event and takes no value'
                          % (frame.type_name, name), frame.node)
             return None, None
+        if not isinstance(frame.node, node.PrototypedNode) and not self.dialect.has_field(
+                frame.type_name, current):
+            self.problem('warning', '%s has no field %s.%s'
+                         % (self.version_name, frame.type_name, current), frame.node)
         return declared, frame
 
     def _set(self, frame: _Frame, declared: Any, value: Any) -> None:
@@ -551,17 +559,7 @@ class SceneBuilder:
 
     def _scaled(self, declared: Any, value: Any) -> Any:
         """A value in the document's units, in the scene's base units"""
-        factor = 1.0
-        for category, power in DERIVED_UNITS[declared.unitCategory].items():
-            factor *= self._units.get(category, 1.0) ** power
-        if factor == 1.0:
-            return value
-        value = declared.coerce(value)
-        if declared.typeName() in ('SFRotation', 'MFRotation'):
-            value = value.copy()
-            value[..., 3] *= factor
-            return value
-        return value * factor
+        return scaled(declared, value, unit_factor(declared.unitCategory, self._units))
 
     # Fields a Script or shader declares
 
@@ -731,6 +729,7 @@ class SceneBuilder:
         body = definition.body or _Body(_Scope(definition.scope))
         template = SceneGraph(children=body.roots, routes=body.routes)
         template.defNames.update(body.scope.defs)
+        template.protoTypes.update(body.scope.protos)
         first = body.roots[0] if body.roots else None
         nodeType = getattr(first, 'nodeType', None) if isinstance(first, node.PrototypedNode) else (
             type(first) if first is not None else None)
@@ -804,6 +803,37 @@ class SceneBuilder:
         if self._lookup(localDEF) is None:
             self.problem('error', 'EXPORT of %r, which no DEF names' % localDEF)
         self.scene.exports.append(ExportInfo(localDEF=localDEF, AS=AS or localDEF))
+
+
+def _node_field(target: Any, name: str) -> Any:
+    """`target`'s node field `name`, or None"""
+    try:
+        declared = protofunctions.getField(target, name)
+    except AttributeError:
+        return None
+    if isinstance(declared, (node.SFNode, node.MFNode)):
+        return declared
+    return None
+
+
+def implied_container(parent: Any, child: Any) -> "str | None":
+    """The field of `parent` a `child` with no containerField goes into
+
+    The child type's default container where the parent has that field and
+    it accepts the child; else the first, by name, of the parent's node
+    fields that accepts it; None where none does.
+    """
+    default = getattr(child, 'CONTAINER_FIELD', '') or getattr(
+        getattr(child, 'nodeType', None), 'CONTAINER_FIELD', '')
+    if default:
+        declared = _node_field(parent, default)
+        if declared is not None and node.accepts(_field_types(declared), child):
+            return str(default)
+    for declared in sorted(protofunctions.getFields(parent), key=lambda f: f.name):
+        if isinstance(declared, (node.SFNode, node.MFNode)) and not declared.name.startswith(' '):
+            if node.accepts(_field_types(declared), child):
+                return str(declared.name)
+    return None
 
 
 def _field_types(declared: Any) -> "tuple[type, ...]":

@@ -167,6 +167,16 @@ class TestWriting(unittest.TestCase):
         self.assertEqual(codecs.encode('SFVec3f', declared.coerce([0.1, 1, -2.5])),
                          '0.1 1 -2.5')
 
+    def test_a_small_number_is_written_without_an_exponent(self):
+        # The schema's patterns for colours and other unit ranges allow an
+        # exponent only on a mantissa in [0, 1].
+        declared = field.newField('value', 'SFColor')
+        self.assertEqual(codecs.encode('SFColor', declared.coerce([7.89723e-05, 0, 0])),
+                         '0.0000789723 0 0')
+
+    def test_a_large_number_is_written_with_an_exponent(self):
+        self.assertEqual(codecs.encode('SFDouble', 1e20), '1e+20')
+
     def test_a_vector_list_separates_its_rows_with_commas(self):
         declared = field.newField('value', 'MFVec2f')
         self.assertEqual(codecs.encode('MFVec2f', declared.coerce([[0, 1], [2, 3]])),

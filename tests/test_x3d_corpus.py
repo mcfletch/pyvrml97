@@ -16,11 +16,12 @@ import os
 import sys
 import unittest
 
-from vrml.x3d import readers
+from vrml.x3d import readers, writers
 from vrml.x3d.compare import first_difference
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SUBSET = os.path.join(HERE, 'fixtures', 'x3d-corpus')
+SCHEMA = os.path.join(HERE, 'fixtures', 'x3d-schema', 'x3d-4.1.xsd')
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'tools'))
 import fetch_x3d_corpus  # noqa: E402 the tools directory is put on the path above
 
@@ -58,6 +59,16 @@ def scenes(directory):
 def read(path):
     with open(path, 'rb') as stream:
         return readers.read(stream.read(), name=path)
+
+
+def errors(scene):
+    """The error messages, without the positions that differ between encodings"""
+    return [problem.message for problem in scene.problems if problem.severity == 'error']
+
+
+def lacks(problem):
+    """Whether a problem is a node or field the document's version does not have"""
+    return ' has no node ' in problem.message or ' has no field ' in problem.message
 
 
 def problems(scene):
@@ -107,6 +118,39 @@ class CorpusTests:
                 scene = read(path)
                 self.assertEqual(scene.version, '2.0')
                 self.assertEqual([str(p) for p in scene.problems if p.severity == 'error'], [])
+
+
+    def test_each_scene_written_in_each_encoding_reads_back_as_itself(self):
+        for path in self.paths:
+            scene = read(path)
+            for encoding in sorted(writers.WRITERS):
+                with self.subTest(scene=os.path.relpath(path, self.directory), encoding=encoding):
+                    again = readers.read(writers.write(scene, encoding).encode('utf-8'), name=path)
+                    # What reading refused is not in the scene, so is not written.
+                    self.assertLessEqual(set(errors(again)), set(errors(scene)))
+                    self.assertIsNone(first_difference(scene, again))
+
+    def test_each_scene_written_as_xml_is_valid_against_the_schema(self):
+        from lxml import etree  # noqa: PLC0415 a test-only dependency
+        schema = etree.XMLSchema(etree.parse(SCHEMA))
+        parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+        for path in self.paths:
+            with self.subTest(scene=os.path.relpath(path, self.directory)):
+                text = writers.write(read(path), 'xml', version='4.1', canonical=True)
+                self.assertTrue(schema.validate(etree.fromstring(text.encode('utf-8'), parser)),
+                                schema.error_log)
+
+    def test_each_vrml97_translation_written_as_vrml97_reads_back_as_itself(self):
+        for path in glob.glob(os.path.join(self.directory, '**', '*.wrl'), recursive=True):
+            scene = read(path)
+            if errors(scene) or any(lacks(problem) for problem in scene.problems):
+                continue
+            with self.subTest(scene=os.path.relpath(path, self.directory)):
+                text = writers.write(scene, 'classic')
+                self.assertTrue(text.startswith('#VRML V2.0 utf8\n'))
+                again = readers.read(text.encode('utf-8'), name=path)
+                self.assertEqual(errors(again), [])
+                self.assertIsNone(first_difference(scene, again, header=False))
 
 
 class TestTheCommittedSubset(CorpusTests, unittest.TestCase):

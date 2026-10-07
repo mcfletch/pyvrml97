@@ -888,6 +888,8 @@ class VersionDifference:
     nodeTypes: "list[str]"
     renames: "list[tuple[str, str, str]]"
     defaults: "list[tuple[str, str, str]]"
+    #: (node type, vocabulary field names) the version does not have.
+    absent: "list[tuple[str, list[str]]]"
     #: What the dialect cannot record, for the report: fields that left a
     #: node without a confirmed new name, fields whose type changed, and
     #: fields whose access type changed.
@@ -909,7 +911,7 @@ def difference(vocabulary: Vocabulary, version: str) -> VersionDifference:
     """Compare one version's X3DUOM with the vocabulary's"""
     old = Model(fetch(version))
     current = vocabulary.model.types
-    result = VersionDifference(version, [], [], [], [], [], [])
+    result = VersionDifference(version, [], [], [], [], [], [], [])
     for name in sorted(old.types):
         spec = old.types[name]
         if spec.kind != 'concrete':
@@ -919,12 +921,17 @@ def difference(vocabulary: Vocabulary, version: str) -> VersionDifference:
         result.nodeTypes.append(name)
         then = {item.name: item for item in spec.fields}
         now = {item.name: item for item in current[name].fields}
+        renamed_to = set()
         for field_name in sorted(set(then) - set(now)):
             target = alias_target(vocabulary, name, field_name)
             if target is None:
                 result.removed.append((name, field_name, then[field_name].type))
             else:
                 result.renames.append((name, field_name, target))
+                renamed_to.add(target)
+        added = sorted(set(now) - set(then) - renamed_to)
+        if added:
+            result.absent.append((name, added))
         for field_name in sorted(set(then) & set(now)):
             before, after = then[field_name], now[field_name]
             if before.type != after.type:
@@ -949,7 +956,7 @@ def generate_dialects(differences: "list[VersionDifference]") -> str:
         'edit. VRML97\'s dialect is written by hand in `vrml.x3d.dialect`.',
         '"""',
         '',
-        'from vrml.x3d.dialect import VRML97, Dialect, FieldDefault, FieldRename',
+        'from vrml.x3d.dialect import VRML97, AbsentFields, Dialect, FieldDefault, FieldRename',
     ]
     names = []
     for item in differences:
@@ -981,6 +988,11 @@ def generate_dialects(differences: "list[VersionDifference]") -> str:
                 lines.append('        FieldDefault(nodeType=%r, fieldName=%r, value=%r),'
                              % (node_type, field_name, value))
             lines.append('    ],')
+        if item.absent:
+            lines.append('    absent=[')
+            for node_type, field_names in item.absent:
+                lines.extend(_absent_lines(node_type, field_names))
+            lines.append('    ],')
         lines.append(')')
     lines.extend(['', '#: Each dialect by the version a document\'s header gives.'])
     lines.append('DIALECTS = {')
@@ -989,6 +1001,24 @@ def generate_dialects(differences: "list[VersionDifference]") -> str:
         lines.append('    %r: %s,' % (version, variable))
     lines.append('}')
     return '\n'.join(lines) + '\n'
+
+
+def _absent_lines(node_type: str, names: "list[str]") -> "list[str]":
+    """One `AbsentFields` entry, wrapped to the line length"""
+    items = ', '.join(repr(name) for name in names)
+    single = '        AbsentFields(nodeType=%r, fields=[%s]),' % (node_type, items)
+    if len(single) <= 92:
+        return [single]
+    lines = ['        AbsentFields(nodeType=%r, fields=[' % node_type]
+    row: "list[str]" = []
+    for name in names:
+        if row and len(', '.join(row + [repr(name)])) > 78:
+            lines.append('            %s,' % ', '.join(row))
+            row = []
+        row.append(repr(name))
+    lines.append('            %s,' % ', '.join(row))
+    lines.append('        ]),')
+    return lines
 
 
 def report(differences: "list[VersionDifference]") -> None:

@@ -12,7 +12,8 @@ optimize the rendering process.
 
 ``vrml.x3d`` holds the X3D 4.1 vocabulary as PyVRML97 nodes, generated from
 Web3D's X3D Unified Object Model, with VRML97 and earlier X3D versions read
-as dialects of it. `docs/x3d.rst`_ describes it.
+as dialects of it. ``vrml.x3d.load`` and ``dump`` read and write the XML,
+ClassicVRML, JSON and VRML97 encodings. `docs/x3d.rst`_ describes it.
 
 .. _`docs/x3d.rst`: docs/x3d.rst
 .. _`OpenGLContext`: https://pypi.python.org/pypi/OpenGLContext

@@ -1,17 +1,20 @@
-"""Reading X3D and VRML documents from files and strings
+"""Reading and writing X3D and VRML documents as files and strings
 
 `load(path)` and `loads(data)` read any encoding. An EXTERNPROTO naming a
-file beside the document is read from there; nothing is fetched over a
-network, which is the application's to do through `extern_resolver`.
+local file is read from there, relative to the document; nothing is fetched
+over a network unless the application passes an `extern_resolver` that does.
+`dump(scene, path)` and `dumps(scene)` write a scene.
 """
 
+import gzip
 import os
 from collections.abc import Sequence
 from typing import Any
 from urllib.parse import urlsplit
 
 from vrml import node
-from vrml.x3d import readers
+from vrml.x3d import nodes as x3d
+from vrml.x3d import readers, writers
 from vrml.x3d.scene import X3DScene
 
 #: How deep EXTERNPROTO files may name further EXTERNPROTO files.
@@ -87,3 +90,48 @@ def loads(data: "bytes | str", name: str = '', **options: Any) -> X3DScene:
         options.setdefault('extern_resolver', LocalPrototypes(dict(options)))
     return readers.read(data, name=name, **options)
 
+
+
+def dumps(
+    scene: X3DScene,
+    encoding: str = 'xml',
+    version: "str | None" = None,
+    canonical: bool = False,
+) -> str:
+    """Return the scene as document text; see `vrml.x3d.writers.write`"""
+    return writers.write(scene, encoding, version=version, canonical=canonical)
+
+
+def dump(
+    scene: X3DScene,
+    path: "str | os.PathLike[str]",
+    encoding: "str | None" = None,
+    version: "str | None" = None,
+    canonical: bool = False,
+) -> None:
+    """Write the scene to `path`
+
+    The encoding comes from the suffix where not given: .x3d, .x3dv, .json
+    or .x3dj, and .wrl, which is VRML97. A suffix ending in z (.x3dz,
+    .x3dvz, .wrz) is gzip-compressed. Nothing is written if the scene cannot
+    be written; an existing file is replaced only when the new one is
+    complete.
+    """
+    name = os.fspath(path)
+    suffix = os.path.splitext(name.lower())[1]
+    if encoding is None:
+        encoding = readers.SUFFIXES.get(suffix)
+        if encoding is None or encoding not in writers.WRITERS:
+            raise ValueError('No writer for files named %r' % name)
+    if version is None:
+        if suffix in ('.wrl', '.wrz'):
+            version = '2.0'
+        elif scene.version == '2.0':
+            version = x3d.X3D_VERSION
+    data = dumps(scene, encoding, version=version, canonical=canonical).encode('utf-8')
+    if suffix.endswith('z'):
+        data = gzip.compress(data, mtime=0)
+    staging = name + '.part'
+    with open(staging, 'wb') as stream:
+        stream.write(data)
+    os.replace(staging, name)

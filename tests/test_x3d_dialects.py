@@ -44,6 +44,16 @@ class TestTheVRML97Dialect(unittest.TestCase):
     def test_a_node_with_no_differences_has_no_defaults(self):
         self.assertEqual(self.tables.defaults('Transform'), [])
 
+    def test_the_fields_x3d_adds_are_absent(self):
+        self.assertTrue(self.tables.has_field('Transform', 'translation'))
+        self.assertFalse(self.tables.has_field('Transform', 'visible'))
+        self.assertFalse(self.tables.has_field('Shape', 'metadata'))
+        self.assertFalse(self.tables.has_field('Script', 'sourceCode'))
+        self.assertFalse(self.tables.has_field('LOD', 'level_changed'))
+
+    def test_a_renamed_field_is_present(self):
+        self.assertTrue(self.tables.has_field('LOD', 'children'))
+
 
 class TestTheX3DDialects(unittest.TestCase):
     def test_every_version_has_one(self):
@@ -78,6 +88,18 @@ class TestTheX3DDialects(unittest.TestCase):
         self.assertEqual(list(dict(tables.defaults('SingleAxisHingeJoint'))['axis']),
                          [0, 0, 0])
 
+    def test_x3d_3_3_lacks_the_fields_4_0_adds(self):
+        tables = dialects.DIALECTS['3.3'].tables()
+        self.assertFalse(tables.has_field('Appearance', 'backMaterial'))
+        self.assertFalse(tables.has_field('Transform', 'visible'))
+        self.assertTrue(tables.has_field('Transform', 'metadata'))
+        self.assertTrue(tables.has_field('Layer', 'pickable'))
+
+    def test_the_vocabulary_version_lacks_no_field(self):
+        tables = dialects.DIALECTS['4.1'].tables()
+        self.assertTrue(tables.has_field('Script', 'sourceCode'))
+        self.assertEqual(tables.absent, {})
+
     def test_x3d_3_0_has_no_rigid_body_physics(self):
         self.assertFalse(dialects.DIALECTS['3.0'].tables().has_node('RigidBody'))
         self.assertFalse(dialects.DIALECTS['3.0'].tables().has_node('PhysicalMaterial'))
@@ -94,6 +116,13 @@ class TestADialectIsANode(unittest.TestCase):
         self.assertEqual(tables.current_name('Sphere', 'r'), 'radius')
         self.assertEqual(tables.defaults('Sphere'), [('radius', 2.0)])
         self.assertTrue(tables.has_node('Sphere'))
+
+    def test_its_absent_fields(self):
+        own = dialect.Dialect(absent=[
+            dialect.AbsentFields(nodeType='Sphere', fields=['solid']),
+        ])
+        self.assertFalse(own.tables().has_field('Sphere', 'solid'))
+        self.assertTrue(own.tables().has_field('Sphere', 'radius'))
 
     def test_it_copies(self):
         copy = dialect.VRML97.copy()

@@ -2,3 +2,5 @@
 pytest
 # pip crashing due to missing dataclasses, sigh
 dataclasses; python_version < '3.7'
+# validating written X3D against its XML Schema
+lxml

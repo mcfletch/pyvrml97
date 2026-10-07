@@ -5,7 +5,7 @@ each version (Web3D x3d repository revision 40303); regenerate rather than
 edit. VRML97's dialect is written by hand in `vrml.x3d.dialect`.
 """
 
-from vrml.x3d.dialect import VRML97, Dialect, FieldDefault, FieldRename
+from vrml.x3d.dialect import VRML97, AbsentFields, Dialect, FieldDefault, FieldRename
 
 
 X3D_3_0 = Dialect(
@@ -51,6 +51,131 @@ X3D_3_0 = Dialect(
     ],
     defaults=[
         FieldDefault(nodeType='SpotLight', fieldName='beamWidth', value='0.7854'),
+    ],
+    absent=[
+        AbsentFields(nodeType='Anchor', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'load', 'visible',
+        ]),
+        AbsentFields(nodeType='Appearance', fields=[
+            'acousticProperties', 'alphaCutoff', 'alphaMode', 'backMaterial',
+            'pointProperties', 'shaders',
+        ]),
+        AbsentFields(nodeType='AudioClip', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'enabled', 'gain', 'load',
+        ]),
+        AbsentFields(nodeType='Billboard', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Collision', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='DirectionalLight', fields=[
+            'global', 'shadowIntensity', 'shadows',
+        ]),
+        AbsentFields(nodeType='ElevationGrid', fields=['attrib', 'fogCoord']),
+        AbsentFields(nodeType='EspduTransform', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='GeoLOD', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoLocation', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoMetadata', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='GeoViewpoint', fields=[
+            'centerOfRotation', 'farDistance', 'navigationInfo', 'nearDistance',
+            'retainUserOffsets', 'viewAll',
+        ]),
+        AbsentFields(nodeType='Group', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='HAnimDisplacer', fields=['description']),
+        AbsentFields(nodeType='HAnimHumanoid', fields=[
+            'bboxDisplay', 'children', 'description', 'displacers',
+            'jointBindingPositions', 'jointBindingRotations', 'jointBindingScales', 'loa',
+            'motions', 'motionsEnabled', 'skeletalConfiguration', 'skinBindingCoords',
+            'skinBindingNormals', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimJoint', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimSegment', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimSite', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='ImageTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'description', 'height',
+            'load', 'textureProperties', 'width',
+        ]),
+        AbsentFields(nodeType='IndexedFaceSet', fields=['attrib', 'fogCoord', 'tangent']),
+        AbsentFields(nodeType='IndexedLineSet', fields=['attrib', 'fogCoord', 'normal']),
+        AbsentFields(nodeType='IndexedTriangleFanSet', fields=[
+            'attrib', 'fogCoord', 'tangent',
+        ]),
+        AbsentFields(nodeType='IndexedTriangleSet', fields=[
+            'attrib', 'fogCoord', 'tangent',
+        ]),
+        AbsentFields(nodeType='IndexedTriangleStripSet', fields=[
+            'attrib', 'fogCoord', 'tangent',
+        ]),
+        AbsentFields(nodeType='Inline', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'description', 'global',
+            'visible',
+        ]),
+        AbsentFields(nodeType='KeySensor', fields=['description']),
+        AbsentFields(nodeType='LOD', fields=[
+            'bboxDisplay', 'forceTransitions', 'level_changed', 'visible',
+        ]),
+        AbsentFields(nodeType='LineSet', fields=['attrib', 'fogCoord', 'normal']),
+        AbsentFields(nodeType='LoadSensor', fields=['description']),
+        AbsentFields(nodeType='Material', fields=[
+            'ambientTexture', 'ambientTextureMapping', 'diffuseTexture',
+            'diffuseTextureMapping', 'emissiveTexture', 'emissiveTextureMapping',
+            'normalScale', 'normalTexture', 'normalTextureMapping', 'occlusionStrength',
+            'occlusionTexture', 'occlusionTextureMapping', 'shininessTexture',
+            'shininessTextureMapping', 'specularTexture', 'specularTextureMapping',
+        ]),
+        AbsentFields(nodeType='MovieTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'enabled', 'gain',
+            'hasSound', 'height', 'load', 'textureProperties', 'width',
+        ]),
+        AbsentFields(nodeType='MultiTexture', fields=['description']),
+        AbsentFields(nodeType='NurbsSet', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='PixelTexture', fields=['description', 'textureProperties']),
+        AbsentFields(nodeType='PointLight', fields=[
+            'global', 'shadowIntensity', 'shadows',
+        ]),
+        AbsentFields(nodeType='PointSet', fields=['attrib', 'fogCoord', 'normal']),
+        AbsentFields(nodeType='ProximitySensor', fields=['description']),
+        AbsentFields(nodeType='ReceiverPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='Script', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='Shape', fields=['bboxDisplay', 'castShadow', 'visible']),
+        AbsentFields(nodeType='SignalPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='Sound', fields=['description', 'enabled']),
+        AbsentFields(nodeType='SpotLight', fields=['global', 'shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='StaticGroup', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='StringSensor', fields=['description']),
+        AbsentFields(nodeType='Switch', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Text', fields=['lineBounds', 'origin', 'textBounds']),
+        AbsentFields(nodeType='TextureCoordinate', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinateGenerator', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransform', fields=['mapping']),
+        AbsentFields(nodeType='TimeSensor', fields=['description']),
+        AbsentFields(nodeType='Transform', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='TransmitterPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='TriangleFanSet', fields=['attrib', 'fogCoord', 'tangent']),
+        AbsentFields(nodeType='TriangleSet', fields=['attrib', 'fogCoord', 'tangent']),
+        AbsentFields(nodeType='TriangleStripSet', fields=['attrib', 'fogCoord', 'tangent']),
+        AbsentFields(nodeType='Viewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'retainUserOffsets',
+            'viewAll',
+        ]),
+        AbsentFields(nodeType='VisibilitySensor', fields=['description']),
     ],
 )
 
@@ -113,6 +238,156 @@ X3D_3_1 = Dialect(
     ],
     defaults=[
         FieldDefault(nodeType='SpotLight', fieldName='beamWidth', value='0.7854'),
+    ],
+    absent=[
+        AbsentFields(nodeType='Anchor', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'load', 'visible',
+        ]),
+        AbsentFields(nodeType='Appearance', fields=[
+            'acousticProperties', 'alphaCutoff', 'alphaMode', 'backMaterial',
+            'pointProperties',
+        ]),
+        AbsentFields(nodeType='AudioClip', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'enabled', 'gain', 'load',
+        ]),
+        AbsentFields(nodeType='Billboard', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADAssembly', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADFace', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADLayer', fields=['bboxDisplay']),
+        AbsentFields(nodeType='CADPart', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Collision', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='ComposedCubeMapTexture', fields=[
+            'description', 'textureProperties',
+        ]),
+        AbsentFields(nodeType='ComposedTexture3D', fields=[
+            'description', 'textureProperties',
+        ]),
+        AbsentFields(nodeType='DirectionalLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='EspduTransform', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='GeneratedCubeMapTexture', fields=[
+            'description', 'textureProperties',
+        ]),
+        AbsentFields(nodeType='GeoLOD', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoLocation', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoMetadata', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='GeoViewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'viewAll',
+        ]),
+        AbsentFields(nodeType='Group', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='HAnimDisplacer', fields=['description']),
+        AbsentFields(nodeType='HAnimHumanoid', fields=[
+            'bboxDisplay', 'children', 'description', 'displacers',
+            'jointBindingPositions', 'jointBindingRotations', 'jointBindingScales', 'loa',
+            'motions', 'motionsEnabled', 'skeletalConfiguration', 'skinBindingCoords',
+            'skinBindingNormals', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimJoint', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimSegment', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimSite', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='ImageCubeMapTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+            'textureProperties',
+        ]),
+        AbsentFields(nodeType='ImageTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'description', 'height',
+            'load', 'textureProperties', 'width',
+        ]),
+        AbsentFields(nodeType='ImageTexture3D', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'depth', 'description',
+            'height', 'load', 'textureProperties', 'width',
+        ]),
+        AbsentFields(nodeType='IndexedFaceSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedLineSet', fields=['normal']),
+        AbsentFields(nodeType='IndexedQuadSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleFanSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleStripSet', fields=['tangent']),
+        AbsentFields(nodeType='Inline', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'description', 'global',
+            'visible',
+        ]),
+        AbsentFields(nodeType='KeySensor', fields=['description']),
+        AbsentFields(nodeType='LOD', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='LineSet', fields=['normal']),
+        AbsentFields(nodeType='LoadSensor', fields=['description']),
+        AbsentFields(nodeType='Material', fields=[
+            'ambientTexture', 'ambientTextureMapping', 'diffuseTexture',
+            'diffuseTextureMapping', 'emissiveTexture', 'emissiveTextureMapping',
+            'normalScale', 'normalTexture', 'normalTextureMapping', 'occlusionStrength',
+            'occlusionTexture', 'occlusionTextureMapping', 'shininessTexture',
+            'shininessTextureMapping', 'specularTexture', 'specularTextureMapping',
+        ]),
+        AbsentFields(nodeType='MovieTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'enabled', 'gain',
+            'hasSound', 'height', 'load', 'textureProperties', 'width',
+        ]),
+        AbsentFields(nodeType='MultiTexture', fields=['description']),
+        AbsentFields(nodeType='NurbsSet', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='PackagedShader', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='PixelTexture', fields=['description', 'textureProperties']),
+        AbsentFields(nodeType='PixelTexture3D', fields=[
+            'description', 'textureProperties',
+        ]),
+        AbsentFields(nodeType='PointLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='PointSet', fields=['normal']),
+        AbsentFields(nodeType='ProximitySensor', fields=['description']),
+        AbsentFields(nodeType='QuadSet', fields=['tangent']),
+        AbsentFields(nodeType='ReceiverPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='Script', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='ShaderPart', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='ShaderProgram', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='Shape', fields=['bboxDisplay', 'castShadow', 'visible']),
+        AbsentFields(nodeType='SignalPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='Sound', fields=['description', 'enabled']),
+        AbsentFields(nodeType='SpotLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='StaticGroup', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='StringSensor', fields=['description']),
+        AbsentFields(nodeType='Switch', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Text', fields=['lineBounds', 'origin', 'textBounds']),
+        AbsentFields(nodeType='TextureCoordinate', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinate3D', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinate4D', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinateGenerator', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransform', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransform3D', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransformMatrix3D', fields=['mapping']),
+        AbsentFields(nodeType='TimeSensor', fields=['description']),
+        AbsentFields(nodeType='Transform', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='TransmitterPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='TriangleFanSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleStripSet', fields=['tangent']),
+        AbsentFields(nodeType='Viewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'retainUserOffsets',
+            'viewAll',
+        ]),
+        AbsentFields(nodeType='VisibilitySensor', fields=['description']),
     ],
 )
 
@@ -207,6 +482,190 @@ X3D_3_2 = Dialect(
         FieldDefault(nodeType='SpotLight', fieldName='beamWidth', value='0.7854'),
         FieldDefault(nodeType='UniversalJoint', fieldName='axis1', value='0 0 0'),
         FieldDefault(nodeType='UniversalJoint', fieldName='axis2', value='0 0 0'),
+    ],
+    absent=[
+        AbsentFields(nodeType='Anchor', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'load', 'visible',
+        ]),
+        AbsentFields(nodeType='Appearance', fields=[
+            'acousticProperties', 'alphaCutoff', 'alphaMode', 'backMaterial',
+            'pointProperties',
+        ]),
+        AbsentFields(nodeType='AudioClip', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'enabled', 'gain', 'load',
+        ]),
+        AbsentFields(nodeType='Billboard', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADAssembly', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADFace', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADLayer', fields=['bboxDisplay']),
+        AbsentFields(nodeType='CADPart', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CollidableOffset', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CollidableShape', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Collision', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='CollisionCollection', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='CollisionSensor', fields=['description']),
+        AbsentFields(nodeType='CollisionSpace', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='ComposedCubeMapTexture', fields=[
+            'description', 'textureProperties',
+        ]),
+        AbsentFields(nodeType='ComposedTexture3D', fields=['description']),
+        AbsentFields(nodeType='ConeEmitter', fields=['on']),
+        AbsentFields(nodeType='DISEntityTypeMapping', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='DirectionalLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='EspduTransform', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='ExplosionEmitter', fields=['on']),
+        AbsentFields(nodeType='GeneratedCubeMapTexture', fields=['description']),
+        AbsentFields(nodeType='GeoLOD', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoLocation', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoMetadata', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='GeoProximitySensor', fields=['description']),
+        AbsentFields(nodeType='GeoTransform', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoViewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'viewAll',
+        ]),
+        AbsentFields(nodeType='Group', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='HAnimDisplacer', fields=['description']),
+        AbsentFields(nodeType='HAnimHumanoid', fields=[
+            'bboxDisplay', 'children', 'description', 'displacers',
+            'jointBindingPositions', 'jointBindingRotations', 'jointBindingScales', 'loa',
+            'motions', 'motionsEnabled', 'skeletalConfiguration', 'skinBindingCoords',
+            'skinBindingNormals', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimJoint', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimSegment', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimSite', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='ImageCubeMapTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='ImageTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'description', 'height',
+            'load', 'width',
+        ]),
+        AbsentFields(nodeType='ImageTexture3D', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'depth', 'description',
+            'height', 'load', 'width',
+        ]),
+        AbsentFields(nodeType='IndexedFaceSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedLineSet', fields=['normal']),
+        AbsentFields(nodeType='IndexedQuadSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleFanSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleStripSet', fields=['tangent']),
+        AbsentFields(nodeType='Inline', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'description', 'global',
+            'visible',
+        ]),
+        AbsentFields(nodeType='KeySensor', fields=['description']),
+        AbsentFields(nodeType='LOD', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Layer', fields=['objectType', 'visible']),
+        AbsentFields(nodeType='LayoutGroup', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='LayoutLayer', fields=['objectType', 'visible']),
+        AbsentFields(nodeType='LinePickSensor', fields=['description']),
+        AbsentFields(nodeType='LineSet', fields=['normal']),
+        AbsentFields(nodeType='LoadSensor', fields=['description']),
+        AbsentFields(nodeType='Material', fields=[
+            'ambientTexture', 'ambientTextureMapping', 'diffuseTexture',
+            'diffuseTextureMapping', 'emissiveTexture', 'emissiveTextureMapping',
+            'normalScale', 'normalTexture', 'normalTextureMapping', 'occlusionStrength',
+            'occlusionTexture', 'occlusionTextureMapping', 'shininessTexture',
+            'shininessTextureMapping', 'specularTexture', 'specularTextureMapping',
+        ]),
+        AbsentFields(nodeType='MovieTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'enabled', 'gain',
+            'hasSound', 'height', 'load', 'width',
+        ]),
+        AbsentFields(nodeType='MultiTexture', fields=['description']),
+        AbsentFields(nodeType='NurbsSet', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='OrthoViewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'viewAll',
+        ]),
+        AbsentFields(nodeType='PackagedShader', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='ParticleSystem', fields=[
+            'bboxDisplay', 'castShadow', 'visible',
+        ]),
+        AbsentFields(nodeType='PickableGroup', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='PixelTexture', fields=['description']),
+        AbsentFields(nodeType='PixelTexture3D', fields=['description']),
+        AbsentFields(nodeType='PointEmitter', fields=['on']),
+        AbsentFields(nodeType='PointLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='PointPickSensor', fields=['description']),
+        AbsentFields(nodeType='PointSet', fields=['normal']),
+        AbsentFields(nodeType='PolylineEmitter', fields=['on']),
+        AbsentFields(nodeType='PrimitivePickSensor', fields=['description']),
+        AbsentFields(nodeType='ProximitySensor', fields=['description']),
+        AbsentFields(nodeType='QuadSet', fields=['tangent']),
+        AbsentFields(nodeType='ReceiverPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='RigidBody', fields=[
+            'bboxCenter', 'bboxDisplay', 'bboxSize', 'visible',
+        ]),
+        AbsentFields(nodeType='RigidBodyCollection', fields=[
+            'bboxCenter', 'bboxDisplay', 'bboxSize', 'visible',
+        ]),
+        AbsentFields(nodeType='ScreenGroup', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Script', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='ShaderPart', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='ShaderProgram', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='Shape', fields=['bboxDisplay', 'castShadow', 'visible']),
+        AbsentFields(nodeType='SignalPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='Sound', fields=['description', 'enabled']),
+        AbsentFields(nodeType='SpotLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='StaticGroup', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='StringSensor', fields=['description']),
+        AbsentFields(nodeType='SurfaceEmitter', fields=['on']),
+        AbsentFields(nodeType='Switch', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='TextureCoordinate', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinate3D', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinate4D', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinateGenerator', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransform', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransform3D', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransformMatrix3D', fields=['mapping']),
+        AbsentFields(nodeType='TimeSensor', fields=['description']),
+        AbsentFields(nodeType='Transform', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='TransformSensor', fields=['description']),
+        AbsentFields(nodeType='TransmitterPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='TriangleFanSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleStripSet', fields=['tangent']),
+        AbsentFields(nodeType='Viewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'viewAll',
+        ]),
+        AbsentFields(nodeType='Viewport', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='VisibilitySensor', fields=['description']),
+        AbsentFields(nodeType='VolumeEmitter', fields=['on']),
+        AbsentFields(nodeType='VolumePickSensor', fields=['description']),
     ],
 )
 
@@ -309,6 +768,193 @@ X3D_3_3 = Dialect(
         FieldDefault(nodeType='UniversalJoint', fieldName='axis1', value='0 0 0'),
         FieldDefault(nodeType='UniversalJoint', fieldName='axis2', value='0 0 0'),
     ],
+    absent=[
+        AbsentFields(nodeType='Anchor', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'load', 'visible',
+        ]),
+        AbsentFields(nodeType='Appearance', fields=[
+            'acousticProperties', 'alphaCutoff', 'alphaMode', 'backMaterial',
+            'pointProperties',
+        ]),
+        AbsentFields(nodeType='AudioClip', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'enabled', 'gain', 'load',
+        ]),
+        AbsentFields(nodeType='Billboard', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADAssembly', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADFace', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CADLayer', fields=['bboxDisplay']),
+        AbsentFields(nodeType='CADPart', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CollidableOffset', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='CollidableShape', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Collision', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='CollisionCollection', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='CollisionSensor', fields=['description']),
+        AbsentFields(nodeType='CollisionSpace', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='ComposedCubeMapTexture', fields=[
+            'description', 'textureProperties',
+        ]),
+        AbsentFields(nodeType='ComposedTexture3D', fields=['description']),
+        AbsentFields(nodeType='ConeEmitter', fields=['on']),
+        AbsentFields(nodeType='DISEntityTypeMapping', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='DirectionalLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='EspduTransform', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='ExplosionEmitter', fields=['on']),
+        AbsentFields(nodeType='GeneratedCubeMapTexture', fields=['description']),
+        AbsentFields(nodeType='GeoLOD', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoLocation', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoMetadata', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='GeoProximitySensor', fields=['description']),
+        AbsentFields(nodeType='GeoTransform', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='GeoViewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'viewAll',
+        ]),
+        AbsentFields(nodeType='Group', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='HAnimDisplacer', fields=['description']),
+        AbsentFields(nodeType='HAnimHumanoid', fields=[
+            'bboxDisplay', 'children', 'description', 'displacers',
+            'jointBindingPositions', 'jointBindingRotations', 'jointBindingScales', 'loa',
+            'motions', 'motionsEnabled', 'skeletalConfiguration', 'skinBindingCoords',
+            'skinBindingNormals', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimJoint', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimSegment', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='HAnimSite', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='ImageCubeMapTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='ImageTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'description', 'height',
+            'load', 'width',
+        ]),
+        AbsentFields(nodeType='ImageTexture3D', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'depth', 'description',
+            'height', 'load', 'width',
+        ]),
+        AbsentFields(nodeType='IndexedFaceSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedLineSet', fields=['normal']),
+        AbsentFields(nodeType='IndexedQuadSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleFanSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleStripSet', fields=['tangent']),
+        AbsentFields(nodeType='Inline', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'description', 'global',
+            'visible',
+        ]),
+        AbsentFields(nodeType='IsoSurfaceVolumeData', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='KeySensor', fields=['description']),
+        AbsentFields(nodeType='LOD', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Layer', fields=['objectType', 'visible']),
+        AbsentFields(nodeType='LayoutGroup', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='LayoutLayer', fields=['objectType', 'visible']),
+        AbsentFields(nodeType='LinePickSensor', fields=['description']),
+        AbsentFields(nodeType='LineSet', fields=['normal']),
+        AbsentFields(nodeType='LoadSensor', fields=['description']),
+        AbsentFields(nodeType='Material', fields=[
+            'ambientTexture', 'ambientTextureMapping', 'diffuseTexture',
+            'diffuseTextureMapping', 'emissiveTexture', 'emissiveTextureMapping',
+            'normalScale', 'normalTexture', 'normalTextureMapping', 'occlusionStrength',
+            'occlusionTexture', 'occlusionTextureMapping', 'shininessTexture',
+            'shininessTextureMapping', 'specularTexture', 'specularTextureMapping',
+        ]),
+        AbsentFields(nodeType='MovieTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'enabled', 'gain',
+            'hasSound', 'height', 'load', 'width',
+        ]),
+        AbsentFields(nodeType='MultiTexture', fields=['description']),
+        AbsentFields(nodeType='NurbsSet', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='OrthoViewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'viewAll',
+        ]),
+        AbsentFields(nodeType='PackagedShader', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load',
+        ]),
+        AbsentFields(nodeType='ParticleSystem', fields=[
+            'bboxDisplay', 'castShadow', 'visible',
+        ]),
+        AbsentFields(nodeType='PickableGroup', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='PixelTexture', fields=['description']),
+        AbsentFields(nodeType='PixelTexture3D', fields=['description']),
+        AbsentFields(nodeType='PointEmitter', fields=['on']),
+        AbsentFields(nodeType='PointLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='PointPickSensor', fields=['description']),
+        AbsentFields(nodeType='PointSet', fields=['normal']),
+        AbsentFields(nodeType='PolylineEmitter', fields=['on']),
+        AbsentFields(nodeType='PrimitivePickSensor', fields=['description']),
+        AbsentFields(nodeType='ProximitySensor', fields=['description']),
+        AbsentFields(nodeType='QuadSet', fields=['tangent']),
+        AbsentFields(nodeType='ReceiverPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='RigidBody', fields=[
+            'bboxCenter', 'bboxDisplay', 'bboxSize', 'visible',
+        ]),
+        AbsentFields(nodeType='RigidBodyCollection', fields=[
+            'bboxCenter', 'bboxDisplay', 'bboxSize', 'visible',
+        ]),
+        AbsentFields(nodeType='ScreenGroup', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='Script', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='SegmentedVolumeData', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='ShaderPart', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='ShaderProgram', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'sourceCode',
+        ]),
+        AbsentFields(nodeType='Shape', fields=['bboxDisplay', 'castShadow', 'visible']),
+        AbsentFields(nodeType='SignalPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='Sound', fields=['description', 'enabled']),
+        AbsentFields(nodeType='SpotLight', fields=['shadowIntensity', 'shadows']),
+        AbsentFields(nodeType='StaticGroup', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='StringSensor', fields=['description']),
+        AbsentFields(nodeType='SurfaceEmitter', fields=['on']),
+        AbsentFields(nodeType='Switch', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='TextureCoordinate', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinate3D', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinate4D', fields=['mapping']),
+        AbsentFields(nodeType='TextureCoordinateGenerator', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransform', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransform3D', fields=['mapping']),
+        AbsentFields(nodeType='TextureTransformMatrix3D', fields=['mapping']),
+        AbsentFields(nodeType='TimeSensor', fields=['description']),
+        AbsentFields(nodeType='Transform', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='TransformSensor', fields=['description']),
+        AbsentFields(nodeType='TransmitterPdu', fields=[
+            'bboxDisplay', 'description', 'visible',
+        ]),
+        AbsentFields(nodeType='TriangleFanSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleStripSet', fields=['tangent']),
+        AbsentFields(nodeType='Viewpoint', fields=[
+            'farDistance', 'navigationInfo', 'nearDistance', 'viewAll',
+        ]),
+        AbsentFields(nodeType='Viewport', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='VisibilitySensor', fields=['description']),
+        AbsentFields(nodeType='VolumeData', fields=['bboxDisplay', 'visible']),
+        AbsentFields(nodeType='VolumeEmitter', fields=['on']),
+        AbsentFields(nodeType='VolumePickSensor', fields=['description']),
+    ],
 )
 
 
@@ -390,6 +1036,25 @@ X3D_4_0 = Dialect(
         'UniversalJoint', 'UnlitMaterial', 'Viewpoint', 'ViewpointGroup',
         'Viewport', 'VisibilitySensor', 'VolumeData', 'VolumeEmitter',
         'VolumePickSensor', 'WaveShaper', 'WindPhysicsModel', 'WorldInfo',
+    ],
+    absent=[
+        AbsentFields(nodeType='HAnimHumanoid', fields=['children']),
+        AbsentFields(nodeType='ImageTexture', fields=['colorDepth', 'height', 'width']),
+        AbsentFields(nodeType='ImageTexture3D', fields=[
+            'colorDepth', 'depth', 'height', 'width',
+        ]),
+        AbsentFields(nodeType='IndexedFaceSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedQuadSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleFanSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleSet', fields=['tangent']),
+        AbsentFields(nodeType='IndexedTriangleStripSet', fields=['tangent']),
+        AbsentFields(nodeType='MovieTexture', fields=[
+            'colorDepth', 'hasSound', 'height', 'width',
+        ]),
+        AbsentFields(nodeType='QuadSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleFanSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleSet', fields=['tangent']),
+        AbsentFields(nodeType='TriangleStripSet', fields=['tangent']),
     ],
 )
 

@@ -51,10 +51,20 @@ class FieldDefault(node.Node):
         return declared.coerce(codecs.decode(declared.typeName(), self.value))
 
 
+class AbsentFields(node.Node):
+    """Fields and events of a vocabulary node type that a version lacks"""
+
+    PROTO = 'AbsentFields'
+    nodeType = field.newField('nodeType', 'SFString', 1, '')
+    fields = field.newField('fields', 'MFString', 1, list)
+
+
 class Dialect(node.Node):
     """The differences between one VRML or X3D version and the vocabulary
 
     An empty `nodeTypes` means the version has every node of the vocabulary.
+    `absent` names, by their vocabulary names, the fields of the version's
+    node types that it does not have.
     """
 
     PROTO = 'Dialect'
@@ -63,10 +73,11 @@ class Dialect(node.Node):
     nodeTypes = field.newField('nodeTypes', 'MFString', 1, list)
     renamed = field.newField('renamed', 'MFNode', 1, list, requiredTypes=FieldRename)
     defaults = field.newField('defaults', 'MFNode', 1, list, requiredTypes=FieldDefault)
+    absent = field.newField('absent', 'MFNode', 1, list, requiredTypes=AbsentFields)
 
     def tables(self) -> 'DialectTables':
         """The dialect as lookup tables, for one document's read or write"""
-        return DialectTables(self.nodeTypes, self.renamed, self.defaults)
+        return DialectTables(self.nodeTypes, self.renamed, self.defaults, self.absent)
 
 
 class DialectTables:
@@ -81,6 +92,7 @@ class DialectTables:
         nodeTypes: Iterable[str],
         renamed: Iterable[FieldRename],
         defaults: Iterable[FieldDefault],
+        absent: Iterable[AbsentFields] = (),
     ) -> None:
         self.nodeTypes = frozenset(nodeTypes)
         self.renames = {(item.nodeType, item.old): item.current for item in renamed}
@@ -91,10 +103,17 @@ class DialectTables:
             self._defaults.setdefault(item.nodeType, []).append(
                 (item.fieldName, item.decoded())
             )
+        self.absent: "dict[str, frozenset[str]]" = {
+            item.nodeType: frozenset(item.fields) for item in absent
+        }
 
     def has_node(self, node_type: str) -> bool:
         """Whether the version has the node type"""
         return not self.nodeTypes or node_type in self.nodeTypes
+
+    def has_field(self, node_type: str, name: str) -> bool:
+        """Whether the version's node type has the vocabulary's field `name`"""
+        return name not in self.absent.get(node_type, ())
 
     def current_name(self, node_type: str, name: str) -> str:
         """The vocabulary's name for a field the version calls `name`"""
@@ -145,5 +164,132 @@ VRML97 = Dialect(
         FieldDefault(nodeType='SpotLight', fieldName='beamWidth', value='1.570796'),
         # 6.44 SpotLight: exposedField SFFloat cutOffAngle 0.785398
         FieldDefault(nodeType='SpotLight', fieldName='cutOffAngle', value='0.785398'),
+    ],
+    # The fields of each node's clause in section 6 that X3D 4.1 adds to.
+    absent=[
+        AbsentFields(nodeType='Anchor', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'load', 'metadata',
+            'visible',
+        ]),
+        AbsentFields(nodeType='Appearance', fields=[
+            'acousticProperties', 'alphaCutoff', 'alphaMode', 'backMaterial',
+            'fillProperties', 'lineProperties', 'metadata', 'pointProperties', 'shaders',
+        ]),
+        AbsentFields(nodeType='AudioClip', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'elapsedTime', 'enabled', 'gain',
+            'isPaused', 'load', 'metadata', 'pauseTime', 'resumeTime',
+        ]),
+        AbsentFields(nodeType='Background', fields=[
+            'bindTime', 'metadata', 'transparency',
+        ]),
+        AbsentFields(nodeType='Billboard', fields=['bboxDisplay', 'metadata', 'visible']),
+        AbsentFields(nodeType='Box', fields=['metadata', 'solid']),
+        AbsentFields(nodeType='Collision', fields=[
+            'bboxDisplay', 'description', 'isActive', 'metadata', 'visible',
+        ]),
+        AbsentFields(nodeType='Color', fields=['metadata']),
+        AbsentFields(nodeType='ColorInterpolator', fields=['metadata']),
+        AbsentFields(nodeType='Cone', fields=['metadata', 'solid']),
+        AbsentFields(nodeType='Coordinate', fields=['metadata']),
+        AbsentFields(nodeType='CoordinateInterpolator', fields=['metadata']),
+        AbsentFields(nodeType='Cylinder', fields=['metadata', 'solid']),
+        AbsentFields(nodeType='CylinderSensor', fields=[
+            'axisRotation', 'description', 'isOver', 'metadata',
+        ]),
+        AbsentFields(nodeType='DirectionalLight', fields=[
+            'global', 'metadata', 'shadowIntensity', 'shadows',
+        ]),
+        AbsentFields(nodeType='ElevationGrid', fields=['attrib', 'fogCoord', 'metadata']),
+        AbsentFields(nodeType='Extrusion', fields=['metadata']),
+        AbsentFields(nodeType='Fog', fields=['bindTime', 'metadata']),
+        AbsentFields(nodeType='FontStyle', fields=['metadata']),
+        AbsentFields(nodeType='Group', fields=['bboxDisplay', 'metadata', 'visible']),
+        AbsentFields(nodeType='ImageTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'description', 'height',
+            'load', 'metadata', 'textureProperties', 'width',
+        ]),
+        AbsentFields(nodeType='IndexedFaceSet', fields=[
+            'attrib', 'fogCoord', 'metadata', 'tangent',
+        ]),
+        AbsentFields(nodeType='IndexedLineSet', fields=[
+            'attrib', 'fogCoord', 'metadata', 'normal',
+        ]),
+        AbsentFields(nodeType='Inline', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'bboxDisplay', 'description', 'global',
+            'load', 'metadata', 'visible',
+        ]),
+        AbsentFields(nodeType='LOD', fields=[
+            'addChildren', 'bboxCenter', 'bboxDisplay', 'bboxSize', 'forceTransitions',
+            'level_changed', 'metadata', 'removeChildren', 'visible',
+        ]),
+        AbsentFields(nodeType='Material', fields=[
+            'ambientTexture', 'ambientTextureMapping', 'diffuseTexture',
+            'diffuseTextureMapping', 'emissiveTexture', 'emissiveTextureMapping',
+            'metadata', 'normalScale', 'normalTexture', 'normalTextureMapping',
+            'occlusionStrength', 'occlusionTexture', 'occlusionTextureMapping',
+            'shininessTexture', 'shininessTextureMapping', 'specularTexture',
+            'specularTextureMapping',
+        ]),
+        AbsentFields(nodeType='MovieTexture', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'colorDepth', 'description',
+            'elapsedTime', 'enabled', 'gain', 'hasSound', 'height', 'isPaused', 'load',
+            'metadata', 'pauseTime', 'pitch', 'resumeTime', 'textureProperties', 'width',
+        ]),
+        AbsentFields(nodeType='NavigationInfo', fields=[
+            'bindTime', 'metadata', 'transitionComplete', 'transitionTime', 'transitionType',
+        ]),
+        AbsentFields(nodeType='Normal', fields=['metadata']),
+        AbsentFields(nodeType='NormalInterpolator', fields=['metadata']),
+        AbsentFields(nodeType='OrientationInterpolator', fields=['metadata']),
+        AbsentFields(nodeType='PixelTexture', fields=[
+            'description', 'metadata', 'textureProperties',
+        ]),
+        AbsentFields(nodeType='PlaneSensor', fields=[
+            'axisRotation', 'description', 'isOver', 'metadata',
+        ]),
+        AbsentFields(nodeType='PointLight', fields=[
+            'global', 'metadata', 'shadowIntensity', 'shadows',
+        ]),
+        AbsentFields(nodeType='PointSet', fields=[
+            'attrib', 'fogCoord', 'metadata', 'normal',
+        ]),
+        AbsentFields(nodeType='PositionInterpolator', fields=['metadata']),
+        AbsentFields(nodeType='ProximitySensor', fields=[
+            'centerOfRotation_changed', 'description', 'metadata',
+        ]),
+        AbsentFields(nodeType='ScalarInterpolator', fields=['metadata']),
+        AbsentFields(nodeType='Script', fields=[
+            'autoRefresh', 'autoRefreshTimeLimit', 'description', 'load', 'metadata',
+            'sourceCode',
+        ]),
+        AbsentFields(nodeType='Shape', fields=[
+            'bboxCenter', 'bboxDisplay', 'bboxSize', 'castShadow', 'metadata', 'visible',
+        ]),
+        AbsentFields(nodeType='Sound', fields=['description', 'enabled', 'metadata']),
+        AbsentFields(nodeType='Sphere', fields=['metadata', 'solid']),
+        AbsentFields(nodeType='SphereSensor', fields=['description', 'isOver', 'metadata']),
+        AbsentFields(nodeType='SpotLight', fields=[
+            'global', 'metadata', 'shadowIntensity', 'shadows',
+        ]),
+        AbsentFields(nodeType='Switch', fields=[
+            'addChildren', 'bboxCenter', 'bboxDisplay', 'bboxSize', 'metadata',
+            'removeChildren', 'visible',
+        ]),
+        AbsentFields(nodeType='Text', fields=[
+            'lineBounds', 'metadata', 'origin', 'solid', 'textBounds',
+        ]),
+        AbsentFields(nodeType='TextureCoordinate', fields=['mapping', 'metadata']),
+        AbsentFields(nodeType='TextureTransform', fields=['mapping', 'metadata']),
+        AbsentFields(nodeType='TimeSensor', fields=[
+            'description', 'elapsedTime', 'isPaused', 'metadata', 'pauseTime', 'resumeTime',
+        ]),
+        AbsentFields(nodeType='TouchSensor', fields=['description', 'metadata']),
+        AbsentFields(nodeType='Transform', fields=['bboxDisplay', 'metadata', 'visible']),
+        AbsentFields(nodeType='Viewpoint', fields=[
+            'centerOfRotation', 'farDistance', 'metadata', 'navigationInfo', 'nearDistance',
+            'retainUserOffsets', 'viewAll',
+        ]),
+        AbsentFields(nodeType='VisibilitySensor', fields=['description', 'metadata']),
+        AbsentFields(nodeType='WorldInfo', fields=['metadata']),
     ],
 )

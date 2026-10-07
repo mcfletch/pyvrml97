@@ -57,7 +57,7 @@ Fields named by a Python keyword (the lights' ``global``) are read with
 reports ``x3d.Shape(geometry=x3d.Appearance())``. Constructors also take
 ``**fields``, for the fields an engine's implementation of a node adds; a
 name the class does not have raises ``AttributeError`` when the node is
-made. Reading a node field is typed ``Any``: it answers the node or ``NULL``.
+made. Reading a node field is typed ``Any``; it returns the node or ``NULL``.
 
 Field types
 -----------
@@ -77,9 +77,10 @@ Dialects
 
 A ``Dialect`` node lists what one version says differently from X3D 4.1: the
 node types it has (``nodeTypes``), the fields it names differently
-(``FieldRename`` nodes in ``renamed``) and the defaults it gives differently
+(``FieldRename`` nodes in ``renamed``), the defaults it gives differently
 (``FieldDefault`` nodes in ``defaults``, each value written as XML attribute
-text). ``vrml.x3d.dialects.DIALECTS`` holds one per version, keyed by the
+text) and the fields of its node types it does not have (``AbsentFields``
+nodes in ``absent``). ``vrml.x3d.dialects.DIALECTS`` holds one per version, keyed by the
 version a document's header gives: ``'2.0'`` (VRML97), ``'3.0'`` to
 ``'3.3'``, ``'4.0'`` and ``'4.1'``.
 
@@ -103,12 +104,121 @@ The old names are aliases on the X3D classes: ``lod.level`` reads and writes
 
 ``Dialect.tables()`` gives the lookups a reader or writer uses for one
 document: ``current_name(nodeType, name)``, ``dialect_name(nodeType, name)``,
-``defaults(nodeType)`` and ``has_node(nodeType)``. A dialect is a node, so an
+``defaults(nodeType)``, ``has_node(nodeType)`` and
+``has_field(nodeType, name)``. A dialect is a node, so an
 application can build its own.
 
 ``vrml.vrml97.basenodes`` exports the 53 VRML97 node classes, which are the
 X3D classes of the same names; a VRML97 document is read with VRML97's
 defaults where they differ.
+
+Reading
+-------
+
+``vrml.x3d.load(path)`` and ``loads(data)`` read any encoding and return an
+``X3DScene``::
+
+    from vrml import x3d
+
+    scene = x3d.load('world.x3d')      # .x3dv, .wrl, .json, .x3dz, .x3dvz, .wrz
+    scene.profile, scene.version       # ('Immersive', '3.3')
+    scene.getDEF('Gold').translation
+    for problem in scene.problems:
+        print(problem)                 # error line 12 column 5: ...
+
+The encoding is recognised from the content, then from the file suffix; a
+gzip-compressed document is decompressed first. A document of more than
+2 GiB, compressed or not, is refused.
+
+``X3DScene`` is a ``SceneGraph`` with the document's ``profile``,
+``version``, ``components``, ``units``, ``meta``, ``imports``, ``exports``
+and ``problems``. Reading does not stop at an error: each problem is a
+``LoadProblem`` node with ``severity`` (``error``, ``warning`` or ``info``),
+``line``, ``column`` (0 where the encoding gives none), ``message`` and the
+``node`` concerned. ``load(path, strict=True)`` raises ``X3DLoadError`` at
+the first error instead.
+
+What reading does:
+
+- A version's old field names and defaults are applied, so the scene holds
+  X3D 4.1 names and values. A node type or field the document's version does
+  not have is read, with a warning.
+- ``UNIT`` statements (X3D 3.3 and later) scale each field in the unit's
+  category, and its derived categories, into base units (metres, radians,
+  kilograms, newtons). ``scene.units`` records them.
+- ``PROTO``/``ProtoDeclare`` makes a prototype class registered on the
+  scene. An ``EXTERNPROTO`` whose URL names a local file, relative to the
+  document, is read from that file (any encoding, eight levels deep at
+  most). Nothing is fetched over a network; ``extern_resolver`` lets an
+  application supply prototypes from elsewhere. An unresolved
+  ``EXTERNPROTO`` has its declared interface and no body, and is completed
+  when ``builder.complete_extern_proto`` is given its definition.
+- A ``Script`` keeps its declared fields, ``url`` and ``sourceCode`` and is
+  not run.
+- An ``IMPORT`` names a node an ``Inline``'s scene exports; routes to it
+  wait in ``scene.pendingRoutes`` until ``builder.bind_imports`` is called
+  with the loaded inline scene.
+
+``prototypes=`` gives the node classes to build by X3D name, so an engine
+reads documents into its own implementations of the nodes.
+
+The readers are ``vrml.x3d.readers.xml`` (expat; external entities are not
+read), ``json`` and ``classic`` (a SimpleParse grammar for ClassicVRML and
+VRML97). Each turns its syntax into calls on one ``SceneBuilder``.
+
+Writing
+-------
+
+``vrml.x3d.dump(scene, path)`` writes a file in the encoding its suffix
+names; ``dumps(scene, encoding='xml')`` returns the text::
+
+    x3d.dump(scene, 'world.json')
+    x3d.dump(scene, 'world.wrl')                  # VRML97
+    x3d.dump(scene, 'world.x3dz')                 # gzip-compressed XML
+    text = x3d.dumps(scene, encoding='classic', version='3.3')
+    text = x3d.dumps(scene, canonical=True)
+
+``encoding`` is ``xml``, ``classic`` or ``json``. ``version`` is the VRML or
+X3D version to write: ``'2.0'`` (VRML97, the ``classic`` encoding only) or
+``'3.0'`` to ``'4.1'``; the scene's own version where not given, and 4.1 for
+a VRML97 scene written as XML or JSON. A ``.wrl`` or ``.wrz`` file is
+written as VRML97.
+
+What is written:
+
+- Only fields whose values differ from the target version's defaults, under
+  the version's field names. ``DEF``/``USE`` follow the graph: a node used
+  more than once, or named by a route, is given a ``DEF`` name if it has
+  none, and two nodes with one name are told apart with a suffix (``_2``).
+- Prototypes, prototype bodies with their ``IS`` connections, ``EXTERNPROTO``
+  interfaces and URLs, routes, ``IMPORT``/``EXPORT`` and the header
+  statements. A version with ``UNIT`` statements has them written and its
+  values written in those units; an earlier one has values in base units.
+- A program's source as CDATA (XML), ``#sourceCode`` (JSON), the
+  ``sourceCode`` field (ClassicVRML) or, for VRML97, an ``ecmascript:`` entry
+  first in ``url``.
+- Numbers in their shortest form at the field's precision, with no exponent
+  below 10\ :sup:`16`.
+
+A node type, field or field type the target version does not have raises
+``X3DWriteError``, whose ``problems`` lists every one found; a field the
+version lacks is written only if its value differs from the default.
+Nothing is written to a file then. ``scene.problems`` is not written.
+
+The XML writer orders attributes as X3D canonical form does (``DEF``,
+``USE``, a ``containerField`` the reader would not infer, then
+alphabetically) and delimits MFString attributes with single quotes.
+``canonical=True`` adds the DTD and the schema attributes. Written XML
+validates against the X3D 4.1 XML Schema.
+
+Validating
+----------
+
+``vrml.x3d.validate(scene, profile=None)`` returns a list of
+``LoadProblem`` nodes for the scene's problems against the X3D model: a value outside its field's range, a value
+outside a closed enumeration, and a node whose component level the profile
+and ``COMPONENT`` statements do not give. It is separate from reading, which
+does none of these checks.
 
 Regenerating the vocabulary
 ---------------------------

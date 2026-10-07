@@ -77,6 +77,13 @@ class TestNodes(unittest.TestCase):
         built.end_document()
         self.assertEqual(len(group.value), 1)
 
+    def test_the_implied_container(self):
+        implied = buildermodule.implied_container
+        self.assertEqual(implied(x3d.Shape(), x3d.Sphere()), 'geometry')
+        self.assertEqual(implied(x3d.Collision(), x3d.Shape()), 'children')
+        self.assertEqual(implied(x3d.MetadataSet(), x3d.MetadataString()), 'value')
+        self.assertIsNone(implied(x3d.Shape(), x3d.Transform()))
+
     def test_a_named_field_takes_the_nodes_started_in_it(self):
         built = Built()
         group = built.b.start_node('Group')
@@ -249,6 +256,15 @@ class TestDialects(unittest.TestCase):
         built.node('PhysicalMaterial')
         warnings = problems(built.end_document(), 'warning')
         self.assertEqual([p.message for p in warnings], ['X3D 3.0 has no node PhysicalMaterial'])
+
+    def test_a_field_the_version_lacks_is_a_warning_and_is_read(self):
+        built = Built()
+        built.document('', '2.0')
+        viewpoint = built.node('Viewpoint', centerOfRotation='1 2 3')
+        warnings = problems(built.end_document(), 'warning')
+        self.assertEqual([p.message for p in warnings],
+                         ['VRML97 has no field Viewpoint.centerOfRotation'])
+        self.assertEqual(list(viewpoint.centerOfRotation), [1, 2, 3])
 
     def test_a_vrml97_document_names_its_version_vrml97(self):
         built = Built()
@@ -460,6 +476,22 @@ class TestPrototypes(unittest.TestCase):
         built.end_proto_body()
         built.end_proto()
         self.assertEqual(len(problems(built.end_document(), 'error')), 1)
+
+    def test_a_prototype_declared_in_a_body_is_the_bodys(self):
+        built = Built()
+        built.start_proto('Outer')
+        built.start_proto_body()
+        built.start_proto('Inner')
+        built.start_proto_body()
+        built.node('Group')
+        built.end_proto_body()
+        Inner = built.end_proto()
+        built.node('Inner')
+        built.end_proto_body()
+        Outer = built.end_proto()
+        scene = built.end_document()
+        self.assertIsNone(scene.getProto('Inner'))
+        self.assertIs(protofunctions.getSceneGraph(Outer).protoTypes['Inner'], Inner)
 
     def test_a_node_valued_default(self):
         built = Built()
