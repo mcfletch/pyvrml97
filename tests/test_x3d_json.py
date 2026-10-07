@@ -41,6 +41,29 @@ class TestTheDocument(unittest.TestCase):
         scene = readers.read(b'{"model": {}}', encoding='json')
         self.assertEqual([p.severity for p in scene.problems], ['error'])
 
+    def test_a_malformed_head_is_an_error_and_the_scene_is_read(self):
+        scene = read([{'Group': {}}], head={
+            'component': [{'@name': 'HAnim', '@level': 'x'}, 'HAnim'],
+            'unit': [{'@category': 'length', '@name': 'mm', '@conversionFactor': 'small'}],
+            'meta': ['title'],
+        })
+        self.assertEqual([p.severity for p in scene.problems], ['error'] * 4)
+        self.assertIsInstance(scene.children[0], x3d.Group)
+
+    def test_a_head_or_scene_that_is_not_an_object_is_an_error(self):
+        for document in ({'X3D': {'head': ['component'], 'Scene': {}}},
+                         {'X3D': {'Scene': [{'Group': {}}]}}):
+            scene = readers.read(json.dumps(document).encode('utf-8'), encoding='json')
+            self.assertEqual([p.severity for p in scene.problems], ['error'])
+
+    def test_nodes_nested_past_the_readers_depth_are_an_error(self):
+        inner = {'Group': {}}
+        for _ in range(400):
+            inner = {'Group': {'-children': [inner]}}
+        scene = read([inner])
+        self.assertEqual([p.severity for p in scene.problems], ['error'])
+        self.assertIsInstance(scene.children[0], x3d.Group)
+
 
 class TestNodes(unittest.TestCase):
     def test_values_children_def_and_use(self):

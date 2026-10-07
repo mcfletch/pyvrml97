@@ -239,9 +239,7 @@ class SceneBuilder:
 
     def document(self, profile: str = '', version: str = '') -> None:
         """The document's header: its profile and version"""
-        if profile and profile not in profiles.PROFILES:
-            self.problem('warning', 'Unknown profile %r' % profile)
-        self.scene.profile = profile
+        self.profile(profile)
         if version:
             self.scene.version = version
             chosen = dialects.DIALECTS.get(version)
@@ -253,6 +251,12 @@ class SceneBuilder:
                 chosen = dialects.DIALECTS[nearest]
             self.dialect = chosen.tables()
             self.version_name = chosen.name
+
+    def profile(self, name: str) -> None:
+        """The document's profile, from its header or a PROFILE statement"""
+        if name and name not in profiles.PROFILES:
+            self.problem('warning', 'Unknown profile %r' % name)
+        self.scene.profile = name
 
     def component(self, name: str, level: int) -> None:
         """A `component` statement"""
@@ -720,17 +724,29 @@ class SceneBuilder:
         if definition is None:
             self.problem('error', 'IS connection outside a prototype body')
             return
-        if not any(item.name == protoField for item in definition.fields):
+        interface = next((item for item in definition.fields if item.name == protoField), None)
+        if interface is None:
             self.problem('error', 'IS names %s, which prototype %s does not declare'
                          % (protoField, definition.name), frame.node)
             return
         current = self.dialect.current_name(frame.type_name, nodeField)
         try:
-            protofunctions.getField(frame.node, current)
+            declared = protofunctions.getField(frame.node, current)
         except AttributeError:
             self.problem('error', '%s has no field %s to connect'
                          % (frame.type_name, nodeField), frame.node)
             return
+        if declared.typeName() != interface.typeName():
+            self.problem('error', 'IS joins %s.%s, an %s, to %s, an %s'
+                         % (frame.type_name, nodeField, declared.typeName(), protoField,
+                            interface.typeName()), frame.node)
+            return
+        if declared.accessType != 'inputOutput' and declared.accessType != interface.accessType:
+            # ISO/IEC 19775-1 4.4.4.3 forbids it; the connection is kept, so
+            # the value an instance gives still reaches the node.
+            self.problem('warning', 'IS joins %s.%s, which is %s, to %s, which is %s'
+                         % (frame.type_name, nodeField, declared.accessType, protoField,
+                            interface.accessType), frame.node)
         definition.connections.append((protoField, frame.node, current))
         frame.set_fields.add(current)
 
@@ -785,6 +801,12 @@ class SceneBuilder:
         sourceField = self._route_field(source, fromField, 'from')
         destinationField = self._route_field(destination, toField, 'to')
         if sourceField is None or destinationField is None:
+            return None
+        sourceType = protofunctions.getField(source, sourceField).typeName()
+        destinationType = protofunctions.getField(destination, destinationField).typeName()
+        if sourceType != destinationType:
+            self.problem('error', 'ROUTE from %s.%s, an %s, to %s.%s, an %s'
+                         % (fromNode, fromField, sourceType, toNode, toField, destinationType))
             return None
         made = route.ROUTE(source, sourceField, destination, destinationField)
         self._body.routes.append(made)
@@ -850,8 +872,13 @@ def implied_container(parent: Any, child: Any) -> "str | None":
 
     The child type's default container where the parent has that field and
     it accepts the child; else the first, by name, of the parent's node
-    fields that accepts it; None where none does.
+    fields that accepts it; None where none does. A prototype instance whose
+    node type is not known (an EXTERNPROTO not read) goes in `children`, the
+    ProtoInstance's own default (ISO/IEC 19776-1), or nowhere.
     """
+    if isinstance(child, node.PrototypedNode) and getattr(child, 'nodeType', None) is None:
+        declared = _node_field(parent, 'children')
+        return 'children' if declared is not None else None
     default = getattr(child, 'CONTAINER_FIELD', '') or getattr(
         getattr(child, 'nodeType', None), 'CONTAINER_FIELD', '')
     if default:

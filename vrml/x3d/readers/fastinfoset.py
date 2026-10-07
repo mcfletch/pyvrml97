@@ -85,6 +85,11 @@ class FastInfosetReader(ElementReader):
         self.builder.field(name, typed)
 
 
-def read(data: bytes, builder: SceneBuilder) -> X3DScene:
-    """The scene an X3D compressed binary document builds"""
+def read(
+    data: bytes,
+    builder: SceneBuilder,
+    charset: "str | None" = None,  # noqa: ARG001 every reader takes it; each string here names its own encoding
+) -> X3DScene:
+    """The scene an X3D compressed binary document builds; each of its
+    strings names its own encoding, so `charset` is not read"""
     return FastInfosetReader(builder).read(data)

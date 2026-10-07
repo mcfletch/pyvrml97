@@ -71,9 +71,11 @@ DOUBLED_IN_BINARY = (
 #: VRML97 files with errors the reader reports: the STEP translations move
 #: a metadata field out of its node, script.wrl routes from names it never
 #: defines, the X3dForWebAuthors translations keep X3D's metadata fields, and
-#: MaterialModulator routes from an EXTERNPROTO's field.
+#: MaterialModulator routes from an EXTERNPROTO's field, and
+#: test-binding2Translated routes an SFTime to a Script's SFBool eventIn.
 VRML97_ERRORS = ('STEP/', 'Background/script.wrl', 'EmptySceneCoreProfile',
-                 'MetadataNodeExamplesX3D', 'WorldInfoExample', 'MaterialModulator')
+                 'MetadataNodeExamplesX3D', 'WorldInfoExample', 'MaterialModulator',
+                 'test-binding2Translated')
 
 
 def scenes(directory):

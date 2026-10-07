@@ -27,8 +27,9 @@ _Definition = tuple[str, frozenset[str], Mapping]
 class JSONReader:
     """Turns a decoded X3D JSON document into builder calls"""
 
-    def __init__(self, builder: SceneBuilder) -> None:
+    def __init__(self, builder: SceneBuilder, charset: "str | None" = None) -> None:
         self.builder = builder
+        self.charset = charset or 'utf-8-sig'
         #: For each open DEF scope (the scene, each prototype body): the
         #: node type and object each of its DEFs names, and the names built
         #: ahead of their DEF because a USE came first.
@@ -36,7 +37,7 @@ class JSONReader:
 
     def read(self, data: bytes) -> X3DScene:
         try:
-            document = json.loads(data.decode('utf-8-sig'))
+            document = json.loads(data.decode(self.charset))
         except (ValueError, UnicodeDecodeError) as error:
             self.builder.problem('error', 'JSON: %s' % error)
             return self.builder.end_document(complete=False)
@@ -45,19 +46,57 @@ class JSONReader:
             self.builder.problem('error', 'JSON document has no X3D object')
             return self.builder.end_document(complete=False)
         self.builder.document(str(top.get('@profile', '')), str(top.get('@version', '')))
-        head = top.get('head') or {}
-        for item in self._list(head.get('component')):
-            self.builder.component(str(item.get('@name', '')), int(item.get('@level', 1)))
-        for item in self._list(head.get('unit')):
-            self.builder.unit(str(item.get('@category', '')), str(item.get('@name', '')),
-                              float(item.get('@conversionFactor', 0.0)))
-        for item in self._list(head.get('meta')):
+        self._head(self._object(top.get('head'), 'head'))
+        try:
+            self._scope(self._object(top.get('Scene'), 'Scene').get('-children'))
+        except RecursionError:
+            self.builder.problem('error', 'JSON: nodes nested too deeply to read')
+            return self.builder.end_document(complete=False)
+        return self.builder.end_document()
+
+    def _object(self, value: Any, what: str) -> Mapping:
+        """`value`, or an empty object where it is missing or not an object"""
+        if value is None:
+            return {}
+        if not isinstance(value, Mapping):
+            self.builder.problem('error', 'JSON: %s is not an object' % what)
+            return {}
+        return value
+
+    def _head(self, head: Mapping) -> None:
+        for item in self._entries(head, 'component'):
+            level = self._number(item, '@level', int, 1)
+            if level is not None:
+                self.builder.component(str(item.get('@name', '')), level)
+        for item in self._entries(head, 'unit'):
+            factor = self._number(item, '@conversionFactor', float, 0.0)
+            if factor is not None:
+                self.builder.unit(str(item.get('@category', '')), str(item.get('@name', '')),
+                                  factor)
+        for item in self._entries(head, 'meta'):
             others = {key[1:]: str(value) for key, value in item.items()
                       if key.startswith('@') and key not in ('@name', '@content')}
-            self.builder.meta(str(item.get('@name', '')), str(item.get('@content', '')), **others)
-        scene = top.get('Scene') or {}
-        self._scope(scene.get('-children'))
-        return self.builder.end_document()
+            self.builder.meta(str(item.get('@name', '')), str(item.get('@content', '')),
+                              **others)
+
+    def _entries(self, head: Mapping, kind: str) -> "list[Mapping]":
+        """The head's `kind` entries that are objects; each other one is reported"""
+        found = []
+        for item in self._list(head.get(kind)):
+            if isinstance(item, Mapping):
+                found.append(item)
+            else:
+                self.builder.problem('error', 'JSON: %s %r is not an object' % (kind, item))
+        return found
+
+    def _number(self, item: Mapping, key: str, kind: "type[Any]", default: Any) -> Any:
+        """`item[key]` as an int or float; None, reported, where it is not a number"""
+        value = item.get(key, default)
+        try:
+            return kind(value)
+        except (TypeError, ValueError):
+            self.builder.problem('error', 'JSON: %s %r is not a number' % (key[1:], value))
+            return None
 
     def _scope(self, items: Any) -> None:
         """Read the nodes of one DEF scope"""
@@ -251,6 +290,7 @@ class JSONReader:
         self._node(name, value, skip)
 
 
-def read(data: bytes, builder: SceneBuilder) -> X3DScene:
-    """The scene an X3D JSON document builds"""
-    return JSONReader(builder).read(data)
+def read(data: bytes, builder: SceneBuilder, charset: "str | None" = None) -> X3DScene:
+    """The scene an X3D JSON document builds; its text is UTF-8 unless
+    `charset` names another encoding"""
+    return JSONReader(builder, charset).read(data)

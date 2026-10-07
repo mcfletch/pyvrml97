@@ -149,6 +149,7 @@ class ClassicReader:
             self.builder.problem('error', 'No #X3D or #VRML header')
         for production in children:
             if production[0] != 'EOF':
+                self._where(production[1])
                 getattr(self, '_' + production[0])(production)
         return self.builder.end_document()
 
@@ -169,7 +170,7 @@ class ClassicReader:
             getattr(self, '_' + statement[0])(statement)
 
     def _profile(self, production: Any) -> None:
-        self.builder.document(self._text(production[3][0]), self.builder.scene.version)
+        self.builder.profile(self._text(production[3][0]))
 
     def _component(self, production: Any) -> None:
         name, level = production[3]
@@ -377,6 +378,7 @@ class ClassicReader:
         return 'text', text
 
 
-def read(data: bytes, builder: SceneBuilder) -> X3DScene:
-    """The scene a ClassicVRML or VRML97 document builds"""
-    return ClassicReader(builder, data.decode('utf-8-sig', errors='replace')).read()
+def read(data: bytes, builder: SceneBuilder, charset: "str | None" = None) -> X3DScene:
+    """The scene a ClassicVRML or VRML97 document builds; its text is UTF-8
+    unless `charset` names another encoding"""
+    return ClassicReader(builder, data.decode(charset or 'utf-8-sig', errors='replace')).read()

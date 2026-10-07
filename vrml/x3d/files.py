@@ -89,11 +89,16 @@ def load(path: "str | os.PathLike[str]", **options: Any) -> X3DScene:
 
 
 def loads(data: "bytes | str", name: str = '', **options: Any) -> X3DScene:
-    """The scene a document in memory builds; `name` is its base for URLs"""
-    if isinstance(data, str):
-        data = data.encode('utf-8')
+    """The scene a document in memory builds; `name` is its base for URLs
+
+    Text is read as the characters it is, whatever encoding an XML
+    declaration in it names.
+    """
     if name:
         options.setdefault('extern_resolver', LocalPrototypes(dict(options)))
+    if isinstance(data, str):
+        return readers.read(data.removeprefix('\ufeff').encode('utf-8'), name=name,
+                            charset='utf-8', **options)
     return readers.read(data, name=name, **options)
 
 

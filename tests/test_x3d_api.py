@@ -30,6 +30,22 @@ class TestLoading(unittest.TestCase):
         self.assertIsInstance(x3d.loads(b'#X3D V4.0 utf8\nGroup {}').children[0], nodes.Group)
         self.assertIsInstance(x3d.loads('#VRML V2.0 utf8\nGroup {}').children[0], nodes.Group)
 
+    def test_loads_reads_text_whatever_encoding_it_declares(self):
+        scene = x3d.loads('<?xml version="1.0" encoding="ISO-8859-1"?>'
+                          '<X3D profile="Core" version="4.0"><Scene>'
+                          '<WorldInfo title="café"/></Scene></X3D>')
+        self.assertEqual(scene.children[0].title, 'café')
+
+    def test_bytes_are_read_in_the_encoding_they_declare(self):
+        scene = x3d.loads('<?xml version="1.0" encoding="ISO-8859-1"?>'
+                          '<X3D profile="Core" version="4.0"><Scene>'
+                          '<WorldInfo title="café"/></Scene></X3D>'.encode('latin-1'))
+        self.assertEqual(scene.children[0].title, 'café')
+
+    def test_a_charset_named_outside_the_document(self):
+        data = '#X3D V4.0 utf8\nPROFILE Core\nWorldInfo { title "café" }\n'.encode('latin-1')
+        self.assertEqual(readers.read(data, charset='latin-1').children[0].title, 'café')
+
     def test_an_external_prototype_beside_the_file_is_resolved(self):
         self.write('lamps.x3dv', '#X3D V4.0 utf8\nPROFILE Core\n'
                                  'PROTO Lamp [ inputOutput SFFloat size 3 ] '

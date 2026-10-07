@@ -453,6 +453,15 @@ class TestRoutes(unittest.TestCase):
         built.route('A', 'set_fraction', 'B', 'set_fraction')
         self.assertEqual(len(problems(built.end_document(), 'error')), 1)
 
+    def test_a_route_between_fields_of_different_types(self):
+        built = Built()
+        built.node('TimeSensor', DEF='Clock')
+        built.node('Transform', DEF='Mover')
+        built.route('Clock', 'fraction_changed', 'Mover', 'set_translation')
+        scene = built.end_document()
+        self.assertEqual(scene.routes, [])
+        self.assertEqual(len(problems(scene, 'error')), 1)
+
     def test_a_route_to_an_unknown_node(self):
         built = Built()
         built.node('TimeSensor', DEF='Clock')
@@ -562,6 +571,49 @@ class TestPrototypes(unittest.TestCase):
         built.end_proto()
         self.assertEqual(len(problems(built.end_document(), 'error')), 1)
 
+    def test_an_is_connection_between_fields_of_different_types(self):
+        built = Built()
+        built.start_proto('Broken')
+        built.proto_field('where', 'SFFloat', 'inputOutput', '1')
+        built.start_proto_body()
+        built.b.start_node('Transform')
+        built.connect('translation', 'where')
+        built.end_node()
+        built.end_proto_body()
+        Broken = built.end_proto()
+        self.assertEqual(len(problems(built.end_document(), 'error')), 1)
+        self.assertEqual(protofunctions.getSceneGraph(Broken).children[0].translation.tolist(),
+                         [0, 0, 0])
+
+    def test_is_connections_follow_the_access_rules(self):
+        """X3D 4.4.4.3: an inputOutput node field takes a prototype field of any
+        access; an inputOutput prototype field needs an inputOutput node field.
+        A connection against the rules is a warning, and is made"""
+        cases = [('initializeOnly', 'Sphere', 'radius', 0),
+                 ('inputOutput', 'Sphere', 'radius', 1),
+                 ('initializeOnly', 'Transform', 'scale', 0),
+                 ('inputOnly', 'Transform', 'scale', 0),
+                 ('outputOnly', 'Transform', 'scale', 0),
+                 ('initializeOnly', 'PositionInterpolator', 'set_fraction', 1),
+                 ('inputOnly', 'PositionInterpolator', 'set_fraction', 0)]
+        for access, type_name, node_field, wrong in cases:
+            built = Built()
+            built.start_proto('P')
+            kind, default = ('SFVec3f', '1 1 1') if node_field == 'scale' else ('SFFloat', '1')
+            if access in ('inputOnly', 'outputOnly'):
+                default = None
+            built.proto_field('f', kind, access, default)
+            built.start_proto_body()
+            built.b.start_node(type_name)
+            built.connect(node_field, 'f')
+            built.end_node()
+            built.end_proto_body()
+            built.end_proto()
+            with self.subTest(access=access, node=type_name):
+                scene = built.end_document()
+                self.assertEqual(len(problems(scene, 'warning')), wrong)
+                self.assertEqual(problems(scene, 'error'), [])
+
     def test_a_prototype_declared_in_a_body_is_the_bodys(self):
         built = Built()
         built.start_proto('Outer')
@@ -648,6 +700,21 @@ class TestExternalPrototypes(unittest.TestCase):
         built.end_document()
         self.assertEqual(made.size, 2.0)
         self.assertEqual(protofunctions.getExternalURL(Far), ['far.x3d#Far'])
+
+    def test_an_unresolved_instance_goes_in_children(self):
+        """19776-1: a ProtoInstance's containerField is children unless it
+        names another; nothing else is known of a node type not yet read"""
+        built = Built()
+        built.start_proto('Far', extern=True)
+        built.proto_url(['far.x3d'])
+        built.end_proto()
+        group = built.node('Transform', children=[lambda: built.node('Far')])
+        shape = built.node('Shape', children=[lambda: built.node('Far')])
+        scene = built.end_document()
+        self.assertEqual(len(group.children), 1)
+        self.assertIs(shape.appearance, node.NULL)
+        self.assertIs(shape.geometry, node.NULL)
+        self.assertEqual(len(problems(scene, 'error')), 1)
 
     def test_a_definition_that_arrives_later_reaches_existing_instances(self):
         built = Built()

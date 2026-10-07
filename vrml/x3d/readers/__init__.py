@@ -61,7 +61,7 @@ def encoding_of(data: bytes, name: str = '') -> str:
 
 
 #: The reader of each encoding.
-READERS: "dict[str, Callable[[bytes, SceneBuilder], X3DScene]]" = {
+READERS: "dict[str, Callable[[bytes, SceneBuilder, str | None], X3DScene]]" = {
     'xml': xml.read,
     'json': json.read,
     'classic': classic.read,
@@ -73,6 +73,7 @@ def read(
     data: bytes,
     encoding: "str | None" = None,
     name: str = '',
+    charset: "str | None" = None,
     **options: Any,
 ) -> X3DScene:
     """The scene a document builds
@@ -81,6 +82,9 @@ def read(
     encoding -- 'xml', 'classic', 'json' or 'fastinfoset'; recognised from
         the content where not given
     name -- the document's file name or URL, the base for its relative URLs
+    charset -- the character encoding of the bytes, where it is known outside
+        the document (an HTTP charset, text encoded by the caller); it is
+        used in place of an XML declaration's
     options -- passed to `SceneBuilder`: prototypes, strict, extern_resolver
     """
     if len(data) > MAX_DOCUMENT_BYTES:
@@ -92,4 +96,4 @@ def read(
     if encoding not in READERS:
         raise UnknownEncoding('No reader for the %s encoding' % encoding)
     options.setdefault('baseURI', name)
-    return READERS[encoding](data, SceneBuilder(**options))
+    return READERS[encoding](data, SceneBuilder(**options), charset)

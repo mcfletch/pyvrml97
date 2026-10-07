@@ -49,6 +49,11 @@ class TestHeaders(unittest.TestCase):
         self.assertAlmostEqual(scene.children[1].beamWidth, 1.570796, places=5)
         self.assertEqual(scene.problems, [])
 
+    def test_an_unknown_version_is_one_warning_on_the_header(self):
+        scene = read('#X3D V4.2 utf8\nPROFILE Interchange\nTransform {}\n')
+        self.assertEqual([(p.severity, p.line) for p in scene.problems], [('warning', 1)])
+        self.assertEqual(scene.profile, 'Interchange')
+
     def test_a_missing_header_is_an_error(self):
         self.assertEqual(len(errors(read('Group {}'))), 1)
 
@@ -207,7 +212,10 @@ class TestPrototypes(unittest.TestCase):
                      '{ Sphere { radius IS r } }\n'
                      'Shape { geometry Thing { r 2 } }')
         self.assertEqual(scene.children[0].geometry.r, 2.0)
-        self.assertEqual(scene.problems, [])
+        self.assertEqual(protofunctions.getSceneGraph(scene.children[0].geometry)
+                         .children[0].radius, 2.0)
+        self.assertEqual([p.severity for p in scene.problems], ['warning'],
+                         'an exposedField is joined to the field radius')
 
     def test_declared_among_a_nodes_fields(self):
         scene = x3d_document(

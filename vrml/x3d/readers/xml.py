@@ -215,9 +215,9 @@ class ElementReader:
 class XMLReader(ElementReader):
     """Turns expat's events into builder calls"""
 
-    def __init__(self, builder: SceneBuilder) -> None:
+    def __init__(self, builder: SceneBuilder, charset: "str | None" = None) -> None:
         super().__init__(builder)
-        self.parser = expat.ParserCreate()
+        self.parser = expat.ParserCreate(charset)
         self.parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
         self.parser.ExternalEntityRefHandler = self._external_entity
         self.parser.StartElementHandler = self._start
@@ -253,6 +253,7 @@ class XMLReader(ElementReader):
         self.in_cdata = False
 
 
-def read(data: bytes, builder: SceneBuilder) -> X3DScene:
-    """The scene an X3D XML document builds"""
-    return XMLReader(builder).read(data)
+def read(data: bytes, builder: SceneBuilder, charset: "str | None" = None) -> X3DScene:
+    """The scene an X3D XML document builds; `charset`, where given, is the
+    encoding of its bytes in place of the one its XML declaration names"""
+    return XMLReader(builder, charset).read(data)
