@@ -193,6 +193,14 @@ outputs the handler sets are forwarded along routes as any field change is:
   ``normalizeVelocity`` and ``closed``; ``SquadOrientationInterpolator`` by
   spherical cubic interpolation; and ``EaseInEaseOut``. The arithmetic is
   ``vrml.x3d.interpolation``.
+- The environmental sensors, ``vrml.x3d.sensors``: ``ProximitySensor``,
+  ``TransformSensor`` and ``VisibilitySensor``. Whoever draws the scene calls
+  ``observe`` each frame with what the sensor senses in its own coordinates
+  (the viewer's position and orientation, the target's, or whether the box
+  is in view); entering the box of ``size`` about ``center`` sends
+  ``isActive TRUE`` and ``enterTime``, leaving it ``isActive FALSE`` and
+  ``exitTime``, and moving within it ``position_changed`` and
+  ``orientation_changed``. A box with a side of zero senses nothing.
 - The followers, ``vrml.x3d.followers``: each chaser reaches a destination
   ``duration`` seconds after it is set, along a smooth step, and each damper
   approaches it through ``order`` first-order filters of time constant
