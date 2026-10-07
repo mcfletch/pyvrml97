@@ -170,6 +170,26 @@ The readers are ``vrml.x3d.readers.xml`` (expat; external entities are not
 read), ``json`` and ``classic`` (a SimpleParse grammar for ClassicVRML and
 VRML97). Each turns its syntax into calls on one ``SceneBuilder``.
 
+Behaviour
+---------
+
+The declarations carry fields; ``vrml.x3d.runtime`` gives some nodes their
+behaviour. Setting an ``inputOnly`` event on a node calls its handler, and the
+outputs the handler sets are forwarded along routes as any field change is:
+
+- ``BooleanFilter``, ``BooleanToggle``, ``BooleanTrigger``, ``IntegerTrigger``
+  and ``TimeTrigger``, which sends ``runtime.clock()``, ``time.time`` unless an
+  engine sets it to its own clock.
+- ``BooleanSequencer`` and ``IntegerSequencer``: the value of the last key a
+  ``set_fraction`` has reached, sent when that key changes; ``next`` and
+  ``previous`` step through the keys, wrapping at the ends.
+- ``KeySensor``: ``keyDown(name)`` and ``keyUp(name)`` send ``keyPress``,
+  ``actionKeyPress`` (``runtime.ACTION_KEYS``), the modifiers' booleans and
+  ``isActive``. Whoever has the keyboard calls them.
+
+A document read with no ``prototypes=`` is built from these classes where they
+exist; ``runtime.PROTOTYPES`` maps them by name for merging with an engine's.
+
 Writing
 -------
 

@@ -20,7 +20,7 @@ from typing import Any, cast
 
 from vrml import field, node, protofunctions, route
 from vrml.vrml97.scenegraph import SceneGraph
-from vrml.x3d import codecs, dialect, dialects, extension, profiles
+from vrml.x3d import codecs, dialect, dialects, extension, profiles, runtime
 from vrml.x3d import nodes as x3d
 from vrml.x3d.dialect import DialectTables
 from vrml.x3d.scene import (
@@ -171,11 +171,15 @@ class _Body:
 ExternResolver = Callable[[Sequence[str], str, str], 'type | None']
 
 
+#: What a document is built from when no prototypes are given.
+DEFAULT_VOCABULARY: "Mapping[str, type]" = {**x3d.CONCRETE_NODES, **runtime.PROTOTYPES}
+
+
 class SceneBuilder:
     """Builds an `X3DScene` from the calls a reader makes
 
-    prototypes -- node classes by X3D name; `vrml.x3d.nodes.CONCRETE_NODES`
-        if not given. An engine passes its implementations here, and its
+    prototypes -- node classes by X3D name; the declarations in
+        `vrml.x3d.nodes`, with `vrml.x3d.runtime`'s behaviours, if not given. An engine passes its implementations here, and its
         `X3DScene` subclass under 'X3DScene' for the scene itself.
     baseURI -- where the document is, for resolving relative URLs
     strict -- raise `X3DLoadError` at the first error rather than recording
@@ -191,7 +195,7 @@ class SceneBuilder:
         strict: bool = False,
         extern_resolver: "ExternResolver | None" = None,
     ) -> None:
-        self.vocabulary = prototypes if prototypes is not None else x3d.CONCRETE_NODES
+        self.vocabulary = prototypes if prototypes is not None else DEFAULT_VOCABULARY
         self.strict = strict
         self.extern_resolver = extern_resolver
         self.line = 0
