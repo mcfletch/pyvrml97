@@ -135,6 +135,17 @@ class TestCheckingAValue(unittest.TestCase):
     def test_a_bool_field_rejects_anything_else(self):
         self.assertEqual(fieldtypes.SFBool(name="b").check(7), 0)
 
+    def test_a_bool_field_reads_the_words_numbers_and_truth_values(self):
+        field = fieldtypes.SFBool(name="b")
+        for given, expected in (('TRUE', True), ('false', False), ('0', False), ('1', True),
+                                (0, False), (2, True), ([], False)):
+            self.assertIs(field.coerce(given), expected, given)
+
+    def test_a_bool_field_refuses_a_word_that_is_not_a_boolean(self):
+        """As MFBool does: 'garbage' is not true"""
+        with self.assertRaises(ValueError):
+            fieldtypes.SFBool(name="b").coerce('garbage')
+
     def test_an_int_field_accepts_an_int(self):
         self.assertEqual(fieldtypes.SFInt32(name="i").check(3), 1)
         self.assertEqual(fieldtypes.SFInt32(name="i").check(3.5), 0)

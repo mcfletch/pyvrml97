@@ -209,6 +209,10 @@ class ElementReader:
 
     def _value(self, name: str, value: Any) -> None:
         """A node's field value, as the encoding gives it"""
+        if (self.builder.field_type(name) in ('SFBool', 'MFBool')
+                and any(word in ('TRUE', 'FALSE') for word in str(value).split())):
+            self.builder.problem('warning', '%s="%s": XML writes a boolean as true or false'
+                                 % (name, value))
         self.builder.field_text(name, value)
 
 

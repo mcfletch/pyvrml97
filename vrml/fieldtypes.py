@@ -243,12 +243,9 @@ class _SFBool(_FieldHost):
         """
         if isinstance(value, str):
             try:
-                value = int(value)
-            except (ValueError, TypeError):
-                if value.lower() == 'true':
-                    value = True
-                elif value.lower() == 'false':
-                    value = False
+                return bool(int(value))
+            except ValueError:
+                return _boolean(value)
         return bool(value)
 
     def check(self, value: Any) -> int:

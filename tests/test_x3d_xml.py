@@ -76,6 +76,17 @@ class TestTheDocument(unittest.TestCase):
 
 
 class TestNodes(unittest.TestCase):
+    def test_a_boolean_in_classic_form_is_read_with_a_warning(self):
+        """19776-1 writes SFBool and MFBool as true and false"""
+        scene = read('<TimeSensor loop="TRUE"/><BooleanSequencer keyValue="FALSE true"/>')
+        self.assertIs(scene.children[0].loop, True)
+        self.assertEqual(list(scene.children[1].keyValue), [False, True])
+        self.assertEqual([p.severity for p in scene.problems], ['warning', 'warning'])
+
+    def test_a_boolean_in_xml_form_is_read_quietly(self):
+        scene = read('<TimeSensor loop="true"/>')
+        self.assertEqual(scene.problems, [])
+
     def test_fields_children_def_and_use(self):
         scene = read(
             '<Transform DEF="T" translation="0 1 0">'
