@@ -86,5 +86,42 @@ class TestComponents(unittest.TestCase):
         self.assertIn('Imaginary', messages(found)[0])
 
 
+class TestTheVersion(unittest.TestCase):
+    def test_a_node_the_scenes_version_lacks(self):
+        scene = X3DScene(version='3.3', children=[x3d.Shape(
+            appearance=x3d.Appearance(material=x3d.PhysicalMaterial()))])
+        self.assertIn('X3D 3.3 has no node PhysicalMaterial', messages(validate(scene)))
+
+    def test_a_field_the_scenes_version_lacks(self):
+        scene = X3DScene(version='3.3', children=[x3d.Shape(castShadow=False)])
+        self.assertIn('X3D 3.3 has no field Shape.castShadow', messages(validate(scene)))
+
+    def test_an_engines_own_field_is_not_held_to_a_version(self):
+        from vrml import field  # noqa: PLC0415 kept with its use
+
+        class Glossy(x3d.Material):
+            x3dExtension = 'Glossy'
+            sheen = field.newField('sheen', 'SFFloat', 1, 0.0)
+        scene = X3DScene(children=[x3d.Shape(appearance=x3d.Appearance(material=Glossy(sheen=1)))])
+        self.assertEqual(validate(scene), [])
+
+    def test_a_component_level_past_the_highest(self):
+        scene = X3DScene(components=[ComponentInfo(name='Shape', level=9)])
+        self.assertTrue(any('Shape' in message and '9' in message
+                            for message in messages(validate(scene))))
+
+
+class TestWhatIsWalked(unittest.TestCase):
+    def test_a_prototype_body(self):
+        from vrml.x3d import files  # noqa: PLC0415 kept with its use
+        scene = files.loads('#X3D V4.0 utf8\nPROFILE Immersive\n'
+                            'PROTO P [ ] { Shape { geometry Sphere { radius -1 } } }\n')
+        self.assertTrue(any('Sphere.radius' in message for message in messages(validate(scene))))
+
+    def test_a_number_that_is_not_finite(self):
+        scene = X3DScene(children=[x3d.Transform(translation=(0, float('nan'), 0))])
+        self.assertIn('Transform.translation', ' '.join(messages(validate(scene))))
+
+
 if __name__ == '__main__':
     unittest.main()

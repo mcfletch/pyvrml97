@@ -388,10 +388,17 @@ Validating
 ----------
 
 ``vrml.x3d.validate(scene, profile=None)`` returns a list of
-``LoadProblem`` nodes for the scene's problems against the X3D model: a value outside its field's range, a value
-outside a closed enumeration, and a node whose component level the profile
-and ``COMPONENT`` statements do not give. It is separate from reading, which
-does none of these checks.
+``LoadProblem`` nodes for the problems of the scene, and of its prototypes'
+bodies, against the X3D model:
+
+- a value outside its field's range, a number that is not finite, and a
+  value outside a closed enumeration;
+- a node or field the scene's version does not have (fields a class adds,
+  carried as metadata, are not held to it);
+- a node whose component level the profile and ``COMPONENT`` statements do
+  not give, and a ``COMPONENT`` statement past the component's highest level.
+
+It is separate from reading, which does none of these checks.
 
 Web3D's example corpus
 ----------------------
