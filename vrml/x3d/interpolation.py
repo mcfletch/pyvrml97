@@ -23,13 +23,14 @@ from __future__ import annotations
 
 import colorsys
 import math
-from typing import Any, Optional
+from typing import Any, NamedTuple, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-__all__ = ['colour', 'compose', 'directions', 'ease', 'inverse', 'linear', 'orientation',
-           'quaternion_of', 'rotation_of', 'segment', 'slerp', 'spline', 'squad', 'tangents']
+__all__ = ['SplineCurve', 'SquadCurve', 'colour', 'compose', 'directions', 'ease', 'inverse',
+           'linear', 'orientation', 'quaternion_of', 'rotation_of', 'segment', 'slerp', 'spline',
+           'spline_at', 'spline_curve', 'squad', 'squad_at', 'squad_curve', 'tangents']
 
 
 def segment(keys: ArrayLike, fraction: float) -> "tuple[int, float]":
@@ -161,43 +162,73 @@ def tangents(values: ArrayLike, closed: bool = False,
     return result.reshape(found.shape)
 
 
-def spline(keys: ArrayLike, values: ArrayLike, fraction: float, closed: bool = False,
-           velocities: Optional[ArrayLike] = None, normalize: bool = False) -> np.ndarray:
-    """The value of X3D's Hermite spline through `values` at a fraction
+class SplineCurve(NamedTuple):
+    """X3D's Hermite spline worked out for its keys: what each fraction reads"""
+
+    keys: np.ndarray
+    points: np.ndarray
+    #: Each key's tangent scaled for the segment leaving it, and for the one
+    #: arriving at it.
+    leaving: np.ndarray
+    arriving: np.ndarray
+    #: The shape of one value.
+    shape: "tuple[int, ...]"
+
+
+def spline_curve(keys: ArrayLike, values: ArrayLike, closed: bool = False,
+                 velocities: Optional[ArrayLike] = None,
+                 normalize: bool = False) -> SplineCurve:
+    """The spline through `values` at `keys`, for :func:`spline_at`
 
     `closed` joins the last value to the first where they are the same. Each
     key's tangent is scaled for the spacing of its neighbouring keys.
     """
     key = np.asarray(keys, dtype=np.float64).ravel()
     found = np.asarray(values, dtype=np.float64)
-    if len(key) < 2:
-        return found[0] if len(found) else found
-    points = found.reshape(len(found), -1)
+    points = found.reshape(len(found), -1) if len(found) else found.reshape(0, 1)
+    count = len(key)
+    if count < 2:
+        return SplineCurve(key, points, points, points, found.shape[1:])
     closed = bool(closed) and np.allclose(points[0], points[-1])
     tangent = tangents(points, closed, velocities, normalize).reshape(points.shape)
-    index, s = segment(key, fraction)
+    before = np.empty(count)
+    after = np.empty(count)
+    before[1:] = np.diff(key)
+    after[:-1] = np.diff(key)
+    before[0] = after[-1] = 0.0
+    if closed:
+        before[0] = before[-1] = key[-1] - key[-2]
+        after[0] = after[-1] = key[1] - key[0]
+    total = before + after
+    scaled = total > 0
+    if not closed:
+        scaled[0] = scaled[-1] = False
+    out_scale = np.ones(count)
+    in_scale = np.ones(count)
+    out_scale[scaled] = 2.0 * after[scaled] / total[scaled]
+    in_scale[scaled] = 2.0 * before[scaled] / total[scaled]
+    return SplineCurve(key, points, tangent * out_scale[:, None], tangent * in_scale[:, None],
+                       found.shape[1:])
 
-    def scaled(at: int, outgoing: bool) -> np.ndarray:
-        """The tangent at key `at`, scaled for the spacing of its neighbours"""
-        found: np.ndarray = tangent[at]
-        if (at == 0 or at == len(key) - 1) and not closed:
-            return found
-        if at == 0 or at == len(key) - 1:
-            before, after = key[-1] - key[-2], key[1] - key[0]
-        else:
-            before, after = key[at] - key[at - 1], key[at + 1] - key[at]
-        total = before + after
-        if total > 0:
-            found = found * (2.0 * (after if outgoing else before) / total)
-        return found
 
+def spline_at(curve: SplineCurve, fraction: float) -> np.ndarray:
+    """The spline's value at a fraction"""
+    if len(curve.keys) < 2:
+        return curve.points[0].reshape(curve.shape) if len(curve.points) else curve.points
+    index, s = segment(curve.keys, fraction)
     h00 = 2 * s ** 3 - 3 * s ** 2 + 1
     h10 = s ** 3 - 2 * s ** 2 + s
     h01 = -2 * s ** 3 + 3 * s ** 2
     h11 = s ** 3 - s ** 2
-    value = (h00 * points[index] + h10 * scaled(index, True)
-             + h01 * points[index + 1] + h11 * scaled(index + 1, False))
-    return np.asarray(value).reshape(found.shape[1:])
+    value = (h00 * curve.points[index] + h10 * curve.leaving[index]
+             + h01 * curve.points[index + 1] + h11 * curve.arriving[index + 1])
+    return np.asarray(value).reshape(curve.shape)
+
+
+def spline(keys: ArrayLike, values: ArrayLike, fraction: float, closed: bool = False,
+           velocities: Optional[ArrayLike] = None, normalize: bool = False) -> np.ndarray:
+    """The value of X3D's Hermite spline through `values` at a fraction"""
+    return spline_at(spline_curve(keys, values, closed, velocities, normalize), fraction)
 
 
 def ease(keys: ArrayLike, pairs: ArrayLike, fraction: float) -> float:
@@ -294,19 +325,23 @@ def slerp(a: np.ndarray, b: np.ndarray, t: float) -> np.ndarray:
     return found
 
 
-def squad(keys: ArrayLike, rotations: ArrayLike, fraction: float) -> np.ndarray:
-    """The rotation `SquadOrientationInterpolator` sends at a fraction
+class SquadCurve(NamedTuple):
+    """Spherical cubic interpolation worked out for its keys"""
 
-    Spherical cubic interpolation of the rotations as quaternions, each key
-    given an inner control quaternion from its neighbours.
-    """
+    keys: np.ndarray
+    #: Each key's rotation as a quaternion, each on the side of the one before.
+    quaternions: np.ndarray
+    #: Each key's inner control quaternion, from its neighbours.
+    inner: np.ndarray
+
+
+def squad_curve(keys: ArrayLike, rotations: ArrayLike) -> SquadCurve:
+    """The squad curve through the key rotations, for :func:`squad_at`"""
     key = np.asarray(keys, dtype=np.float64).ravel()
     quaternions = [quaternion_of(rotation) for rotation in np.asarray(rotations, np.float64)]
     for index in range(1, len(quaternions)):
         if np.dot(quaternions[index - 1], quaternions[index]) < 0:
             quaternions[index] = -quaternions[index]
-    if len(key) < 2:
-        return rotation_of(quaternions[0])
     inner = []
     for index, q in enumerate(quaternions):
         if index == 0 or index == len(quaternions) - 1:
@@ -316,7 +351,21 @@ def squad(keys: ArrayLike, rotations: ArrayLike, fraction: float) -> np.ndarray:
         tangent = (_log(compose(back, quaternions[index + 1]))
                    + _log(compose(back, quaternions[index - 1]))) / -4.0
         inner.append(compose(q, _exp(tangent)))
-    index, h = segment(key, fraction)
-    outer = slerp(quaternions[index], quaternions[index + 1], h)
-    middle = slerp(inner[index], inner[index + 1], h)
+    return SquadCurve(key, np.array(quaternions), np.array(inner))
+
+
+def squad_at(curve: SquadCurve, fraction: float) -> np.ndarray:
+    """The rotation (axis, angle) on the squad curve at a fraction"""
+    if len(curve.keys) < 2:
+        return rotation_of(curve.quaternions[0])
+    index, h = segment(curve.keys, fraction)
+    outer = slerp(curve.quaternions[index], curve.quaternions[index + 1], h)
+    middle = slerp(curve.inner[index], curve.inner[index + 1], h)
     return rotation_of(slerp(outer, middle, 2.0 * h * (1.0 - h)))
+
+
+def squad(keys: ArrayLike, rotations: ArrayLike, fraction: float) -> np.ndarray:
+    """The rotation `SquadOrientationInterpolator` sends at a fraction:
+    spherical cubic interpolation of the rotations as quaternions, each key
+    given an inner control quaternion from its neighbours"""
+    return squad_at(squad_curve(keys, rotations), fraction)

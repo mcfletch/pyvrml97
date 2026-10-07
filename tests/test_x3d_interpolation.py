@@ -204,6 +204,27 @@ class TestTheNodes(unittest.TestCase):
         root = 1.0 / np.sqrt(2.0)
         self.assertTrue(np.allclose(found, [(root, root, 0)]))
 
+    def test_a_splines_curve_follows_each_field(self):
+        made = runtime.SplineScalarInterpolator(key=[0, 0.5, 1], keyValue=[0.0, 2.0, 1.0])
+        edits = [('keyValue', [0.0, 3.0, 1.0]), ('key', [0, 0.25, 1]),
+                 ('keyVelocity', [1.0, 1.0, 1.0]), ('normalizeVelocity', True),
+                 ('keyValue', [1.0, 3.0, 1.0]), ('closed', True)]
+        for name, value in edits:
+            before = float(made.on_set_fraction(0.4))
+            setattr(made, name, value)
+            with self.subTest(field=name):
+                self.assertNotAlmostEqual(float(made.on_set_fraction(0.4)), before)
+
+    def test_a_squads_curve_follows_its_keys(self):
+        made = runtime.SquadOrientationInterpolator(
+            key=[0, 0.5, 1], keyValue=[(0, 1, 0, 0), (0, 1, 0, 1), (1, 0, 0, 1)])
+        before = made.on_set_fraction(0.3).copy()
+        made.keyValue = [(0, 1, 0, 0), (0, 1, 0, 2), (1, 0, 0, 1)]
+        self.assertFalse(np.allclose(made.on_set_fraction(0.3), before))
+        before = made.on_set_fraction(0.3).copy()
+        made.key = [0, 0.8, 1]
+        self.assertFalse(np.allclose(made.on_set_fraction(0.3), before))
+
     def test_no_keys_sends_nothing(self):
         made = runtime.SplineScalarInterpolator()
         made.set_fraction = 0.5

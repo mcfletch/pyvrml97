@@ -16,6 +16,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from vrml import cache, protofunctions
 from vrml.x3d import followers, interpolation, loadsensor, pointing, sensors, timesensor, timing
 from vrml.x3d import nodes as x3d
 
@@ -290,17 +291,32 @@ class CoordinateInterpolator2D(Runs, x3d.CoordinateInterpolator2D):
     """A run of 2D points per key, straight between keys"""
 
 
+def _held(node: Any, key: str, fields: "tuple[str, ...]", make: Callable[[], Any]) -> Any:
+    """`make()`, kept in vrml's cache on `node` until one of its `fields` changes"""
+    found = cache.CACHE.getData(node, key)
+    if found is None:
+        found = make()
+        holder = cache.CACHE.holder(node, found, key)
+        for name in fields:
+            holder.depend(node, protofunctions.getField(node, name))
+    return found
+
+
 class Splined(Interpolated):
-    """A spline interpolator: X3D's Hermite spline through `keyValue`"""
+    """A spline interpolator: X3D's Hermite spline through `keyValue`, worked
+    out once for its keys and kept until they change"""
 
     closed: Any
     keyVelocity: Any
     normalizeVelocity: Any
 
     def evaluate(self, fraction: float) -> Any:
-        return interpolation.spline(self.key, self.keyValue, fraction, closed=bool(self.closed),
-                                    velocities=self.keyVelocity,
-                                    normalize=bool(self.normalizeVelocity))
+        curve = _held(self, 'spline-curve',
+                      ('key', 'keyValue', 'keyVelocity', 'closed', 'normalizeVelocity'),
+                      lambda: interpolation.spline_curve(
+                          self.key, self.keyValue, closed=bool(self.closed),
+                          velocities=self.keyVelocity, normalize=bool(self.normalizeVelocity)))
+        return interpolation.spline_at(curve, fraction)
 
 
 class SplinePositionInterpolator(Splined, x3d.SplinePositionInterpolator):
@@ -322,7 +338,9 @@ class SquadOrientationInterpolator(Interpolated, x3d.SquadOrientationInterpolato
     """A rotation by spherical cubic interpolation of the key rotations"""
 
     def evaluate(self, fraction: float) -> Any:
-        return interpolation.squad(self.key, self.keyValue, fraction)
+        curve = _held(self, 'squad-curve', ('key', 'keyValue'),
+                      lambda: interpolation.squad_curve(self.key, self.keyValue))
+        return interpolation.squad_at(curve, fraction)
 
 
 class EaseInEaseOut(x3d.EaseInEaseOut):
