@@ -201,6 +201,12 @@ outputs the handler sets are forwarded along routes as any field change is:
   cycle after cycle where ``loop`` is true, until a ``stopTime`` later than
   ``startTime``; a single cycle that ended before the first ``advance`` does
   not run.
+- ``LoadSensor``, ``vrml.x3d.loadsensor``: a node reading a url records its
+  state with ``loadsensor.set_load_state`` (``LOADING``, ``LOADED`` or
+  ``FAILED``), and ``observe()`` reads the sensor's children's states,
+  sending ``isActive`` and ``progress`` while they load, ``isLoaded TRUE``
+  and ``loadTime`` when all have, and ``isLoaded FALSE`` when one fails or
+  ``timeOut`` passes. A child that records no state is not waited for.
 - The environmental sensors, ``vrml.x3d.sensors``: ``ProximitySensor``,
   ``TransformSensor`` and ``VisibilitySensor``. Whoever draws the scene calls
   ``observe`` each frame with what the sensor senses in its own coordinates
