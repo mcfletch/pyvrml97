@@ -225,8 +225,13 @@ is reached at most once, so routes that loop end:
   ``isActive``. Whoever has the keyboard calls them.
 - ``StringSensor``: ``typed(character)`` adds to ``enteredText``; a return
   sends ``finalText``, and a backspace deletes where ``deletionAllowed``.
-- ``PositionInterpolator2D`` and ``CoordinateInterpolator2D`` straight between
-  keys; ``SplinePositionInterpolator``, ``SplinePositionInterpolator2D`` and
+- ``PositionInterpolator``, ``ScalarInterpolator``, ``CoordinateInterpolator``,
+  ``PositionInterpolator2D`` and ``CoordinateInterpolator2D`` straight between
+  keys; ``OrientationInterpolator`` along the shorter arc;
+  ``ColorInterpolator`` straight between keys in HSV, the hue the shorter way
+  round its circle; ``NormalInterpolator`` along each direction's great
+  circle. Each interpolator's ``on_set_fraction`` also returns the value it
+  sends. ``SplinePositionInterpolator``, ``SplinePositionInterpolator2D`` and
   ``SplineScalarInterpolator`` on X3D's Hermite spline, with ``keyVelocity``,
   ``normalizeVelocity`` and ``closed``; ``SquadOrientationInterpolator`` by
   spherical cubic interpolation; and ``EaseInEaseOut``. The arithmetic is

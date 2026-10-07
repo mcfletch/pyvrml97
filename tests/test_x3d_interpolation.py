@@ -152,6 +152,49 @@ class TestTheNodes(unittest.TestCase):
         made.set_fraction = 0.5
         self.assertAlmostEqual(float(sent(made)[3]), 0.5, places=4)
 
+    def test_a_position_interpolator(self):
+        made = runtime.PositionInterpolator(key=[0, 0.5, 1],
+                                            keyValue=[(0, 0, 0), (2, 0, 0), (2, 4, 0)])
+        made.set_fraction = 0.75
+        self.assertTrue(np.allclose(sent(made), (2, 2, 0)))
+
+    def test_a_scalar_interpolator_answers_its_value(self):
+        made = runtime.ScalarInterpolator(key=[0, 1], keyValue=[10.0, 20.0])
+        self.assertAlmostEqual(float(made.on_set_fraction(0.25)), 12.5)
+        self.assertAlmostEqual(float(sent(made)), 12.5)
+
+    def test_an_orientation_interpolator_turns_the_shorter_way(self):
+        made = runtime.OrientationInterpolator(key=[0, 1],
+                                               keyValue=[(0, 1, 0, 0), (0, 1, 0, 1.0)])
+        made.set_fraction = 0.5
+        found = sent(made)
+        self.assertTrue(np.allclose(found[:3], (0, 1, 0)))
+        self.assertAlmostEqual(float(found[3]), 0.5, places=6)
+
+    def test_a_colour_interpolator_runs_in_hsv(self):
+        """19.4.2: red to green passes through yellow, not a dark brown"""
+        made = runtime.ColorInterpolator(key=[0, 1], keyValue=[(1, 0, 0), (0, 1, 0)])
+        made.set_fraction = 0.5
+        self.assertTrue(np.allclose(sent(made), (1, 1, 0), atol=1e-6))
+
+    def test_a_colours_hue_goes_the_shorter_way_round(self):
+        made = runtime.ColorInterpolator(key=[0, 1], keyValue=[(1, 0, 0.5), (1, 0.5, 0)])
+        made.set_fraction = 0.5
+        self.assertTrue(np.allclose(sent(made), (1, 0, 0), atol=1e-6))
+
+    def test_a_coordinate_interpolator(self):
+        made = runtime.CoordinateInterpolator(
+            key=[0, 1], keyValue=[(0, 0, 0), (1, 0, 0), (0, 2, 0), (1, 2, 0)])
+        made.set_fraction = 0.5
+        self.assertTrue(np.allclose(sent(made), [(0, 1, 0), (1, 1, 0)]))
+
+    def test_a_normal_interpolator_stays_on_the_sphere(self):
+        made = runtime.NormalInterpolator(key=[0, 1], keyValue=[(1, 0, 0), (0, 1, 0)])
+        made.set_fraction = 0.5
+        found = np.asarray(sent(made)).reshape(-1, 3)
+        root = 1.0 / np.sqrt(2.0)
+        self.assertTrue(np.allclose(found, [(root, root, 0)]))
+
     def test_no_keys_sends_nothing(self):
         made = runtime.SplineScalarInterpolator()
         made.set_fraction = 0.5

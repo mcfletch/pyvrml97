@@ -6,9 +6,9 @@ node calls its `on_<event>` method, and the outputs that method sets are
 forwarded along routes as any field change is. Nothing here draws or reads a
 device; :class:`KeySensor` is told of keys by whoever has a keyboard.
 
-`PROTOTYPES` maps each X3D name to its class here, to pass as a reader's
-`prototypes=` (merged with an engine's own). A `TimeTrigger` sends the time
-of its scene (:meth:`~vrml.x3d.timing.Timed.now`).
+`PROTOTYPES` maps each X3D name to its class here; a reader builds these
+where its `prototypes=` gives no class of the name. A `TimeTrigger` sends the
+time of its scene (:meth:`~vrml.x3d.timing.Timed.now`).
 """
 
 from __future__ import annotations
@@ -220,25 +220,74 @@ class Interpolated:
         """The value at `fraction`"""
         raise NotImplementedError('%s must evaluate its keys' % type(self).__name__)
 
-    def on_set_fraction(self, value: Any) -> None:
-        if len(self.key) and len(self.keyValue):
-            self.value_changed = self.evaluate(float(value))
+    def on_set_fraction(self, value: Any) -> Any:
+        """Send the value at fraction `value`, and return it; None with no keys"""
+        if not (len(self.key) and len(self.keyValue)):
+            return None
+        self.value_changed = self.evaluate(float(value))
+        return self.value_changed
 
 
-class PositionInterpolator2D(Interpolated, x3d.PositionInterpolator2D):
-    """A 2D position, straight between keys"""
+class Linear(Interpolated):
+    """An interpolator straight between key values, one per key"""
 
     def evaluate(self, fraction: float) -> Any:
         return interpolation.linear(self.key, self.keyValue, fraction)
 
 
-class CoordinateInterpolator2D(Interpolated, x3d.CoordinateInterpolator2D):
-    """A run of 2D points per key, straight between keys"""
+class Runs(Interpolated):
+    """An interpolator straight between runs of key values, one run per key"""
 
     def evaluate(self, fraction: float) -> Any:
         per_key = max(len(self.keyValue) // len(self.key), 1)
         return interpolation.linear(self.key, self.keyValue[:per_key * len(self.key)],
                                     fraction, per_key=per_key)
+
+
+class PositionInterpolator(Linear, x3d.PositionInterpolator):
+    """A position, straight between keys"""
+
+
+class ScalarInterpolator(Linear, x3d.ScalarInterpolator):
+    """A number, straight between keys"""
+
+    def evaluate(self, fraction: float) -> Any:
+        return float(super().evaluate(fraction))
+
+
+class CoordinateInterpolator(Runs, x3d.CoordinateInterpolator):
+    """A run of points per key, straight between keys"""
+
+
+class OrientationInterpolator(Interpolated, x3d.OrientationInterpolator):
+    """A rotation, along the shorter arc between keys"""
+
+    def evaluate(self, fraction: float) -> Any:
+        return interpolation.orientation(self.key, self.keyValue, fraction)
+
+
+class ColorInterpolator(Interpolated, x3d.ColorInterpolator):
+    """A colour, straight between keys in HSV"""
+
+    def evaluate(self, fraction: float) -> Any:
+        return interpolation.colour(self.key, self.keyValue, fraction)
+
+
+class NormalInterpolator(Interpolated, x3d.NormalInterpolator):
+    """A run of directions per key, each along its great circle"""
+
+    def evaluate(self, fraction: float) -> Any:
+        per_key = max(len(self.keyValue) // len(self.key), 1)
+        return interpolation.directions(self.key, self.keyValue[:per_key * len(self.key)],
+                                        fraction, per_key=per_key)
+
+
+class PositionInterpolator2D(Linear, x3d.PositionInterpolator2D):
+    """A 2D position, straight between keys"""
+
+
+class CoordinateInterpolator2D(Runs, x3d.CoordinateInterpolator2D):
+    """A run of 2D points per key, straight between keys"""
 
 
 class Splined(Interpolated):
@@ -288,6 +337,8 @@ PROTOTYPES: "dict[str, type]" = {
     cls.PROTO: cls for cls in (
         BooleanFilter, BooleanToggle, BooleanTrigger, IntegerTrigger, TimeTrigger,
         BooleanSequencer, IntegerSequencer, KeySensor, StringSensor,
+        PositionInterpolator, ScalarInterpolator, CoordinateInterpolator,
+        OrientationInterpolator, ColorInterpolator, NormalInterpolator,
         PositionInterpolator2D, CoordinateInterpolator2D, SplinePositionInterpolator,
         SplinePositionInterpolator2D, SplineScalarInterpolator, SquadOrientationInterpolator,
         EaseInEaseOut,

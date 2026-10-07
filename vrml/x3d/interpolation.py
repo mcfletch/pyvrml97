@@ -6,6 +6,10 @@ and values (ISO/IEC 19775-1, 19.2):
 - :func:`segment` finds the keys a fraction lies between;
 - :func:`linear` interpolates straight between them, one value or a run of
   values per key;
+- :func:`orientation` turns between rotations along the shorter arc,
+  :func:`colour` runs between colours in HSV, the hue the shorter way round
+  its circle, and :func:`directions` moves each of a run of directions along
+  the great circle between them;
 - :func:`spline` follows X3D's Hermite spline through the values, with
   tangents from :func:`tangents`;
 - :func:`ease` reshapes a fraction as `EaseInEaseOut` does;
@@ -17,14 +21,15 @@ Rotations are X3D's (axis x, y, z, angle in radians); quaternions are
 
 from __future__ import annotations
 
+import colorsys
 import math
 from typing import Any, Optional
 
 import numpy as np
 from numpy.typing import ArrayLike
 
-__all__ = ['ease', 'linear', 'quaternion_of', 'rotation_of', 'segment', 'slerp', 'spline',
-           'squad', 'tangents']
+__all__ = ['colour', 'directions', 'ease', 'linear', 'orientation', 'quaternion_of',
+           'rotation_of', 'segment', 'slerp', 'spline', 'squad', 'tangents']
 
 
 def segment(keys: ArrayLike, fraction: float) -> "tuple[int, float]":
@@ -64,6 +69,57 @@ def linear(keys: ArrayLike, values: ArrayLike, fraction: float, per_key: int = 1
         found = runs[index] * (1.0 - s) + runs[index + 1] * s
     shape: Any = np.asarray(values).shape[1:] if per_key == 1 else (per_key,) + np.asarray(values).shape[1:]
     return np.asarray(found).reshape(shape)
+
+
+def orientation(keys: ArrayLike, rotations: ArrayLike, fraction: float) -> np.ndarray:
+    """The rotation `OrientationInterpolator` sends: the shorter arc between keys"""
+    found = np.asarray(rotations, dtype=np.float64).reshape(-1, 4)
+    index, s = segment(keys, fraction)
+    if len(found) < 2:
+        return found[0].copy()
+    turned = slerp(quaternion_of(found[index]), quaternion_of(found[index + 1]), s)
+    return rotation_of(turned)
+
+
+def colour(keys: ArrayLike, colours: ArrayLike, fraction: float) -> np.ndarray:
+    """The colour `ColorInterpolator` sends: straight between keys in HSV (19.4.2),
+    the hue the shorter way round its circle"""
+    found = np.asarray(colours, dtype=np.float64).reshape(-1, 3)
+    index, s = segment(keys, fraction)
+    if len(found) < 2 or s == 0.0:
+        return found[min(index, len(found) - 1)].copy()
+    h0, s0, v0 = colorsys.rgb_to_hsv(*found[index])
+    h1, s1, v1 = colorsys.rgb_to_hsv(*found[index + 1])
+    # A grey has no hue of its own: it takes the other end's.
+    if s0 == 0.0:
+        h0 = h1
+    if s1 == 0.0:
+        h1 = h0
+    turn = (h1 - h0 + 0.5) % 1.0 - 0.5
+    return np.array(colorsys.hsv_to_rgb((h0 + turn * s) % 1.0, s0 + (s1 - s0) * s,
+                                        v0 + (v1 - v0) * s))
+
+
+def directions(keys: ArrayLike, values: ArrayLike, fraction: float, per_key: int = 1) -> np.ndarray:
+    """The directions `NormalInterpolator` sends: each along the great circle
+    between its keys' directions (19.4.8), `per_key` of them per key"""
+    count = len(np.asarray(keys).ravel())
+    runs = np.asarray(values, dtype=np.float64).reshape(count, per_key, 3)
+    index, s = segment(keys, fraction)
+    if count < 2:
+        return runs[0].copy()
+    a, b = runs[index], runs[index + 1]
+    a = a / np.maximum(np.linalg.norm(a, axis=1, keepdims=True), 1e-12)
+    b = b / np.maximum(np.linalg.norm(b, axis=1, keepdims=True), 1e-12)
+    cosine = np.clip(np.einsum('ij,ij->i', a, b), -1.0, 1.0)[:, None]
+    angle = np.arccos(cosine)
+    sine = np.sin(angle)
+    near = sine < 1e-9
+    safe = np.where(near, 1.0, sine)
+    found = np.where(near, a + (b - a) * s,
+                     (np.sin((1 - s) * angle) * a + np.sin(s * angle) * b) / safe)
+    result: np.ndarray = found / np.maximum(np.linalg.norm(found, axis=1, keepdims=True), 1e-12)
+    return result
 
 
 def tangents(values: ArrayLike, closed: bool = False,
