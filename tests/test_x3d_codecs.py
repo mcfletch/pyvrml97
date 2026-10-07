@@ -128,6 +128,23 @@ class TestNodes(unittest.TestCase):
             codecs.decode('SFNode', 'Box')
 
 
+class TestPyVRML97Types(unittest.TestCase):
+    """The field types pyvrml97 adds to X3D's, which an engine's own nodes use"""
+
+    def test_each_reads_and_writes(self):
+        for type_name, text, expected in (
+                ('SFUInt32', '7', 7),
+                ('MFUInt32', '0, 1 2', [0, 1, 2]),
+                ('MFFloat32', '0.5 1', [0.5, 1.0]),
+                ('SFArray', '1 2 3 4', [1, 2, 3, 4]),
+                ('SFArray32', '0.25', [0.25])):
+            with self.subTest(type_name=type_name):
+                value = held(type_name, text)
+                self.assertEqual(np.asarray(value).ravel().tolist(), np.ravel(expected).tolist())
+                self.assertEqual(np.asarray(held(type_name, codecs.encode(type_name, value)))
+                                 .ravel().tolist(), np.ravel(expected).tolist())
+
+
 class TestDecodedValues(unittest.TestCase):
     """`from_values` gives the value `decode` would, from numbers or booleans"""
 

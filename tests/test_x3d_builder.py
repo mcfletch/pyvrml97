@@ -332,6 +332,22 @@ class TestDialects(unittest.TestCase):
         warnings = problems(built.end_document(), 'warning')
         self.assertEqual([p.message for p in warnings], ['VRML97 has no node LocalFog'])
 
+    def test_a_node_x3d_does_not_declare_is_no_version_warning(self):
+        """An application's own node in its vocabulary is in no version of X3D"""
+        class Engine(x3d.Group):
+            PROTO = 'EngineGroup'
+
+        class EngineCurve(x3d.Group):
+            """Its own node, under a name X3D gives another"""
+            PROTO = 'NurbsCurve'
+
+        built = Built(prototypes={'EngineGroup': Engine, 'NurbsCurve': EngineCurve})
+        built.document('', '2.0')
+        made = built.node('EngineGroup')
+        self.assertIsInstance(made, Engine)
+        self.assertIsInstance(built.node('NurbsCurve'), EngineCurve)
+        self.assertEqual(problems(built.end_document(), 'warning'), [])
+
     def test_an_unknown_version_reads_as_the_nearest(self):
         built = Built()
         built.document('Full', '3.9')

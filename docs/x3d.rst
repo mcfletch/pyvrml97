@@ -142,7 +142,8 @@ What reading does:
 
 - A version's old field names and defaults are applied, so the scene holds
   X3D 4.1 names and values. A node type or field the document's version does
-  not have is read, with a warning.
+  not have is read, with a warning. A node ``prototypes=`` supplies that X3D
+  does not declare (an engine's own) is read without one.
 - ``UNIT`` statements (X3D 3.3 and later) scale each field in the unit's
   category, and its derived categories, into base units (metres, radians,
   kilograms, newtons). ``scene.units`` records them.

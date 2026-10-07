@@ -372,7 +372,10 @@ class SceneBuilder:
             frame.skip = True
             self._frames.append(frame)
             return None
-        if not self.dialect.has_node(type_name) and self._scope.proto(type_name) is None:
+        declared = x3d.CONCRETE_NODES.get(type_name)
+        if (declared is not None and issubclass(cls, declared)
+                and not self.dialect.has_node(type_name)):
+            # A class that is not X3D's node is the vocabulary's own, in no version.
             self.problem('warning', '%s has no node %s' % (self.version_name, type_name))
         built = cls()
         notify = isinstance(built, node.PrototypedNode)

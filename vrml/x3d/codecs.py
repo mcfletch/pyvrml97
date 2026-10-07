@@ -24,14 +24,17 @@ FLOAT32_TYPES = frozenset((
     'SFMatrix3f', 'SFMatrix4f', 'SFQuaternion',
     'MFVec2f', 'MFVec3f', 'MFVec4f', 'MFColor', 'MFColorRGBA', 'MFRotation',
     'MFMatrix3f', 'MFMatrix4f', 'MFQuaternion',
+    'MFFloat32', 'SFArray32',
 ))
 FLOAT64_TYPES = frozenset((
     'MFFloat', 'MFDouble', 'MFTime',
     'SFVec2d', 'SFVec3d', 'SFVec4d', 'SFMatrix3d', 'SFMatrix4d',
     'MFVec2d', 'MFVec3d', 'MFVec4d', 'MFMatrix3d', 'MFMatrix4d',
+    'SFArray',
 ))
-INTEGER_LIST_TYPES = frozenset(('MFInt32', 'SFImage', 'MFImage'))
+INTEGER_LIST_TYPES = frozenset(('MFInt32', 'MFUInt32', 'SFImage', 'MFImage'))
 SCALAR_FLOAT_TYPES = frozenset(('SFFloat', 'SFDouble', 'SFTime'))
+INTEGER_SCALAR_TYPES = frozenset(('SFInt32', 'SFUInt32'))
 
 #: How many numbers make one value of each vector type; a list writes its
 #: values separated by commas.
@@ -144,6 +147,7 @@ DECODERS: "dict[str, Callable[[str], Any]]" = {
     'SFBool': _boolean,
     'MFBool': _booleans,
     'SFInt32': _scalar(_integer),
+    'SFUInt32': _scalar(_integer),
     'SFString': str,
     'MFString': _strings,
     'SFNode': _node,
@@ -183,10 +187,10 @@ def from_values(type_name: str, values: Any) -> Any:
         raise ValueError('%d booleans are not an %s' % (len(values), type_name))
     array = np.asarray(values).ravel()
     integral = np.issubdtype(array.dtype, np.integer)
-    if type_name in SCALAR_FLOAT_TYPES or type_name == 'SFInt32':
+    if type_name in SCALAR_FLOAT_TYPES or type_name in INTEGER_SCALAR_TYPES:
         if len(array) != 1:
             raise ValueError('%d numbers are not an %s' % (len(array), type_name))
-        if type_name == 'SFInt32':
+        if type_name in INTEGER_SCALAR_TYPES:
             if not integral:
                 raise ValueError('%r is not an integer' % (array[0],))
             return int(array[0])
@@ -248,7 +252,9 @@ ENCODERS: "dict[str, Callable[[Any], str]]" = {
     'SFBool': lambda value: 'true' if value else 'false',
     'MFBool': lambda value: ' '.join('true' if item else 'false' for item in value),
     'SFInt32': lambda value: str(int(value)),
+    'SFUInt32': lambda value: str(int(value)),
     'MFInt32': _numbers,
+    'MFUInt32': _numbers,
     'SFString': str,
     'MFString': lambda value: ' '.join(_quote(item) for item in value),
     'SFImage': _image,
@@ -257,7 +263,8 @@ ENCODERS: "dict[str, Callable[[Any], str]]" = {
     'MFNode': _null,
 }
 ENCODERS.update({name: number_text for name in SCALAR_FLOAT_TYPES})
-ENCODERS.update({name: _numbers for name in ('MFFloat', 'MFDouble', 'MFTime')})
+ENCODERS.update({name: _numbers for name in (
+    'MFFloat', 'MFDouble', 'MFTime', 'MFFloat32', 'SFArray', 'SFArray32')})
 ENCODERS.update({
     name: _vectors(size) if name.startswith('MF') else _numbers
     for name, size in TUPLE_SIZE.items()
