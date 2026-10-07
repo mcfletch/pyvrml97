@@ -114,6 +114,32 @@ class TestPausing(unittest.TestCase):
         self.assertAlmostEqual(sent(sensor, 'elapsedTime'), 2.0)
 
 
+class TestPauseAndResume(unittest.TestCase):
+    def test_pause_and_resume_take_effect_now(self):
+        sensor = TimeSensor(cycleInterval=4.0, loop=True, startTime=10.0)
+        sensor.advance(11.0)
+        sensor.pause(12.0)
+        sensor.advance(12.0)
+        self.assertTrue(sensor.paused())
+        sensor.resume(14.0)
+        sensor.advance(15.0)
+        self.assertFalse(sensor.paused())
+        self.assertAlmostEqual(sent(sensor, 'elapsedTime'), 3.0)
+
+    def test_they_default_to_the_sensors_time(self):
+        from vrml.x3d import timing  # noqa: PLC0415 kept with its use
+        saved = timing.clock
+        timing.clock = lambda: 21.0
+        try:
+            sensor = TimeSensor()
+            sensor.pause()
+            self.assertEqual(sensor.pauseTime, 21.0)
+            sensor.resume()
+            self.assertEqual(sensor.resumeTime, 21.0)
+        finally:
+            timing.clock = saved
+
+
 class TestRegistered(unittest.TestCase):
     def test_it_is_in_the_runtime(self):
         self.assertIs(runtime.PROTOTYPES['TimeSensor'], TimeSensor)

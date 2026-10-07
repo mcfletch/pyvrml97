@@ -13,7 +13,8 @@ time and sends what the sensor sends then:
   out) while it runs.
 - `isPaused` as it pauses at `pauseTime` and resumes at `resumeTime`, each
   taking effect when it is the later of the two and has passed. Nothing else
-  is sent while it is paused.
+  is sent while it is paused. :meth:`TimeSensor.pause` and
+  :meth:`TimeSensor.resume` set those fields to the sensor's time.
 
 `startTime`, `cycleInterval` and `loop` are read as it starts; changing them
 while it runs changes nothing until it starts again. A sensor that is not
@@ -53,6 +54,19 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
     def running(self) -> bool:
         """Whether the sensor is active"""
         return '_run' in self.__dict__
+
+    def paused(self) -> bool:
+        """Whether the sensor is active and paused"""
+        run = self.__dict__.get('_run')
+        return run is not None and run.pausedAt is not None
+
+    def pause(self, now: Optional[float] = None) -> None:
+        """Pause the sensor at `now` (its :meth:`now` where None): `pauseTime` is set to it"""
+        self.pauseTime = self.now() if now is None else float(now)
+
+    def resume(self, now: Optional[float] = None) -> None:
+        """Resume the sensor at `now` (its :meth:`now` where None): `resumeTime` is set to it"""
+        self.resumeTime = self.now() if now is None else float(now)
 
     def _starts(self, now: float) -> bool:
         """Whether the sensor would start at `now`"""
