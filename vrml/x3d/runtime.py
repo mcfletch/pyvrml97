@@ -8,7 +8,7 @@ device; :class:`KeySensor` is told of keys by whoever has a keyboard.
 
 `PROTOTYPES` maps each X3D name to its class here, to pass as a reader's
 `prototypes=` (merged with an engine's own). A `TimeTrigger` sends the time
-of its scene (:func:`~vrml.x3d.timing.now_for`).
+of its scene (:meth:`~vrml.x3d.timing.Timed.now`).
 """
 
 from __future__ import annotations
@@ -65,11 +65,11 @@ class IntegerTrigger(x3d.IntegerTrigger):
             self.triggerValue = self.integerKey
 
 
-class TimeTrigger(x3d.TimeTrigger):
-    """Sends the time of its scene for each boolean it receives"""
+class TimeTrigger(timing.Timed, x3d.TimeTrigger):
+    """Sends the time of its scene (:meth:`now`) for each boolean it receives"""
 
     def on_set_boolean(self, _value: Any) -> None:
-        self.triggerTime = timing.now_for(self)
+        self.triggerTime = self.now()
 
 
 class Sequencer:

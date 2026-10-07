@@ -201,12 +201,13 @@ outputs the handler sets are forwarded along routes as any field change is:
   says the same. ``wake()`` is called when one starts moving, for whoever
   calls ``advance`` each frame.
 
-The time a node is at is its scene's: ``vrml.x3d.timing.now_for(node)`` calls
-the ``clock()`` of the scene the node is rooted in, and ``timing.clock``
-(``time.time``) for a node in no scene with one. An engine gives its scene
-class a ``clock`` method returning the time its frames run on, so a
-``TimeTrigger``, a follower's change of destination and a frame's ``advance``
-agree.
+The time a node is at is its scene's. Each node that stamps time is a
+``vrml.x3d.timing.Timed``, whose ``now()`` calls the ``clock()`` of the scene
+the node is rooted in, and ``timing.clock`` (``time.time``) for a node in no
+scene with one. An engine gives its scene class a ``clock`` method returning
+the time its frames run on, and may override ``now`` on its node classes for
+nodes in no scene, so a ``TimeTrigger``, a follower's change of destination
+and a frame's ``advance`` agree.
 
 A document read with no ``prototypes=`` is built from these classes where they
 exist; ``runtime.PROTOTYPES`` maps them by name for merging with an engine's.

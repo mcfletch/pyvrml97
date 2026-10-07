@@ -11,8 +11,8 @@ that is negative). Rotations are chased and damped as quaternions.
 
 Nothing here keeps time. :meth:`Follower.advance` takes the time, moves the
 value and sends it, and answers whether the follower is still moving;
-`set_destination` stamps a change with the time of the follower's scene
-(:func:`~vrml.x3d.timing.now_for`). :meth:`Follower.wake` is called when a
+`set_destination` stamps a change with :meth:`~vrml.x3d.timing.Timed.now`,
+the time of the follower's scene. :meth:`Follower.wake` is called when a
 follower starts to move, for whoever ticks it to begin.
 """
 
@@ -57,7 +57,7 @@ def _inverse(q: np.ndarray) -> np.ndarray:
     return np.array([-q[0], -q[1], -q[2], q[3]])
 
 
-class Follower:
+class Follower(timing.Timed):
     """What every follower does: start from its initial fields, retarget, advance
 
     A subclass gives the arithmetic of its kind of motion; :attr:`rotation`
@@ -92,7 +92,7 @@ class Follower:
         self._reset(self._held(self.initialValue))
         destination = self._held(self.initialDestination)
         if not self._same(destination, self._current()):
-            self._retarget(destination, timing.now_for(self))
+            self._retarget(destination, self.now())
 
     def _same(self, a: np.ndarray, b: np.ndarray) -> bool:
         if self.rotation:
@@ -131,7 +131,7 @@ class Follower:
 
     def on_set_destination(self, value: Any) -> None:
         self._ready()
-        self._retarget(self._held(value), timing.now_for(self))
+        self._retarget(self._held(value), self.now())
         self._moved(True)
 
     def on_set_value(self, value: Any) -> None:
