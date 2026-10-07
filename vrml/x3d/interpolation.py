@@ -121,18 +121,17 @@ def spline(keys: ArrayLike, values: ArrayLike, fraction: float, closed: bool = F
 
     def scaled(at: int, outgoing: bool) -> np.ndarray:
         """The tangent at key `at`, scaled for the spacing of its neighbours"""
+        found: np.ndarray = tangent[at]
+        if (at == 0 or at == len(key) - 1) and not closed:
+            return found
         if at == 0 or at == len(key) - 1:
-            if not closed:
-                return tangent[at]
-            before = key[-1] - key[-2]
-            after = key[1] - key[0]
+            before, after = key[-1] - key[-2], key[1] - key[0]
         else:
-            before = key[at] - key[at - 1]
-            after = key[at + 1] - key[at]
+            before, after = key[at] - key[at - 1], key[at + 1] - key[at]
         total = before + after
-        if total <= 0:
-            return tangent[at]
-        return tangent[at] * (2.0 * (after if outgoing else before) / total)
+        if total > 0:
+            found = found * (2.0 * (after if outgoing else before) / total)
+        return found
 
     h00 = 2 * s ** 3 - 3 * s ** 2 + 1
     h10 = s ** 3 - 2 * s ** 2 + s
@@ -223,11 +222,14 @@ def _slerp(a: np.ndarray, b: np.ndarray, t: float) -> np.ndarray:
     cosine = float(np.dot(a, b))
     if cosine < 0:
         b, cosine = -b, -cosine
+    found: np.ndarray
     if cosine > 1.0 - 1e-9:
         found = a + (b - a) * t
-        return found / np.linalg.norm(found)
-    angle = math.acos(cosine)
-    return (math.sin((1 - t) * angle) * a + math.sin(t * angle) * b) / math.sin(angle)
+        found = found / np.linalg.norm(found)
+    else:
+        angle = math.acos(cosine)
+        found = (math.sin((1 - t) * angle) * a + math.sin(t * angle) * b) / math.sin(angle)
+    return found
 
 
 def squad(keys: ArrayLike, rotations: ArrayLike, fraction: float) -> np.ndarray:
