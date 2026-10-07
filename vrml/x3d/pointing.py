@@ -169,7 +169,7 @@ class Dragging(Pointing):
 
     def into(self, point: ArrayLike) -> np.ndarray:
         """`point` (or a direction) in the sensor's turned coordinates"""
-        return self.turning().T @ _vector(point)
+        return np.asarray(self.turning().T @ _vector(point))
 
     def end(self, _over: bool, _now: float) -> None:
         last = self.__dict__.get('_last')
@@ -219,7 +219,7 @@ class CylinderSensor(Dragging, x3d.CylinderSensor):
         if self.__dict__['_disk']:
             if abs(direction[1]) < 1e-12:
                 return None
-            return origin + direction * ((first[1] - origin[1]) / direction[1])
+            return np.asarray(origin + direction * ((first[1] - origin[1]) / direction[1]))
         radius = self.__dict__['_radius']
         a = direction[0] ** 2 + direction[2] ** 2
         b = 2.0 * (origin[0] * direction[0] + origin[2] * direction[2])
@@ -229,8 +229,8 @@ class CylinderSensor(Dragging, x3d.CylinderSensor):
         root = b * b - 4.0 * a * c
         if root < 0:
             # The nearest the ray comes to the axis.
-            return origin + direction * (-b / (2.0 * a))
-        return origin + direction * ((-b - math.sqrt(root)) / (2.0 * a))
+            return np.asarray(origin + direction * (-b / (2.0 * a)))
+        return np.asarray(origin + direction * ((-b - math.sqrt(root)) / (2.0 * a)))
 
     def drag(self, ray: Ray) -> None:
         track = self._track(self.into(ray.origin), self.into(ray.direction))
@@ -256,7 +256,7 @@ def _quaternion_between(a: np.ndarray, b: np.ndarray) -> np.ndarray:
         axis = axis / np.linalg.norm(axis)
         return np.append(axis, 0.0)
     found = np.append(cross, 1.0 + dot)
-    return found / np.linalg.norm(found)
+    return np.asarray(found / np.linalg.norm(found))
 
 
 def _compose(a: np.ndarray, b: np.ndarray) -> np.ndarray:
