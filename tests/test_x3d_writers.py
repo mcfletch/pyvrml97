@@ -275,6 +275,17 @@ class TestWhatCannotBeWritten(unittest.TestCase):
                         x3d.dumps(scene, encoding=encoding)
                     self.assertIn('Transform.translation', str(raised.exception))
 
+    def test_nodes_nested_past_the_writers_depth(self):
+        """About 300 levels in ClassicVRML and JSON; XML writes more"""
+        inner = nodes.Group()
+        for _ in range(450):
+            inner = nodes.Transform(children=[inner])
+        for encoding in ('classic', 'json'):
+            with self.subTest(encoding=encoding):
+                with self.assertRaises(X3DWriteError) as raised:
+                    x3d.dumps(X3DScene(children=[inner]), encoding=encoding)
+                self.assertIn('nested', str(raised.exception))
+
     def test_a_character_xml_cannot_carry(self):
         scene = X3DScene(children=[nodes.WorldInfo(title='a\x01b')])
         with self.assertRaises(X3DWriteError) as raised:

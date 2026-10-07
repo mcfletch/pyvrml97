@@ -318,3 +318,58 @@ class TestWhatAnInstanceStandsFor(unittest.TestCase):
     def test_a_name_neither_has(self):
         with self.assertRaises(AttributeError):
             self.wood.noSuchThing  # noqa: B018 the read is what is tested
+
+
+class TestTheFieldsOfAClass(unittest.TestCase):
+    """getFields answers from what the class holds now, however it changed"""
+
+    def made(self):
+        from vrml import field as fields, node  # noqa: PLC0415 kept with its use
+
+        class Thing(node.Node):
+            PROTO = 'Thing'
+            size = fields.newField('size', 'SFFloat', 1, 1.0)
+        return Thing, fields
+
+    def names(self, cls):
+        return sorted(item.name for item in protofunctions.getFields(cls) if not item.name.startswith(' '))
+
+    def test_a_field_added_by_add_field(self):
+        Thing, fields = self.made()
+        self.assertIn('size', self.names(Thing))
+        protofunctions.addField(Thing, fields.newField('weight', 'SFFloat', 1, 0.0))
+        self.assertIn('weight', self.names(Thing))
+
+    def test_a_field_set_on_the_class(self):
+        Thing, fields = self.made()
+        self.names(Thing)
+        Thing.colour = fields.newField('colour', 'SFColor', 1, (1, 1, 1))
+        self.assertIn('colour', self.names(Thing))
+
+    def test_a_field_added_to_a_base_reaches_the_subclass(self):
+        Thing, fields = self.made()
+
+        class Other(Thing):
+            pass
+        self.names(Other)
+        protofunctions.addField(Thing, fields.newField('weight', 'SFFloat', 1, 0.0))
+        self.assertIn('weight', self.names(Other))
+
+    def test_a_field_removed(self):
+        Thing, _fields = self.made()
+        self.names(Thing)
+        protofunctions.removeField(Thing, 'size')
+        self.assertNotIn('size', self.names(Thing))
+
+    def test_a_field_replaced_through_add_field(self):
+        Thing, fields = self.made()
+        self.names(Thing)
+        replacement = fields.newField('size', 'SFFloat', 1, 2.0)
+        protofunctions.addField(Thing, replacement)
+        found = [item for item in protofunctions.getFields(Thing) if item.name == 'size']
+        self.assertIs(found[0], replacement)
+
+    def test_the_answer_is_the_callers_to_change(self):
+        Thing, _fields = self.made()
+        protofunctions.getFields(Thing).clear()
+        self.assertIn('size', self.names(Thing))

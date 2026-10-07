@@ -373,7 +373,10 @@ What is written:
 A node type, field or field type the target version does not have raises
 ``X3DWriteError``, whose ``problems`` lists every one found; a field the
 version lacks is written only if its value differs from the default.
-Nothing is written to a file then. ``scene.problems`` is not written.
+Nothing is written to a file then. ``scene.problems`` is not written. The
+same error is raised for a DEF name the encoding cannot hold, a number that
+is not finite, a character XML 1.0 cannot carry, and nodes nested past what
+the writer reaches: about 300 levels in ClassicVRML and JSON, more in XML.
 
 Classes of an engine's own
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

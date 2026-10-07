@@ -182,7 +182,11 @@ class SceneWriter:
 
     def write(self) -> str:
         """The scene as text; raises X3DWriteError if the version cannot hold it"""
-        text = self.document()
+        try:
+            text = self.document()
+        except RecursionError:
+            self.problem('the nodes are nested too deeply to write')
+            raise X3DWriteError(self.problems) from None
         if self.problems:
             raise X3DWriteError(self.problems)
         return text
@@ -362,12 +366,33 @@ class SceneWriter:
             for name, protoField in found.items()
         )
 
+    def _default(self, declared: Any, type_name: str, defaults: "dict[str, Any]") -> Any:
+        """A field's default for `type_name` in the target version, coerced;
+        worked out once for each field and node type in a write"""
+        memo: "dict[tuple[Any, str], Any]" = self.__dict__.setdefault('_defaults', {})
+        key = (declared, type_name)
+        if key not in memo:
+            default = defaults[declared.name] if declared.name in defaults else declared.getDefault()
+            try:
+                default = declared.coerce(default)
+            except (TypeError, ValueError):
+                pass
+            memo[key] = default
+        return memo[key]
+
+    def _inherited(self, cls: type) -> "set[str]":
+        """The field and event names a class has from the declaration it extends"""
+        memo: "dict[type, set[str]]" = self.__dict__.setdefault('_inherited_names', {})
+        if cls not in memo:
+            base = next(item for item in cls.__mro__ if not item.__dict__.get(' declares', False))
+            memo[cls] = {item.name for item in protofunctions.getFields(base)
+                         + protofunctions.getFields(base, 1)}
+        return memo[cls]
+
     def own_declarations(self, target: Any) -> "list[Declaration]":
         """Fields a Script or shader node declares, with their current values"""
         cls = type(target)
-        base = next(item for item in cls.__mro__ if not item.__dict__.get(' declares', False))
-        inherited = {item.name for item in protofunctions.getFields(base)
-                     + protofunctions.getFields(base, 1)}
+        inherited = self._inherited(cls)
         found = []
         connected = self._scopes[-1].connections.get(target, {}) if self._scopes else {}
         for declared in protofunctions.getFields(cls) + protofunctions.getFields(cls, 1):
@@ -404,12 +429,25 @@ class SceneWriter:
             out for the encoding to write itself, 'field' writes it as a
             field, 'url' puts it first in the `url` field
         """
-        return [item for item in self._fields(target, source) if item.type_name not in NODE_TYPES]
+        return self._split(target, source)[0]
 
     def node_fields(self, target: Any) -> "list[Value]":
         """Node-valued fields that are not empty, named as the version names them"""
-        return [item for item in self._fields(target, 'separate')
-                if item.type_name in NODE_TYPES]
+        return self._split(target, None)[1]
+
+    def _split(self, target: Any, source: "str | None") -> "tuple[list[Value], list[Value]]":
+        """`target`'s fields to write, values apart from nodes; the last node's
+        are kept, since an encoding asks for both one after the other (`source`
+        None takes either, for the node fields it does not change)"""
+        last = self.__dict__.get('_last_split')
+        if last is not None and last[0] is target and (source is None or last[1] == source):
+            found: "tuple[list[Value], list[Value]]" = last[2]
+            return found
+        written = self._fields(target, source or 'separate')
+        found = ([item for item in written if item.type_name not in NODE_TYPES],
+                 [item for item in written if item.type_name in NODE_TYPES])
+        self.__dict__['_last_split'] = (target, source or 'separate', found)
+        return found
 
     def source(self, target: Any) -> str:
         """Inline program text of a Script or shader node, or ''"""
@@ -452,11 +490,7 @@ class SceneWriter:
                     continue
                 value = self.written_as(value)
             else:
-                default = defaults[name] if name in defaults else declared.getDefault()
-                try:
-                    default = declared.coerce(default)
-                except (TypeError, ValueError):
-                    pass
+                default = self._default(declared, type_name, defaults)
                 if same(value, default):
                     continue
                 if not _finite(type_name_of, value):

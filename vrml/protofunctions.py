@@ -14,6 +14,7 @@ module.
 
 
 
+import weakref
 from typing import Any
 from vrml import field
 from vrml import field as fieldmodule
@@ -87,7 +88,9 @@ def addField(cls: Any, field: Any) -> None:
 
     At present this just calls setattr(cls,field.name,field)
     """
+    global _declarations
     setattr(_getcls(cls), field.name, field)
+    _declarations += 1
 
 
 def removeField(cls: Any, field: Any) -> None:
@@ -96,10 +99,12 @@ def removeField(cls: Any, field: Any) -> None:
     If field is a string, calls delattr(cls,field) for the class
     otherwise calls delattr( cls, field.name )
     """
+    global _declarations
     if isinstance(field, str):
         delattr(_getcls(cls), field)
     else:
         delattr(_getcls(cls), field.name)
+    _declarations += 1
 
 
 def getField(cls: Any, field: str) -> Any:
@@ -152,32 +157,38 @@ def getField(cls: Any, field: str) -> Any:
     )
 
 
+#: Moved by addField and removeField; part of what a class's fields are held against.
+_declarations = 0
+#: Each class's fields and events, with what they were found against.
+_FOUND: "weakref.WeakKeyDictionary[type, dict[int, tuple[Any, list[Any]]]]" = (
+    weakref.WeakKeyDictionary())
+
+
 def getFields(cls: Any, events: int=0) -> "list[Any]":
     """Get all fields of the definition/prototype
 
     if events is true, then return events
     instead of fields.
+
+    Kept for each class against the number of attributes each class of its
+    MRO has and the count addField and removeField move, so a field added to
+    the class or a base, by either, is found. A field replaced under its own
+    name goes through addField to be found.
     """
     cls = _getcls(cls)
-    wanted: type
-    if events:
-        wanted = field.Event
-    else:
-        wanted = field.Field
-    items = {}
-    mro = cls.__mro__[:]
-    while mro:
-        items.update(
-            dict(
-                [
-                    (key, value)
-                    for key, value in mro[-1].__dict__.items()
-                    if isinstance(value, wanted)
-                ]
-            )
-        )
-        mro = mro[:-1]
-    return list(items.values())
+    held = _FOUND.get(cls)
+    stamp = (_declarations, tuple(len(klass.__dict__) for klass in cls.__mro__))
+    found = held.get(events) if held is not None else None
+    if found is not None and found[0] == stamp:
+        return list(found[1])
+    wanted: type = field.Event if events else field.Field
+    items: "dict[str, Any]" = {}
+    for klass in reversed(cls.__mro__):
+        items.update((key, value) for key, value in klass.__dict__.items()
+                     if isinstance(value, wanted))
+    answer = list(items.values())
+    _FOUND.setdefault(cls, {})[events] = (stamp, answer)
+    return list(answer)
 
 
 ##def clonePROTO( cls ):
