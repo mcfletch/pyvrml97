@@ -66,7 +66,14 @@ class ElementReader:
 
     def _start(self, name: str, attributes: "dict[str, str]") -> None:
         self._position()
-        if name in CONTAINERS:
+        if self._parent_kind() == 'foreign':
+            element = _Element('foreign')
+        elif ':' in name:
+            # An element of another namespace (an XML Signature, an
+            # application's own data) is not X3D: it and its content are skipped
+            self.builder.problem('info', 'Element %s of another namespace skipped' % name)
+            element = _Element('foreign')
+        elif name in CONTAINERS:
             element = _Element(name)
         elif name in self.statements:
             element = self.statements[name](attributes)

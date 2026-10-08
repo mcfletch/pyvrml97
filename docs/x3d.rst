@@ -83,8 +83,9 @@ A ``Dialect`` node lists what one version says differently from X3D 4.1: the
 node types it has (``nodeTypes``), the fields it names differently
 (``FieldRename`` nodes in ``renamed``), the defaults it gives differently
 (``FieldDefault`` nodes in ``defaults``, each value written as XML attribute
-text) and the fields of its node types it does not have (``AbsentFields``
-nodes in ``absent``). ``vrml.x3d.dialects.DIALECTS`` holds one per version, keyed by the
+text), the fields of its node types it does not have (``AbsentFields``
+nodes in ``absent``) and the node types it puts in another field where no
+``containerField`` names one (``ContainerDefault`` nodes in ``containers``). ``vrml.x3d.dialects.DIALECTS`` holds one per version, keyed by the
 version a document's header gives: ``'2.0'`` (VRML97), ``'3.0'`` to
 ``'3.3'``, ``'4.0'`` and ``'4.1'``.
 
@@ -105,10 +106,18 @@ X3D 4.0       none                                         none (4.1 adds seven 
 
 The old names are aliases on the X3D classes: ``lod.level`` reads and writes
 ``lod.children``. An alias is not a field and ``getFields`` does not list it.
+A version's renames apply to its X3D nodes; a prototype that shares an X3D
+node's name keeps the field names it declares.
+
+X3D 3.x gives the metadata nodes ``metadata`` as their default container,
+where 4.0 gives ``value``. Written as a 3.x document, a metadata node in a
+``value`` field is given ``containerField="value"``. Reading keeps 4.x's
+default in every version, since documents of that age, and X_ITE, read a
+``MetadataSet``'s children as its values.
 
 ``Dialect.tables()`` gives the lookups a reader or writer uses for one
 document: ``current_name(nodeType, name)``, ``dialect_name(nodeType, name)``,
-``defaults(nodeType)``, ``has_node(nodeType)`` and
+``defaults(nodeType)``, ``container(nodeType)``, ``has_node(nodeType)`` and
 ``has_field(nodeType, name)``. A dialect is a node, so an
 application can build its own.
 
@@ -162,6 +171,10 @@ What reading does:
   not have is read, with a warning. A node type that X3D does not declare
   is read without a warning where ``prototypes=`` supplies a class for it
   (an engine's own).
+- An MFString attribute without quotes is read as one string, with a
+  warning. An element of another XML namespace (``ds:Signature``, an
+  application's own data) is skipped with what it contains, with an ``info``
+  problem.
 - ``UNIT`` statements (X3D 3.3 and later) scale each field in the unit's
   category, and its derived categories, into base units (metres, radians,
   kilograms, newtons). ``scene.units`` records them.

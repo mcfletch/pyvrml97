@@ -202,3 +202,13 @@ class TestValues(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_an_element_of_another_namespace_is_skipped_with_its_content():
+    """An XML Signature, or an application's own element, is not an X3D node"""
+    scene = readers.read(b"""<X3D version='3.3' xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
+        <Scene><Group/><ds:Signature><ds:SignedInfo><Shape/></ds:SignedInfo></ds:Signature>
+        <Transform/></Scene></X3D>""", name='a.x3d')
+    assert [type(child).__name__ for child in scene.children] == ['Group', 'Transform']
+    assert [problem.severity for problem in scene.problems] == ['info']
+    assert 'ds:Signature' in scene.problems[0].message

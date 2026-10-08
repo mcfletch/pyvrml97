@@ -899,6 +899,9 @@ class VersionDifference:
     removed: "list[tuple[str, str, str]]"
     retyped: "list[tuple[str, str, str, str]]"
     reaccessed: "list[tuple[str, str, str, str]]"
+    #: (node type, container) where the version's default containerField
+    #: differs from the vocabulary's.
+    containers: "list[tuple[str, str]]" = dataclasses.field(default_factory=list)
 
 
 def alias_target(vocabulary: Vocabulary, type_name: str, name: str) -> "str | None":
@@ -922,6 +925,8 @@ def difference(vocabulary: Vocabulary, version: str) -> VersionDifference:
         if name not in current:
             raise GenerationError('X3D %s node %s is not in the vocabulary' % (version, name))
         result.nodeTypes.append(name)
+        if spec.container and spec.container != current[name].container:
+            result.containers.append((name, spec.container))
         then = {item.name: item for item in spec.fields}
         now = {item.name: item for item in current[name].fields}
         renamed_to = set()
@@ -959,7 +964,9 @@ def generate_dialects(differences: "list[VersionDifference]") -> str:
         'edit. VRML97\'s dialect is written by hand in `vrml.x3d.dialect`.',
         '"""',
         '',
-        'from vrml.x3d.dialect import VRML97, AbsentFields, Dialect, FieldDefault, FieldRename',
+        'from vrml.x3d.dialect import (',
+        '    VRML97, AbsentFields, ContainerDefault, Dialect, FieldDefault, FieldRename,',
+        ')',
     ]
     names = []
     for item in differences:
@@ -990,6 +997,12 @@ def generate_dialects(differences: "list[VersionDifference]") -> str:
             for node_type, field_name, value in item.defaults:
                 lines.append('        FieldDefault(nodeType=%r, fieldName=%r, value=%r),'
                              % (node_type, field_name, value))
+            lines.append('    ],')
+        if item.containers:
+            lines.append('    containers=[')
+            for node_type, container in item.containers:
+                lines.append('        ContainerDefault(nodeType=%r, container=%r),'
+                             % (node_type, container))
             lines.append('    ],')
         if item.absent:
             lines.append('    absent=[')
