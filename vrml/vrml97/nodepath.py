@@ -160,7 +160,7 @@ class _NodePath( _PathHost ):
         else:
             matrix = dot( own, base )
         if matrix is None:
-            matrix = identity(4, dtype='f')
+            matrix = identity(4, dtype='d')
         holder.data = matrix
         return matrix
     def transformChildren( self, reverse: int=0 ) -> "Iterator[Any]":

@@ -628,4 +628,4 @@ class SceneWriter:
         """
         if isinstance(child, node.PrototypedNode) and name != 'children':
             return False
-        return implied_container(parent, child) == name
+        return implied_container(parent, child, self.dialect) == name

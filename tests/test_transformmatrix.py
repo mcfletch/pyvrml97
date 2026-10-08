@@ -1,7 +1,11 @@
+import importlib
+
+import numpy as np
+import pytest
 import unittest
 import sys
 from vrml.arrays import pi,array
-from vrml.vrml97 import transformmatrix
+from vrml.vrml97 import basenodes, nodepath, transformmatrix
 from vrml.arrays import allclose,dot
 from vrml.vrml97 import _transformmatrix
 
@@ -86,3 +90,21 @@ class TestTransformMatrix( unittest.TestCase ):
                 assert allclose(firstmatrix,secondmatrix, atol=0.000001), (firstmatrix,secondmatrix,name)
 
 
+@pytest.mark.parametrize('module', ['vrml.vrml97._transformmatrix',
+                                    'vrml.vrml97._transformmatrix_accel'])
+def test_transform_matrices_are_double_precision(module):
+    """A geocentric offset survives to the millimetre"""
+    found = importlib.import_module(module)
+    forward, inverse = found.transMatrix((6378137.123, -4.5e6, 0.001))
+    assert forward.dtype == np.float64
+    assert forward[3, 0] == pytest.approx(6378137.123, abs=1e-6)
+    assert inverse[3, 1] == pytest.approx(4.5e6, abs=1e-6)
+    rotation, _ = found.rotMatrix((0.0, 0.0, 1.0, 0.3))
+    assert rotation.dtype == np.float64
+
+
+def test_a_paths_matrix_is_double_precision():
+    shape = basenodes.Shape()
+    group = basenodes.Group(children=[shape])
+    path = nodepath.NodePath([]) + group + shape
+    assert path.transformMatrix().dtype == np.float64

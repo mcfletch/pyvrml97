@@ -67,12 +67,12 @@ def scaleMatrix( source: Any=None ) -> Any:
         (x,y,z) = source[:3]
     if x == y == z == 1.0:
         return None, None
-    S = array( [ [x,0,0,0], [0,y,0,0], [0,0,z,0], [0,0,0,1] ], 'f' )
+    S = array( [ [x,0,0,0], [0,y,0,0], [0,0,z,0], [0,0,0,1] ], 'd' )
     S1 = array( [
         [1./(x or VERY_SMALL),0,0,0],
         [0,1./(y or VERY_SMALL),0,0],
         [0,0,1./(z or VERY_SMALL),0],
-        [0,0,0,1] ], 'f'
+        [0,0,0,1] ], 'd'
     )
     return S, S1
 
@@ -92,8 +92,8 @@ def transMatrix( source: Any=None ) -> Any:
         (x,y,z) = source[:3]
     if x == y == z == 0.0:
         return None, None
-    T = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [x,y,z,1] ], 'f' )
-    T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'f' )
+    T = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [x,y,z,1] ], 'd' )
+    T1 = array( [ [1,0,0,0], [0,1,0,0], [0,0,1,0], [-x,-y,-z,1] ], 'd' )
     return T, T1
 
 def perspectiveMatrix( fovy: float, aspect: float, zNear: float, zFar: float, inverse: bool=False ) -> Any:

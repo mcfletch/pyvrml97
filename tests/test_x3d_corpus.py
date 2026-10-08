@@ -62,11 +62,11 @@ def converted_differently(path, suffix):
         return REWRITTEN_SCRIPT in stream.read()
 
 #: The values Web3D's .x3db files write a second time under a name their
-#: node does not take: an Anchor's url, an Inline's bboxSize, a LOD's range
-#: and a Viewpoint's centerOfRotation.
+#: node does not take: an Anchor's url, an Inline's bboxSize, a LOD's range,
+#: a Viewpoint's centerOfRotation, and a NurbsPatchSurface's weights.
 DOUBLED_IN_BINARY = (
     'Anchor.autoRefresh', 'Anchor.load', 'Anchor.visible', 'Inline.visible',
-    'LOD.forceTransitions', 'Viewpoint.retainUserOffsets',
+    'LOD.forceTransitions', 'Viewpoint.retainUserOffsets', 'NurbsPatchSurface.solid',
 )
 
 #: VRML97 files with errors the reader reports: the STEP translations move
@@ -99,9 +99,54 @@ def lacks(problem):
 
 
 def problems(scene):
-    """Errors and warnings, less the note that scripts are not run"""
+    """Errors and warnings, less the note that scripts are not run and the
+    warnings that an MFString value is not quoted
+
+    Thousands of the Savage, Basic and HumanoidAnimation scenes write a single
+    url or geoSystem without the quotes the XML encoding asks for; the reader
+    reads them as one string and says so, and a misread string would show in
+    the graphs the other encodings build.
+    """
     return [str(problem) for problem in scene.problems
-            if problem.severity != 'info' and 'not run' not in problem.message]
+            if problem.severity != 'info' and 'not run' not in problem.message
+            and 'value not quoted' not in problem.message]
+
+
+#: Scenes of the larger archives with faults of their own, which the reader
+#: reports, by part of their path.
+AUTHORING_FAULTS = (
+    # Deliberately faulty: Basic/development's tests of validators and
+    # diagnostics, X3dRetreatProtoExercise's undeclared field types, and the
+    # CAD alternatives that show what CADPart and CADFace do not allow.
+    'development/Test', 'X3dRetreatProtoExercise', 'CADPartChildTransformationAlternative',
+    # Drafts and conversions kept as they were: originals folders, an Office
+    # export's files, and a converter's Cesium skin with its own node types.
+    '/originals/', '_files/', 'CesiumManCastleOnlineConverter',
+    # Lattice's XVL nodes, which are not X3D, and Xj3D's own components.
+    'LatticeXvl/', 'basic_point_sprites', 'CarDemoMain',
+    # Prototypes shadowing X3D nodes with EXTERNPROTOs the scene does not
+    # load, and prototypes of DIS nodes whose fields are events.
+    'MetadataExamples', 'RadioCommunicationsPrototypes', 'QuadTreeExamples',
+    'SpinGroupInternalSubsetDeclaration',
+    # Fields, routes and USE that the scene gets wrong: a ROUTE or USE naming a
+    # DEF the scene does not have before it, between fields of different types, to an
+    # event by its bare name or from a field the node lacks; a USE given
+    # fields or naming another node type; a DEF given twice; an IS between
+    # fields of different types or access.
+    'NurbsPrototypes', 'newGeospatialScene', 'Trebuchet', 'TwoLeggedTablePrototype',
+    'BooleanSequencerPrototype', 'EventUtilityPrototypes', 'LODlevelChangedExample',
+    'MetadataPrototypes', 'ViewpointGroupPrototype', 'JinLOA4MarkersAnimated',
+    'JinFacsAu12LipCornerPullerMorpher', 'JinFacsAu25LipsPartMorpher',
+    'BvhConversion1Illustrated', 'HAnimDisplacerExamples',
+    'HAnimPosePrototype', 'AllenStandShootRifleM24',
+    'InterchangableActorsViaDynamicRoutingPrototypes', 'WinterAndSpring/FlowerGardens',
+    'UHRB/Hospital', 'SeaWebBuoyExample', 'SeaWebBuoyPrototype', 'CampPendletonRaidWithRez',
+    'NancyTeamAddRoutes', 'Sovremenny-initial/Superstructure',
+    'Sovremenny-initial/YardArm', 'PatrolCraftNavalAcademyBrazil/Propeller',
+    'ColorSequencerPrototype', 'PointTrackGeneratorPrototype5', 'PushButtonPrototype',
+    'DTEDMultiGrid', 'DTEDSingleGrid', 'PajekVisualizationPrototypes',
+    'ParallelepipedPrototype', 'MultiTextureTeapot', 'SplitChannels',
+)
 
 
 class CorpusTests:
@@ -123,7 +168,7 @@ class CorpusTests:
 
     def test_each_xml_scene_reads_without_a_problem(self):
         for path in self.paths:
-            if any(name in path for name in self.KNOWN_ERRORS):
+            if any(name in path for name in self.KNOWN_ERRORS + AUTHORING_FAULTS):
                 continue
             with self.subTest(scene=os.path.relpath(path, self.directory)):
                 self.assertEqual(problems(read(path)), [])
@@ -154,8 +199,8 @@ class CorpusTests:
         for path in glob.glob(os.path.join(self.directory, '**', '*.x3db'), recursive=True):
             with open(path, 'rb') as stream:
                 data = stream.read()
-            if not data:
-                continue                        # published empty
+            if not data or not data.endswith(b'\xff'):
+                continue                        # published empty, or cut short
             with self.subTest(scene=os.path.relpath(path, self.directory)):
                 scene = readers.read(data, name=path)
                 self.assertEqual([message for message in errors(scene)
