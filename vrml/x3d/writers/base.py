@@ -130,9 +130,9 @@ class _Scope:
         self.protos = protos
         self.names: "dict[Any, str]" = {}
         self.written: "set[Any]" = set()
-        #: For each body node, its fields' IS connections: node field to
-        #: prototype field.
-        self.connections: "dict[Any, dict[str, str]]" = {}
+        #: For each body node, its fields' IS connections: node field to the
+        #: prototype fields it is connected to.
+        self.connections: "dict[Any, dict[str, list[str]]]" = {}
 
 
 class SceneWriter:
@@ -357,7 +357,7 @@ class SceneWriter:
         prototype = isinstance(target, node.PrototypedNode)
         return sorted(
             (name if prototype else self.dialect.dialect_name(type_name, name), protoField)
-            for name, protoField in found.items()
+            for name, protoFields in found.items() for protoField in protoFields
         )
 
     def _default(self, declared: Any, type_name: str, defaults: "dict[str, Any]") -> Any:
@@ -555,7 +555,8 @@ class SceneWriter:
         scope = self.enter(graph)
         for protoField, targets in node.ismaps(proto).items():
             for target, nodeField in targets:
-                scope.connections.setdefault(target, {})[nodeField] = protoField
+                scope.connections.setdefault(target, {}).setdefault(nodeField, []).append(
+                    protoField)
         return graph
 
     # Routes and statements

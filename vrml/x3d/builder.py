@@ -656,11 +656,16 @@ class SceneBuilder:
         if not isinstance(frame.node, DECLARES_FIELDS):
             self.problem('error', '%s does not declare fields' % frame.type_name, frame.node)
             return
+        built = frame.node
+        own = type(built)
+        base = own.__mro__[1] if own.__dict__.get(' declares', False) else own
+        if hasattr(base, name) and isinstance(getattr(base, name), (field.Field, field.Event)):
+            self.problem('error', '%s declares %s, a field of its node type'
+                         % (frame.type_name, name), built)
+            return
         declared = self._declaration(name, type_name, accessType, text, value)
         if declared is None:
             return
-        built = frame.node
-        own = type(built)
         if not own.__dict__.get(' declares', False):
             own = type(own.__name__, (own,), {'PROTO': protofunctions.protoName(built),
                                               ' declares': True})

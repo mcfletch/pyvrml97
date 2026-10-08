@@ -118,6 +118,21 @@ class TestRoundTrip(unittest.TestCase):
                     protofunctions.getSceneGraph(scene.getProto('Lamp')), body, header=False))
                 self.assertEqual(sorted(node.ismaps(Lamp)), ['lightColor', 'size', 'switchOn'])
 
+    def test_a_node_field_connected_to_two_prototype_fields_keeps_both(self):
+        scene = x3d.loads(
+            '#X3D V4.0 utf8\nPROFILE Immersive\n'
+            'PROTO P [ initializeOnly MFVec3f spine [ 0 0 0 ] inputOnly MFVec3f set_spine\n'
+            '  inputOutput MFString code [ ] ] {\n'
+            '  Shape { geometry PointSet { coord Coordinate { point IS spine point IS set_spine } } }\n'
+            '  Script { inputOutput MFString code IS code initializeOnly MFVec3f spine IS spine\n'
+            '    spine IS set_spine } }\n'
+            'P { }\n', name='a.x3dv')
+        self.assertEqual(errors(scene), [])
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding))
+                self.assertIsNone(first_difference(scene, again))
+
     def test_an_external_prototype_keeps_its_urls(self):
         scene = everything()
         for encoding in ENCODINGS:

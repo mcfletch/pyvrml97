@@ -824,6 +824,18 @@ class TestDeclaredFields(unittest.TestCase):
         self.assertEqual([p.severity for p in scene.problems], ['warning'])
         self.assertIn('not run', scene.problems[0].message)
 
+    def test_a_script_declaring_one_of_its_own_fields_is_an_error(self):
+        built = Built()
+        script = built.b.start_node('Script', DEF='S')
+        built.field_text('url', '"a.js"')
+        built.declare_field('url', 'MFString', 'inputOutput')
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(script.url, ['a.js'])
+        self.assertIs(protofunctions.getField(script, 'url'), protofunctions.getField(x3d.Script, 'url'))
+        self.assertEqual([p.message for p in scene.problems if p.severity == 'error'],
+                         ['Script declares url, a field of its node type'])
+
     def test_a_shape_declares_no_fields(self):
         built = Built()
         built.b.start_node('Shape')
