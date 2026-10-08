@@ -118,6 +118,21 @@ class TestRoundTrip(unittest.TestCase):
                     protofunctions.getSceneGraph(scene.getProto('Lamp')), body, header=False))
                 self.assertEqual(sorted(node.ismaps(Lamp)), ['lightColor', 'size', 'switchOn'])
 
+    def test_a_node_field_connected_to_two_prototype_fields_keeps_both(self):
+        scene = x3d.loads(
+            '#X3D V4.0 utf8\nPROFILE Immersive\n'
+            'PROTO P [ initializeOnly MFVec3f spine [ 0 0 0 ] inputOnly MFVec3f set_spine\n'
+            '  inputOutput MFString code [ ] ] {\n'
+            '  Shape { geometry PointSet { coord Coordinate { point IS spine point IS set_spine } } }\n'
+            '  Script { inputOutput MFString code IS code initializeOnly MFVec3f spine IS spine\n'
+            '    spine IS set_spine } }\n'
+            'P { }\n', name='a.x3dv')
+        self.assertEqual(errors(scene), [])
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding))
+                self.assertIsNone(first_difference(scene, again))
+
     def test_an_external_prototype_keeps_its_urls(self):
         scene = everything()
         for encoding in ENCODINGS:
@@ -263,6 +278,29 @@ class TestFieldsWritten(unittest.TestCase):
         script = nodes.Script(sourceCode='ecmascript: var s = "]]>";')
         again = x3d.loads(x3d.dumps(X3DScene(children=[script])))
         self.assertEqual(again.children[0].sourceCode.strip(), script.sourceCode)
+
+
+SCRIPT_DECLARING_DESCRIPTION = '''<X3D profile='Immersive' version='3.3'><Scene>
+    <Script><field name='description' type='MFString' accessType='initializeOnly' value='"a"'/>
+    </Script></Scene></X3D>'''
+
+
+class TestDeclarationsOfAVersionsFields(unittest.TestCase):
+    """X3D 3.x's Script has no description field; 4.0's has one"""
+
+    def test_a_script_keeps_its_declaration_in_its_own_version(self):
+        scene = x3d.loads(SCRIPT_DECLARING_DESCRIPTION, name='a.x3d')
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding))
+                self.assertEqual(again.children[0].description, ['a'])
+                self.assertIsNone(first_difference(scene, again))
+
+    def test_a_version_whose_node_has_the_field_refuses_the_declaration(self):
+        scene = x3d.loads(SCRIPT_DECLARING_DESCRIPTION, name='a.x3d')
+        with self.assertRaises(X3DWriteError) as raised:
+            x3d.dumps(scene, encoding='xml', version='4.0')
+        self.assertIn('Script declares description, a field of its node type', str(raised.exception))
 
 
 class TestWhatCannotBeWritten(unittest.TestCase):

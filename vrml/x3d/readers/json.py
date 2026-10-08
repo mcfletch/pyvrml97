@@ -14,7 +14,7 @@ from collections.abc import Iterator, Mapping
 from typing import Any
 
 from vrml.x3d import codecs
-from vrml.x3d.builder import SceneBuilder
+from vrml.x3d.builder import XML_NAME, SceneBuilder
 from vrml.x3d.scene import X3DScene
 
 #: `@` keys of a node object that are the encoding's, not the node's.
@@ -47,6 +47,7 @@ class JSONReader:
 
     def __init__(self, builder: SceneBuilder, charset: "str | None" = None) -> None:
         self.builder = builder
+        builder.def_names = XML_NAME
         #: The members and indexes leading to where the reader is.
         self.path: "list[str]" = []
         self.charset = charset or 'utf-8-sig'

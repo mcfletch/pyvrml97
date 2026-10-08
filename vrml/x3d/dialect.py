@@ -54,10 +54,9 @@ class FieldDefault(node.Node):
 class ContainerDefault(node.Node):
     """The field a version puts a node type in where no containerField names one
 
-    Writing that version, a node in another field is given its containerField.
-    Reading keeps the vocabulary's default: X3D 3.x gives metadata nodes
-    `metadata`, where documents of that age, and X_ITE, put a MetadataSet's
-    children in `value`.
+    Reading that version, a node with no containerField goes there; writing
+    it, a node in another field is given its containerField. X3D 3.x gives
+    metadata nodes `metadata`, where 4.x gives them `value`.
     """
 
     PROTO = 'ContainerDefault'

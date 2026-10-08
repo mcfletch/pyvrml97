@@ -355,6 +355,15 @@ class TestDialects(unittest.TestCase):
                          ['VRML97 has no field Viewpoint.centerOfRotation'])
         self.assertEqual(list(viewpoint.centerOfRotation), [1, 2, 3])
 
+    def test_a_node_field_the_version_lacks_is_a_warning_and_is_read(self):
+        built = Built()
+        built.document('Full', '3.0')
+        appearance = built.node('Appearance', children=[lambda: built.node('PointProperties')])
+        warnings = problems(built.end_document(), 'warning')
+        self.assertEqual([p.message for p in warnings], [
+            'X3D 3.0 has no node PointProperties', 'X3D 3.0 has no field Appearance.pointProperties'])
+        self.assertIsInstance(appearance.pointProperties, x3d.PointProperties)
+
     def test_a_route_to_a_field_the_version_lacks_is_a_warning_and_is_made(self):
         built = Built()
         built.document('', '2.0')
@@ -815,6 +824,29 @@ class TestDeclaredFields(unittest.TestCase):
         self.assertEqual([p.severity for p in scene.problems], ['warning'])
         self.assertIn('not run', scene.problems[0].message)
 
+    def test_a_script_declaring_one_of_its_own_fields_is_an_error(self):
+        built = Built()
+        script = built.b.start_node('Script', DEF='S')
+        built.field_text('url', '"a.js"')
+        built.declare_field('url', 'MFString', 'inputOutput')
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(script.url, ['a.js'])
+        self.assertIs(protofunctions.getField(script, 'url'), protofunctions.getField(x3d.Script, 'url'))
+        self.assertEqual([p.message for p in scene.problems if p.severity == 'error'],
+                         ['Script declares url, a field of its node type'])
+
+    def test_a_script_declares_a_field_its_version_does_not_give_it(self):
+        """Script has a description field from X3D 4.0"""
+        built = Built()
+        built.document('Immersive', '3.3')
+        script = built.b.start_node('Script')
+        built.declare_field('description', 'MFString', 'initializeOnly', '"a" "b"')
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(script.description, ['a', 'b'])
+        self.assertEqual([p.message for p in scene.problems if p.severity == 'error'], [])
+
     def test_a_shape_declares_no_fields(self):
         built = Built()
         built.b.start_node('Shape')
@@ -898,12 +930,16 @@ METADATA_IN_SET = """<X3D version='%s'><Scene><WorldInfo>
     </WorldInfo></Scene></X3D>"""
 
 
-@pytest.mark.parametrize('version', ['3.3', '4.0'])
-def test_a_metadata_sets_children_are_its_values_in_any_version(version):
-    """X3D 3.x's default container for metadata is `metadata`; documents of that
-    age, and X_ITE, read a MetadataSet's children as its values all the same"""
-    found = readers.read((METADATA_IN_SET % version).encode(), name='a.x3d').children[0].metadata
+def test_a_metadata_sets_child_is_one_of_its_values_from_4_0():
+    found = readers.read((METADATA_IN_SET % '4.0').encode(), name='a.x3d').children[0].metadata
     assert not found.metadata and [type(item).__name__ for item in found.value] == ['MetadataString']
+
+
+@pytest.mark.parametrize('version', ['3.0', '3.3'])
+def test_a_metadata_sets_child_is_its_metadata_in_3_x(version):
+    """X3D 3.x's default container for a metadata node is `metadata`"""
+    found = readers.read((METADATA_IN_SET % version).encode(), name='a.x3d').children[0].metadata
+    assert not found.value and isinstance(found.metadata, x3d.MetadataString)
 
 
 def test_a_version_writes_a_container_field_where_its_default_differs():

@@ -110,10 +110,11 @@ A version's renames apply to its X3D nodes; a prototype that shares an X3D
 node's name keeps the field names it declares.
 
 X3D 3.x gives the metadata nodes ``metadata`` as their default container,
-where 4.0 gives ``value``. Written as a 3.x document, a metadata node in a
-``value`` field is given ``containerField="value"``. Reading keeps 4.x's
-default in every version, since documents of that age, and X_ITE, read a
-``MetadataSet``'s children as its values.
+where 4.0 gives ``value``. Read from a 3.x document, a ``MetadataSet``'s
+child with no ``containerField`` is the set's own ``metadata``; from a 4.x
+document, it is one of the set's ``value`` nodes. Written as a 3.x
+document, a metadata node in a ``value`` field is given
+``containerField="value"``.
 
 ``Dialect.tables()`` gives the lookups a reader or writer uses for one
 document: ``current_name(nodeType, name)``, ``dialect_name(nodeType, name)``,
@@ -175,6 +176,10 @@ What reading does:
   warning. An element of another XML namespace (``ds:Signature``, an
   application's own data) is skipped with what it contains, with an ``info``
   problem.
+- A ``DEF`` name in an XML or JSON document that is not an XML name (an
+  NCName: a letter or underscore, then letters, digits, ``_``, ``-`` and
+  ``.``) is kept, with a warning; writing the scene to an encoding that
+  cannot hold the name raises ``X3DWriteError``.
 - ``UNIT`` statements (X3D 3.3 and later) scale each field in the unit's
   category, and its derived categories, into base units (metres, radians,
   kilograms, newtons). ``scene.units`` records them.
@@ -192,7 +197,10 @@ What reading does:
   read from that node, and a cache depending on such a field
   (``CacheHolder.depend``) watches that node's.
 - A ``Script`` keeps its declared fields, ``url`` and ``sourceCode`` and is
-  not run.
+  not run. A declaration of a field the node type has in the document's
+  version (``url``, or ``description`` from X3D 4.0) is an error and is not
+  read. Writing to a version whose node type has a declared field's name
+  raises ``X3DWriteError``.
 - An ``IMPORT`` names a node an ``Inline``'s scene exports; routes to it
   wait in ``scene.pendingRoutes`` until
   ``builder.bind_imports(scene, inline, inlined)`` is called with the
@@ -219,7 +227,9 @@ differ from X3D's.
 The readers are ``vrml.x3d.readers.xml`` (expat; external entities are not
 read), ``json``, ``classic`` (a SimpleParse grammar for ClassicVRML and
 VRML97) and ``fastinfoset``. Each turns its syntax into calls on one
-``SceneBuilder``.
+``SceneBuilder``. The ClassicVRML reader takes a node name with a full stop
+(``DEF brick.jpg``), which Web3D's converter writes, with a warning; in a
+``ROUTE``, the last full stop ends the node's name.
 
 The compressed binary encoding (``.x3db``, ISO/IEC 19776-3) is the XML
 encoding written as Fast Infoset (ITU-T X.891). ``vrml.x3d.fastinfoset``
