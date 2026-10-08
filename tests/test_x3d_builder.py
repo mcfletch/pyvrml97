@@ -84,6 +84,20 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(implied(x3d.MetadataSet(), x3d.MetadataString()), 'value')
         self.assertIsNone(implied(x3d.Shape(), x3d.Transform()))
 
+    def test_a_use_of_an_enclosing_node_is_an_error_and_not_placed(self):
+        built = Built()
+        group = built.b.start_node('Group', DEF='LOOP')
+        inner = built.b.start_node('Transform')
+        built.b.start_node('Group', USE='LOOP')
+        built.end_node()
+        built.end_node()
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(list(inner.children), [])
+        self.assertIn("USE of 'LOOP' inside the node it names",
+                      [problem.message for problem in scene.problems])
+        self.assertEqual(list(group.children), [inner])
+
     def test_a_field_a_subclass_hides_is_not_an_implied_container(self):
         class Hiding(x3d.TextureBackground):
             # An implementation's own attribute in place of an inherited field

@@ -356,6 +356,10 @@ class SceneBuilder:
             if built is None:
                 self.problem('error', 'USE of %r, which no DEF names' % USE)
                 frame.skip = True
+            elif any(open_frame.node is built for open_frame in self._frames):
+                # A node inside itself would make the scene graph a loop
+                self.problem('error', 'USE of %r inside the node it names' % USE, built)
+                frame.skip = True
             else:
                 if DEF:
                     self.problem('error', 'Node has both DEF and USE')
