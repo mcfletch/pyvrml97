@@ -301,6 +301,17 @@ is reached at most once, so routes that loop end:
   the first hit and send ``trackPoint_changed`` and their translation or
   rotation, clamped to their limits, carrying on from the last drag where
   ``autoOffset`` is true.
+- The pick sensors, ``vrml.x3d.picking``: ``LinePickSensor``,
+  ``PointPickSensor``, ``PrimitivePickSensor`` and ``VolumePickSensor``.
+  Whoever draws the scene tests the sensor's ``pickingGeometry`` against the
+  shapes under its ``pickTarget`` nodes and calls ``observe`` each frame with
+  a ``picking.Pick`` (the shape, a distance, and for line and point sensors
+  the points, normals and texture coordinates in the sensor's coordinates)
+  for each shape touched. ``sortOrder`` keeps the first found (``ANY``), the
+  nearest (``CLOSEST``), all of them (``ALL``) or all nearest first
+  (``ALL_SORTED``); the sensor sends ``isActive``, ``pickedGeometry`` and the
+  point events as they change. ``sensor.accepts(labels)`` is the
+  ``objectType`` test under ``matchCriterion`` (``picking.matches``).
 - The followers, ``vrml.x3d.followers``: each chaser reaches a destination
   ``duration`` seconds after it is set, along a smooth step, and each damper
   approaches it through ``order`` first-order filters of time constant

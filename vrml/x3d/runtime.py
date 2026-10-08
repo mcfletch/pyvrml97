@@ -17,7 +17,9 @@ from collections.abc import Callable
 from typing import Any
 
 from vrml import cache, protofunctions
-from vrml.x3d import followers, interpolation, loadsensor, pointing, sensors, timesensor, timing
+from vrml.x3d import (
+    followers, interpolation, loadsensor, picking, pointing, sensors, timesensor, timing,
+)
 from vrml.x3d import nodes as x3d
 
 __all__ = ['ACTION_KEYS', 'MODIFIER_KEYS', 'PROTOTYPES']
@@ -365,5 +367,6 @@ PROTOTYPES: "dict[str, type]" = {
 PROTOTYPES.update(followers.FOLLOWERS)
 PROTOTYPES.update(sensors.SENSORS)
 PROTOTYPES.update(pointing.POINTING)
+PROTOTYPES.update(picking.PICK_SENSORS)
 PROTOTYPES['TimeSensor'] = timesensor.TimeSensor
 PROTOTYPES['LoadSensor'] = loadsensor.LoadSensor
