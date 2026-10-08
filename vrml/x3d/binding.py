@@ -123,16 +123,20 @@ def current_path(paths: Sequence[Any]) -> Any:
                         node.set_bind = True
                     return path
     for path in paths:
-        if not _inlined(path[-1], main):
+        if not _inlined(path):
             path[-1].set_bind = True
             return path
     return None
 
 
-def _inlined(node: Any, main: Any) -> bool:
-    """Whether `node` is of another scene than `main`: one an Inline read"""
-    owner = protofunctions.root(node)
-    return bool(owner) and owner is not main
+def _inlined(path: Sequence[Any]) -> bool:
+    """Whether `path` reaches its node through an Inline
+
+    A node read from one document and placed straight into another scene
+    stays rooted in its document, so the path, not the root, says whether an
+    Inline read it.
+    """
+    return any(protofunctions.protoName(node) == 'Inline' for node in path[:-1])
 
 
 class Bindable(timing.Timed):

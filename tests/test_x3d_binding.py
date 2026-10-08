@@ -201,6 +201,14 @@ class TestInlines(BindCase):
         self.assertIsNone(binding.current_path(paths))
         self.assertIsNone(sent(self.inlined, 'isBound'))
 
+    def test_a_documents_node_placed_in_another_scene_is_bound_first(self):
+        """A node read from one document and placed straight into another
+        scene stays rooted in its document; it is not inlined"""
+        wrapper = ClockedScene(children=[self.first])
+        paths = [(wrapper, self.first)]
+        self.assertIs(binding.current_path(paths), paths[0])
+        self.assertIs(binding.bound(self.first), self.first)
+
     def test_an_inlined_node_bound_by_an_event_is_current(self):
         self.inlined.set_bind = True
         paths = [(self.scene, self.first), (self.scene, self.inline, self.inlined)]
