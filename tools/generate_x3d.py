@@ -140,6 +140,15 @@ BEHAVIOURS = {
     'X3DBindableNode': ('Bindable',),
 }
 
+#: Node types a field holds beyond the X3DUOM's list for it. ISO/IEC 19775-1
+#: (3.3, 26.3.3) lists HAnimSite among an HAnimJoint's children, and HAnim 1's
+#: Joint, which the humanoids of Web3D's examples are built to, holds any
+#: child: markers drawn at a joint, and an LOD of skins.
+ACCEPTS = {
+    ('HAnimJoint', 'children'): ('HAnimSite', 'X3DChildNode'),
+    ('HAnimHumanoid', 'skin'): ('X3DChildNode',),
+}
+
 #: Names fields had before X3D 4.1 that the X3DUOM does not record as a
 #: synonym, confirmed against the specifications: VRML97 (ISO/IEC 14772-1)
 #: 6.7, 6.25 and 6.45, and X3D 3.3 (ISO/IEC 19775-1:2013) 35.4.1 and 35.4.2.
@@ -429,13 +438,16 @@ class Model:
         default = element.get('default')
         if default is None and not type_name.startswith('MF') and type_name != 'SFNode':
             default = self.field_types[type_name].get('defaultValue', '')
+        acceptable = tuple((element.get('acceptableNodeTypes') or '').split('|')) \
+            if element.get('acceptableNodeTypes') else ()
+        acceptable += tuple(name for name in ACCEPTS.get((owner, element.get('name')), ())
+                            if name not in acceptable)
         return FieldSpec(
             name=element.get('name'),
             type=type_name,
             access=element.get('accessType'),
             default=default,
-            acceptable=tuple((element.get('acceptableNodeTypes') or '').split('|'))
-            if element.get('acceptableNodeTypes') else (),
+            acceptable=acceptable,
             minimum=minimum if minimum is not None else minimum_exclusive,
             minimumExclusive=minimum_exclusive is not None,
             maximum=maximum if maximum is not None else maximum_exclusive,

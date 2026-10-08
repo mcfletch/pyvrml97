@@ -158,6 +158,23 @@ class TestPrototypes(unittest.TestCase):
                      '<fieldValue name="extra"><Shape/><Shape/></fieldValue></ProtoInstance>')
         self.assertEqual(len(scene.children[0].extra), 2)
 
+    def test_an_event_field_written_as_an_element_declares_the_event(self):
+        """HAnim's prototypes write their addChildren events with a closing tag."""
+        scene = read('<ProtoDeclare name="Joint"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly"></field>'
+                     '</ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>'
+                     '<ProtoInstance name="Joint"/>')
+        self.assertEqual(errors(scene), [])
+        self.assertEqual(protofunctions.getField(scene.children[0], 'addChildren').name,
+                         'addChildren')
+
+    def test_nodes_given_for_an_event_field_are_reported(self):
+        scene = read('<ProtoDeclare name="Joint"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly"><Group/></field>'
+                     '</ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>')
+        self.assertEqual([str(p.message) for p in errors(scene)],
+                         ['Nodes given for prototype field addChildren, an event'])
+
     def test_an_external_prototype(self):
         scene = read('<ExternProtoDeclare name="Far" url=\'"far.x3d#Far"\'>'
                      '<field name="size" type="SFFloat" accessType="initializeOnly"/>'

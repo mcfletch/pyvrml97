@@ -5,7 +5,7 @@ These read the checked-in module, so they run offline.
 
 import unittest
 
-from vrml.x3d import hanimnames
+from vrml.x3d import hanimnames, readers
 from vrml.x3d import nodes as x3d
 
 
@@ -46,3 +46,18 @@ class TestSegmentsAndSites(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestWhatAJointHolds(unittest.TestCase):
+    def test_a_joint_holds_sites_and_markers(self):
+        scene = readers.read(b'''<X3D version="4.0"><Scene><HAnimHumanoid>
+          <HAnimJoint containerField="skeleton" name="humanoid_root">
+            <HAnimSite name="crotch"/><Transform><Shape/></Transform>
+          </HAnimJoint>
+          <LOD containerField="skin"><Shape/></LOD>
+        </HAnimHumanoid></Scene></X3D>''', encoding='xml')
+        self.assertEqual([p for p in scene.problems if p.severity == 'error'], [])
+        humanoid = scene.children[0]
+        self.assertEqual([type(c).__name__ for c in humanoid.skeleton[0].children],
+                         ['HAnimSite', 'Transform'])
+        self.assertEqual([type(c).__name__ for c in humanoid.skin], ['LOD'])
