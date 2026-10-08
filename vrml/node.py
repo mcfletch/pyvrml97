@@ -520,9 +520,12 @@ class RootScenegraphNode(WeakSFNode):
     def fset(self, client: Any, value: Any, notify: int=1) -> Any:
         """Set the root scenegraph node of `client` and its subtree
 
-        A node already rooted in `value` is not walked: its subtree was
-        rooted when it was, so each node is visited once however often the
-        graph reaches it.
+        Its descendants are given it too, except those already rooted: a node
+        rooted in `value` was walked when it was, so each node is visited once
+        however often the graph reaches it, and one rooted in another scene
+        belongs to the document it was read from, which is where its DEF
+        names and `baseURI` are; wrapping it in a new graph does not move it
+        out of that document.
         """
         result = super(RootScenegraphNode, self).fset(client, value, notify)
         for each_field in getFields(client.__class__):
@@ -556,8 +559,8 @@ class RootScenegraphNode(WeakSFNode):
         return result
 
     def _adopt(self, child: Any, value: Any) -> None:
-        """Root `child` in `value` unless it is a node rooted there already"""
-        if isinstance(child, Node) and child and self.fget(child) is not value:
+        """Root `child` in `value` unless it already has a scene"""
+        if isinstance(child, Node) and child and not self.fget(child):
             self.fset(child, value, notify=False)
 
 

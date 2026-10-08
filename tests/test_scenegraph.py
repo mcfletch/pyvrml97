@@ -51,6 +51,26 @@ class TestWhatAGraphStartsWith(unittest.TestCase):
         scene = SceneGraph(children=[child])
         self.assertIs(protofunctions.root(child), scene)
 
+    def test_a_node_of_another_scene_keeps_that_scene(self):
+        """A document's nodes are wrapped in a new graph to be shown; the
+        document is still where their DEF names and ``baseURI`` live."""
+        deep = basenodes.Group()
+        document = SceneGraph(baseURI="https://example.com/a.wrl",
+                              children=[basenodes.Group(children=[deep])])
+        wrapper = SceneGraph(children=list(document.children))
+        self.assertIs(protofunctions.root(deep), document)
+        self.assertIs(protofunctions.root(document.children[0]), document)
+        self.assertEqual(protofunctions.root(deep).baseURI,
+                         "https://example.com/a.wrl")
+        self.assertIsNot(wrapper, document)
+
+    def test_a_node_of_another_scene_is_not_named_in_the_wrapper(self):
+        named = basenodes.Group(DEF="door")
+        document = SceneGraph(children=[named])
+        wrapper = SceneGraph(children=list(document.children))
+        self.assertIs(document.getDEF("door"), named)
+        self.assertIsNone(wrapper.getDEF("door"))
+
 
 class TestNamesInIt(unittest.TestCase):
     """`DEF` gives a node a name, and the graph is where the name is looked
