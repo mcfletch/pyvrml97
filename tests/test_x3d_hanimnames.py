@@ -61,3 +61,13 @@ class TestWhatAJointHolds(unittest.TestCase):
         self.assertEqual([type(c).__name__ for c in humanoid.skeleton[0].children],
                          ['HAnimSite', 'Transform'])
         self.assertEqual([type(c).__name__ for c in humanoid.skin], ['LOD'])
+
+
+class TestPoses(unittest.TestCase):
+    def test_a_fraction_is_routed_to_a_pose(self):
+        scene = readers.read(b'''<X3D version="4.1"><Scene>
+          <ScalarInterpolator DEF="I" key="0 1" keyValue="0 1"/>
+          <HAnimPose DEF="P"/>
+          <ROUTE fromNode="I" fromField="value_changed" toNode="P" toField="set_fraction"/>
+        </Scene></X3D>''', encoding='xml')
+        self.assertEqual([p for p in scene.problems if p.severity == 'error'], [])

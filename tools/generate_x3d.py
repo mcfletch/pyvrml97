@@ -149,6 +149,13 @@ ACCEPTS = {
     ('HAnimHumanoid', 'skin'): ('X3DChildNode',),
 }
 
+#: Field types the X3DUOM states otherwise than the field's description:
+#: HAnimPose's set_fraction is "a fraction in range [0,1]", sent from a
+#: TimeSensor's or an interpolator's SFFloat, and the X3DUOM says SFTime.
+RETYPED = {
+    ('HAnimPose', 'set_fraction'): 'SFFloat',
+}
+
 #: Names fields had before X3D 4.1 that the X3DUOM does not record as a
 #: synonym, confirmed against the specifications: VRML97 (ISO/IEC 14772-1)
 #: 6.7, 6.25 and 6.45, and X3D 3.3 (ISO/IEC 19775-1:2013) 35.4.1 and 35.4.2.
@@ -426,7 +433,7 @@ class Model:
         if children:
             raise GenerationError('%s.%s has unknown elements %s'
                                   % (owner, element.get('name'), sorted(children)))
-        type_name = element.get('type')
+        type_name = RETYPED.get((owner, element.get('name')), element.get('type'))
         type_name = TYPE_SUBSTITUTES.get(type_name, type_name)
         if type_name not in field.baseFieldTypes:
             raise GenerationError('%s.%s has type %s, which pyvrml97 does not declare'

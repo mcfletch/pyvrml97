@@ -2499,7 +2499,7 @@ class HAnimPose(X3DChildNode):
     loa = field.newField('loa', 'SFInt32', 1, -1, minimum=-1.0, maximum=5.0)
     name = field.newField('name', 'SFString', 1, '')
     resetAllJoints = field.newEvent('resetAllJoints', 'SFBool', 0)
-    set_fraction = field.newEvent('set_fraction', 'SFTime', 0)
+    set_fraction = field.newEvent('set_fraction', 'SFFloat', 0)
     set_startTime = field.newEvent('set_startTime', 'SFTime', 0)
     transitionDuration = field.newField('transitionDuration', 'SFTime', 1, 0.0, minimum=0.0)
 
