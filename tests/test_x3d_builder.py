@@ -381,6 +381,13 @@ class TestDialects(unittest.TestCase):
         warnings = problems(built.end_document(), 'warning')
         self.assertEqual([p.message for p in warnings], ['VRML97 has no node LocalFog'])
 
+    def test_a_vrml97_prototype_declaring_an_x3d_field_type_is_warned_of(self):
+        """VRML97 has no MFBool; X3D's converters write it into .wrl prototypes"""
+        scene = readers.read(b'#VRML V2.0 utf8\nPROTO P [ field MFBool flags [ TRUE ] ] { Group {} }\n',
+                             name='a.wrl')
+        self.assertEqual([p.message for p in scene.problems if p.severity == 'warning'],
+                         ['VRML97 has no field type MFBool (flags)'])
+
     def test_a_node_x3d_does_not_declare_is_no_version_warning(self):
         """An application's own node in its vocabulary is in no version of X3D"""
         class Engine(x3d.Group):

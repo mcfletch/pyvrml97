@@ -303,6 +303,18 @@ class TestDeclarationsOfAVersionsFields(unittest.TestCase):
         self.assertIn('Script declares description, a field of its node type', str(raised.exception))
 
 
+    def test_a_declaration_matching_the_versions_field_is_written_as_that_field(self):
+        """A 3.x Script's SFString inputOutput description is 4.0's own field"""
+        scene = x3d.loads(SCRIPT_DECLARING_DESCRIPTION.replace(
+            "type='MFString' accessType='initializeOnly' value='\"a\"'",
+            "type='SFString' accessType='inputOutput' value='a'"), name='a.x3d')
+        text = x3d.dumps(scene, encoding='xml', version='4.0')
+        self.assertNotIn("name='description'", text.replace('"', "'"))
+        again = x3d.loads(text)
+        self.assertEqual(again.children[0].description, 'a')
+        self.assertEqual([str(p) for p in again.problems if p.severity == 'error'], [])
+
+
 class TestWhatCannotBeWritten(unittest.TestCase):
     def test_a_number_with_no_text_form_names_its_field(self):
         for value in (float('nan'), float('inf')):

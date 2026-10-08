@@ -150,6 +150,14 @@ class DialectTables:
         return self._defaults.get(node_type, [])
 
 
+#: The field types VRML97 has (ISO/IEC 14772-1, section 5).
+VRML97_FIELD_TYPES = frozenset((
+    'SFBool', 'SFColor', 'SFFloat', 'SFImage', 'SFInt32', 'SFNode', 'SFRotation',
+    'SFString', 'SFTime', 'SFVec2f', 'SFVec3f',
+    'MFColor', 'MFFloat', 'MFInt32', 'MFNode', 'MFRotation', 'MFString', 'MFTime',
+    'MFVec2f', 'MFVec3f',
+))
+
 #: VRML97, ISO/IEC 14772-1:1997, against X3D 4.1. Clause numbers are those
 #: of ISO/IEC 14772-1 section 6, "Node reference".
 VRML97 = Dialect(

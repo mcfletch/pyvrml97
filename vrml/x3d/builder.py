@@ -683,6 +683,8 @@ class SceneBuilder:
         if type_name not in field.baseFieldTypes:
             self.problem('error', 'Field %s has unknown type %s' % (name, type_name))
             return None
+        if self.scene.version == '2.0' and type_name not in dialect.VRML97_FIELD_TYPES:
+            self.problem('warning', 'VRML97 has no field type %s (%s)' % (type_name, name))
         if accessType in ('inputOnly', 'outputOnly', 'eventIn', 'eventOut'):
             return field.newEvent(name, type_name, accessType in ('outputOnly', 'eventOut'))
         if accessType not in ('inputOutput', 'initializeOnly', 'exposedField', 'field'):

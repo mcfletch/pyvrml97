@@ -113,8 +113,9 @@ def written(test, scene, encoding, **options):
 
 
 def lacks(problem):
-    """Whether a problem is a node or field the document's version does not have"""
-    return ' has no node ' in problem.message or ' has no field ' in problem.message
+    """Whether a problem is a node, field or field type the document's version does not have"""
+    return any(words in problem.message
+               for words in (' has no node ', ' has no field ', ' has no field type '))
 
 
 def problems(scene):
@@ -241,7 +242,9 @@ class CorpusTests:
     def test_each_scene_written_as_xml_is_valid_against_the_schema(self):
         from lxml import etree  # noqa: PLC0415 a test-only dependency
         schema = etree.XMLSchema(etree.parse(SCHEMA))
-        parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+        # huge_tree: GrampsAnimations writes one text node past libxml2's default limit.
+        parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False,
+                                 huge_tree=True)
         for path in self.paths:
             with self.subTest(scene=os.path.relpath(path, self.directory)):
                 text = written(self, read(path), 'xml', version='4.1', canonical=True)

@@ -21,14 +21,7 @@ from vrml.x3d import codecs
 from vrml.x3d.codecs import same
 from vrml.x3d import nodes as x3d
 from vrml.x3d.builder import XML_NAME, implied_container, scaled, unit_factor
-
-#: The field types VRML97 has (ISO/IEC 14772-1, section 5).
-VRML97_TYPES = frozenset((
-    'SFBool', 'SFColor', 'SFFloat', 'SFImage', 'SFInt32', 'SFNode', 'SFRotation',
-    'SFString', 'SFTime', 'SFVec2f', 'SFVec3f',
-    'MFColor', 'MFFloat', 'MFInt32', 'MFNode', 'MFRotation', 'MFString', 'MFTime',
-    'MFVec2f', 'MFVec3f',
-))
+from vrml.x3d.dialect import VRML97_FIELD_TYPES
 
 #: VRML97's word for each access type.
 VRML97_ACCESS = {
@@ -387,7 +380,10 @@ class SceneWriter:
         """Fields a Script or shader node declares, with their current values
 
         A declaration may take the name of a field the node type has in
-        another version: X3D 3.x's Script declaring `description`.
+        another version: X3D 3.x's Script declaring `description`. Where the
+        version being written has that field, of the same type and access,
+        the declaration is left out and its value written as that field;
+        otherwise the writer refuses it.
         """
         cls = type(target)
         inherited = self._inherited(cls)
@@ -398,6 +394,10 @@ class SceneWriter:
             if inherited.get(declared.name) is declared or declared.name.startswith(' '):
                 continue
             if declared.name in inherited and self.dialect.has_field(type_name, declared.name):
+                own = inherited[declared.name]
+                if (declared.typeName() == own.typeName()
+                        and getattr(declared, 'accessType', None) == getattr(own, 'accessType', None)):
+                    continue
                 self.problem('%s declares %s, a field of its node type'
                              % (type_name, declared.name))
             value = None
@@ -416,7 +416,7 @@ class SceneWriter:
 
     def declaration(self, declared: Any, value: Any) -> Declaration:
         type_name = str(declared.typeName())
-        if self.vrml97 and type_name not in VRML97_TYPES:
+        if self.vrml97 and type_name not in VRML97_FIELD_TYPES:
             self.problem('VRML97 has no field type %s (%s)' % (type_name, declared.name))
         return Declaration(declared.accessType, type_name, declared.name, value)
 
@@ -492,7 +492,11 @@ class SceneWriter:
                     continue
                 value = self.written_as(value)
             else:
-                default = self._default(declared, type_name, defaults)
+                # A declaration standing for the version's own field of its
+                # name is held to that field's default, not its own value.
+                builtin = self._inherited(type(target)).get(name, declared) \
+                    if type(target).__dict__.get(' declares', False) else declared
+                default = self._default(builtin, type_name, defaults)
                 if same(value, default):
                     continue
                 if not _finite(type_name_of, value):
