@@ -387,6 +387,22 @@ class TestXML(unittest.TestCase):
         self.assertIn("<ProtoInstance name='Lamp'>", text.replace('"', "'"))
         self.assertIn("<fieldValue name='lightColor' value='0 1 0'/>", text.replace('"', "'"))
 
+    def test_a_connected_prototype_instance_gives_its_field_values_before_is(self):
+        """The schema's X3DPrototypeInstance: fieldValue elements, then IS"""
+        scene = x3d.loads(b'''<X3D profile='Immersive' version='4.0'><Scene>
+          <ProtoDeclare name='Spin'><ProtoInterface>
+            <field name='speed' type='SFTime' accessType='inputOutput' value='1'/>
+            <field name='stop' type='SFTime' accessType='inputOutput' value='0'/>
+          </ProtoInterface><ProtoBody><TimeSensor/></ProtoBody></ProtoDeclare>
+          <ProtoDeclare name='Outer'><ProtoInterface>
+            <field name='rate' type='SFTime' accessType='inputOutput' value='1'/>
+          </ProtoInterface><ProtoBody><Group><ProtoInstance name='Spin'>
+            <fieldValue name='stop' value='3'/>
+            <IS><connect nodeField='speed' protoField='rate'/></IS>
+          </ProtoInstance></Group></ProtoBody></ProtoDeclare></Scene></X3D>''', name='a.x3d')
+        text = x3d.dumps(scene, encoding='xml')
+        self.assertLess(text.index('<fieldValue'), text.index('<IS>'), text)
+
     def test_written_xml_is_valid_against_the_schema(self):
         from lxml import etree  # noqa: PLC0415 a test-only dependency
         with open(SCHEMA, 'rb') as stream:
