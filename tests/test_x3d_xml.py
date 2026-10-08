@@ -158,6 +158,33 @@ class TestPrototypes(unittest.TestCase):
                      '<fieldValue name="extra"><Shape/><Shape/></fieldValue></ProtoInstance>')
         self.assertEqual(len(scene.children[0].extra), 2)
 
+    def test_an_input_only_node_field_has_no_default(self):
+        scene = read('<ProtoDeclare name="Holder"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly"/>'
+                     '<field name="set_target" type="SFNode" accessType="inputOnly"/>'
+                     '</ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>'
+                     '<ProtoInstance name="Holder"/>')
+        self.assertEqual(len(scene.children), 1)
+        self.assertEqual(scene.problems, [])
+
+    def test_an_input_only_node_field_connected_to_the_body(self):
+        scene = read('<ProtoDeclare name="Holder"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly"/>'
+                     '</ProtoInterface><ProtoBody><Group><IS>'
+                     '<connect nodeField="addChildren" protoField="addChildren"/>'
+                     '</IS></Group></ProtoBody></ProtoDeclare>'
+                     '<ProtoInstance name="Holder"/>')
+        self.assertEqual(len(scene.children), 1)
+        self.assertEqual(scene.problems, [])
+
+    def test_nodes_given_for_an_input_only_field_are_reported(self):
+        scene = read('<ProtoDeclare name="Holder"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly">'
+                     '<Group/></field></ProtoInterface><ProtoBody><Group/></ProtoBody>'
+                     '</ProtoDeclare><ProtoInstance name="Holder"/>')
+        self.assertEqual(len(scene.children), 1)
+        self.assertEqual([p.severity for p in scene.problems], ['error'])
+
     def test_an_external_prototype(self):
         scene = read('<ExternProtoDeclare name="Far" url=\'"far.x3d#Far"\'>'
                      '<field name="size" type="SFFloat" accessType="initializeOnly"/>'
@@ -202,3 +229,13 @@ class TestValues(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_an_element_of_another_namespace_is_skipped_with_its_content():
+    """An XML Signature, or an application's own element, is not an X3D node"""
+    scene = readers.read(b"""<X3D version='3.3' xmlns:ds='http://www.w3.org/2000/09/xmldsig#'>
+        <Scene><Group/><ds:Signature><ds:SignedInfo><Shape/></ds:SignedInfo></ds:Signature>
+        <Transform/></Scene></X3D>""", name='a.x3d')
+    assert [type(child).__name__ for child in scene.children] == ['Group', 'Transform']
+    assert [problem.severity for problem in scene.problems] == ['info']
+    assert 'ds:Signature' in scene.problems[0].message
