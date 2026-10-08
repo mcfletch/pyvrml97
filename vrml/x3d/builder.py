@@ -717,7 +717,7 @@ class SceneBuilder:
         if isinstance(declared, field.Event):
             # An event carries no value, so has no default to give
             if nodes:
-                self.problem('warning', 'Prototype field %s is %s, which takes no default'
+                self.problem('error', 'Prototype field %s is %s, which takes no default'
                              % (declared.name, declared.accessType))
             return
         default = nodes if isinstance(declared, node.MFNode) else (nodes[-1] if nodes else node.NULL)
