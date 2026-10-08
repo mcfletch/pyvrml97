@@ -299,3 +299,23 @@ class TestRegistered(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_a_single_cycle_at_half_rate_runs_for_twice_its_interval():
+    sensor = TimeSensor(cycleInterval=2.0, startTime=0.0)
+    sensor.rate = 0.5
+    assert sensor.advance(3.0)
+    assert sensor.isActive is True
+    assert abs(sensor.fraction_changed - 0.75) < 1e-9
+
+
+def test_a_single_cycle_backwards_runs_from_its_end():
+    sensor = TimeSensor(cycleInterval=4.0, startTime=10.0)
+    sensor.rate = -1.0
+    sensor.advance(10.0)
+    assert sensor.fraction_changed == 1.0
+    sensor.advance(11.0)
+    assert abs(sensor.fraction_changed - 0.75) < 1e-9
+    sensor.advance(20.0)
+    assert sensor.isActive is False
+    assert sensor.fraction_changed == 0.0
