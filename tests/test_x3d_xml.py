@@ -167,6 +167,16 @@ class TestPrototypes(unittest.TestCase):
         self.assertEqual(len(scene.children), 1)
         self.assertEqual(scene.problems, [])
 
+    def test_an_input_only_node_field_connected_to_the_body(self):
+        scene = read('<ProtoDeclare name="Holder"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly"/>'
+                     '</ProtoInterface><ProtoBody><Group><IS>'
+                     '<connect nodeField="addChildren" protoField="addChildren"/>'
+                     '</IS></Group></ProtoBody></ProtoDeclare>'
+                     '<ProtoInstance name="Holder"/>')
+        self.assertEqual(len(scene.children), 1)
+        self.assertEqual(scene.problems, [])
+
     def test_nodes_given_for_an_input_only_field_are_reported(self):
         scene = read('<ProtoDeclare name="Holder"><ProtoInterface>'
                      '<field name="addChildren" type="MFNode" accessType="inputOnly">'

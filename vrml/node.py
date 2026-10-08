@@ -217,7 +217,9 @@ class PrototypedNode(object):
         sg = template.copy(copier)
         for fieldName, mappings in isMappings:
             sourceField = getField(self, fieldName)
-            hasDefault = hasattr(sourceField, 'getDefault')
+            # An event (inputOnly, outputOnly) has no value to start from.
+            hasDefault = (hasattr(sourceField, 'getDefault')
+                          and not isinstance(sourceField, field.Event))
             default = sourceField.getDefault() if hasDefault else None
             for destination, destinationField in mappings:
                 # The mappings name the *prototype's* nodes, and this
