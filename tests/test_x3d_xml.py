@@ -168,6 +168,17 @@ class TestPrototypes(unittest.TestCase):
         self.assertEqual(protofunctions.getField(scene.children[0], 'addChildren').name,
                          'addChildren')
 
+    def test_an_instance_connects_a_node_event_its_body_receives(self):
+        """HAnim's Joint prototype passes its addChildren event to a Transform."""
+        scene = read('<ProtoDeclare name="Joint"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly"/>'
+                     '</ProtoInterface><ProtoBody><Group><IS>'
+                     '<connect nodeField="addChildren" protoField="addChildren"/>'
+                     '</IS></Group></ProtoBody></ProtoDeclare>'
+                     '<ProtoInstance name="Joint"/>')
+        self.assertEqual(errors(scene), [])
+        self.assertEqual(len(scene.children), 1)
+
     def test_nodes_given_for_an_event_field_are_reported(self):
         scene = read('<ProtoDeclare name="Joint"><ProtoInterface>'
                      '<field name="addChildren" type="MFNode" accessType="inputOnly"><Group/></field>'
