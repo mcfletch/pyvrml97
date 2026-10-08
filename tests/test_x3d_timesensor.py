@@ -6,6 +6,7 @@ and `elapsedTime` while it runs, and `isPaused` as it pauses and resumes. It
 answers whether it sent anything.
 """
 
+import time
 import unittest
 
 from pydispatch import dispatcher
@@ -79,6 +80,23 @@ class TestStarting(unittest.TestCase):
         sensor.advance(11.0)
         sensor.advance(12.0)
         self.assertEqual(sent(sensor, 'fraction_changed'), 1.0)
+
+    def test_a_loop_from_time_zero_reaches_the_wall_clock_at_once(self):
+        """A document's looping sensor starts at 0 and is first advanced to now"""
+        sensor = TimeSensor(cycleInterval=6.0, loop=True)
+        started = time.perf_counter()
+        sensor.advance(1699999998.0 + 1.5)
+        self.assertLess(time.perf_counter() - started, 0.1)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.25, places=4)
+        self.assertEqual(sent(sensor, 'cycleTime'), 1699999998.0)
+
+    def test_a_loop_run_backwards_from_far_ahead_reaches_its_cycle_at_once(self):
+        sensor = TimeSensor(cycleInterval=6.0, loop=True)
+        sensor.rate = -1.0
+        started = time.perf_counter()
+        sensor.advance(1699999998.0 + 1.5)
+        self.assertLess(time.perf_counter() - started, 0.1)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.75, places=4)
 
     def test_elapsed_time_counts_from_the_start(self):
         sensor = TimeSensor(cycleInterval=2.0, loop=True, startTime=10.0)
