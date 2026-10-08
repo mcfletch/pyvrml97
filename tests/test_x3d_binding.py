@@ -232,3 +232,55 @@ class TestUnrooted(unittest.TestCase):
         made = nodes.Viewpoint()
         paths = [(nodes.Group(children=[made]), made)]
         self.assertIs(binding.current_path(paths), paths[0])
+
+
+class TestLayers(unittest.TestCase):
+    """7.2.2: each layer of a LayerSet has bind stacks of its own"""
+
+    def setUp(self):
+        self.root_view = nodes.Viewpoint(description='root')
+        self.near = nodes.Viewpoint(description='near')
+        self.far = nodes.Viewpoint(description='far')
+        self.layer = nodes.Layer(children=[nodes.Group(children=[self.near, self.far])])
+        self.layers = nodes.LayerSet(layers=[self.layer], order=[0, 1])
+        self.scene = ClockedScene(children=[self.root_view, self.layers])
+
+    def test_a_layer_placed_by_its_paths_binds_apart_from_the_scene(self):
+        root_paths = [(self.scene, self.root_view)]
+        layer_paths = [(self.scene, self.layers, self.layer, self.layer.children[0], self.near),
+                       (self.scene, self.layers, self.layer, self.layer.children[0], self.far)]
+        self.assertIs(binding.current_path(root_paths), root_paths[0])
+        self.assertIs(binding.current_path(layer_paths), layer_paths[0])
+        self.assertIs(binding.bound(self.root_view), self.root_view)
+        self.assertIs(binding.bound(self.near), self.near)
+        self.assertIs(sent(self.root_view, 'isBound'), True)
+
+    def test_binding_in_a_layer_leaves_the_scenes_node_bound(self):
+        binding.place_layers(self.scene)
+        self.root_view.set_bind = True
+        self.far.set_bind = True
+        self.assertIs(binding.bound(self.root_view), self.root_view)
+        self.assertIs(binding.bound(self.far), self.far)
+        self.assertIs(sent(self.root_view, 'isBound'), True)
+
+    def test_the_layer_owns_its_nodes_stacks(self):
+        binding.place_layers(self.scene)
+        self.assertIs(binding.stack_owner(self.near), self.layer)
+        self.assertIs(binding.stack_owner(self.root_view), self.scene)
+        self.near.set_bind = True
+        self.assertIs(binding.bound(self.layer, nodetypes.Viewpoint), self.near)
+        self.assertIsNone(binding.bound(self.scene, nodetypes.Viewpoint))
+
+    def test_a_document_places_its_layers_nodes(self):
+        from vrml.x3d import files  # noqa: PLC0415 kept with its use
+        scene = files.loads(
+            '<X3D profile="Full" version="4.0"><Scene>'
+            '<Viewpoint DEF="A"/>'
+            '<LayerSet order="0 1"><Layer><Transform><Viewpoint DEF="B"/></Transform></Layer>'
+            '</LayerSet></Scene></X3D>')
+        a, b = scene.getDEF('A'), scene.getDEF('B')
+        a.set_bind = True
+        b.set_bind = True
+        self.assertIs(binding.bound(a), a)
+        self.assertIs(binding.bound(b), b)
+        self.assertIsInstance(binding.stack_owner(b), nodes.Layer)
