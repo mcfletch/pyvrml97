@@ -823,3 +823,20 @@ class TestDeclaredFields(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+
+class WithApple(x3d.WorldInfo):
+    """A node with a node field its subclass reads as something else"""
+
+    apple = node.SFNode('apple', 1, node.NULL, requiredTypes=(x3d.X3DTextureNode,))
+
+
+class Shadowed(WithApple):
+    apple = property(lambda self: None)
+
+
+class TestShadowedFields(unittest.TestCase):
+    def test_a_field_a_subclass_shadows_is_no_container(self):
+        self.assertEqual(buildermodule.implied_container(WithApple(), x3d.ImageTexture()), 'apple')
+        self.assertIsNone(buildermodule.implied_container(Shadowed(), x3d.ImageTexture()))
