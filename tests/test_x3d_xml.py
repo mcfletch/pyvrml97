@@ -158,6 +158,23 @@ class TestPrototypes(unittest.TestCase):
                      '<fieldValue name="extra"><Shape/><Shape/></fieldValue></ProtoInstance>')
         self.assertEqual(len(scene.children[0].extra), 2)
 
+    def test_an_input_only_node_field_has_no_default(self):
+        scene = read('<ProtoDeclare name="Holder"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly"/>'
+                     '<field name="set_target" type="SFNode" accessType="inputOnly"/>'
+                     '</ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>'
+                     '<ProtoInstance name="Holder"/>')
+        self.assertEqual(len(scene.children), 1)
+        self.assertEqual(scene.problems, [])
+
+    def test_nodes_given_for_an_input_only_field_are_reported(self):
+        scene = read('<ProtoDeclare name="Holder"><ProtoInterface>'
+                     '<field name="addChildren" type="MFNode" accessType="inputOnly">'
+                     '<Group/></field></ProtoInterface><ProtoBody><Group/></ProtoBody>'
+                     '</ProtoDeclare><ProtoInstance name="Holder"/>')
+        self.assertEqual(len(scene.children), 1)
+        self.assertEqual([p.severity for p in scene.problems], ['error'])
+
     def test_an_external_prototype(self):
         scene = read('<ExternProtoDeclare name="Far" url=\'"far.x3d#Far"\'>'
                      '<field name="size" type="SFFloat" accessType="initializeOnly"/>'

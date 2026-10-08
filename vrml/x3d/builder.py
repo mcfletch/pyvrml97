@@ -695,6 +695,12 @@ class SceneBuilder:
         if declared is None:
             self.problem('error', 'Nodes given for an undeclared prototype field')
             return
+        if isinstance(declared, field.Event):
+            # An inputOnly or outputOnly field has no value to default.
+            if nodes:
+                self.problem('error', 'Nodes given for prototype event %s, which has no '
+                                      'default' % declared.name)
+            return
         default = nodes if isinstance(declared, node.MFNode) else (nodes[-1] if nodes else node.NULL)
         replacement = type(declared)(declared.name, declared.exposure, default)
         definition.fields[definition.fields.index(declared)] = replacement
