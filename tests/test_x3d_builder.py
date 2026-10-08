@@ -898,12 +898,16 @@ METADATA_IN_SET = """<X3D version='%s'><Scene><WorldInfo>
     </WorldInfo></Scene></X3D>"""
 
 
-@pytest.mark.parametrize('version', ['3.3', '4.0'])
-def test_a_metadata_sets_children_are_its_values_in_any_version(version):
-    """X3D 3.x's default container for metadata is `metadata`; documents of that
-    age, and X_ITE, read a MetadataSet's children as its values all the same"""
-    found = readers.read((METADATA_IN_SET % version).encode(), name='a.x3d').children[0].metadata
+def test_a_metadata_sets_child_is_one_of_its_values_from_4_0():
+    found = readers.read((METADATA_IN_SET % '4.0').encode(), name='a.x3d').children[0].metadata
     assert not found.metadata and [type(item).__name__ for item in found.value] == ['MetadataString']
+
+
+@pytest.mark.parametrize('version', ['3.0', '3.3'])
+def test_a_metadata_sets_child_is_its_metadata_in_3_x(version):
+    """X3D 3.x's default container for a metadata node is `metadata`"""
+    found = readers.read((METADATA_IN_SET % version).encode(), name='a.x3d').children[0].metadata
+    assert not found.value and isinstance(found.metadata, x3d.MetadataString)
 
 
 def test_a_version_writes_a_container_field_where_its_default_differs():

@@ -110,10 +110,11 @@ A version's renames apply to its X3D nodes; a prototype that shares an X3D
 node's name keeps the field names it declares.
 
 X3D 3.x gives the metadata nodes ``metadata`` as their default container,
-where 4.0 gives ``value``. Written as a 3.x document, a metadata node in a
-``value`` field is given ``containerField="value"``. Reading keeps 4.x's
-default in every version, since documents of that age, and X_ITE, read a
-``MetadataSet``'s children as its values.
+where 4.0 gives ``value``. Read from a 3.x document, a ``MetadataSet``'s
+child with no ``containerField`` is the set's own ``metadata``; from a 4.x
+document, it is one of the set's ``value`` nodes. Written as a 3.x
+document, a metadata node in a ``value`` field is given
+``containerField="value"``.
 
 ``Dialect.tables()`` gives the lookups a reader or writer uses for one
 document: ``current_name(nodeType, name)``, ``dialect_name(nodeType, name)``,

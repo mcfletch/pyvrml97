@@ -213,7 +213,10 @@ def _interface_differs(a: type, b: type) -> "str | None":
                                            second.accessType, second.typeName())
         if isinstance(first, (node.SFNode, node.MFNode)):
             continue
-        found = _values_differ(first.getDefault(), second.getDefault(), _tolerance(first))
+        # Each default as an instance holds it: a declaration without a
+        # value gives the type's own, which the field coerces on first use
+        found = _values_differ(first.coerce(first.getDefault()), second.coerce(second.getDefault()),
+                               _tolerance(first))
         if found:
             return '%s default: %s' % (name, found)
     return None

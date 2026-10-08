@@ -541,10 +541,9 @@ class SceneBuilder:
                 protofunctions.protoName(built))
             self.problem('error', '%s %s %s' % (parent.type_name, why, name), built)
             return None
-        # The vocabulary's default container, whatever the version: X3D 3.x
-        # gives metadata nodes `metadata`, where documents of that age, and
-        # X_ITE, put them in a MetadataSet's `value`
-        name = implied_container(parent.node, built)
+        # The document's version's default container: X3D 3.x gives metadata
+        # nodes `metadata`, where 4.x gives them `value`
+        name = implied_container(parent.node, built, self.dialect)
         if name is None:
             self.problem('error', '%s has no field that holds a %s'
                          % (parent.type_name, protofunctions.protoName(built)), built)
@@ -719,6 +718,12 @@ class SceneBuilder:
             if nodes:
                 self.problem('error', 'Prototype field %s is %s, which takes no default'
                              % (declared.name, declared.accessType))
+            return
+        if not isinstance(declared, (node.SFNode, node.MFNode)):
+            # A field of values keeps the default its declaration gave it
+            if nodes:
+                self.problem('error', 'Prototype field %s is an %s, which takes no nodes'
+                             % (declared.name, declared.typeName()))
             return
         default = nodes if isinstance(declared, node.MFNode) else (nodes[-1] if nodes else node.NULL)
         replacement = type(declared)(declared.name, declared.exposure, default)
