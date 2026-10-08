@@ -84,6 +84,13 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(implied(x3d.MetadataSet(), x3d.MetadataString()), 'value')
         self.assertIsNone(implied(x3d.Shape(), x3d.Transform()))
 
+    def test_a_field_a_subclass_hides_is_not_an_implied_container(self):
+        class Hiding(x3d.TextureBackground):
+            # An implementation's own attribute in place of an inherited field
+            backTexture = property(lambda _node: None)
+        self.assertEqual(buildermodule.implied_container(Hiding(), x3d.ImageTexture()),
+                         'bottomTexture')
+
     def test_a_named_field_takes_the_nodes_started_in_it(self):
         built = Built()
         group = built.b.start_node('Group')

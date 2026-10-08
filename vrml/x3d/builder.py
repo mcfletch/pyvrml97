@@ -886,7 +886,7 @@ def implied_container(parent: Any, child: Any) -> "str | None":
 
     The child type's default container where the parent has that field and
     it accepts the child; else the first, by name, of the parent's node
-    fields that accepts it; None where none does. A prototype instance whose
+    fields (those its class does not hide) that accepts it; None where none does. A prototype instance whose
     node type is not known (an EXTERNPROTO not read) goes in `children`, the
     ProtoInstance's own default (ISO/IEC 19776-1), or nowhere.
     """
@@ -901,6 +901,10 @@ def implied_container(parent: Any, child: Any) -> "str | None":
             return str(default)
     for declared in sorted(protofunctions.getFields(parent), key=lambda f: f.name):
         if isinstance(declared, (node.SFNode, node.MFNode)) and not declared.name.startswith(' '):
+            # A field the node's class hides behind an attribute of its own is
+            # not one a child can be put in
+            if _node_field(parent, declared.name) is None:
+                continue
             if node.accepts(_field_types(declared), child):
                 return str(declared.name)
     return None
