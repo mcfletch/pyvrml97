@@ -288,6 +288,14 @@ is reached at most once, so routes that loop end:
   time it has run. ``TimeSensor.rate``, which is not an X3D field, is how fast its cycles run
   against the clock (2 twice as fast, 0 held, negative backwards); a change
   carries on from where the cycle is.
+  ``timesensor.Clocked`` is the same behaviour for any time-dependent node,
+  given its cycle, its rate and what it sends.
+- ``MovieTexture``, ``vrml.x3d.media``: runs as a ``TimeSensor`` does, its
+  cycle the movie's duration (given by whoever decodes it, with
+  ``setDuration``) and its rate ``speed``, sending ``isActive``,
+  ``isPaused``, ``elapsedTime`` and ``duration_changed``. ``position()`` is
+  the time into the movie that is shown: the start before it first plays
+  (the end for a negative ``speed``), and where it stopped once stopped.
 - ``LoadSensor``, ``vrml.x3d.loadsensor``: a node reading a url records its
   state with ``loadsensor.set_load_state`` (``LOADING``, ``LOADED`` or
   ``FAILED``), and ``observe()`` reads the sensor's children's states,

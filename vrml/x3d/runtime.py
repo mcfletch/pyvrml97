@@ -18,7 +18,8 @@ from typing import Any
 
 from vrml import cache, protofunctions
 from vrml.x3d import (
-    followers, geospatial, interpolation, loadsensor, pointing, sensors, timesensor, timing,
+    followers, geospatial, interpolation, loadsensor, media, pointing, sensors, timesensor,
+    timing,
 )
 from vrml.x3d import nodes as x3d
 
@@ -392,4 +393,5 @@ PROTOTYPES.update(followers.FOLLOWERS)
 PROTOTYPES.update(sensors.SENSORS)
 PROTOTYPES.update(pointing.POINTING)
 PROTOTYPES['TimeSensor'] = timesensor.TimeSensor
+PROTOTYPES['MovieTexture'] = media.MovieTexture
 PROTOTYPES['LoadSensor'] = loadsensor.LoadSensor
