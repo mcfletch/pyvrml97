@@ -156,8 +156,8 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
         if cycle > 0 and run.progress - run.began >= cycle:
             if not self.loop:
                 return self._stop(run.clock(run.began + cycle), run, 1.0)
-            # Whole cycles at once: a sensor started at 0 is first advanced
-            # to the wall clock, some hundreds of millions of cycles on.
+            # Every cycle passed since the last advance at once, however many
+            # a jump of the clock skipped; the loop takes up any rounding.
             run.began += math.floor((run.progress - run.began) / cycle) * cycle
             while run.progress - run.began >= cycle:
                 run.began += cycle
