@@ -277,7 +277,8 @@ if __name__ == '__main__':
 
 
 class TestAnEnginesDefaults(unittest.TestCase):
-    """VRML97's own defaults hold in a world; an engine's hold for what VRML97 does not have."""
+    """VRML97's own defaults hold in a world, and X3D's where VRML97 has no
+    such field; an engine's class keeps its own for nodes made in code."""
 
     def test_a_directional_light_is_scoped(self):
         from vrml import field  # noqa: PLC0415 kept with its use
@@ -314,7 +315,8 @@ class TestAnEnginesDefaults(unittest.TestCase):
         self.assertEqual(given.radius, 4.0)
         self.assertEqual(Engine().radius, float('inf'))
 
-    def test_a_field_vrml97_does_not_have_keeps_the_engines_default(self):
+    def test_a_field_vrml97_does_not_have_takes_x3ds_default(self):
+        """VRML97 lights cast no shadows, which is X3D's default"""
         from vrml import field  # noqa: PLC0415 kept with its use
         from vrml.vrml97 import basenamespaces, parseprocessor  # noqa: PLC0415 kept with its use
         from vrml.x3d import nodes  # noqa: PLC0415 kept with its use
@@ -325,4 +327,5 @@ class TestAnEnginesDefaults(unittest.TestCase):
         success, results, _consumed = PARSER.parse(
             HEADER + 'PointLight { }\n',
             processor=parseprocessor.ParseProcessor(basePrototypes=prototypes))
-        self.assertTrue(results[1].children[0].shadows)
+        self.assertFalse(results[1].children[0].shadows)
+        self.assertTrue(Engine().shadows)

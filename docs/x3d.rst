@@ -198,10 +198,10 @@ the nodes, and its ``X3DScene`` subclass under ``'X3DScene'``. A node type it
 does not supply is built from pyvrml97's class, and one with no behaviour
 there either is reported once in ``scene.problems`` (``info``). A field the
 document leaves out has the X3D declaration's default, also where the engine's class defaults it
-otherwise for a node made in code; a field the document's version does not
-have keeps the engine's default. The VRML97 reader does the same for the
-fields VRML97 has, and then sets VRML97's own defaults where they differ
-from X3D's.
+otherwise for a node made in code, and so does a field the document's
+version does not have: a light in an X3D 3 document casts no shadows. The
+VRML97 reader does the same, and then sets VRML97's own defaults where they
+differ from X3D's.
 
 The readers are ``vrml.x3d.readers.xml`` (expat; external entities are not
 read), ``json``, ``classic`` (a SimpleParse grammar for ClassicVRML and

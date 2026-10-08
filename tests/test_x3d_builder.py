@@ -208,7 +208,8 @@ class TestNodes(unittest.TestCase):
         self.assertFalse(quiet.shadows)
         self.assertTrue(loud.shadows)
 
-    def test_a_field_the_documents_version_lacks_keeps_the_engines_default(self):
+    def test_a_field_the_documents_version_lacks_takes_x3ds_default(self):
+        """A version without shadows has none, which is what X3D's default says"""
         class Engine(x3d.PointLight):
             shadows = buildermodule.field.newField('shadows', 'SFBool', 1, True)
 
@@ -216,7 +217,7 @@ class TestNodes(unittest.TestCase):
         built.document(profile='Immersive', version='3.3')
         light = built.node('PointLight')
         built.end_document()
-        self.assertTrue(light.shadows)
+        self.assertFalse(light.shadows)
 
     def test_an_engine_scene_class(self):
         from vrml.x3d.scene import X3DScene  # noqa: PLC0415 kept with its one use
