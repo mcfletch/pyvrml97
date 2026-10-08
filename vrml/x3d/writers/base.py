@@ -10,7 +10,6 @@ Node types, fields and field types the target version lacks are collected
 as problems, and `write()` raises `X3DWriteError` listing all of them.
 """
 
-import re
 from collections.abc import Iterable, Sequence
 from typing import Any, NamedTuple
 
@@ -21,7 +20,7 @@ from vrml.x3d import dialects, extension
 from vrml.x3d import codecs
 from vrml.x3d.codecs import same
 from vrml.x3d import nodes as x3d
-from vrml.x3d.builder import implied_container, scaled, unit_factor
+from vrml.x3d.builder import XML_NAME, implied_container, scaled, unit_factor
 
 #: The field types VRML97 has (ISO/IEC 14772-1, section 5).
 VRML97_TYPES = frozenset((
@@ -39,11 +38,6 @@ VRML97_ACCESS = {
 
 #: The url schemes that mark a Script's program written inline.
 INLINE_SCHEMES = ('ecmascript:', 'javascript:', 'vrmlscript:')
-
-#: A DEF name in the XML and JSON encodings: an XML NCName, which is what the
-#: schema's xs:ID is -- a letter or underscore, then letters, digits, '_', '-'
-#: and '.'.
-XML_NAME = re.compile(r'[^\W\d][\w.\-]*\Z')
 
 #: Fields every prototype has that are pyvrml97's, not its interface's.
 _PROTOTYPE_FIELDS = frozenset(

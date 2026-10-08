@@ -176,6 +176,10 @@ What reading does:
   warning. An element of another XML namespace (``ds:Signature``, an
   application's own data) is skipped with what it contains, with an ``info``
   problem.
+- A ``DEF`` name in an XML or JSON document that is not an XML name (an
+  NCName: a letter or underscore, then letters, digits, ``_``, ``-`` and
+  ``.``) is kept, with a warning; writing the scene to an encoding that
+  cannot hold the name raises ``X3DWriteError``.
 - ``UNIT`` statements (X3D 3.3 and later) scale each field in the unit's
   category, and its derived categories, into base units (metres, radians,
   kilograms, newtons). ``scene.units`` records them.

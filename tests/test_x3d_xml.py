@@ -239,3 +239,15 @@ def test_an_element_of_another_namespace_is_skipped_with_its_content():
     assert [type(child).__name__ for child in scene.children] == ['Group', 'Transform']
     assert [problem.severity for problem in scene.problems] == ['info']
     assert 'ds:Signature' in scene.problems[0].message
+
+
+def test_a_def_name_that_is_no_xml_name_is_kept_with_a_warning():
+    """An XML DEF is an xs:ID, an NCName; a scene read with another can be
+    written only where its encoding allows the name"""
+    scene = readers.read(b"""<X3D version='4.0'><Scene><Group DEF='Left Hand'/>
+        <Group DEF='1st'/><Group DEF='a-b.c'/></Scene></X3D>""", name='a.x3d')
+    assert isinstance(scene.getDEF('Left Hand'), x3d.Group)
+    assert [(problem.severity, problem.message) for problem in scene.problems] == [
+        ('warning', "DEF name 'Left Hand' is not an XML name"),
+        ('warning', "DEF name '1st' is not an XML name"),
+    ]

@@ -93,6 +93,25 @@ def errors(scene):
     return [problem.message for problem in scene.problems if problem.severity == 'error']
 
 
+#: What reading says of a DEF name the XML and JSON encodings do not allow.
+NOT_AN_XML_NAME = ' is not an XML name'
+
+
+def written(test, scene, encoding, **options):
+    """The scene written in `encoding`, or None where the writer refuses
+    only what reading reported: a node or field the version lacks, or a DEF
+    name the XML and JSON encodings do not allow"""
+    try:
+        return writers.write(scene, encoding, **options)
+    except writers.X3DWriteError as error:
+        reported = {problem.message for problem in scene.problems}
+        reported |= {message[:-len(NOT_AN_XML_NAME)] for message in reported
+                     if message.endswith(NOT_AN_XML_NAME)}
+        refused = {problem.split(' cannot be written')[0] for problem in error.problems}
+        test.assertLessEqual(refused, reported, error.problems)
+        return None
+
+
 def lacks(problem):
     """Whether a problem is a node or field the document's version does not have"""
     return ' has no node ' in problem.message or ' has no field ' in problem.message
@@ -211,7 +230,10 @@ class CorpusTests:
             scene = read(path)
             for encoding in sorted(writers.WRITERS):
                 with self.subTest(scene=os.path.relpath(path, self.directory), encoding=encoding):
-                    again = readers.read(writers.write(scene, encoding).encode('utf-8'), name=path)
+                    text = written(self, scene, encoding)
+                    if text is None:
+                        continue
+                    again = readers.read(text.encode('utf-8'), name=path)
                     # What reading refused is not in the scene, so is not written.
                     self.assertLessEqual(set(errors(again)), set(errors(scene)))
                     self.assertIsNone(first_difference(scene, again))
@@ -222,7 +244,9 @@ class CorpusTests:
         parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
         for path in self.paths:
             with self.subTest(scene=os.path.relpath(path, self.directory)):
-                text = writers.write(read(path), 'xml', version='4.1', canonical=True)
+                text = written(self, read(path), 'xml', version='4.1', canonical=True)
+                if text is None:
+                    continue
                 self.assertTrue(schema.validate(etree.fromstring(text.encode('utf-8'), parser)),
                                 schema.error_log)
 

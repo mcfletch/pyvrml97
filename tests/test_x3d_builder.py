@@ -355,6 +355,15 @@ class TestDialects(unittest.TestCase):
                          ['VRML97 has no field Viewpoint.centerOfRotation'])
         self.assertEqual(list(viewpoint.centerOfRotation), [1, 2, 3])
 
+    def test_a_node_field_the_version_lacks_is_a_warning_and_is_read(self):
+        built = Built()
+        built.document('Full', '3.0')
+        appearance = built.node('Appearance', children=[lambda: built.node('PointProperties')])
+        warnings = problems(built.end_document(), 'warning')
+        self.assertEqual([p.message for p in warnings], [
+            'X3D 3.0 has no node PointProperties', 'X3D 3.0 has no field Appearance.pointProperties'])
+        self.assertIsInstance(appearance.pointProperties, x3d.PointProperties)
+
     def test_a_route_to_a_field_the_version_lacks_is_a_warning_and_is_made(self):
         built = Built()
         built.document('', '2.0')

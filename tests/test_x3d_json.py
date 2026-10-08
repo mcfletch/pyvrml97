@@ -246,5 +246,12 @@ class TestWhatWeb3DsConverterWrites(unittest.TestCase):
         self.assertEqual(scene.children[0].string, ['true', 'x'])
 
 
+def test_a_def_name_that_is_no_xml_name_is_kept_with_a_warning():
+    scene = read([{'Group': {'@DEF': 'Left Hand'}}])
+    assert isinstance(scene.getDEF('Left Hand'), x3d.Group)
+    assert [problem.message for problem in scene.problems] == [
+        "DEF name 'Left Hand' is not an XML name"]
+
+
 if __name__ == '__main__':
     unittest.main()
