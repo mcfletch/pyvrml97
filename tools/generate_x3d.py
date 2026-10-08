@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Generate the X3D declarations from Web3D's X3D Unified Object Model
 
-    tools/generate_x3d.py              write vrml/x3d/nodes.py, nodes.pyi, dialects.py
+    tools/generate_x3d.py              write vrml/x3d/nodes.py, nodes.pyi, dialects.py,
+                                       hanimnames.py
     tools/generate_x3d.py --check      regenerate into a temporary directory and
                                        compare with the checked-in modules
     tools/generate_x3d.py --report     print the version differences the
@@ -123,6 +124,9 @@ MARKERS = {
     'Transform': 'Transforming',
     'Billboard': 'Transforming',
     'CADPart': 'Transforming',
+    'HAnimHumanoid': 'Transforming',
+    'HAnimJoint': 'Transforming',
+    'HAnimSite': 'Transforming',
     'Inline': 'Traversable',
 }
 
@@ -130,7 +134,26 @@ MARKERS = {
 BEHAVIOURS = {
     'Transform': ('LocalMatrices',),
     'CADPart': ('LocalMatrices',),
+    'HAnimHumanoid': ('LocalMatrices',),
+    'HAnimJoint': ('LocalMatrices',),
+    'HAnimSite': ('LocalMatrices',),
     'X3DBindableNode': ('Bindable',),
+}
+
+#: Node types a field holds beyond the X3DUOM's list for it. ISO/IEC 19775-1
+#: (3.3, 26.3.3) lists HAnimSite among an HAnimJoint's children, and HAnim 1's
+#: Joint, which the humanoids of Web3D's examples are built to, holds any
+#: child: markers drawn at a joint, and an LOD of skins.
+ACCEPTS = {
+    ('HAnimJoint', 'children'): ('HAnimSite', 'X3DChildNode'),
+    ('HAnimHumanoid', 'skin'): ('X3DChildNode',),
+}
+
+#: Field types the X3DUOM states otherwise than the field's description:
+#: HAnimPose's set_fraction is "a fraction in range [0,1]", sent from a
+#: TimeSensor's or an interpolator's SFFloat, and the X3DUOM says SFTime.
+RETYPED = {
+    ('HAnimPose', 'set_fraction'): 'SFFloat',
 }
 
 #: Names fields had before X3D 4.1 that the X3DUOM does not record as a
@@ -410,7 +433,7 @@ class Model:
         if children:
             raise GenerationError('%s.%s has unknown elements %s'
                                   % (owner, element.get('name'), sorted(children)))
-        type_name = element.get('type')
+        type_name = RETYPED.get((owner, element.get('name')), element.get('type'))
         type_name = TYPE_SUBSTITUTES.get(type_name, type_name)
         if type_name not in field.baseFieldTypes:
             raise GenerationError('%s.%s has type %s, which pyvrml97 does not declare'
@@ -422,13 +445,16 @@ class Model:
         default = element.get('default')
         if default is None and not type_name.startswith('MF') and type_name != 'SFNode':
             default = self.field_types[type_name].get('defaultValue', '')
+        acceptable = tuple((element.get('acceptableNodeTypes') or '').split('|')) \
+            if element.get('acceptableNodeTypes') else ()
+        acceptable += tuple(name for name in ACCEPTS.get((owner, element.get('name')), ())
+                            if name not in acceptable)
         return FieldSpec(
             name=element.get('name'),
             type=type_name,
             access=element.get('accessType'),
             default=default,
-            acceptable=tuple((element.get('acceptableNodeTypes') or '').split('|'))
-            if element.get('acceptableNodeTypes') else (),
+            acceptable=acceptable,
             minimum=minimum if minimum is not None else minimum_exclusive,
             minimumExclusive=minimum_exclusive is not None,
             maximum=maximum if maximum is not None else maximum_exclusive,
@@ -1054,13 +1080,85 @@ def differences_from(vocabulary: Vocabulary) -> "list[VersionDifference]":
     return [difference(vocabulary, version) for version in sorted(SOURCES)]
 
 
+#: The X3DUOM's HAnim name lists, by the prefix of the tables each makes.
+HANIM_NAME_TYPES = (
+    ('JOINT', 'hanimJointNameValues'),
+    ('SEGMENT', 'hanimSegmentNameValues'),
+    ('SITE', 'hanimFeaturePointNameValues'),
+)
+
+
+def hanim_tables(data: bytes) -> "list[tuple[str, str, dict[str, Any]]]":
+    """HAnim's standard names as (table name, comment, table) rows
+
+    Read from the X3DUOM's name lists: each name's level of articulation,
+    the name it hangs from, its aliases and, for joints, its default centre.
+    """
+    root = ElementTree.fromstring(data)
+    lists = {element.get('name'): element for element in root.iter('SimpleType')}
+    tables: "list[tuple[str, str, dict[str, Any]]]" = []
+    for prefix, type_name in HANIM_NAME_TYPES:
+        element = lists.get(type_name)
+        if element is None:
+            raise GenerationError('the X3DUOM has no %s' % type_name)
+        levels: "dict[str, Any]" = {}
+        parents: "dict[str, Any]" = {}
+        aliases: "dict[str, Any]" = {}
+        centers: "dict[str, Any]" = {}
+        for entry in element.findall('enumeration'):
+            name = entry.get('value') or ''
+            levels[name] = int(entry.get('loa') or -1)
+            if entry.get('parent'):
+                parents[name] = entry.get('parent')
+            for alias in (entry.get('alias') or '').split(','):
+                if alias.strip() and alias.strip() != name:
+                    aliases[alias.strip()] = name
+            if entry.get('default'):
+                centers[name] = tuple(float(value) for value in entry.get('default').split())
+        kind = prefix.lower()
+        tables.append(('%s_LOA' % prefix, 'Each %s name\'s level of articulation (0 to 4).' % kind,
+                       levels))
+        tables.append(('%s_PARENT' % prefix, 'The name each %s hangs from.' % kind, parents))
+        tables.append(('%s_ALIASES' % prefix, 'Each other name for a %s, and its standard name.'
+                       % kind, aliases))
+        if prefix == 'JOINT':
+            tables.append(('JOINT_CENTER', 'Each joint\'s default centre, in metres, where '
+                           'the standard gives one.', centers))
+    return tables
+
+
+def generate_hanim(data: bytes) -> str:
+    """The text of vrml/x3d/hanimnames.py"""
+    tables = hanim_tables(data)
+    lines = [
+        '"""HAnim\'s standard joint, segment and site names (ISO/IEC 19774-1)',
+        '',
+        'Generated by tools/generate_x3d.py from the X3D Unified Object Model',
+        '(Web3D x3d repository revision %d); regenerate rather than edit. A' % REVISION,
+        'site is a feature point of the HAnim architecture.',
+        '"""',
+        '',
+        '__all__ = [',
+    ]
+    lines.extend('    %r,' % name for name, _comment, _table in tables)
+    lines.append(']')
+    for name, comment, table in tables:
+        lines.extend(['', '#: %s' % comment, '%s = {' % name])
+        for key, value in table.items():
+            lines.append('    %r: %r,' % (key, value))
+        lines.append('}')
+    return '\n'.join(lines) + '\n'
+
+
 def generate(directory: str) -> "dict[str, str]":
     """Write the generated modules into `directory`, answering their paths"""
-    vocabulary = Vocabulary(Model(fetch(VOCABULARY)))
+    data = fetch(VOCABULARY)
+    vocabulary = Vocabulary(Model(data))
     outputs = {
         'nodes.py': generate_nodes(vocabulary),
         'nodes.pyi': generate_stubs(vocabulary),
         'dialects.py': generate_dialects(differences_from(vocabulary)),
+        'hanimnames.py': generate_hanim(data),
     }
     written = {}
     for name, text in outputs.items():
