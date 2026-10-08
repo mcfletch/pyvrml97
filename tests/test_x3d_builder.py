@@ -8,10 +8,13 @@ import math
 import unittest
 
 import numpy as np
+import pytest
 
 from vrml import node, protofunctions
 from vrml.x3d import builder as buildermodule
+from vrml.x3d import loads
 from vrml.x3d import nodes as x3d
+from vrml.x3d import readers, writers
 from vrml.x3d.builder import SceneBuilder, X3DLoadError
 
 
@@ -97,6 +100,14 @@ class TestNodes(unittest.TestCase):
         self.assertIn("USE of 'LOOP' inside the node it names",
                       [problem.message for problem in scene.problems])
         self.assertEqual(list(group.children), [inner])
+
+    def test_a_script_may_hold_itself_in_a_field(self):
+        scene = loads(b"""<X3D version="3.3"><Scene><Script DEF="SELF">
+          <field name="me" type="SFNode" accessType="initializeOnly"><Script USE="SELF"/></field>
+          </Script></Scene></X3D>""")
+        self.assertEqual(problems(scene, 'error'), [])
+        script = scene.getDEF('SELF')
+        self.assertIs(script.me, script)
 
     def test_a_field_a_subclass_hides_is_not_an_implied_container(self):
         class Hiding(x3d.TextureBackground):
@@ -844,3 +855,89 @@ class TestDeclaredFields(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_a_prototype_event_field_of_nodes_has_no_default():
+    scene = readers.read(b"""<X3D version='3.3'><Scene><ProtoDeclare name='P'><ProtoInterface>
+        <field accessType='inputOnly' name='set_m' type='SFNode'/>
+        <field accessType='outputOnly' name='ms_changed' type='MFNode'/>
+        <field accessType='initializeOnly' name='m' type='SFNode'><Material/></field>
+        </ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare></Scene></X3D>""",
+                         name='a.x3d')
+    assert [str(problem) for problem in scene.problems if problem.severity != 'info'] == []
+
+
+def test_nodes_given_to_a_prototype_event_field_are_reported():
+    scene = readers.read(b"""<X3D version='3.3'><Scene><ProtoDeclare name='P'><ProtoInterface>
+        <field accessType='inputOnly' name='set_m' type='SFNode'><Material/></field>
+        </ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare></Scene></X3D>""",
+                         name='a.x3d')
+    assert any('set_m' in str(problem) for problem in scene.problems)
+
+
+def test_an_attribute_naming_no_field_of_a_prototype_instance_is_reported():
+    """`nodeType` is an attribute of every prototype instance's class, not a field"""
+    scene = readers.read(b"""<X3D version='3.3'><Scene><ProtoDeclare name='P'><ProtoInterface>
+        </ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>
+        <ProtoInstance name='P'><fieldValue name='nodeType' value='Group'/></ProtoInstance>
+        </Scene></X3D>""", name='a.x3d')
+    assert any('nodeType' in str(problem) for problem in scene.problems)
+
+
+
+def test_an_element_attribute_naming_no_field_of_a_prototype_instance_is_reported():
+    """A prototype used as an element: its class's `nodeType` is not a field"""
+    scene = readers.read(b"""<X3D version='3.3'><Scene><ProtoDeclare name='P'><ProtoInterface>
+        </ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>
+        <P nodeType='Group'/></Scene></X3D>""", name='a.x3d')
+    assert any('nodeType' in str(problem) for problem in scene.problems)
+
+
+def test_a_prototype_event_connected_by_is_instantiates():
+    scene = readers.read(b"""#VRML V2.0 utf8
+PROTO P [ eventIn MFNode addChildren ] { Group { addChildren IS addChildren } }
+P {}
+""", name='a.wrl')
+    assert [str(problem) for problem in scene.problems if problem.severity == 'error'] == []
+    assert len(scene.children) == 1
+
+
+def test_a_prototype_named_as_a_node_keeps_its_own_field_names():
+    """A dialect renames the X3D node's fields, not a prototype's of the same name"""
+    scene = readers.read(b"""<X3D version='3.0'><Scene>
+        <ProtoDeclare name='LoadSensor'><ProtoInterface>
+          <field accessType='inputOutput' name='watchList' type='MFNode'/>
+        </ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>
+        <ImageTexture DEF='I' url='"a.png"'/>
+        <LoadSensor><ImageTexture USE='I' containerField='watchList'/></LoadSensor>
+        </Scene></X3D>""", name='a.x3d')
+    assert [str(problem) for problem in scene.problems if problem.severity != 'info'] == []
+    assert len(scene.children[-1].watchList) == 1
+
+
+def test_a_name_that_is_no_field_of_the_node_is_reported_as_none():
+    scene = readers.read(b"""<X3D version='3.3'><Scene><ProtoDeclare name='P'><ProtoInterface>
+        </ProtoInterface><ProtoBody><Group/></ProtoBody></ProtoDeclare>
+        <P nodeType='Group'/></Scene></X3D>""", name='a.x3d')
+    assert [problem.message for problem in scene.problems] == ['P has no field nodeType']
+
+
+
+METADATA_IN_SET = """<X3D version='%s'><Scene><WorldInfo>
+    <MetadataSet name='s'><MetadataString name='a' value='"x"'/></MetadataSet>
+    </WorldInfo></Scene></X3D>"""
+
+
+@pytest.mark.parametrize('version', ['3.3', '4.0'])
+def test_a_metadata_sets_children_are_its_values_in_any_version(version):
+    """X3D 3.x's default container for metadata is `metadata`; documents of that
+    age, and X_ITE, read a MetadataSet's children as its values all the same"""
+    found = readers.read((METADATA_IN_SET % version).encode(), name='a.x3d').children[0].metadata
+    assert not found.metadata and [type(item).__name__ for item in found.value] == ['MetadataString']
+
+
+def test_a_version_writes_a_container_field_where_its_default_differs():
+    """Written as 3.3, a metadata node in `value` says so"""
+    scene = readers.read((METADATA_IN_SET % '4.0').encode(), name='a.x3d')
+    assert 'containerField="value"' in writers.write(scene, 'xml', version='3.3')
+    assert 'containerField' not in writers.write(scene, 'xml', version='4.0')

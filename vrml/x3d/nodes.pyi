@@ -1541,7 +1541,7 @@ class HAnimDisplacer(X3DGeometricPropertyNode):
     weight: _Field[float, float]
     def __init__(self, *, DEF: str = ..., coordIndex: _Numbers = ..., description: str = ..., displacements: _Numbers = ..., metadata: X3DMetadataObject | None = ..., name: str = ..., weight: float = ..., **fields: Any) -> None: ...
 
-class HAnimHumanoid(X3DChildNode, X3DBoundedObject):
+class HAnimHumanoid(behaviours.LocalMatrices, nodetypes.Transforming, X3DChildNode, X3DBoundedObject):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]
@@ -1565,7 +1565,7 @@ class HAnimHumanoid(X3DChildNode, X3DBoundedObject):
     sites: _Field[list[Any], Sequence[HAnimSite]]
     skeletalConfiguration: _Field[str, str]
     skeleton: _Field[list[Any], Sequence[HAnimJoint | HAnimSite]]
-    skin: _Field[list[Any], Sequence[Group | Transform | Shape | IndexedFaceSet]]
+    skin: _Field[list[Any], Sequence[Group | Transform | Shape | IndexedFaceSet | X3DChildNode | nodetypes.Children]]
     skinBindingCoords: _Field[Any, Coordinate | CoordinateDouble | None]
     skinBindingNormals: _Field[Any, X3DNormalNode | None]
     skinCoord: _Field[Any, Coordinate | CoordinateDouble | None]
@@ -1573,15 +1573,15 @@ class HAnimHumanoid(X3DChildNode, X3DBoundedObject):
     translation: _Field[_F32, _Numbers]
     version: _Field[str, str]
     viewpoints: _Field[list[Any], Sequence[HAnimSite]]
-    def __init__(self, *, DEF: str = ..., bboxCenter: _Numbers = ..., bboxDisplay: bool | int = ..., bboxSize: _Numbers = ..., center: _Numbers = ..., children: Sequence[HAnimPose] = ..., description: str = ..., displacers: Sequence[HAnimDisplacer] = ..., info: str | Iterable[str] = ..., jointBindingPositions: _Numbers = ..., jointBindingRotations: _Numbers = ..., jointBindingScales: _Numbers = ..., joints: Sequence[HAnimJoint] = ..., loa: int = ..., metadata: X3DMetadataObject | None = ..., motions: Sequence[HAnimMotion] = ..., motionsEnabled: _Numbers = ..., name: str = ..., rotation: _Numbers = ..., scale: _Numbers = ..., scaleOrientation: _Numbers = ..., segments: Sequence[HAnimSegment] = ..., sites: Sequence[HAnimSite] = ..., skeletalConfiguration: str = ..., skeleton: Sequence[HAnimJoint | HAnimSite] = ..., skin: Sequence[Group | Transform | Shape | IndexedFaceSet] = ..., skinBindingCoords: Coordinate | CoordinateDouble | None = ..., skinBindingNormals: X3DNormalNode | None = ..., skinCoord: Coordinate | CoordinateDouble | None = ..., skinNormal: X3DNormalNode | None = ..., translation: _Numbers = ..., version: str = ..., viewpoints: Sequence[HAnimSite] = ..., visible: bool | int = ..., **fields: Any) -> None: ...
+    def __init__(self, *, DEF: str = ..., bboxCenter: _Numbers = ..., bboxDisplay: bool | int = ..., bboxSize: _Numbers = ..., center: _Numbers = ..., children: Sequence[HAnimPose] = ..., description: str = ..., displacers: Sequence[HAnimDisplacer] = ..., info: str | Iterable[str] = ..., jointBindingPositions: _Numbers = ..., jointBindingRotations: _Numbers = ..., jointBindingScales: _Numbers = ..., joints: Sequence[HAnimJoint] = ..., loa: int = ..., metadata: X3DMetadataObject | None = ..., motions: Sequence[HAnimMotion] = ..., motionsEnabled: _Numbers = ..., name: str = ..., rotation: _Numbers = ..., scale: _Numbers = ..., scaleOrientation: _Numbers = ..., segments: Sequence[HAnimSegment] = ..., sites: Sequence[HAnimSite] = ..., skeletalConfiguration: str = ..., skeleton: Sequence[HAnimJoint | HAnimSite] = ..., skin: Sequence[Group | Transform | Shape | IndexedFaceSet | X3DChildNode | nodetypes.Children] = ..., skinBindingCoords: Coordinate | CoordinateDouble | None = ..., skinBindingNormals: X3DNormalNode | None = ..., skinCoord: Coordinate | CoordinateDouble | None = ..., skinNormal: X3DNormalNode | None = ..., translation: _Numbers = ..., version: str = ..., viewpoints: Sequence[HAnimSite] = ..., visible: bool | int = ..., **fields: Any) -> None: ...
 
-class HAnimJoint(X3DChildNode, X3DBoundedObject):
+class HAnimJoint(behaviours.LocalMatrices, nodetypes.Transforming, X3DChildNode, X3DBoundedObject):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]
     addChildren: _Field[list[Any], Sequence[HAnimJoint | HAnimSegment]]
     center: _Field[_F32, _Numbers]
-    children: _Field[list[Any], Sequence[HAnimJoint | HAnimSegment]]
+    children: _Field[list[Any], Sequence[HAnimJoint | HAnimSegment | HAnimSite | X3DChildNode | nodetypes.Children]]
     description: _Field[str, str]
     displacers: _Field[list[Any], Sequence[HAnimDisplacer]]
     limitOrientation: _Field[_F32, _Numbers]
@@ -1596,7 +1596,7 @@ class HAnimJoint(X3DChildNode, X3DBoundedObject):
     stiffness: _Field[_F64, _Numbers]
     translation: _Field[_F32, _Numbers]
     ulimit: _Field[_F64, _Numbers]
-    def __init__(self, *, DEF: str = ..., bboxCenter: _Numbers = ..., bboxDisplay: bool | int = ..., bboxSize: _Numbers = ..., center: _Numbers = ..., children: Sequence[HAnimJoint | HAnimSegment] = ..., description: str = ..., displacers: Sequence[HAnimDisplacer] = ..., limitOrientation: _Numbers = ..., llimit: _Numbers = ..., metadata: X3DMetadataObject | None = ..., name: str = ..., rotation: _Numbers = ..., scale: _Numbers = ..., scaleOrientation: _Numbers = ..., skinCoordIndex: _Numbers = ..., skinCoordWeight: _Numbers = ..., stiffness: _Numbers = ..., translation: _Numbers = ..., ulimit: _Numbers = ..., visible: bool | int = ..., **fields: Any) -> None: ...
+    def __init__(self, *, DEF: str = ..., bboxCenter: _Numbers = ..., bboxDisplay: bool | int = ..., bboxSize: _Numbers = ..., center: _Numbers = ..., children: Sequence[HAnimJoint | HAnimSegment | HAnimSite | X3DChildNode | nodetypes.Children] = ..., description: str = ..., displacers: Sequence[HAnimDisplacer] = ..., limitOrientation: _Numbers = ..., llimit: _Numbers = ..., metadata: X3DMetadataObject | None = ..., name: str = ..., rotation: _Numbers = ..., scale: _Numbers = ..., scaleOrientation: _Numbers = ..., skinCoordIndex: _Numbers = ..., skinCoordWeight: _Numbers = ..., stiffness: _Numbers = ..., translation: _Numbers = ..., ulimit: _Numbers = ..., visible: bool | int = ..., **fields: Any) -> None: ...
 
 class HAnimMotion(X3DChildNode):
     PROTO: str
@@ -1653,7 +1653,7 @@ class HAnimSegment(X3DGroupingNode):
     name: _Field[str, str]
     def __init__(self, *, DEF: str = ..., bboxCenter: _Numbers = ..., bboxDisplay: bool | int = ..., bboxSize: _Numbers = ..., centerOfMass: _Numbers = ..., children: Sequence[X3DChildNode | nodetypes.Children] = ..., coord: Coordinate | CoordinateDouble | None = ..., description: str = ..., displacers: Sequence[HAnimDisplacer] = ..., mass: float = ..., metadata: X3DMetadataObject | None = ..., momentsOfInertia: _Numbers = ..., name: str = ..., visible: bool | int = ..., **fields: Any) -> None: ...
 
-class HAnimSite(X3DGroupingNode):
+class HAnimSite(behaviours.LocalMatrices, nodetypes.Transforming, X3DGroupingNode):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]

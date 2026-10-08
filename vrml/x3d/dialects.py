@@ -5,7 +5,9 @@ each version (Web3D x3d repository revision 40303); regenerate rather than
 edit. VRML97's dialect is written by hand in `vrml.x3d.dialect`.
 """
 
-from vrml.x3d.dialect import VRML97, AbsentFields, Dialect, FieldDefault, FieldRename
+from vrml.x3d.dialect import (
+    VRML97, AbsentFields, ContainerDefault, Dialect, FieldDefault, FieldRename,
+)
 
 
 X3D_3_0 = Dialect(
@@ -51,6 +53,13 @@ X3D_3_0 = Dialect(
     ],
     defaults=[
         FieldDefault(nodeType='SpotLight', fieldName='beamWidth', value='0.7854'),
+    ],
+    containers=[
+        ContainerDefault(nodeType='MetadataDouble', container='metadata'),
+        ContainerDefault(nodeType='MetadataFloat', container='metadata'),
+        ContainerDefault(nodeType='MetadataInteger', container='metadata'),
+        ContainerDefault(nodeType='MetadataSet', container='metadata'),
+        ContainerDefault(nodeType='MetadataString', container='metadata'),
     ],
     absent=[
         AbsentFields(nodeType='Anchor', fields=[
@@ -238,6 +247,13 @@ X3D_3_1 = Dialect(
     ],
     defaults=[
         FieldDefault(nodeType='SpotLight', fieldName='beamWidth', value='0.7854'),
+    ],
+    containers=[
+        ContainerDefault(nodeType='MetadataDouble', container='metadata'),
+        ContainerDefault(nodeType='MetadataFloat', container='metadata'),
+        ContainerDefault(nodeType='MetadataInteger', container='metadata'),
+        ContainerDefault(nodeType='MetadataSet', container='metadata'),
+        ContainerDefault(nodeType='MetadataString', container='metadata'),
     ],
     absent=[
         AbsentFields(nodeType='Anchor', fields=[
@@ -482,6 +498,14 @@ X3D_3_2 = Dialect(
         FieldDefault(nodeType='SpotLight', fieldName='beamWidth', value='0.7854'),
         FieldDefault(nodeType='UniversalJoint', fieldName='axis1', value='0 0 0'),
         FieldDefault(nodeType='UniversalJoint', fieldName='axis2', value='0 0 0'),
+    ],
+    containers=[
+        ContainerDefault(nodeType='DISEntityTypeMapping', container='mapping'),
+        ContainerDefault(nodeType='MetadataDouble', container='metadata'),
+        ContainerDefault(nodeType='MetadataFloat', container='metadata'),
+        ContainerDefault(nodeType='MetadataInteger', container='metadata'),
+        ContainerDefault(nodeType='MetadataSet', container='metadata'),
+        ContainerDefault(nodeType='MetadataString', container='metadata'),
     ],
     absent=[
         AbsentFields(nodeType='Anchor', fields=[
@@ -767,6 +791,15 @@ X3D_3_3 = Dialect(
         FieldDefault(nodeType='SpotLight', fieldName='beamWidth', value='0.7854'),
         FieldDefault(nodeType='UniversalJoint', fieldName='axis1', value='0 0 0'),
         FieldDefault(nodeType='UniversalJoint', fieldName='axis2', value='0 0 0'),
+    ],
+    containers=[
+        ContainerDefault(nodeType='DISEntityTypeMapping', container='mapping'),
+        ContainerDefault(nodeType='MetadataBoolean', container='metadata'),
+        ContainerDefault(nodeType='MetadataDouble', container='metadata'),
+        ContainerDefault(nodeType='MetadataFloat', container='metadata'),
+        ContainerDefault(nodeType='MetadataInteger', container='metadata'),
+        ContainerDefault(nodeType='MetadataSet', container='metadata'),
+        ContainerDefault(nodeType='MetadataString', container='metadata'),
     ],
     absent=[
         AbsentFields(nodeType='Anchor', fields=[

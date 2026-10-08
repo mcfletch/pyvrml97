@@ -6,6 +6,7 @@ and `elapsedTime` while it runs, and `isPaused` as it pauses and resumes. It
 answers whether it sent anything.
 """
 
+import time
 import unittest
 
 from pydispatch import dispatcher
@@ -26,6 +27,16 @@ class TestStarting(unittest.TestCase):
         self.assertIs(sent(sensor, 'isActive'), True)
         self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.5)
         self.assertEqual(sent(sensor, 'time'), 5.0)
+
+    def test_a_looping_sensor_from_time_zero_reaches_today_at_once(self):
+        """Thirty years of 0.9 second cycles are counted, not stepped through."""
+        sensor = TimeSensor(cycleInterval=0.9, loop=True)
+        started = time.perf_counter()
+        self.assertTrue(sensor.advance(946684800.45))
+        self.assertLess(time.perf_counter() - started, 0.1)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), (946684800.45 % 0.9) / 0.9,
+                               places=4)
+        self.assertTrue(sensor.advance(946684801.0))
 
     def test_a_single_cycle_long_past_does_not_run(self):
         sensor = TimeSensor(cycleInterval=2.0, loop=False)
@@ -72,6 +83,27 @@ class TestStarting(unittest.TestCase):
         self.assertEqual(times, [8.0])
         sensor.advance(13.0)
         self.assertEqual(times, [8.0, 12.0])
+
+    def test_a_jump_of_many_cycles_costs_one_step(self):
+        """A clock that jumps from 0 to the epoch passes 2e8 cycles at once"""
+        import time  # noqa: PLC0415 kept with its use
+        sensor = TimeSensor(cycleInterval=8.0, loop=True)
+        sensor.advance(0.0)
+        started = time.perf_counter()
+        sensor.advance(1.7e9 + 2.0)
+        self.assertLess(time.perf_counter() - started, 1.0)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.25)
+        self.assertEqual(sent(sensor, 'cycleTime'), 1.7e9)
+
+    def test_a_backward_jump_of_many_cycles_costs_one_step(self):
+        import time  # noqa: PLC0415 kept with its use
+        sensor = TimeSensor(cycleInterval=8.0, loop=True)
+        sensor.advance(0.0)
+        sensor.rate = -1.0
+        started = time.perf_counter()
+        sensor.advance(1.7e9 + 2.0)
+        self.assertLess(time.perf_counter() - started, 1.0)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.75)
 
     def test_a_cycle_reached_exactly_ends_at_one(self):
         """8.4.1: a fraction of 0 after the start is sent as 1"""
@@ -278,3 +310,23 @@ class TestRegistered(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+def test_a_single_cycle_at_half_rate_runs_for_twice_its_interval():
+    sensor = TimeSensor(cycleInterval=2.0, startTime=0.0)
+    sensor.rate = 0.5
+    assert sensor.advance(3.0)
+    assert sensor.isActive is True
+    assert abs(sensor.fraction_changed - 0.75) < 1e-9
+
+
+def test_a_single_cycle_backwards_runs_from_its_end():
+    sensor = TimeSensor(cycleInterval=4.0, startTime=10.0)
+    sensor.rate = -1.0
+    sensor.advance(10.0)
+    assert sensor.fraction_changed == 1.0
+    sensor.advance(11.0)
+    assert abs(sensor.fraction_changed - 0.75) < 1e-9
+    sensor.advance(20.0)
+    assert sensor.isActive is False
+    assert sensor.fraction_changed == 0.0

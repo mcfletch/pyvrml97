@@ -11,6 +11,7 @@ import unittest
 
 import numpy as np
 
+from vrml.x3d import nodes as x3d
 from vrml.x3d import pointing, runtime
 
 
@@ -57,6 +58,17 @@ class TestTouch(unittest.TestCase):
         self.sensor.pointerPress(self.hit, down((1, 2, 5), (1, 2, 0)))
         self.assertIsNone(sent(self.sensor, 'isOver'))
         self.assertIsNone(sent(self.sensor, 'isActive'))
+
+
+class TestGeoTouch(unittest.TestCase):
+    def test_over_sends_the_hit_in_its_geo_system(self):
+        sensor = pointing.GeoTouchSensor(geoOrigin=x3d.GeoOrigin(geoCoords=(0.0, 0.0, 0.0)))
+        sensor.pointerOver(pointing.Hit((25, 0, 0), (1, 0, 0), None))
+        self.assertTrue(np.allclose(sent(sensor, 'hitPoint_changed'), (25, 0, 0)))
+        self.assertTrue(np.allclose(sent(sensor, 'hitGeoCoord_changed'), (0, 0, 25), atol=1e-6))
+
+    def test_it_is_the_runtimes_geo_touch_sensor(self):
+        self.assertIs(pointing.POINTING['GeoTouchSensor'], pointing.GeoTouchSensor)
 
 
 class TestPlane(unittest.TestCase):

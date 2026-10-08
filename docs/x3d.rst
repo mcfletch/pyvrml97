@@ -83,8 +83,9 @@ A ``Dialect`` node lists what one version says differently from X3D 4.1: the
 node types it has (``nodeTypes``), the fields it names differently
 (``FieldRename`` nodes in ``renamed``), the defaults it gives differently
 (``FieldDefault`` nodes in ``defaults``, each value written as XML attribute
-text) and the fields of its node types it does not have (``AbsentFields``
-nodes in ``absent``). ``vrml.x3d.dialects.DIALECTS`` holds one per version, keyed by the
+text), the fields of its node types it does not have (``AbsentFields``
+nodes in ``absent``) and the node types it puts in another field where no
+``containerField`` names one (``ContainerDefault`` nodes in ``containers``). ``vrml.x3d.dialects.DIALECTS`` holds one per version, keyed by the
 version a document's header gives: ``'2.0'`` (VRML97), ``'3.0'`` to
 ``'3.3'``, ``'4.0'`` and ``'4.1'``.
 
@@ -105,10 +106,18 @@ X3D 4.0       none                                         none (4.1 adds seven 
 
 The old names are aliases on the X3D classes: ``lod.level`` reads and writes
 ``lod.children``. An alias is not a field and ``getFields`` does not list it.
+A version's renames apply to its X3D nodes; a prototype that shares an X3D
+node's name keeps the field names it declares.
+
+X3D 3.x gives the metadata nodes ``metadata`` as their default container,
+where 4.0 gives ``value``. Written as a 3.x document, a metadata node in a
+``value`` field is given ``containerField="value"``. Reading keeps 4.x's
+default in every version, since documents of that age, and X_ITE, read a
+``MetadataSet``'s children as its values.
 
 ``Dialect.tables()`` gives the lookups a reader or writer uses for one
 document: ``current_name(nodeType, name)``, ``dialect_name(nodeType, name)``,
-``defaults(nodeType)``, ``has_node(nodeType)`` and
+``defaults(nodeType)``, ``container(nodeType)``, ``has_node(nodeType)`` and
 ``has_field(nodeType, name)``. A dialect is a node, so an
 application can build its own.
 
@@ -162,6 +171,10 @@ What reading does:
   not have is read, with a warning. A node type that X3D does not declare
   is read without a warning where ``prototypes=`` supplies a class for it
   (an engine's own).
+- An MFString attribute without quotes is read as one string, with a
+  warning. An element of another XML namespace (``ds:Signature``, an
+  application's own data) is skipped with what it contains, with an ``info``
+  problem.
 - ``UNIT`` statements (X3D 3.3 and later) scale each field in the unit's
   category, and its derived categories, into base units (metres, radians,
   kilograms, newtons). ``scene.units`` records them.
@@ -275,6 +288,14 @@ is reached at most once, so routes that loop end:
   time it has run. ``TimeSensor.rate``, which is not an X3D field, is how fast its cycles run
   against the clock (2 twice as fast, 0 held, negative backwards); a change
   carries on from where the cycle is.
+  ``timesensor.Clocked`` is the same behaviour for any time-dependent node,
+  given its cycle, its rate and what it sends.
+- ``MovieTexture``, ``vrml.x3d.media``: runs as a ``TimeSensor`` does, its
+  cycle the movie's duration (given by whoever decodes it, with
+  ``setDuration``) and its rate ``speed``, sending ``isActive``,
+  ``isPaused``, ``elapsedTime`` and ``duration_changed``. ``position()`` is
+  the time into the movie that is shown: the start before it first plays
+  (the end for a negative ``speed``), and where it stopped once stopped.
 - ``LoadSensor``, ``vrml.x3d.loadsensor``: a node reading a url records its
   state with ``loadsensor.set_load_state`` (``LOADING``, ``LOADED`` or
   ``FAILED``), and ``observe()`` reads the sensor's children's states,
@@ -288,7 +309,9 @@ is reached at most once, so routes that loop end:
   is in view); entering the box of ``size`` about ``center`` sends
   ``isActive TRUE`` and ``enterTime``, leaving it ``isActive FALSE`` and
   ``exitTime``, and moving within it ``position_changed`` and
-  ``orientation_changed``. A box with a side of zero senses nothing.
+  ``orientation_changed``. A box with a side of zero senses nothing. A
+  ``GeoProximitySensor``'s box is about its ``geoCenter``, and it sends the
+  viewer's position in its ``geoSystem`` as ``geoCoord_changed``.
 - The pointing-device sensors, ``vrml.x3d.pointing``: ``TouchSensor``,
   ``PlaneSensor``, ``CylinderSensor`` and ``SphereSensor``. Whoever has the
   pointer calls ``pointerOver(hit)`` as it moves, ``pointerPress(hit, ray)``
@@ -296,9 +319,10 @@ is reached at most once, so routes that loop end:
   ``pointerDrag(hit, ray)`` while it is held and ``pointerRelease(over)``
   when it comes up, each in the sensor's coordinates (``pointing.Hit``,
   ``pointing.Ray``). A ``TouchSensor`` sends ``isOver``, the hit's point,
-  normal and texture coordinate, and ``touchTime`` for a release over it;
-  the drag sensors map the drag onto the plane, cylinder or sphere through
-  the first hit and send ``trackPoint_changed`` and their translation or
+  normal and texture coordinate, and ``touchTime`` for a release over it; a
+  ``GeoTouchSensor`` sends the hit's point in its ``geoSystem`` as
+  ``hitGeoCoord_changed`` too. The drag sensors map the drag onto the plane,
+  cylinder or sphere through the first hit and send ``trackPoint_changed`` and their translation or
   rotation, clamped to their limits, carrying on from the last drag where
   ``autoOffset`` is true.
 - The pick sensors, ``vrml.x3d.picking``: ``LinePickSensor``,
@@ -312,6 +336,9 @@ is reached at most once, so routes that loop end:
   (``ALL_SORTED``); the sensor sends ``isActive``, ``pickedGeometry`` and the
   point events as they change. ``sensor.accepts(labels)`` is the
   ``objectType`` test under ``matchCriterion`` (``picking.matches``).
+- ``GeoPositionInterpolator``, ``vrml.x3d.runtime``: interpolates along the
+  globe between its ``keyValue`` coordinates, sending ``geovalue_changed`` in
+  its ``geoSystem`` and ``value_changed`` in the scene's coordinates.
 - The followers, ``vrml.x3d.followers``: each chaser reaches a destination
   ``duration`` seconds after it is set, along a smooth step, and each damper
   approaches it through ``order`` first-order filters of time constant
@@ -319,6 +346,20 @@ is reached at most once, so routes that loop end:
   its value; it answers whether the follower is still moving, and ``isActive``
   says the same. ``wake()`` is called when one starts moving, for whoever
   calls ``advance`` each frame.
+
+The Geospatial component's coordinates are ``vrml.x3d.geospatial``'s, in
+double precision. ``system(geoSystem)`` reads a ``geoSystem`` field: ``"GD"``
+latitude, longitude and height (``"longitude_first"`` for the other order),
+``"UTM"`` northing, easting and height in a zone ``"Zn"`` (``"S"`` south,
+``"easting_first"``), or ``"GC"`` geocentric metres, on any of the
+ellipsoids in ``ELLIPSOIDS`` (``"WE"``, WGS84, by default).
+``to_geocentric`` and ``from_geocentric`` convert between them; UTM is the
+Krüger series to sixth order. ``frame`` is the frame on the ellipsoid at a
+point, +Y up along its normal, +X east and -Z north. A geospatial node's
+coordinates come into the scene through its ``geoOrigin``:
+``scene_points``, ``scene_matrix``, ``geo_coordinates`` and ``elevations``
+take the node and do the conversion its ``geoSystem`` and ``GeoOrigin``
+ask for, and ``grid_coordinates`` gives a ``GeoElevationGrid``'s points.
 
 Every bindable node (``vrml.x3d.binding.Bindable``) is on its scene's bind
 stack of its kind: viewpoints of every sort share one, backgrounds another,
