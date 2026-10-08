@@ -6,6 +6,7 @@ and `elapsedTime` while it runs, and `isPaused` as it pauses and resumes. It
 answers whether it sent anything.
 """
 
+import time
 import unittest
 
 from pydispatch import dispatcher
@@ -26,6 +27,16 @@ class TestStarting(unittest.TestCase):
         self.assertIs(sent(sensor, 'isActive'), True)
         self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.5)
         self.assertEqual(sent(sensor, 'time'), 5.0)
+
+    def test_a_looping_sensor_from_time_zero_reaches_today_at_once(self):
+        """Thirty years of 0.9 second cycles are counted, not stepped through."""
+        sensor = TimeSensor(cycleInterval=0.9, loop=True)
+        started = time.perf_counter()
+        self.assertTrue(sensor.advance(946684800.45))
+        self.assertLess(time.perf_counter() - started, 0.1)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), (946684800.45 % 0.9) / 0.9,
+                               places=4)
+        self.assertTrue(sensor.advance(946684801.0))
 
     def test_a_single_cycle_long_past_does_not_run(self):
         sensor = TimeSensor(cycleInterval=2.0, loop=False)

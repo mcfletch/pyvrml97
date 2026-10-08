@@ -35,6 +35,7 @@ the cycle is. `elapsedTime` stays the clock time the sensor has run.
 from __future__ import annotations
 
 import dataclasses
+import math
 from typing import Any, Optional
 
 from vrml import fieldtypes
@@ -152,15 +153,21 @@ class TimeSensor(timing.Timed, x3d.TimeSensor):
         cycle = float(self.cycleInterval)
         under_way = run.began if run.counted else None
         ended = False
-        while cycle > 0 and run.progress - run.began >= cycle:
+        if cycle > 0 and run.progress - run.began >= cycle:
             if not self.loop:
                 return self._stop(run.clock(run.began + cycle), run, 1.0)
-            run.began += cycle
+            # Counted rather than stepped: a sensor started at time zero is
+            # decades of cycles behind the clock.
+            run.began += math.floor((run.progress - run.began) / cycle) * cycle
+            while run.progress - run.began >= cycle:
+                run.began += cycle
             ended = True
-        while cycle > 0 and run.progress < run.began:
+        if cycle > 0 and run.progress < run.began:
             if not self.loop:
                 return self._stop(run.clock(run.began), run, 0.0)
-            run.began -= cycle
+            run.began -= math.ceil((run.began - run.progress) / cycle) * cycle
+            while run.progress < run.began:
+                run.began -= cycle
         if run.began != under_way:
             # One cycleTime for the cycle under way, however many have passed
             # since the last advance; a cycle run backwards begins at its end.
