@@ -457,6 +457,11 @@ class RootScenegraphNode(WeakSFNode):
     def fset(self, client: Any, value: Any, notify: int=1) -> Any:
         """Set the root scenegraph node (recursively)
 
+        `client` is given `value`. Its descendants are given it too, except
+        those already rooted in another scene: they belong to the document
+        they were read from, which is where their DEF names and `baseURI`
+        are, and wrapping them in a new graph does not move them out of it.
+
         TODO: this will blow up on cyclic graphs!
         """
         result = super(RootScenegraphNode, self).fset(client, value, notify)
@@ -471,11 +476,11 @@ class RootScenegraphNode(WeakSFNode):
                 except ValueError:
                     pass
                 else:
-                    self.fset(child, value, notify=False)
+                    self._adopt(child, value)
             elif isinstance(each_field, MFNode):
                 try:
                     for child in each_field.__get__(client):
-                        self.fset(child, value, notify=False)
+                        self._adopt(child, value)
                 except AttributeError:
                     pass
             elif each_field.name == ' DEF':
@@ -489,6 +494,12 @@ class RootScenegraphNode(WeakSFNode):
                 except AttributeError:
                     pass
         return result
+
+    def _adopt(self, child: Any, value: Any) -> None:
+        """Root `child` in `value` unless it already has another scene"""
+        current = self.fget(child) if isinstance(child, Node) else None
+        if not current or current is value:
+            self.fset(child, value, notify=False)
 
 
 field.register(WeakSFNode)
