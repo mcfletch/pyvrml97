@@ -227,7 +227,9 @@ differ from X3D's.
 The readers are ``vrml.x3d.readers.xml`` (expat; external entities are not
 read), ``json``, ``classic`` (a SimpleParse grammar for ClassicVRML and
 VRML97) and ``fastinfoset``. Each turns its syntax into calls on one
-``SceneBuilder``.
+``SceneBuilder``. The ClassicVRML reader takes a node name with a full stop
+(``DEF brick.jpg``), which Web3D's converter writes, with a warning; in a
+``ROUTE``, the last full stop ends the node's name.
 
 The compressed binary encoding (``.x3db``, ISO/IEC 19776-3) is the XML
 encoding written as Fast Infoset (ITU-T X.891). ``vrml.x3d.fastinfoset``
