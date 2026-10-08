@@ -17,7 +17,9 @@ from collections.abc import Callable
 from typing import Any
 
 from vrml import cache, protofunctions
-from vrml.x3d import followers, interpolation, loadsensor, pointing, sensors, timesensor, timing
+from vrml.x3d import (
+    followers, geospatial, interpolation, loadsensor, pointing, sensors, timesensor, timing,
+)
 from vrml.x3d import nodes as x3d
 
 __all__ = ['ACTION_KEYS', 'MODIFIER_KEYS', 'PROTOTYPES']
@@ -343,6 +345,30 @@ class SquadOrientationInterpolator(Interpolated, x3d.SquadOrientationInterpolato
         return interpolation.squad_at(curve, fraction)
 
 
+class GeoPositionInterpolator(Interpolated, x3d.GeoPositionInterpolator):
+    """A geospatial position: around the globe between keys
+
+    Each key value is in the node's `geoSystem`; the value between two keys
+    is :func:`~vrml.x3d.geospatial.slerp_points` of theirs, sent as the
+    scene's point in `value_changed` and in the `geoSystem` in
+    `geovalue_changed`.
+    """
+
+    def evaluate(self, fraction: float) -> Any:
+        points = _held(self, 'geo-keys', ('keyValue', 'geoSystem', 'geoOrigin'),
+                       lambda: geospatial.to_geocentric(geospatial.node_system(self),
+                                                        self.keyValue))
+        index, weight = interpolation.segment(self.key, fraction)
+        last = len(points) - 1
+        start, end = points[min(index, last)], points[min(index + 1, last)]
+        found = geospatial.slerp_points(start, end, weight)
+        origin = geospatial.node_origin(self)
+        self.geovalue_changed = tuple(geospatial.from_geocentric(
+            geospatial.node_system(self), [found])[0])
+        local = origin.local([found])[0] if origin is not None else found
+        return tuple(float(value) for value in local)
+
+
 class EaseInEaseOut(x3d.EaseInEaseOut):
     """A fraction eased out of and into each key (:func:`~vrml.x3d.interpolation.ease`)"""
 
@@ -359,7 +385,7 @@ PROTOTYPES: "dict[str, type]" = {
         OrientationInterpolator, ColorInterpolator, NormalInterpolator,
         PositionInterpolator2D, CoordinateInterpolator2D, SplinePositionInterpolator,
         SplinePositionInterpolator2D, SplineScalarInterpolator, SquadOrientationInterpolator,
-        EaseInEaseOut,
+        EaseInEaseOut, GeoPositionInterpolator,
     )
 }
 PROTOTYPES.update(followers.FOLLOWERS)

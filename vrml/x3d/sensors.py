@@ -12,6 +12,9 @@ sensor's own coordinates, and the sensor sends its events.
   `position_changed` and `orientation_changed` when either changes.
 - A box with any side of zero senses nothing, and a sensor that is not
   `enabled` is left, sending `isActive FALSE` where it was active.
+- A `GeoProximitySensor`'s box is about its `geoCenter`, in its `geoSystem`,
+  and it sends `geoCoord_changed`, the viewer's position in that system,
+  with `position_changed`.
 
 The times are the sensor's :meth:`~vrml.x3d.timing.Timed.now` unless
 `observe` is given one.
@@ -25,9 +28,9 @@ import numpy as np
 from numpy.typing import ArrayLike
 
 from vrml.x3d import nodes as x3d
-from vrml.x3d import timing
+from vrml.x3d import geospatial, timing
 
-__all__ = ['SENSORS', 'ProximitySensor', 'Region', 'TransformSensor', 'VisibilitySensor']
+__all__ = ['SENSORS', 'GeoProximitySensor', 'ProximitySensor', 'Region', 'TransformSensor', 'VisibilitySensor']
 
 
 class Region(timing.Timed):
@@ -44,12 +47,16 @@ class Region(timing.Timed):
         """Whether the box has every side longer than zero"""
         return bool(np.all(np.asarray(self.size, dtype=np.float64) > 0))
 
+    def boxCentre(self) -> np.ndarray:
+        """The centre of the box, in the sensor's coordinates"""
+        return np.asarray(self.center, np.float64)
+
     def contains(self, point: ArrayLike) -> bool:
         """Whether `point`, in the sensor's coordinates, is within its box"""
         if not self.sized():
             return False
         size = np.asarray(self.size, dtype=np.float64)
-        offset = np.abs(np.asarray(point, dtype=np.float64)[:3] - np.asarray(self.center, np.float64))
+        offset = np.abs(np.asarray(point, dtype=np.float64)[:3] - self.boxCentre())
         return bool(np.all(offset <= size / 2.0))
 
     def active(self) -> bool:
@@ -104,6 +111,41 @@ class ProximitySensor(Posed, x3d.ProximitySensor):
     """The viewer within a box"""
 
 
+class GeoProximitySensor(Posed, x3d.GeoProximitySensor):
+    """The viewer within a box about a point in a `geoSystem`"""
+
+    geoCenter: Any
+    geoSystem: Any
+    geoOrigin: Any
+    geoCoord_changed: Any
+
+    def _inputs(self) -> tuple[Any, ...]:
+        """The values the box's centre is worked out from"""
+        origin = self.geoOrigin
+        held = ((tuple(origin.geoCoords), tuple(origin.geoSystem), bool(origin.rotateYUp))
+                if origin else None)
+        return (tuple(self.geoCenter), tuple(self.geoSystem), held)
+
+    def boxCentre(self) -> np.ndarray:
+        """`geoCenter` in the sensor's coordinates, kept while its inputs are"""
+        inputs = self._inputs()
+        held = self.__dict__.get('_centre')
+        if held is None or held[0] != inputs:
+            held = (inputs, geospatial.scene_points(self, self.geoCenter)[0])
+            self.__dict__['_centre'] = held
+        centre: np.ndarray = held[1]
+        return centre
+
+    def observe(self, position: ArrayLike, orientation: ArrayLike,
+                now: Optional[float] = None) -> None:
+        """The viewer is at `position`, turned by `orientation`; sends its geoCoord as it moves"""
+        last = self.__dict__.get('_pose')
+        Posed.observe(self, position, orientation, now)
+        pose = self.__dict__.get('_pose')
+        if pose is not None and (last is None or not np.allclose(last[0], pose[0])):
+            self.geoCoord_changed = geospatial.geo_coordinates(self, pose[0])[0]
+
+
 class TransformSensor(Posed, x3d.TransformSensor):
     """A target object within a box"""
 
@@ -118,4 +160,4 @@ class VisibilitySensor(Region, x3d.VisibilitySensor):
 
 #: Each sensor class by its X3D name.
 SENSORS: "dict[str, type]" = {cls.PROTO: cls for cls in (
-    ProximitySensor, TransformSensor, VisibilitySensor)}
+    GeoProximitySensor, ProximitySensor, TransformSensor, VisibilitySensor)}

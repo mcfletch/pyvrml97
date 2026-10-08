@@ -288,7 +288,9 @@ is reached at most once, so routes that loop end:
   is in view); entering the box of ``size`` about ``center`` sends
   ``isActive TRUE`` and ``enterTime``, leaving it ``isActive FALSE`` and
   ``exitTime``, and moving within it ``position_changed`` and
-  ``orientation_changed``. A box with a side of zero senses nothing.
+  ``orientation_changed``. A box with a side of zero senses nothing. A
+  ``GeoProximitySensor``'s box is about its ``geoCenter``, and it sends the
+  viewer's position in its ``geoSystem`` as ``geoCoord_changed``.
 - The pointing-device sensors, ``vrml.x3d.pointing``: ``TouchSensor``,
   ``PlaneSensor``, ``CylinderSensor`` and ``SphereSensor``. Whoever has the
   pointer calls ``pointerOver(hit)`` as it moves, ``pointerPress(hit, ray)``
@@ -296,11 +298,15 @@ is reached at most once, so routes that loop end:
   ``pointerDrag(hit, ray)`` while it is held and ``pointerRelease(over)``
   when it comes up, each in the sensor's coordinates (``pointing.Hit``,
   ``pointing.Ray``). A ``TouchSensor`` sends ``isOver``, the hit's point,
-  normal and texture coordinate, and ``touchTime`` for a release over it;
-  the drag sensors map the drag onto the plane, cylinder or sphere through
-  the first hit and send ``trackPoint_changed`` and their translation or
+  normal and texture coordinate, and ``touchTime`` for a release over it; a
+  ``GeoTouchSensor`` sends the hit's point in its ``geoSystem`` as
+  ``hitGeoCoord_changed`` too. The drag sensors map the drag onto the plane,
+  cylinder or sphere through the first hit and send ``trackPoint_changed`` and their translation or
   rotation, clamped to their limits, carrying on from the last drag where
   ``autoOffset`` is true.
+- ``GeoPositionInterpolator``, ``vrml.x3d.runtime``: interpolates along the
+  globe between its ``keyValue`` coordinates, sending ``geovalue_changed`` in
+  its ``geoSystem`` and ``value_changed`` in the scene's coordinates.
 - The followers, ``vrml.x3d.followers``: each chaser reaches a destination
   ``duration`` seconds after it is set, along a smooth step, and each damper
   approaches it through ``order`` first-order filters of time constant
@@ -308,6 +314,20 @@ is reached at most once, so routes that loop end:
   its value; it answers whether the follower is still moving, and ``isActive``
   says the same. ``wake()`` is called when one starts moving, for whoever
   calls ``advance`` each frame.
+
+The Geospatial component's coordinates are ``vrml.x3d.geospatial``'s, in
+double precision. ``system(geoSystem)`` reads a ``geoSystem`` field: ``"GD"``
+latitude, longitude and height (``"longitude_first"`` for the other order),
+``"UTM"`` northing, easting and height in a zone ``"Zn"`` (``"S"`` south,
+``"easting_first"``), or ``"GC"`` geocentric metres, on any of the
+ellipsoids in ``ELLIPSOIDS`` (``"WE"``, WGS84, by default).
+``to_geocentric`` and ``from_geocentric`` convert between them; UTM is the
+Krüger series to sixth order. ``frame`` is the frame on the ellipsoid at a
+point, +Y up along its normal, +X east and -Z north. A geospatial node's
+coordinates come into the scene through its ``geoOrigin``:
+``scene_points``, ``scene_matrix``, ``geo_coordinates`` and ``elevations``
+take the node and do the conversion its ``geoSystem`` and ``GeoOrigin``
+ask for, and ``grid_coordinates`` gives a ``GeoElevationGrid``'s points.
 
 Every bindable node (``vrml.x3d.binding.Bindable``) is on its scene's bind
 stack of its kind: viewpoints of every sort share one, backgrounds another,
