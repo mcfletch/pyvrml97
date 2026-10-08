@@ -160,6 +160,24 @@ class TestCurrent(BindCase):
         self.assertIs(binding.bound(self.first), self.first)
         self.assertIs(sent(self.first, 'isBound'), True)
 
+    def test_asking_again_sets_nothing_on_the_bound_node(self):
+        """A pass asks every frame; the node on top is not sent set_bind again"""
+        paths = [(self.scene, self.first), (self.scene, self.second)]
+        binding.current_path(paths)
+        sets = []
+        original = binding.Bindable.on_set_bind
+
+        def counting(node, value):
+            sets.append((node, value))
+            return original(node, value)
+        binding.Bindable.on_set_bind = counting
+        try:
+            for _frame in range(3):
+                self.assertIs(binding.current_path(paths), paths[0])
+        finally:
+            binding.Bindable.on_set_bind = original
+        self.assertEqual(sets, [])
+
 
 class TestInlines(BindCase):
     """7.2.2: nodes of a file an Inline reads are not candidates for the first

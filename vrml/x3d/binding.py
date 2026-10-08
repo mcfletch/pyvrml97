@@ -114,11 +114,13 @@ def current_path(paths: Sequence[Any]) -> Any:
         if not any(owner is known for known in owners):
             owners.append(owner)
     for owner in owners:
-        for reference in reversed(_stack(owner, kind)):
+        stack = _stack(owner, kind)
+        for reference in reversed(stack):
             node = reference()
             for path in paths:
                 if path[-1] is node:
-                    node.set_bind = True
+                    if reference is not stack[-1]:
+                        node.set_bind = True
                     return path
     for path in paths:
         if not _inlined(path[-1], main):
