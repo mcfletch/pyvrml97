@@ -73,6 +73,27 @@ class TestStarting(unittest.TestCase):
         sensor.advance(13.0)
         self.assertEqual(times, [8.0, 12.0])
 
+    def test_a_jump_of_many_cycles_costs_one_step(self):
+        """A clock that jumps from 0 to the epoch passes 2e8 cycles at once"""
+        import time  # noqa: PLC0415 kept with its use
+        sensor = TimeSensor(cycleInterval=8.0, loop=True)
+        sensor.advance(0.0)
+        started = time.perf_counter()
+        sensor.advance(1.7e9 + 2.0)
+        self.assertLess(time.perf_counter() - started, 1.0)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.25)
+        self.assertEqual(sent(sensor, 'cycleTime'), 1.7e9)
+
+    def test_a_backward_jump_of_many_cycles_costs_one_step(self):
+        import time  # noqa: PLC0415 kept with its use
+        sensor = TimeSensor(cycleInterval=8.0, loop=True)
+        sensor.advance(0.0)
+        sensor.rate = -1.0
+        started = time.perf_counter()
+        sensor.advance(1.7e9 + 2.0)
+        self.assertLess(time.perf_counter() - started, 1.0)
+        self.assertAlmostEqual(sent(sensor, 'fraction_changed'), 0.75)
+
     def test_a_cycle_reached_exactly_ends_at_one(self):
         """8.4.1: a fraction of 0 after the start is sent as 1"""
         sensor = TimeSensor(cycleInterval=2.0, loop=True, startTime=10.0)
