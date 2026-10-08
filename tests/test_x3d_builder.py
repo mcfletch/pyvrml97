@@ -833,7 +833,9 @@ class WithApple(x3d.WorldInfo):
 
 
 class Shadowed(WithApple):
-    apple = property(lambda self: None)
+    @property
+    def apple(self):
+        return None
 
 
 class TestShadowedFields(unittest.TestCase):
