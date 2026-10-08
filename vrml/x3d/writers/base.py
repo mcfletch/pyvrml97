@@ -374,24 +374,32 @@ class SceneWriter:
             memo[key] = default
         return memo[key]
 
-    def _inherited(self, cls: type) -> "set[str]":
-        """The field and event names a class has from the declaration it extends"""
-        memo: "dict[type, set[str]]" = self.__dict__.setdefault('_inherited_names', {})
+    def _inherited(self, cls: type) -> "dict[str, Any]":
+        """The fields and events a class has from the declaration it extends, by name"""
+        memo: "dict[type, dict[str, Any]]" = self.__dict__.setdefault('_inherited_fields', {})
         if cls not in memo:
             base = next(item for item in cls.__mro__ if not item.__dict__.get(' declares', False))
-            memo[cls] = {item.name for item in protofunctions.getFields(base)
+            memo[cls] = {item.name: item for item in protofunctions.getFields(base)
                          + protofunctions.getFields(base, 1)}
         return memo[cls]
 
     def own_declarations(self, target: Any) -> "list[Declaration]":
-        """Fields a Script or shader node declares, with their current values"""
+        """Fields a Script or shader node declares, with their current values
+
+        A declaration may take the name of a field the node type has in
+        another version: X3D 3.x's Script declaring `description`.
+        """
         cls = type(target)
         inherited = self._inherited(cls)
+        type_name = protofunctions.protoName(target)
         found = []
         connected = self._scopes[-1].connections.get(target, {}) if self._scopes else {}
         for declared in protofunctions.getFields(cls) + protofunctions.getFields(cls, 1):
-            if declared.name in inherited or declared.name.startswith(' '):
+            if inherited.get(declared.name) is declared or declared.name.startswith(' '):
                 continue
+            if declared.name in inherited and self.dialect.has_field(type_name, declared.name):
+                self.problem('%s declares %s, a field of its node type'
+                             % (type_name, declared.name))
             value = None
             if isinstance(declared, field.Field) and declared.name not in connected:
                 value = declared.fget(target)

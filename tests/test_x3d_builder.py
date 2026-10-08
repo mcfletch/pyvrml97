@@ -836,6 +836,17 @@ class TestDeclaredFields(unittest.TestCase):
         self.assertEqual([p.message for p in scene.problems if p.severity == 'error'],
                          ['Script declares url, a field of its node type'])
 
+    def test_a_script_declares_a_field_its_version_does_not_give_it(self):
+        """Script has a description field from X3D 4.0"""
+        built = Built()
+        built.document('Immersive', '3.3')
+        script = built.b.start_node('Script')
+        built.declare_field('description', 'MFString', 'initializeOnly', '"a" "b"')
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(script.description, ['a', 'b'])
+        self.assertEqual([p.message for p in scene.problems if p.severity == 'error'], [])
+
     def test_a_shape_declares_no_fields(self):
         built = Built()
         built.b.start_node('Shape')

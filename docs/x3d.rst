@@ -197,7 +197,10 @@ What reading does:
   read from that node, and a cache depending on such a field
   (``CacheHolder.depend``) watches that node's.
 - A ``Script`` keeps its declared fields, ``url`` and ``sourceCode`` and is
-  not run.
+  not run. A declaration of a field the node type has in the document's
+  version (``url``, or ``description`` from X3D 4.0) is an error and is not
+  read. Writing to a version whose node type has a declared field's name
+  raises ``X3DWriteError``.
 - An ``IMPORT`` names a node an ``Inline``'s scene exports; routes to it
   wait in ``scene.pendingRoutes`` until
   ``builder.bind_imports(scene, inline, inlined)`` is called with the

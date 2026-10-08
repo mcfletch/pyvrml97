@@ -659,7 +659,8 @@ class SceneBuilder:
         built = frame.node
         own = type(built)
         base = own.__mro__[1] if own.__dict__.get(' declares', False) else own
-        if hasattr(base, name) and isinstance(getattr(base, name), (field.Field, field.Event)):
+        if (isinstance(getattr(base, name, None), (field.Field, field.Event))
+                and self.dialect.has_field(frame.type_name, name)):
             self.problem('error', '%s declares %s, a field of its node type'
                          % (frame.type_name, name), built)
             return
