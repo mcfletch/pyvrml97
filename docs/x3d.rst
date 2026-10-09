@@ -312,6 +312,19 @@ is reached at most once, so routes that loop end:
   ``isPaused``, ``elapsedTime`` and ``duration_changed``. ``position()`` is
   the time into the movie that is shown: the start before it first plays
   (the end for a negative ``speed``), and where it stopped once stopped.
+- The Sound component's sources and processing nodes, ``vrml.x3d.sound``:
+  each runs as a ``TimeSensor`` does from ``startTime`` to a later
+  ``stopTime``, pausing and resuming, sending ``isActive``, ``isPaused`` and
+  ``elapsedTime``, and stopping when not ``enabled``. An ``AudioClip``'s cycle
+  is its duration (given by whoever decodes it, with ``setDuration``, which
+  sends ``duration_changed``, -1 for a clip that cannot be read) over the
+  ``pitch`` it had when it started. A ``BufferAudioSource``'s is its buffer's
+  duration over ``playbackRate`` times ``2 ** (detune / 1200)``;
+  ``samples()`` is ``buffer`` as ``(channels, frames)``, each channel's
+  samples after the last's, and ``setBuffer`` sends ``length``,
+  ``bufferlength``, ``channelCount`` and ``bufferDuration``. The other sources
+  and the processing nodes have no cycle and run until stopped.
+  ``position()`` is the time into the clip or buffer that is playing.
 - ``LoadSensor``, ``vrml.x3d.loadsensor``: a node reading a url records its
   state with ``loadsensor.set_load_state`` (``LOADING``, ``LOADED`` or
   ``FAILED``), and ``observe()`` reads the sensor's children's states,

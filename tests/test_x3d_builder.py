@@ -109,19 +109,12 @@ class TestNodes(unittest.TestCase):
         script = scene.getDEF('SELF')
         self.assertIs(script.me, script)
 
-    def test_a_script_field_may_hold_a_node_that_encloses_the_script(self):
-        """VRML97 Annex C's example 2: a Script holds itself and its parent."""
-        scene = loads(
-            '<X3D version="3.0"><Scene><Transform DEF="ROOT"><Script DEF="S">'
-            '<field accessType="initializeOnly" name="myself" type="SFNode">'
-            '<Script USE="S"/></field>'
-            '<field accessType="initializeOnly" name="root" type="SFNode">'
-            '<Transform USE="ROOT"/></field></Script></Transform></Scene></X3D>')
+    def test_a_script_may_hold_a_node_it_is_inside(self):
+        scene = loads(b"""<X3D version="3.3"><Scene><Transform DEF="ROOT"><Script DEF="S">
+          <field name="root" type="SFNode" accessType="initializeOnly"><Transform USE="ROOT"/></field>
+          </Script></Transform></Scene></X3D>""")
         self.assertEqual(problems(scene, 'error'), [])
-        root = scene.getDEF('ROOT')
-        script = root.children[0]
-        self.assertIs(script.myself, script)
-        self.assertIs(script.root, root)
+        self.assertIs(scene.getDEF('S').root, scene.getDEF('ROOT'))
 
     def test_a_use_of_an_enclosing_node_below_a_script_is_still_an_error(self):
         built = Built()
