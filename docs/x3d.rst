@@ -192,7 +192,8 @@ What reading does:
 - ``PROTO``/``ProtoDeclare`` makes a prototype class registered on the
   scene. An ``EXTERNPROTO`` whose URL names a local file, relative to the
   document, is read from that file (any encoding, eight levels deep at
-  most). Nothing is fetched over a network; ``extern_resolver`` lets an
+  most): the prototype its ``#name`` names, or, with none, the file's first
+  ``PROTO`` (not counting its ``EXTERNPROTO`` statements). Nothing is fetched over a network; ``extern_resolver`` lets an
   application supply prototypes from elsewhere. An unresolved
   ``EXTERNPROTO`` has its declared interface and no body, and is completed
   when ``builder.complete_extern_proto(extern, definition)`` is given the

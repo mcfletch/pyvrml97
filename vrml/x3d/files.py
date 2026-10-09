@@ -13,7 +13,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, BinaryIO
 from urllib.parse import unquote, urlsplit
 
-from vrml import node
+from vrml import node, protofunctions
 from vrml.x3d import nodes as x3d
 from vrml.x3d import readers, writers
 from vrml.x3d.builder import ExternResolver
@@ -58,6 +58,20 @@ def local_path(url: str, base: str) -> "tuple[str, str] | None":
     return os.path.normpath(path), parts.fragment
 
 
+def first_prototype(scene: X3DScene) -> "type | None":
+    """The first prototype `scene` declares, external prototypes passed over;
+    None for none
+
+    An EXTERNPROTO URL with no ``#name`` names it (19775-1 4.9.3), whatever
+    its name.
+    """
+    for prototype in scene.protoTypes.values():
+        if not protofunctions.getExternalURL(prototype):
+            found: type = prototype
+            return found
+    return None
+
+
 class LocalPrototypes:
     """Resolves EXTERNPROTO URLs that name local files, relative to the document
 
@@ -76,7 +90,7 @@ class LocalPrototypes:
         self.depth = depth
         self.scenes: "dict[str, X3DScene | None]" = {} if scenes is None else scenes
 
-    def __call__(self, urls: Sequence[str], base: str, name: str) -> "type | None":
+    def __call__(self, urls: Sequence[str], base: str, name: str) -> "type | None":  # noqa: ARG002 ExternResolver's signature; the file, not this name, says which prototype
         if self.depth >= MAX_PROTOTYPE_DEPTH:
             return None
         for url in urls:
@@ -87,7 +101,7 @@ class LocalPrototypes:
             scene = self._scene(path)
             if scene is None:
                 continue
-            found = scene.getProto(fragment or name)
+            found = scene.getProto(fragment) if fragment else first_prototype(scene)
             if found is not None and found not in node.PENDING_PROTOTYPES:
                 return found
         return None

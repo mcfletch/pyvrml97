@@ -95,6 +95,18 @@ class TestLoading(unittest.TestCase):
                                         '[ "my%20lamps.x3dv#Lamp" ]\nLamp {}\n')
         self.assertEqual(x3d.load(path).children[0].size, 3.0)
 
+    def test_an_external_prototype_url_with_no_name_takes_the_files_first(self):
+        """19775-1 4.9.3: the first PROTO in the file, not counting EXTERNPROTOs,
+        whatever its name (ConformanceNist EXTERNPROTO/first_proto)"""
+        self.write('lamps.x3dv', '#X3D V4.0 utf8\nPROFILE Core\n'
+                                 'EXTERNPROTO Other [ ] [ "missing.x3dv" ]\n'
+                                 'PROTO Blue [ inputOutput SFFloat size 3 ] { Group { } }\n'
+                                 'PROTO Lamp [ inputOutput SFFloat size 5 ] { Group { } }\n')
+        path = self.write('scene.x3dv', '#X3D V4.0 utf8\nPROFILE Core\n'
+                                        'EXTERNPROTO Lamp [ inputOutput SFFloat size ] '
+                                        '[ "lamps.x3dv" ]\nLamp {}\n')
+        self.assertEqual(x3d.load(path).children[0].size, 3.0)
+
     def test_where_an_external_prototype_url_leads(self):
         from vrml.x3d.files import local_path  # noqa: PLC0415 kept with its use
         base = os.path.join(os.sep, 'worlds', 'scene.x3d')
