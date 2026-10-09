@@ -91,9 +91,44 @@ class TestLoading(unittest.TestCase):
         sensor.observe(now=1.0)
         self.assertIs(sent(sensor, 'isLoaded'), True)
 
-    def test_no_children_and_disabled_send_nothing(self):
-        self.assertFalse(LoadSensor().observe(now=1.0))
+    def test_a_disabled_sensor_sends_nothing(self):
         self.assertFalse(LoadSensor(children=watched(LOADED), enabled=False).observe(now=1.0))
+
+    def test_no_children_send_not_loaded_once(self):
+        sensor = LoadSensor()
+        self.assertTrue(sensor.observe(now=1.0))
+        self.assertIs(sent(sensor, 'isLoaded'), False)
+        self.assertIs(sent(sensor, 'isActive'), False)
+        self.assertEqual(sent(sensor, 'progress'), 0.0)
+        self.assertIsNone(sent(sensor, 'loadTime'))
+        self.assertFalse(sensor.observe(now=2.0))
+
+    def test_new_children_are_watched_afresh(self):
+        sensor = LoadSensor()
+        sensor.observe(now=1.0)
+        sensor.children = watched(LOADED)
+        self.assertTrue(sensor.observe(now=2.0))
+        self.assertIs(sent(sensor, 'isLoaded'), True)
+        sensor.children = []
+        self.assertTrue(sensor.observe(now=3.0))
+        self.assertIs(sent(sensor, 'isLoaded'), False)
+
+    def test_a_failure_sends_the_part_loaded(self):
+        children = watched(LOADED, LOADING, LOADING, LOADING)
+        sensor = LoadSensor(children=children)
+        sensor.observe(now=1.0)
+        loadsensor.set_load_state(children[1], FAILED)
+        loadsensor.set_load_state(children[2], LOADED)
+        sensor.observe(now=2.0)
+        self.assertAlmostEqual(sent(sensor, 'progress'), 0.5)
+
+
+class TestLoadStateMethod(unittest.TestCase):
+    def test_a_node_may_answer_its_own_state(self):
+        class Answering(nodes.ImageTexture):
+            def loadState(self):
+                return FAILED
+        self.assertEqual(loadsensor.load_state(Answering()), FAILED)
 
 
 class TestRegistered(unittest.TestCase):
