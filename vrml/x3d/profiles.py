@@ -51,6 +51,10 @@ COMPONENTS = {
 #: Other spellings of component names that documents use.
 COMPONENT_ALIASES = {'H-Anim': 'HAnim'}
 
+#: Components beyond X3D's that documents declare, with their highest level:
+#: X_ITE's own (`vrml.x3d.xite`). No profile includes them.
+EXTENSION_COMPONENTS = {'X_ITE': 1}
+
 PROFILES = {
     # Annex A
     'Core': _profile('Core', {'Core': 1}),

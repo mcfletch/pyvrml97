@@ -77,9 +77,6 @@ class JSONWriter(SceneWriter):
             '@xsd:noNamespaceSchemaLocation': SCHEMA % self.version,
             'JSON schema': JSON_SCHEMA % self.version,
         }
-        head = self.head()
-        if head:
-            top['head'] = head
         self.enter(self.scene)
         children = self.graph(self.scene)
         for inlineDEF, importedDEF, AS in self.imports():
@@ -94,14 +91,18 @@ class JSONWriter(SceneWriter):
             children.append({'EXPORT': record})
         children.extend(self.route_objects(self.scene))
         self.leave()
+        head = self.head()
+        if head:
+            top['head'] = head
         top['Scene'] = {'-children': children} if children else {}
         return text({'X3D': top}) + '\n'
 
     def head(self) -> "dict[str, Any]":
         head: "dict[str, Any]" = {}
-        if self.scene.components:
-            head['component'] = [{'@name': item.name, '@level': int(item.level)}
-                                 for item in self.scene.components]
+        components = self.components()
+        if components:
+            head['component'] = [{'@name': name, '@level': level}
+                                 for name, level in components]
         if self.writes_units and self.scene.units:
             head['unit'] = [{'@category': item.category, '@name': item.name,
                              '@conversionFactor': _number(item.conversionFactor)}

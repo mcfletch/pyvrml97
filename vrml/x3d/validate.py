@@ -15,7 +15,7 @@ from typing import Any
 import numpy as np
 
 from vrml import field, node, protofunctions
-from vrml.x3d import dialects, extension, profiles
+from vrml.x3d import dialects, extension, profiles, xite
 from vrml.x3d import nodes as x3d
 from vrml.x3d.scene import LoadProblem
 
@@ -129,7 +129,7 @@ def validate(scene: Any, profile: "str | None" = None) -> "list[LoadProblem]":
         problems.append(LoadProblem(severity='warning', message=unknown))
     for statement in scene.components:
         name = profiles.COMPONENT_ALIASES.get(statement.name, statement.name)
-        highest = profiles.COMPONENTS.get(name)
+        highest = profiles.COMPONENTS.get(name, profiles.EXTENSION_COMPONENTS.get(name))
         if highest is not None and statement.level > highest:
             problems.append(LoadProblem(
                 severity='error',
@@ -145,7 +145,7 @@ def validate(scene: Any, profile: "str | None" = None) -> "list[LoadProblem]":
     tables = chosen.tables()
     for current in _nodes(_roots(scene)):
         type_name = protofunctions.protoName(current)
-        declared_type = x3d.CONCRETE_NODES.get(type_name)
+        declared_type = xite.declaration(type_name)
         in_vocabulary = declared_type is not None and isinstance(current, declared_type)
         if in_vocabulary and not tables.has_node(type_name):
             problems.append(LoadProblem(

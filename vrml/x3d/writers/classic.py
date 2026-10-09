@@ -52,8 +52,7 @@ class ClassicWriter(SceneWriter):
         else:
             self.out.append('#X3D V%s utf8' % self.version)
             self.out.append('PROFILE %s' % self.profile)
-            for item in self.scene.components:
-                self.out.append('COMPONENT %s:%d' % (item.name, item.level))
+            components = len(self.out)
             if self.writes_units:
                 for item in self.scene.units:
                     self.out.append('UNIT %s %s %s' % (
@@ -70,6 +69,9 @@ class ClassicWriter(SceneWriter):
             self.out.append('EXPORT %s%s' % (localDEF, ' AS ' + AS if AS else ''))
         self.route_lines(self.scene, 0)
         self.leave()
+        if not self.vrml97:
+            self.out[components:components] = [
+                'COMPONENT %s:%d' % (name, level) for name, level in self.components()]
         return '\n'.join(self.out) + '\n'
 
     # Scenes and prototype bodies
