@@ -9,10 +9,17 @@ reading without errors rather than to the XML graph. `tests/fixtures/x3d-corpus`
 also reads, every archive in it, when it is there.
 The examples are under the Web3D Consortium Open-Source License
 (`tests/fixtures/x3d-corpus/*/license.html`).
+
+`tests/fixtures/x3d-corpus-faults.json` records the faults of the fetched
+archives' own files, each with its reason and part of the failure its check
+reports. A listed file must still fail that way, so a reader that learns to
+read it, or a corrected archive, fails the check until its entry goes.
 """
 
 import glob
+import json
 import os
+import re
 import unittest
 
 from vrml.x3d import corpus, readers, writers
@@ -93,9 +100,29 @@ def errors(scene):
     return [problem.message for problem in scene.problems if problem.severity == 'error']
 
 
+#: What reading says of a DEF name the XML and JSON encodings do not allow.
+NOT_AN_XML_NAME = ' is not an XML name'
+
+
+def written(test, scene, encoding, **options):
+    """The scene written in `encoding`, or None where the writer refuses
+    only what reading reported: a node or field the version lacks, or a DEF
+    name the XML and JSON encodings do not allow"""
+    try:
+        return writers.write(scene, encoding, **options)
+    except writers.X3DWriteError as error:
+        reported = {problem.message for problem in scene.problems}
+        reported |= {message[:-len(NOT_AN_XML_NAME)] for message in reported
+                     if message.endswith(NOT_AN_XML_NAME)}
+        refused = {problem.split(' cannot be written')[0] for problem in error.problems}
+        test.assertLessEqual(refused, reported, error.problems)
+        return None
+
+
 def lacks(problem):
-    """Whether a problem is a node or field the document's version does not have"""
-    return ' has no node ' in problem.message or ' has no field ' in problem.message
+    """Whether a problem is a node, field or field type the document's version does not have"""
+    return any(words in problem.message
+               for words in (' has no node ', ' has no field ', ' has no field type '))
 
 
 def problems(scene):
@@ -149,6 +176,25 @@ AUTHORING_FAULTS = (
 )
 
 
+#: Faults the fetched archives' files have, which the checks below find: by
+#: check, the scene's path under the corpus directory, the reason (one of
+#: `reasons`) and part of the failure the check reports.
+FAULTS_FILE = os.path.join(HERE, 'fixtures', 'x3d-corpus-faults.json')
+
+
+def recorded_faults():
+    """(check, path) -> {'reason', 'fails'}, and the reasons by name"""
+    with open(FAULTS_FILE, encoding='utf-8') as stream:
+        data = json.load(stream)
+    faults = {(entry['check'], entry['path']): entry for entry in data['faults']}
+    return faults, data['reasons']
+
+
+def without_addresses(text):
+    """`text` without the object addresses a node's repr carries"""
+    return re.sub(r' @0x[0-9A-Fa-f]+', '', text)
+
+
 class CorpusTests:
     """The checks, over whichever directory of scenes a subclass names"""
 
@@ -161,17 +207,34 @@ class CorpusTests:
         'XmpMetadataEmbedded',
     )
 
+    @classmethod
+    def setUpClass(cls):
+        cls.faults, cls.reasons = recorded_faults()
+
     def setUp(self):
         self.paths = scenes(self.directory)
         if not self.paths:
             self.skipTest('no scenes in %s' % self.directory)
+
+    def holds(self, check, path, found):
+        """`found`, the failures `check` reports of `path`, is none, or names its recorded fault"""
+        relative = os.path.relpath(path, self.directory).replace(os.sep, '/')
+        found = [without_addresses(str(item)) for item in found]
+        entry = self.faults.get((check, relative))
+        if entry is None:
+            self.assertEqual(found, [])
+            return
+        self.assertIn(entry['reason'], self.reasons)
+        self.assertTrue(any(entry['fails'] in item for item in found),
+                        'the %s fault recorded for %s (%s) is not what %s reports: %s'
+                        % (entry['reason'], relative, entry['fails'], check, found))
 
     def test_each_xml_scene_reads_without_a_problem(self):
         for path in self.paths:
             if any(name in path for name in self.KNOWN_ERRORS + AUTHORING_FAULTS):
                 continue
             with self.subTest(scene=os.path.relpath(path, self.directory)):
-                self.assertEqual(problems(read(path)), [])
+                self.holds('xml', path, problems(read(path)))
 
     def test_each_encoding_builds_the_xml_graph(self):
         for path in self.paths:
@@ -181,7 +244,8 @@ class CorpusTests:
                 if not os.path.exists(other) or converted_differently(other, suffix):
                     continue
                 with self.subTest(scene=os.path.relpath(other, self.directory)):
-                    self.assertIsNone(first_difference(expected, read(other), ignore=ignore))
+                    difference = first_difference(expected, read(other), ignore=ignore)
+                    self.holds('encoding', other, [] if difference is None else [difference])
 
     def test_each_vrml97_translation_reads_without_an_error(self):
         for path in glob.glob(os.path.join(self.directory, '**', '*.wrl'), recursive=True):
@@ -189,9 +253,10 @@ class CorpusTests:
                 continue
             with self.subTest(scene=os.path.relpath(path, self.directory)):
                 scene = read(path)
-                self.assertEqual(scene.version, '2.0')
-                self.assertEqual([str(p) for p in scene.problems if p.severity == 'error'], [])
-
+                found = [p.message for p in scene.problems if p.severity == 'error']
+                if scene.version != '2.0':
+                    found.append('version %s' % scene.version)
+                self.holds('vrml97', path, found)
 
     def test_each_binary_scene_reads(self):
         """The .x3db files are earlier revisions of their scenes than the
@@ -203,28 +268,44 @@ class CorpusTests:
                 continue                        # published empty, or cut short
             with self.subTest(scene=os.path.relpath(path, self.directory)):
                 scene = readers.read(data, name=path)
-                self.assertEqual([message for message in errors(scene)
-                                  if not any(name in message for name in DOUBLED_IN_BINARY)], [])
+                self.holds('binary', path, [message for message in errors(scene)
+                                            if not any(name in message for name in DOUBLED_IN_BINARY)])
 
     def test_each_scene_written_in_each_encoding_reads_back_as_itself(self):
         for path in self.paths:
             scene = read(path)
             for encoding in sorted(writers.WRITERS):
                 with self.subTest(scene=os.path.relpath(path, self.directory), encoding=encoding):
-                    again = readers.read(writers.write(scene, encoding).encode('utf-8'), name=path)
+                    text = written(self, scene, encoding)
+                    if text is None:
+                        continue
+                    again = readers.read(text.encode('utf-8'), name=path)
                     # What reading refused is not in the scene, so is not written.
-                    self.assertLessEqual(set(errors(again)), set(errors(scene)))
-                    self.assertIsNone(first_difference(scene, again))
+                    found = sorted(set(errors(again)) - set(errors(scene)))
+                    difference = first_difference(scene, again)
+                    if difference is not None:
+                        found.append(difference)
+                    self.holds('written', path, found)
 
     def test_each_scene_written_as_xml_is_valid_against_the_schema(self):
         from lxml import etree  # noqa: PLC0415 a test-only dependency
         schema = etree.XMLSchema(etree.parse(SCHEMA))
-        parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False)
+        # huge_tree: GrampsAnimations writes one text node past libxml2's default limit.
+        parser = etree.XMLParser(load_dtd=False, no_network=True, resolve_entities=False,
+                                 huge_tree=True)
         for path in self.paths:
             with self.subTest(scene=os.path.relpath(path, self.directory)):
-                text = writers.write(read(path), 'xml', version='4.1', canonical=True)
-                self.assertTrue(schema.validate(etree.fromstring(text.encode('utf-8'), parser)),
-                                schema.error_log)
+                scene = read(path)
+                try:
+                    text = written(self, scene, 'xml', version='4.1', canonical=True)
+                except self.failureException as refused:
+                    self.holds('schema', path, [refused])
+                    continue
+                if text is None:
+                    continue
+                valid = schema.validate(etree.fromstring(text.encode('utf-8'), parser))
+                self.holds('schema', path, [] if valid else [
+                    error.message for error in schema.error_log])
 
     def test_each_vrml97_translation_written_as_vrml97_reads_back_as_itself(self):
         for path in glob.glob(os.path.join(self.directory, '**', '*.wrl'), recursive=True):
@@ -235,8 +316,17 @@ class CorpusTests:
                 text = writers.write(scene, 'classic')
                 self.assertTrue(text.startswith('#VRML V2.0 utf8\n'))
                 again = readers.read(text.encode('utf-8'), name=path)
-                self.assertEqual(errors(again), [])
-                self.assertIsNone(first_difference(scene, again, header=False))
+                found = list(errors(again))
+                difference = first_difference(scene, again, header=False)
+                if difference is not None:
+                    found.append(difference)
+                self.holds('vrml97 written', path, found)
+
+    def test_each_recorded_fault_names_a_reason(self):
+        for (check, path), entry in self.faults.items():
+            with self.subTest(check=check, scene=path):
+                self.assertIn(entry['reason'], self.reasons)
+                self.assertTrue(entry['fails'])
 
 
 class TestTheCommittedSubset(CorpusTests, unittest.TestCase):

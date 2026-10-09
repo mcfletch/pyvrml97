@@ -15,6 +15,7 @@ the scene's `problems` field; in strict mode the first error raises
 """
 
 import math
+import re
 import weakref
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast
@@ -159,6 +160,11 @@ class _Body:
 ExternResolver = Callable[[Sequence[str], str, str], 'type | None']
 
 
+#: A DEF name in the XML and JSON encodings: an XML NCName, which is what the
+#: schema's xs:ID is -- a letter or underscore, then letters, digits, '_', '-'
+#: and '.'.
+XML_NAME = re.compile(r'[^\W\d][\w.\-]*\Z')
+
 #: What a document is built from when no prototypes are given.
 DEFAULT_VOCABULARY: "Mapping[str, type]" = {**x3d.CONCRETE_NODES, **runtime.PROTOTYPES}
 
@@ -216,6 +222,9 @@ class SceneBuilder:
         self._problems: "list[LoadProblem]" = []
         self._scripts = 0
         self._unknown_types: "set[str]" = set()
+        #: What a DEF name in the document's encoding matches, where the
+        #: encoding's grammar does not already hold its reader to it.
+        self.def_names: "re.Pattern[str] | None" = None
 
     # Problems
 
@@ -514,6 +523,10 @@ class SceneBuilder:
         return self._scope.defs.get(name)
 
     def _define(self, name: str, built: Any) -> None:
+        if self.def_names is not None and not self.def_names.match(name):
+            # Kept, so the document's USE and ROUTE statements find it;
+            # an encoding that cannot hold the name does not write it
+            self.problem('warning', 'DEF name %r is not an XML name' % name, built)
         if name in self._scope.defs:
             self.problem('warning', 'DEF %r is named twice; the later node takes it' % name)
         self._scope.defs[name] = built
@@ -533,8 +546,13 @@ class SceneBuilder:
         if parent.target:
             containerField = parent.target[-1]
         name = self._container(parent, built, containerField)
-        if name is not None:
-            parent.children.setdefault(name, []).append(built)
+        if name is None:
+            return
+        if not isinstance(parent.node, node.PrototypedNode) and not self.dialect.has_field(
+                parent.type_name, name):
+            self.problem('warning', '%s has no field %s.%s'
+                         % (self.version_name, parent.type_name, name), parent.node)
+        parent.children.setdefault(name, []).append(built)
 
     def _container(self, parent: _Frame, built: Any, explicit: str) -> "str | None":
         """The parent field a node goes into: the explicit one, else the implied one"""
@@ -548,10 +566,9 @@ class SceneBuilder:
                 protofunctions.protoName(built))
             self.problem('error', '%s %s %s' % (parent.type_name, why, name), built)
             return None
-        # The vocabulary's default container, whatever the version: X3D 3.x
-        # gives metadata nodes `metadata`, where documents of that age, and
-        # X_ITE, put them in a MetadataSet's `value`
-        name = implied_container(parent.node, built)
+        # The document's version's default container: X3D 3.x gives metadata
+        # nodes `metadata`, where 4.x gives them `value`
+        name = implied_container(parent.node, built, self.dialect)
         if name is None:
             self.problem('error', '%s has no field that holds a %s'
                          % (parent.type_name, protofunctions.protoName(built)), built)
@@ -646,11 +663,17 @@ class SceneBuilder:
         if not isinstance(frame.node, DECLARES_FIELDS):
             self.problem('error', '%s does not declare fields' % frame.type_name, frame.node)
             return
+        built = frame.node
+        own = type(built)
+        base = own.__mro__[1] if own.__dict__.get(' declares', False) else own
+        if (isinstance(getattr(base, name, None), (field.Field, field.Event))
+                and self.dialect.has_field(frame.type_name, name)):
+            self.problem('error', '%s declares %s, a field of its node type'
+                         % (frame.type_name, name), built)
+            return
         declared = self._declaration(name, type_name, accessType, text, value)
         if declared is None:
             return
-        built = frame.node
-        own = type(built)
         if not own.__dict__.get(' declares', False):
             own = type(own.__name__, (own,), {'PROTO': protofunctions.protoName(built),
                                               ' declares': True})
@@ -667,6 +690,8 @@ class SceneBuilder:
         if type_name not in field.baseFieldTypes:
             self.problem('error', 'Field %s has unknown type %s' % (name, type_name))
             return None
+        if self.scene.version == '2.0' and type_name not in dialect.VRML97_FIELD_TYPES:
+            self.problem('warning', 'VRML97 has no field type %s (%s)' % (type_name, name))
         if accessType in ('inputOnly', 'outputOnly', 'eventIn', 'eventOut'):
             return field.newEvent(name, type_name, accessType in ('outputOnly', 'eventOut'))
         if accessType not in ('inputOutput', 'initializeOnly', 'exposedField', 'field'):
@@ -726,6 +751,12 @@ class SceneBuilder:
             if nodes:
                 self.problem('error', 'Prototype field %s is %s, which takes no default'
                              % (declared.name, declared.accessType))
+            return
+        if not isinstance(declared, (node.SFNode, node.MFNode)):
+            # A field of values keeps the default its declaration gave it
+            if nodes:
+                self.problem('error', 'Prototype field %s is an %s, which takes no nodes'
+                             % (declared.name, declared.typeName()))
             return
         default = nodes if isinstance(declared, node.MFNode) else (nodes[-1] if nodes else node.NULL)
         replacement = type(declared)(declared.name, declared.exposure, default)

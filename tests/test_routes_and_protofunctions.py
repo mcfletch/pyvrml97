@@ -69,6 +69,23 @@ class TestForwardingAValue(unittest.TestCase):
         self.source.translation = (0.0, 1.0, 0.0)
         self.assertEqual(list(self.destination.translation), [0.0, 1.0, 0.0])
 
+    def test_a_node_appended_to_a_list_forwards_the_list(self):
+        source, destination = basenodes.Group(), basenodes.Group()
+        wired = route.ROUTE(source, 'children', destination, 'children')
+        shape = basenodes.Shape()
+        source.children.append(shape)
+        self.assertEqual(list(destination.children), [shape])
+        self.assertIs(wired.destination, destination)
+
+    def test_a_change_to_one_list_forwards_only_that_list(self):
+        from vrml.x3d import nodes as x3d  # noqa: PLC0415 kept with its use
+        source, destination = x3d.HAnimJoint(children=[]), x3d.HAnimJoint()
+        wired = route.ROUTE(source, 'children', destination, 'children')
+        source.displacers = []
+        source.displacers.append(x3d.HAnimDisplacer())
+        self.assertEqual(list(destination.children), [])
+        self.assertIs(wired.destination, destination)
+
     def test_binding_a_field_that_is_not_there_is_reported_not_raised(self):
         """A scene file can name a field the node does not have, and the rest
         of it is still worth loading."""

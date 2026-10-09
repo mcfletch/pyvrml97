@@ -151,6 +151,31 @@ class TestPrototypes(unittest.TestCase):
             {'ProtoInstance': {'@name': 'Far', 'fieldValue': [{'@name': 'size', '@value': 2}]}}])
         self.assertEqual(scene.children[0].size, 2.0)
 
+    def test_a_comment_among_a_value_fields_children_leaves_its_default(self):
+        scene = read([{'ProtoDeclare': {
+            '@name': 'Keyed',
+            'ProtoInterface': {'field': [
+                {'@name': 'key', '@type': 'MFFloat', '@accessType': 'inputOutput',
+                 '-children': [{'#comment': 'NULL initialization value'}]},
+                {'@name': 'keyValue', '@type': 'MFVec4f', '@accessType': 'inputOutput',
+                 '-children': [{'#comment': 'NULL initialization value'}]}]},
+            'ProtoBody': {'-children': [{'Group': {}}]}}},
+            {'ProtoInstance': {'@name': 'Keyed', '@DEF': 'K'}}])
+        self.assertEqual(scene.problems, [])
+        self.assertEqual(list(scene.getDEF('K').key), [])
+        self.assertEqual(len(scene.getDEF('K').keyValue), 0)
+
+    def test_a_node_given_to_a_value_field_is_reported(self):
+        scene = read([{'ProtoDeclare': {
+            '@name': 'Keyed',
+            'ProtoInterface': {'field': [
+                {'@name': 'key', '@type': 'MFFloat', '@accessType': 'inputOutput',
+                 '-children': [{'Shape': {}}]}]},
+            'ProtoBody': {'-children': [{'Group': {}}]}}}])
+        self.assertEqual([problem.message for problem in scene.problems],
+                         ['Prototype field key is an MFFloat, which takes no nodes'])
+        self.assertEqual(list(scene.protoTypes['Keyed'].key.getDefault()), [])
+
 
 class TestScripts(unittest.TestCase):
     def test_fields_and_source(self):
@@ -219,6 +244,13 @@ class TestWhatWeb3DsConverterWrites(unittest.TestCase):
     def test_an_mfstring_field_given_booleans(self):
         scene = read([{'Text': {'@string': [True, 'x']}}])
         self.assertEqual(scene.children[0].string, ['true', 'x'])
+
+
+def test_a_def_name_that_is_no_xml_name_is_kept_with_a_warning():
+    scene = read([{'Group': {'@DEF': 'Left Hand'}}])
+    assert isinstance(scene.getDEF('Left Hand'), x3d.Group)
+    assert [problem.message for problem in scene.problems] == [
+        "DEF name 'Left Hand' is not an XML name"]
 
 
 if __name__ == '__main__':

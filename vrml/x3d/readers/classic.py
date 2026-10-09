@@ -12,8 +12,8 @@ is matched as one run of them (`numberRun`); one holding anything else
 A file with an X3D header that declares fields with VRML97's words
 (`field`, `exposedField`, `eventIn`, `eventOut`) is read with a warning,
 which is an error in strict mode. What Web3D's converter writes outside the
-grammar (a DEF name with a full stop, a prototype inside a list of nodes) is
-read with a warning.
+grammar (a DEF name with a full stop, also in a ROUTE, a prototype inside a
+list of nodes) is read with a warning.
 """
 
 import re
@@ -43,7 +43,8 @@ componentName  := -[: \t\r\n,]+
 unit           := 'UNIT', ws, !, id, ws, id, ws, factor
 factor         := number
 meta           := 'META', ts, !, string, ts, string
-route          := 'ROUTE', ws, !, id, '.', id, ws, 'TO', ws, id, '.', id
+route          := 'ROUTE', ws, !, routeEnd, ws, 'TO', ws, routeEnd
+routeEnd       := id, ('.', idRest+)+
 import         := 'IMPORT', ws, !, id, '.', id, (ws, 'AS', ws, id)?
 export         := 'EXPORT', ws, !, id, (ws, 'AS', ws, id)?
 
@@ -185,8 +186,15 @@ class ClassicReader:
         self.builder.meta(key, value)
 
     def _route(self, production: Any) -> None:
-        names = [self._text(item) for item in production[3]]
-        self.builder.route(*names)
+        # A field name holds no full stop: the last one ends the node's name,
+        # which Web3D's converter writes with full stops of its own
+        (source, source_field), (destination, destination_field) = (
+            self._text(item).rsplit('.', 1) for item in production[3])
+        for name, item in ((source, production[3][0]), (destination, production[3][1])):
+            if '.' in name:
+                self._where(item[1])
+                self.builder.problem('warning', 'Name %r holds a full stop' % name)
+        self.builder.route(source, source_field, destination, destination_field)
 
     def _import(self, production: Any) -> None:
         names = [self._text(item) for item in production[3]]
