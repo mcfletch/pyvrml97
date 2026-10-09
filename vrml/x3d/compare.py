@@ -109,14 +109,14 @@ class _Comparison:
         type_name = protofunctions.protoName(a)
         names = {f.name for f in protofunctions.getFields(a)} | {
             f.name for f in protofunctions.getFields(b)}
-        if 'sourceCode' in names and 'url' in names:
+        connected = self.connected.get(a, ())
+        if 'sourceCode' in names and 'url' in names and not {'sourceCode', 'url'} & set(connected):
             left, right = _program(a), _program(b)
             if left[0] != right[0]:
                 return '%s: program source %r != %r' % (path, left[0][:60], right[0][:60])
             if left[1] != right[1]:
                 return '%s.url: %r != %r' % (path, left[1], right[1])
             names -= {'sourceCode', 'url'}
-        connected = self.connected.get(a, ())
         for name in sorted(names):
             if name.startswith(' ') or name == 'externalURL' or (type_name, name) in self.ignore:
                 continue
@@ -213,7 +213,10 @@ def _interface_differs(a: type, b: type) -> "str | None":
                                            second.accessType, second.typeName())
         if isinstance(first, (node.SFNode, node.MFNode)):
             continue
-        found = _values_differ(first.getDefault(), second.getDefault(), _tolerance(first))
+        # Each default as an instance holds it: a declaration without a
+        # value gives the type's own, which the field coerces on first use
+        found = _values_differ(first.coerce(first.getDefault()), second.coerce(second.getDefault()),
+                               _tolerance(first))
         if found:
             return '%s default: %s' % (name, found)
     return None

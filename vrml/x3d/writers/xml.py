@@ -208,6 +208,11 @@ class XMLWriter(SceneWriter):
         # Declared fields come first: an IS connection names one of them.
         for declared in self.own_declarations(target):
             self.field_declaration(declared, depth + 1)
+        # A prototype instance's field values come before its IS, as the
+        # schema's X3DPrototypeInstance orders them; a node's IS comes first.
+        if prototype:
+            for item in self.values(target) + self.node_fields(target):
+                self.field_value(item, depth + 1)
         connections = self.connections(target)
         if connections:
             self.out.append('%s<IS>' % (indent + INDENT))
@@ -215,10 +220,7 @@ class XMLWriter(SceneWriter):
                 self.element(depth + 2, 'connect', [('nodeField', nodeField),
                                                      ('protoField', protoField)])
             self.out.append('%s</IS>' % (indent + INDENT))
-        if prototype:
-            for item in self.values(target) + self.node_fields(target):
-                self.field_value(item, depth + 1)
-        else:
+        if not prototype:
             for item in self.values(target):
                 start += self.value_attribute(item.name, item.type_name, item.value)
             # The schema puts a node's metadata before its other node fields.

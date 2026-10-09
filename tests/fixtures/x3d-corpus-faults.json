@@ -1,0 +1,4021 @@
+{
+ "reasons": {
+  "translation-metadata-moved": "Web3D's VRML97 converter moves a metadata node out of a node VRML97 gives no metadata field, writing 'closing node early, pushing metadata node afterwards as peer'; the field it then writes at the top level is no VRML97 syntax.",
+  "translation-export-import": "The converter writes X3D's EXPORT and IMPORT statements as a block, 'EXPORT { ... }', which no encoding has.",
+  "translation-syntax": "The translation does not parse: the converter leaves out a field name before a node (CollidableShape's shape, SpatialSound's children), writes an SFString without quotes (language GLSL), repeats a field for each node of a list (trimmingContour), or the file is cut short.",
+  "not-vrml97": "Not VRML97: VRML 1.0, Lattice XVL nodes, or node types of one browser's own (NurbsSurface, CoordinateDeformer, KbdSensor, Torus, PolygonBackground).",
+  "content-faults": "The scene's own content is wrong: a ROUTE, USE or IS naming a node or field it does not have, or one of another type or access; a field given more nodes than it holds; a Script declaring a field its node type has; a value its field type cannot take.",
+  "translation-unreadable": "The translation into this encoding does not read (a syntax error from one of the faults above), so nothing of it compares with the .x3d.",
+  "translation-metadata-doubled": "The ClassicVRML converter writes a nested MetadataSet's children twice.",
+  "translation-differs": "The translation says something other than the .x3d beside it: a field dropped (WorldInfo info and title, farDistance, HAnimHumanoid version), an IS connection commented out, an empty string dropped from an MFString, whitespace changed in a Script's source, a declaration's type changed (MFDouble to MFFloat), a header's version or profile changed, or a different revision of the scene.",
+  "binary-attribute-names": "The .x3db does not decode to the scene beside it: its attributes come out with other names and values. vrml.x3d.fivocabulary numbers attribute names past 53 by inference, since no edition of table A.3 publishes the files' numbering; a published numbering would settle it.",
+  "schema-file-values": "Written as 4.1, the scene carries a value of its own that the 4.1 schema refuses: an enumeration value or component of another version or browser, a number out of range, a required attribute it lacks, a DEF it repeats, or a node where the schema allows none.",
+  "version-upgrade-conflict": "Written as 4.1, a 3.x Script's declaration takes the name of a field 4.x gives Script (description), with another type or access.",
+  "schema-content-model": "The 4.1 schema's content model refuses a node the field allows: PointSet's normal.",
+  "self-declared-invalid": "The scene says in its meta 'error' that it is not valid: a Transform both connected by IS and given children."
+ },
+ "faults": [
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/CAD/CadGeometryPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/AceticAcid.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Alanine.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/ButanedioicAcid.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Caffeine.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Cholesterol.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Cortisone.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/CyclohexeneOxide.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Cyclopentanamine.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Digitoxigenin.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/DimethylSulfoxide.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Ethanol.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/GlycerolDiacetate.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Histamine.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Oxytocin.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/PyruvicAcid.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Riboflavin.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/SomatoStatin.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/TartaricAcid.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/Tetrahydrofuran.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/TransDCE.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/VitaminK.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/_1_4_Dihydronaphthalene.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ChemicalMarkupLanguage/_3_Methyl_1H_indene.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ano1_text: txt default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/DistributedInteractiveSimulation/AutomatedEntityGeometryCreator.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/DistributedInteractiveSimulation/DISEntityPrototypes.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].title: 'DISEntityPrototypes.x3d' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/DistributedInteractiveSimulation/ExternProtoDeclareDefinitions.json",
+   "reason": "translation-differs",
+   "fails": "children[2].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Followers/FollowerExternalPrototypeDeclarations.json",
+   "reason": "translation-differs",
+   "fails": "children[0].info: length 12 != 10"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Followers/FollowerPrototypeDeclarations.json",
+   "reason": "translation-differs",
+   "fails": "children[0].info: length 12 != 10"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Followers/RoomDesired.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].title: 'RoomDesired.x3d' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/A3_GeoInline.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "children[1].children: 1 nodes != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/GeoSpatialExternProtoDeclarations.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].children[1].description: '\"Initial GeoViewpoint\""
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/GeospatialCoordinateAxesNsewExample.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].title: 'GeospatialCoordinateAxesNsewExample.x3d'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/TripsModel.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[1].children[1].metadata.value[0].value: length 1 !="
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/newGeospatialScene.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "children[5].geoOrigin: NULL != GeoOrigin( DEF='DefaultGeoOri"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/HelloWorld.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].info: length 1 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellAttributeAll.json",
+   "reason": "translation-unreadable",
+   "fails": "children[4].children[2].children[2].geometry.coord: NULL != "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellAttributeEdgeRound.json",
+   "reason": "translation-unreadable",
+   "fails": "children[3].children[2].geometry.coord: NULL != Coordinate( "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellAttributeEdgeVector.json",
+   "reason": "translation-unreadable",
+   "fails": "children[3].children[2].geometry.coord: NULL != Coordinate( "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellAttributeFaceFlags.json",
+   "reason": "translation-unreadable",
+   "fails": "children[3].children[2].geometry.coord: NULL != Coordinate( "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellAttributeNumberOfDivisions.json",
+   "reason": "translation-unreadable",
+   "fails": "children[3].children[2].geometry.coord: NULL != Coordinate( "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellAttributeShellType.json",
+   "reason": "translation-unreadable",
+   "fails": "children[3].children[2].geometry.coord: NULL != Coordinate( "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellAttributeTexture.json",
+   "reason": "translation-unreadable",
+   "fails": "children[3].children[2].geometry.coord: NULL != Coordinate( "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellAttributeVertexRound.json",
+   "reason": "translation-unreadable",
+   "fails": "children[3].children[2].geometry.coord: NULL != Coordinate( "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellExternProtoDeclare.json",
+   "reason": "translation-differs",
+   "fails": "children[3].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/XvlShellProtoDeclare.json",
+   "reason": "translation-differs",
+   "fails": "children[3].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/baby.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/communicator/communicator.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/dolphin.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/hand.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/octopus.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/oni.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/HoleCentered.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/HoleLargeOffset.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/HoleSmallOffset.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/NurbsExternPrototypes.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.NurbsCurve: knot: initializeOnly MFDouble != init"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/StampX3dLetters.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/StampX3dLettersHalloween.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/TrimmedNurbsWithHole.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/TrimmingContourExample.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/animated_patch.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "version: '3.0' != '3.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/animated_patch22.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/nrbduck_0.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "version: '3.0' != '3.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BallBounce.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BallBounceSimple.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BallJointExample.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BodyGeometry.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BounceTrimesh.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/CarDemoMain.json",
+   "reason": "translation-unreadable",
+   "fails": "children[12].bodies[1].massDensityModel: NULL != Sphere( DEF"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/DoubleHingeJoint.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/MotorJoint.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/MovingBody.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/SingleHingeJoint.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/SliderJointExample.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/UniversalJointExample.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Shaders/Flutter.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Shaders/SimpleShader.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/StudentProjects/KeyboardEightyEightKeys.json",
+   "reason": "translation-differs",
+   "fails": "children[8].children[301]: program source 'ecmascript:\\n\\nfu"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/StudentProjects/ProjectileInterpolatorArena.json",
+   "reason": "translation-differs",
+   "fails": "children[9]: program source 'ecmascript:\\nvar maxValue;\\n\\nf"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/StudentProjects/ProjectileInterpolatorPrototype.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/StudentProjects/ProjectileSliderBarPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.ProjectileSliderBar[1]: program source 'ecmascrip"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/StudentProjects/ProjectileSliderBarPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ProjectileSliderBar: name default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/StudentProjects/melon/MelonLauncher.x3dv",
+   "reason": "translation-differs",
+   "fails": "version: '3.0' != '3.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/ArtDecoPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/AutumnPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/GlassPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/MetalsPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/NeonPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/RococoPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/SantaFePrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/SheenPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/SilkyPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/SpringPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/SummerPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/TropicalPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/UniversalMediaMaterials/WinterPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/VolumeRendering/ProjectionMaxVentricles.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].title: 'ProjectionMaxVentricles.x3d' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/VolumeRendering/ShadedBrain.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].title: 'ShadedBrain.x3d' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Vrml97Specification/RefractiveMaterial.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Vrml97Specification/Rotor.json",
+   "reason": "translation-differs",
+   "fails": "children[2].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Web3dOutreach/CubeLogoPrototype.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].children[0].geometry.string: length "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Web3dOutreach/LogoLetterPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].children[0].geometry.string: length "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Web3dOutreach/Web3dTimeline.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.TimelineElement[1]: program source 'ecmascript:\\n"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/InlineExport.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/InlineImport.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/RefractiveMaterial.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.RefractiveMaterial[1]: program source 'ecmascript"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/StringArrayEncodingExamples.json",
+   "reason": "translation-differs",
+   "fails": "children[3].geometry.string: length 3 != 2"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/TextureProjectorComponentExample.json",
+   "reason": "translation-differs",
+   "fails": "children[0].farDistance: 10.0 != -1.0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/TextureProjectorComponentExample.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].farDistance: 10.0 != -1.0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/X3dHeaderPrototypeSyntaxExamples.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/course/CreateVrmlFromStringRandomBoxes.json",
+   "reason": "translation-differs",
+   "fails": "children[11]: program source 'ecmascript:\\n\\nfunction R () {"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/course/CreateX3DFromStringRandomSpheres.json",
+   "reason": "translation-differs",
+   "fails": "children[9].children[0].children[0].geometry.string: length "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/course/ExtrusionCrossSectionPrototype.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].children[0].geometry.string: length "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/BooleanSequencerExample.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[1].children[0].children[0].children[0]."
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/BooleanSequencerPrototype.json",
+   "reason": "translation-unreadable",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/CameraExamples.json",
+   "reason": "translation-differs",
+   "fails": "children[17].children[0].children[0].geometry.string: length"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/CameraExamples.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].title: 'CameraExamples.x3d' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/CameraPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[2].children[0].children[0].geometry.string: length "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/CoordinateInterpolator2dPrototype.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/EventUtilityPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/Geometry2dComponentExamples.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/Geometry2dComponentExternProtos.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/ImportExportSyntax.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/IntegerSequencerPrototype.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/LoadSensorPrototype.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/MetadataExamples.json",
+   "reason": "translation-differs",
+   "fails": "children[0].children: 7 nodes != 6"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/MetadataExamples.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.MetadataDouble: value: inputOutput MFDouble != in"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/MetadataPrototypes.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.MetadataDouble: value: inputOutput MFDouble != in"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/PositionInterpolator2dPrototype.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/ProtoTagDtdDeclarationExamples.json",
+   "reason": "translation-differs",
+   "fails": "children: 3 nodes != 2"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/ProxyShapeExample.json",
+   "reason": "translation-differs",
+   "fails": "children[2]: program source \"ecmascript:\\n\\nfunction initial"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/QuadTreeExamples.json",
+   "reason": "translation-unreadable",
+   "fails": "children[0].children[2].children: 1 nodes != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/SpinGroupInternalSubsetDeclaration.json",
+   "reason": "translation-unreadable",
+   "fails": "prototypes.SpinGroup.routes: [('SpinGroupOrientationInterpol"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/SpinGroupInternalSubsetDeclaration.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.SpinGroup.routes: [('SpinGroupOrientationInterpol"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestContainerFieldValues.json",
+   "reason": "translation-unreadable",
+   "fails": "children[3].geometry.string: length 4 != 3"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestContainerFieldValues.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].title: 'TestContainerFieldValues.x3d' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestDiagnosticOverloadedChildNodes.json",
+   "reason": "translation-unreadable",
+   "fails": "version: '3.3' != '4.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestRegularExpressionChecks.json",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestSchema.json",
+   "reason": "translation-unreadable",
+   "fails": "children[5].appearance.metadata: MetadataSet( ) != NULL"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestSchema.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "children[0].title: 'TestSchema.x3d' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestSchematronDiagnostics.json",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Core' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestSchematronDiagnostics.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Core' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TextExamples.json",
+   "reason": "translation-differs",
+   "fails": "children[2].children[0].geometry.string: length 3 != 2"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/UnquotedTokensNavigationInfoAndFontStyle.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 13 != 11"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/ViewpointGroupPrototype.json",
+   "reason": "translation-differs",
+   "fails": "children[2].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/X3dRetreatProtoExercise.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/HAnimModelFootLeft.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/HAnimModelFootRight.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/HAnimModelHandLeft.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/HAnimModelHandRight.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA1.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA2.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA3.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA4.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA4Animated.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA4MarkersAnimated.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter01Jin.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter02Chul.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter03Hyun.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter04Young.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter05Ju.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter06Ga.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter07No.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter08Da.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter09Ru.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter10Mi.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter11Min.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter12Sun.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/DigitalHeritage/LaFerrassie_I_right_thumb_index_finger.json",
+   "reason": "translation-differs",
+   "fails": "children[3].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/DigitalHeritage/LaFerrassie_I_right_thumb_index_finger.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Interchange' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/FacialAnimation/FacialAnimationComparisonScripts.json",
+   "reason": "translation-differs",
+   "fails": "children[34].children[0].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/AllenDutton.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].version: '1.0' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/BoxMan3.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[2].info: length 4 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/BoxMan3AnimationPanel.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[2].info: length 4 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/DiamondManLOA_0.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[3].metadata.value[0].value: length 1 != 2"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/DiamondManLOA_1.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[3].metadata.value[0].value: length 1 != 2"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/DiamondManLOA_2.json",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/DiamondManLOA_2.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "children[4].metadata.metadata.value: length 1 != 2"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/HAnim1SpecificationLOA3Animation.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[12].info: length 7 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/HAnim1SpecificationLOA3Illustrated.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[12].info: length 7 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/HAnim1SpecificationLOA3Invisible.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[12].info: length 7 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/JinOriginalLOA1.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/JinOriginalLOA2.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/JinOriginalLOA3.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/JinOriginalLOA4.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/JoeSkinTexcoordDisplacerKick.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[10].children[0].version: '1.0' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter01Jin.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter02Chul.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter03Hyun.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter04Young.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter05Ju.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter06Ga.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter07No.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter08Da.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter09Ru.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter10Mi.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter11Min.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter12Sun.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 6 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/NancyNativeTags.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[0].info: length 7 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/NancyStandShootRifleM24.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[4].children[0].children[0].children[0].children[0]."
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/AnimatedAssembledHumanSkeleton.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].children[0].info: length 1 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/LaughingSkeleton.json",
+   "reason": "translation-differs",
+   "fails": "children[13].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/LaughingSkeleton.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[13].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/MedicalMetadata.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[1].children[1].children[0].metadata.value: 14 nodes"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/SkeletonCompleteNormals.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/BvhConversion1.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/BvhConversion1Illustrated.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/BvhConversion1Invisible.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/BvhSeamless3dExport1.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[2].version: '1.0' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/HAnimDisplacerExamples.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[10].children[0].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/Pirouette.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/UniversityWisconsionExample1.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Poses/HAnimPoseExample.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "imports: [('HumanoidInline', 'JoeSkeletonSkinSite', 'Humanoi"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Poses/HAnimPosePrototype.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "version: '4.0' != '4.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Poses/PoseCollection.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/AllenDuttonProtoInstances.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.Humanoid: info default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/AllenStandShootRifleM24.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "children[2].children[0].children[2].children[0].children[0]."
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/HAnimBehaviorPrototypes.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[2].HumanoidArray[0].version: '1.0' != ''"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/HAnimPrototypes.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.Humanoid1_1: info default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/InterchangableActorsViaDynamicRoutingPrototypes.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "prototypes.Humanoid1_1: info default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/LOA1_JumpAnimation.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/LOA1_KneelAnimation.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/LOA1_RunAnimation.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/LOA1_StandAnimation.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/LOA1_StopAnimation.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/LOA1_SwimmingFlutterKickAnimation.json",
+   "reason": "translation-differs",
+   "fails": "children[3].children[0].geometry.string: length 5 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/LOA1_WalkAnimation.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].geometry.string: length 6 != 5"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/NancyPrototypes.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.Humanoid: info default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan1.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan1AnimationPanel.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[2].info: length 4 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan2.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan2AnimationPanel.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[2].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/CesiumManCastleOnlineConverter.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Interchange' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/DesignPatternsApparelMedicalSkinLayers.json",
+   "reason": "translation-unreadable",
+   "fails": "children[2].metadata: MetadataString( ) != NULL"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/DesignPatternsApparelMedicalSkinLayers.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/JinLOA4SkinSingleMesh.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].children[0].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/JoeKick.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/JoeKickAnimation.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[10].children[0].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/JoeSkeletonSkinSite.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/JoeSkeletonSkinSiteSaluteWalk.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[6].children[0].children[0].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/HAnim1SpecificationLOA3Animation.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[12].info: length 7 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/HAnim1SpecificationLOA3Illustrated.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[12].info: length 7 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/HAnim1SpecificationLOA3Invisible.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[12].info: length 7 != 0"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/HAnim2SpecificationLOA3Illustrated.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[12].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/HAnim2SpecificationLOA3Invisible.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[12].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/KoreanCharacterMotionAnnexB01Jin.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/KoreanCharacterMotionAnnexC01Jin.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/KoreanCharacterMotionAnnexD01Jin.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].children[0].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Templates/DiamondManLOA0.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Templates/DiamondManLOA1.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[3].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Templates/DiamondManLOA2.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[4].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/GrampsAnimations.json",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/GrampsAnimations.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Leif.json",
+   "reason": "translation-differs",
+   "fails": "children[7].children[1].children[0].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Leif.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "children[7].children[1].children[0].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/LeifAnimated.json",
+   "reason": "translation-differs",
+   "fails": "children[7].children[1].children[1].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/LeifAnimated.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "children[7].children[1].children[1].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Lily.json",
+   "reason": "translation-differs",
+   "fails": "children[7].children[1].children[0].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Lily.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/LilyAnimated.json",
+   "reason": "translation-differs",
+   "fails": "children[6].children[1].children[0].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/LilyAnimated.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/MainStage.json",
+   "reason": "translation-differs",
+   "fails": "children[4].direction: [1.0, 0.0, 0.0] != [0.0, 0.0, -1.0]"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/MainStage.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[4].direction: [1.0, 0.0, 0.0] != [0.0, 0.0, -1.0]"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Tufani.json",
+   "reason": "translation-differs",
+   "fails": "children[7].children[1].children[0].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Tufani.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/TufaniAnimated.json",
+   "reason": "translation-differs",
+   "fails": "children[6].children[1].children[0].version: '' != '2.0'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/TufaniAnimated.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "children[6].children[1].children[0].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/WinterAndSpringHumanoidTimings.json",
+   "reason": "translation-differs",
+   "fails": "children[3].children[0].geometry.string: length 5 != 3"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/WinterAndSpringTest.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[20].children[0].info: length 0 != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/Boeing747Tunisia/Boeing747.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 29"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F16FightingFalconTurkey/F16.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[6].children[5].children[0].geometry.str"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18BlueAngelUnitedStates/BlueAngelF18Example.json",
+   "reason": "translation-differs",
+   "fails": "children[10].children[0].children[0].children[1].children[6]"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18BlueAngelUnitedStates/CanopyPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.Canopy[0].children[2].children[1]: program source"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18BlueAngelUnitedStates/WheelsFrontExample.json",
+   "reason": "translation-differs",
+   "fails": "children[2].children[0].children[0]: program source 'ecmascr"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18BlueAngelUnitedStates/WheelsFrontPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.WheelsFront[0].children[0].children[2]: program s"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18BlueAngelUnitedStates/WheelsRearLeftExample.json",
+   "reason": "translation-differs",
+   "fails": "children[2].children[0].children[0]: program source 'ecmascr"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18BlueAngelUnitedStates/WheelsRearLeftPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.WheelsRearLeft[0].children[0].children[2]: progra"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18BlueAngelUnitedStates/WheelsRearRightExample.json",
+   "reason": "translation-differs",
+   "fails": "children[2].children[0].children[0]: program source 'ecmascr"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18BlueAngelUnitedStates/WheelsRearRightPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.WheelsRearRight[0].children[0].children[2]: progr"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18SuperhornetUnitedStates/F18.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Avatars/Marines/Marine.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Buildings/SecurityPerimeter/Bollard.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Buildings/UHRB/Hospital.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.Aperture: description default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Buildings/UHRB/SimpleBuildingConstructionPrototypes.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.Building[0].children[1].children[1]: program sour"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Buildings/UHRB/UltraHighResolutionBuildingPrototypes.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.Aperture: description default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/OmniDirectional/OmniReceiverPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.OmniReceiver[0].children[1]: program source 'ecma"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/OmniDirectional/OmniTransmitterPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.OmniTransmitter[0].children[3]: program source 'e"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Sonobuoys/DicassPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.DICASS: linkTargetWindow default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Sonobuoys/SonobuoyFieldScenario.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[9].children[0].ID: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/Atmosphere/CloudsProcedural1.json",
+   "reason": "translation-differs",
+   "fails": "children[8].children[2]: program source 'ecmascript:\\nfuncti"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/Atmosphere/CloudsProcedural1.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[8].children[2]: program source 'ecmascript:\\nfuncti"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/Atmosphere/CloudsProcedural2.json",
+   "reason": "translation-differs",
+   "fails": "children[8].children[3]: program source 'ecmascript:\\n\\n\\nfu"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/Atmosphere/CloudsProcedural2.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[8].children[3]: program source 'ecmascript:\\n\\n\\nfu"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/Atmosphere/CloudsProcedural3.json",
+   "reason": "translation-differs",
+   "fails": "children[9].children[2]: program source 'ecmascript:\\n\\n\\nfu"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/Atmosphere/CloudsProcedural3.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[9].children[2]: program source 'ecmascript:\\n\\n\\nfu"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/Atmosphere/CloudsProcedural4.json",
+   "reason": "translation-differs",
+   "fails": "children[8].children[3]: program source 'ecmascript:\\n\\n\\nfu"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/Atmosphere/CloudsProcedural4.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[8].children[3]: program source 'ecmascript:\\n\\n\\nfu"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Environment/TimeOfDay/TimeOfDay.json",
+   "reason": "translation-differs",
+   "fails": "children[5].children[4].children[3].children[1].children[0]."
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/GroundVehicles/Cargo/CargoTruckHighDetail.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 50"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/GroundVehicles/Chevy/ChevyTahoe.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 50"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/GroundVehicles/Emergency/WashingtonStatePatrolCruiser.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 50"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/HarborEquipment/Brow/BrowPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.Brow: SealURL default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/HarborEquipment/Brow/BrowWithWatchAndRiserPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.BrowWithWatchAndRiser: SealURL default: length 0 "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/HarborEquipment/Brow/BrowWithWatchPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.Brow: SealURL default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Locations/NarragansettBayRhodeIslandBathymetry/NarragansettBayMerged.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Locations/Singapore/Singapore.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].children[2].metadata.value: 2 nodes != 69"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Locations/StraitsOfMalaccaLarge/StraitsOfMalaccaWayPoints.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Locations/TunisAirportTunisia/TunisAirportTunisia.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 57"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedAirVehicles/Rascal.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[6].metadata.value: 2 nodes != 50"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedAirVehicles/ScanEagle.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[1].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedAirVehicles/SeaScan.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[1].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedSurfaceVehicles/SeaFox.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedSurfaceVehicles/SeaFoxOriginal.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedUnderwaterVehicles/SolarAuvCadModel.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[6].metadata.value: 2 nodes != 50"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Scenarios/UssColeTerroristAttack/UssColeTerroristAttack.json",
+   "reason": "translation-differs",
+   "fails": "children[1].children[20]: program source 'ecmascript:\\nfunct"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/Barge.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShip.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[1].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShipBlue.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 29"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShipGreen.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShipOrange.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShipRed.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/Freighter.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 26"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/OilTanker.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 26"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CigaretteBoat/CigaretteBoat.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 28"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CigaretteBoat/CigaretteBoatWithDriver.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 28"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CruiseShip/CruiseShip.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/Ferries/BoatFerryArizona.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 26"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/Ferries/LargeFerry.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/PersonalWaterCraft/JetSki.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 30"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/Trawlers/Trawler.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[1].metadata.value: 2 nodes != 25"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/Tugboats/Tug.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 28"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/CarrierNimitzUnitedStates/NimitzCVN.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 31"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/CruiserUnitedStates/CG47.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 32"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/DDG51FlightIIaUnitedStates/DDG51.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 35"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/DDGArleighBurkeUnitedStates/ArleighBurkeHighDetail.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 32"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/FFG7OliverHazardPerryUnitedStates/OliverHazardPerryFFG.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[5].metadata.value: 2 nodes != 31"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/FrigateYavuzTurkey/SeaZenith.json",
+   "reason": "translation-differs",
+   "fails": "children[1]: program source 'ecmascript:\\n\\nfunction initial"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/PatrolBoatUnitedStates/PatrolBoatIdle.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/RHIBUnitedStates/RHIB.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/RHIBUnitedStates/RHIBDriverFlag.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/RHIBUnitedStates/RhibOutboard.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/SmallCraft/PSC9.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 50"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/SmallCraft/SpeedboatIraqIdle.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 27"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/SmallCraft/SpeedboatIraqMoving.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 28"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Space/Satellites/RadarsatPrototype.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 48"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Submarines/SsgnOhioUnitedStates/Ohio.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[5].metadata.value: 2 nodes != 26"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Submarines/SsnLosAngelesUnitedStates/LosAngelesSSNPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.SSN: SubmarineCrestURL default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Submarines/SsnSeawolfUnitedStates/SSN21Seawolf.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[0].metadata.value: 2 nodes != 26"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/BathymetryGeneratorViaExtrusionPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.BathymetryGenerator[0].children[1]: program sourc"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/HiddenViewpointPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.HiddenViewpoint: label default: length 0 != 1"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/MaterialToggleExample.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/PushButtonExample.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/PushButtonPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.PushButton[1]: program source 'ecmascript:\\n\\nfun"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/WaypointInterpolatorPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.WaypointInterpolator[0].children[3]: program sour"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Authoring/AnimatedViewpointRecorderPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.AnimatedViewpointRecorder[0].children[2]: program"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Authoring/ViewPositionOrientationPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.ViewPositionOrientation[1]: program source 'ecmas"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/HeadsUpDisplays/DvdControllerExample.json",
+   "reason": "translation-differs",
+   "fails": "children[3]: program source \"ecmascript:\\n\\nfunction initial"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/HeadsUpDisplays/DvdControllerPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.DvdController[0].children[1].children[0].children"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/HeadsUpDisplays/HudControlPanelPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.HudControlPanel: textureMap default: length 0 != "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/SMAL/SavageObjectMetadataTemplate.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[4].metadata.value: 2 nodes != 24"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/SMAL/SavageTerrainMetadataTemplate.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[4].metadata.value: 2 nodes != 73"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/SMAL/SavageVehicleMetadataTemplate.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[4].metadata.value: 2 nodes != 49"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Symbology/NTDSPrototypes.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.AirAssumedFriend: symbolModifier default: length "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Weapons/Missiles/MissileExplosionPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.ASMEXPLOSION[0].children[1]: program source 'ecma"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Weapons/Missiles/MultipleExplosionPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.TLAMEXPLOSION[0].children[1]: program source 'ecm"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Weapons/Missiles/TomahawkPrototype.json",
+   "reason": "translation-differs",
+   "fails": "prototypes.BGM-109[0].children[5]: program source 'ecmascrip"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Weapons/UnderwaterMines/ReportedContactPrototype.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.ReportedContact: description default: length 0 !="
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AdditiveManufacturing/CaffeinePubChem2519SticksColor.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[2].metadata.value: 3 nodes != 7"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/AllAudioGraphNodesTest.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/Filters.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "version: '4.0' != '4.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/SingleAudio.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "version: '4.0' != '4.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/SpatialAudioCameraAnimation.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "version: '4.0' != '4.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/SplitChannels.json",
+   "reason": "translation-differs",
+   "fails": "children[8].children[0].children[0].children[0].children: 0 "
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/SplitChannels.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "version: '4.0' != '4.1'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Conversions/SpriStepAS1PE203.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[7].metadata.value: 2 nodes != 4"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/GeometricShapes/ParallelepipedPrototype.json",
+   "reason": "translation-unreadable",
+   "fails": "prototypes.Parallelepiped[1]: program source 'ecmascript:\\nf"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/SanCarlosCathedral/SanCarlosCathedral.x3dv",
+   "reason": "translation-differs",
+   "fails": "prototypes.TouchSensorSelected.IS: the connections differ"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Scanning/ScannerMetadataExample33.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].value: 4 nodes != 33"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Scanning/ScannerMetadataExample4.x3dv",
+   "reason": "translation-differs",
+   "fails": "children[1].value: 4 nodes != 33"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/TextureMapping/MultiTextureDesignPattern.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Immersive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/TextureMapping/MultiTextureTeapot.x3dv",
+   "reason": "translation-unreadable",
+   "fails": "profile: 'Interactive' != 'Full'"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/TextureMapping/TextureAngleViewer.json",
+   "reason": "translation-differs",
+   "fails": "children[7]: program source 'ecmascript:\\n\\nfunction set_tra"
+  },
+  {
+   "check": "written",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/SpinGroupInternalSubsetDeclaration.x3d",
+   "reason": "self-declared-invalid",
+   "fails": "ROUTE names SpinGroup"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Followers/originals/Chasers.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'Script', attribute 'DEF': 'ScrPosDamp' is not a valid value of the atomic type 'x"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/newGeospatialScene.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'GeoLOD': Missing child element(s). Expected is one of ( Background, ColorInterpol"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Points/originals/basic_point_sprites.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'component', attribute 'name': [facet 'enumeration'] The value 'xj3d_Shape' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/CarDemoMain.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'component', attribute 'name': [facet 'enumeration'] The value 'xj3d_RigidBodyPhys"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/SceneNodePrototype.x3d",
+   "reason": "version-upgrade-conflict",
+   "fails": "declares description, a field of its node type"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestSchema.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'TimeSensor', attribute 'cycleInterval': [facet 'minInclusive'] The value '-0.18' "
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/ViewpointGroupPrototype.x3d",
+   "reason": "version-upgrade-conflict",
+   "fails": "declares description, a field of its node type"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Bones/originals/lcuboid.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'Material', attribute 'ambientIntensity': [facet 'maxInclusive'] The value '98' is"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Bones/originals/ldphal3.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'Material', attribute 'ambientIntensity': [facet 'maxInclusive'] The value '98' is"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Bones/originals/leftfoot.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'Material', attribute 'ambientIntensity': [facet 'maxInclusive'] The value '98' is"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Bones/originals/skeleton1.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'Material', attribute 'ambientIntensity': [facet 'maxInclusive'] The value '98' is"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/DigitalHeritage/LaFerrassie_I_right_thumb_index_finger.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/FacialAnimation/FacialAnimationComparisonScripts.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/AllenDutton.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/BoxMan3.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/BoxMan3AnimationPanel.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/DiamondManLOA_0.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/DiamondManLOA_1.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/DiamondManLOA_2.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/HAnim1SpecificationLOA3Animation.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/HAnim1SpecificationLOA3Illustrated.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/HAnim1SpecificationLOA3Invisible.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/JoeSkinTexcoordDisplacerKick.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter01Jin.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter02Chul.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter03Hyun.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter04Young.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter05Ju.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter06Ga.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter07No.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter08Da.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter09Ru.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter10Mi.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter11Min.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/KoreanCharacter12Sun.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/NancyDiving.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/NancyNativeTags.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/NancyStandShootRifleM24.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/LaughingSkeleton.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/originals/leftfoot.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'Material', attribute 'ambientIntensity': [facet 'maxInclusive'] The value '98' is"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/originals/skeleton1.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'Material', attribute 'ambientIntensity': [facet 'maxInclusive'] The value '98' is"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/BvhSeamless3dExport1.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/AllenStandShootRifleM24.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/HAnimBehaviorPrototypes.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/InterchangableActorsViaDynamicRoutingPrototypes.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan1.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan1AnimationPanel.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan2.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/HAnim1SpecificationLOA3Animation.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/HAnim1SpecificationLOA3Illustrated.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Specifications/HAnim1SpecificationLOA3Invisible.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid', attribute 'version': [facet 'enumeration'] The value '1.0' is not"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/GrampsAnimations.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Leif.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/LeifAnimated.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Lily.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/LilyAnimated.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Tufani.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/TufaniAnimated.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'HAnimHumanoid': The attribute 'version' is required but missing."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Buildings/UHRB/SimpleBuildingConstructionPrototypes.x3d",
+   "reason": "version-upgrade-conflict",
+   "fails": "declares description, a field of its node type"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/SeaWeb/SeaWebBuoyPrototype.x3d",
+   "reason": "version-upgrade-conflict",
+   "fails": "declares description, a field of its node type"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/WaypointInterpolatorPrototype.x3d",
+   "reason": "version-upgrade-conflict",
+   "fails": "declares description, a field of its node type"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/HeadsUpDisplays/DvdControllerPrototype.x3d",
+   "reason": "version-upgrade-conflict",
+   "fails": "declares description, a field of its node type"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Terrain/DTEDMultiGrid.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'GeoOrigin': This element is not expected. Expected is one of ( Background, ColorI"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Terrain/DTEDSingleGrid.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'GeoOrigin': This element is not expected. Expected is one of ( Background, ColorI"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Buildings/UserInterface/WaypointInterpolatorPrototype.x3d",
+   "reason": "version-upgrade-conflict",
+   "fails": "declares description, a field of its node type"
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Scanning/X3dMeshDesignPattern.x3d",
+   "reason": "schema-content-model",
+   "fails": "Element 'Normal': This element is not expected."
+  },
+  {
+   "check": "schema",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/TextureMapping/MultiTextureTeapot.x3d",
+   "reason": "schema-file-values",
+   "fails": "Element 'TextureCoordinateGenerator', attribute 'mode': [facet 'enumeration'] The value 'S"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/DistributedInteractiveSimulation/AutomatedEntityGeometryCreator.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'DISEntityTypeMapping' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ExperimentalBinaryCompression/isenburg/fish.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'url fish.jpg\\r' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ExperimentalBinaryCompression/isenburg/fish_coded.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'url fish.jpg\\r' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/ExperimentalBinaryCompression/isenburg/fish_compressed.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'url fish.jpg\\r' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/CaliforniaCampuses.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from BooleanToggle.toggle, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/CaliforniaCampusesTour3Altitudes.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from BooleanToggle.toggle, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/CaliforniaCampusesTour4Altitudes.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from BooleanToggle.toggle, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/CaliforniaCampusesTour5Altitudes.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from BooleanToggle.toggle, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/OpenStreetMapX3dEarthDemo.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE to GeoViewpoint.position, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Geospatial/newGeospatialScene.wrl",
+   "reason": "content-faults",
+   "fails": "GeoLOD.geoOrigin holds one node, given 2"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/baby.wrl",
+   "reason": "not-vrml97",
+   "fails": "ClassicVRML: cannot read 'type LATTICE_MESH' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/communicator/communicator.wrl",
+   "reason": "not-vrml97",
+   "fails": "ClassicVRML: cannot read 'type LATTICE_MESH' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/dolphin.wrl",
+   "reason": "not-vrml97",
+   "fails": "ClassicVRML: cannot read 'type LATTICE_MESH' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/hand.wrl",
+   "reason": "not-vrml97",
+   "fails": "ClassicVRML: cannot read 'type LATTICE_MESH' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/octopus.wrl",
+   "reason": "not-vrml97",
+   "fails": "ClassicVRML: cannot read 'type LATTICE_MESH' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/LatticeXvl/javasrc/Lv_Java_v0_31/CodeBase/Demo/oni.wrl",
+   "reason": "not-vrml97",
+   "fails": "ClassicVRML: cannot read 'type LATTICE_MESH' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/HoleCentered.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'trimmingContour Cont' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/HoleLargeOffset.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'trimmingContour Cont' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/HoleSmallOffset.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'trimmingContour Cont' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/NurbsPrototypes.wrl",
+   "reason": "content-faults",
+   "fails": "Group has no field addGeometry to connect"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/StampX3dLetters.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/StampX3dLettersHalloween.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/TrimmedNurbsWithHole.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'trimmingContour Cont' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/TrimmingContourExample.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'trimmingContour Cont' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/4ducks.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'DEF nurb  NurbsPatch' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/animated_patch.wrl",
+   "reason": "content-faults",
+   "fails": "Values where nodes belong: '0 0 0\\n1 0 0\\n2 0 0\\n3 0 0\\n0 1 0\\n1 1 0\\n"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/animated_patch22.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'DEF nurb  NurbsPatch' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/birds2.wrl",
+   "reason": "not-vrml97",
+   "fails": "Unknown node type NurbsSurface"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/deform_222_grid.wrl",
+   "reason": "not-vrml97",
+   "fails": "Unknown node type CoordinateDeformer"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/deform_sphere.wrl",
+   "reason": "not-vrml97",
+   "fails": "Unknown node type CoordinateDeformer"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/nrbduck_0.wrl",
+   "reason": "content-faults",
+   "fails": "Values where nodes belong: '1.49662 0.0131926 -0.535702\\n1.49662 0.01'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/nrbduck_0.x3d.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'NurbsSurface {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/theducks.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from TimeSensor.fraction: no such field"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/originals/trimmednurbs.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'geometry EXTERNPROTO' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Networking/NetworkSensorConnectionPrototypes.wrl",
+   "reason": "content-faults",
+   "fails": "Script declares url, a field of its node type"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BallBounce.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BallBounceSimple.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BallJointExample.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BodyGeometry.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/BounceTrimesh.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/CarDemoMain.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/DoubleHingeJoint.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/MotorJoint.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/MovingBody.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/SingleHingeJoint.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/SliderJointExample.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/RigidBodyPhysics/UniversalJointExample.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Shaders/Flutter.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'language GLSL' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Shaders/SimpleShader.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'language GLSL' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Shaders/originals/edge.wrl",
+   "reason": "not-vrml97",
+   "fails": "Unknown node type PolygonBackground"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Shaders/originals/geoShader.wrl",
+   "reason": "not-vrml97",
+   "fails": "Unknown node type Torus"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Shaders/originals/phongBspGLSL.wrl",
+   "reason": "not-vrml97",
+   "fails": "Unknown node type MatrixTransform"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/StudentProjects/Race20/race20/race20.wrl",
+   "reason": "not-vrml97",
+   "fails": "Unknown node type KbdSensor"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/InlineExport.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/InlineImport.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/X3dSpecifications/X3dHeaderPrototypeSyntaxExamples.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/BooleanSequencerPrototype.wrl",
+   "reason": "content-faults",
+   "fails": "IS joins Anchor.description, an SFString, to keyValue, an MFBool"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/CameraExamples.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from BooleanToggle.toggle, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/ImportExportSyntax.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/LODlevelChangedExample.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from activeLOD.level_changed, an MFNode, to PreloadLevelsScript."
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/MetadataExamples.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read ']' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestDiagnosticOverloadedChildNodes.wrl",
+   "reason": "content-faults",
+   "fails": "Appearance.material holds one node, given 2"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestMetadataNodes.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'USE M0' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestProtoDeclareDisconnectedField.wrl",
+   "reason": "content-faults",
+   "fails": "IS names undefinedProtoField, which prototype MyShape does not declare"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestRegularExpressionChecks.wrl",
+   "reason": "content-faults",
+   "fails": "ScalarInterpolator.key: could not convert string to float: '0.250.5'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestSchema.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'value  SomeKindOfMet' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/TestSchematronDiagnostics.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'USE IllegalCombinati' (expected node"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/X3dRetreatProtoExercise.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'NULL ]' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA1.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA2.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA3.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA4.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA4Animated.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Pitc' (expected routeEnd)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/JinLOA4MarkersAnimated.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Tran' (expected node"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter01Jin.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter02Chul.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter03Hyun.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter04Young.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter05Ju.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter06Ga.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter07No.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter08Da.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter09Ru.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter10Mi.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter11Min.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Characters/KoreanCharacter12Sun.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/DigitalHeritage/LaFerrassie_I_right_thumb_index_finger.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata DEF Sunrize'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/FacialAnimation/FacialAnimationComparisonScripts.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'displacers NULL' (expected node"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/FacialAnimation/JinFacsAu12LipCornerPullerMorpher.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from ScalarInterpolator.fraction_changed: no such field"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/FacialAnimation/JinFacsAu25LipsPartMorpher.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE names __4_AnimationAdapter, which no DEF names"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/JoeSkinTexcoordDisplacerKick.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE names Joe_skull_tip_raiser_action, which no DEF names"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Medical/SkeletonCompleteNormals.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: unexpected end of text (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/BvhConversion1.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read '}' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/BvhConversion1Illustrated.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read '}' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/BvhConversion1Invisible.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read '}' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/HAnimDisplacerExamples.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE names Joe_skull_tip_raiser_action, which no DEF names"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/Pirouette.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read '}' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/MotionAnimation/UniversityWisconsionExample1.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read '}' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Poses/HAnimPoseExample.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read 'AS HumanoidImported' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Poses/HAnimPosePrototype.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read 'AS HumanoidImported' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Poses/PoseCollection.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'name Stand' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/AllenStandShootRifleM24.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE names hanim_RifleM24, which no DEF names"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Prototypes/InterchangableActorsViaDynamicRoutingPrototypes.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE names Boxman_LOA1_KneelAnimation, which no DEF names"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan1.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/BoxMan2.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/CesiumManCastleOnlineConverter.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read 'DEF Skeleton_torso_j' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/DesignPatternsApparelMedicalSkinLayers.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'geometry DEF SkinMes' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/JoeKick.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read 'AS JoeKick' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/JoeKickAnimation.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE names Joe_skull_tip_raiser_action, which no DEF names"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Skin/JoeSkeletonSkinSite.wrl",
+   "reason": "translation-export-import",
+   "fails": "ClassicVRML: cannot read '{' (expected id)"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/GrampsAnimations.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: unexpected end of text (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Leif.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'DEF' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/LeifAnimated.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: unexpected end of text (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Lily.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: unexpected end of text (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/LilyAnimated.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: unexpected end of text (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/Tufani.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: unexpected end of text (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/TufaniAnimated.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Tufani_l' (expected routeEnd"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/WinterAndSpring/WinterAndSpringHumanoidTimings.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/Boeing747Tunisia/Boeing747.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/AircraftFixedWing/F18SuperhornetUnitedStates/F18.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Avatars/Marines/Marine.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Buildings/SecurityPerimeter/Bollard.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/Nec3ElementYagi20mAt50ft.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/Nec5ElementTwinDeltaLoop2m.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/NecBowtieXg91a.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/NecGridYagiWireFence.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/NecHelix.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/NecParabola50x50.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/NecSpiderQuad.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/NecTvUhf.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/NecVerticalYagi3Element.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/Radar/RadarBeamX3dVisualization.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/CommunicationsAndSensors/SeaWeb/SeaWebBuoyExample.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from TransmissionDuration2.triggerValue, an SFInt32, to SeaWebBu"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/GroundVehicles/Cargo/CargoTruckHighDetail.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/GroundVehicles/Chevy/ChevyTahoe.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/GroundVehicles/Emergency/WashingtonStatePatrolCruiser.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Locations/NarragansettBayRhodeIslandBathymetry/NarragansettBayMerged.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Inline {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Locations/Singapore/Singapore.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Locations/StraitsOfMalaccaLarge/StraitsOfMalaccaWayPoints.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Shape {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Locations/TunisAirportTunisia/TunisAirportTunisia.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedAirVehicles/Rascal.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedAirVehicles/ScanEagle.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedAirVehicles/SeaScan.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedSurfaceVehicles/SeaFox.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedSurfaceVehicles/SeaFoxOriginal.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Robots/UnmannedUnderwaterVehicles/SolarAuvCadModel.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Scenarios/AmphibiousRaidCampPendleton/CampPendletonRaidWithRez.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE to WaypointInterpolator.fraction: no such field"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Scenarios/CaptureTheFlag/NancyTeamAddRoutes.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from EspduTransform.articulationParameterValue0: no such field"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Scenarios/JfcomDceeExerciseJuly2003/XdvExerciseScenario.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from EntityEspdu.rotation, an SFRotation, to LocalTestView.set_o"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/Barge.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShip.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShipBlue.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShipGreen.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShipOrange.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/ContainerShipRed.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/Freighter.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CargoShips/OilTanker.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CigaretteBoat/CigaretteBoat.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CigaretteBoat/CigaretteBoatWithDriver.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/CruiseShip/CruiseShip.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/Ferries/BoatFerryArizona.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/Ferries/LargeFerry.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/PersonalWaterCraft/JetSki.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/Trawlers/Trawler.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsCivilian/Tugboats/Tug.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/CarrierNimitzUnitedStates/NimitzCVN.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/CruiserUnitedStates/CG47.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/DDG51FlightIIaUnitedStates/DDG51.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata DEF DDG51_S'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/DDGArleighBurkeUnitedStates/ArleighBurkeHighDetail.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/FFG7OliverHazardPerryUnitedStates/OliverHazardPerryFFG.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/PatrolBoatUnitedStates/PatrolBoatIdle.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/RHIBUnitedStates/RHIB.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/RHIBUnitedStates/RHIBDriverFlag.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/RHIBUnitedStates/RhibOutboard.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/SmallCraft/PSC9.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/SmallCraft/SpeedboatIraqIdle.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/ShipsMilitary/SmallCraft/SpeedboatIraqMoving.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Space/Satellites/RadarsatPrototype.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Submarines/SsgnOhioUnitedStates/Ohio.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Submarines/SsnSeawolfUnitedStates/SSN21Seawolf.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/ColorSequencerExample.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE to BooleanToggle.toggle, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/MaterialToggleExample.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'defaultMaterial     ' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/PointTrackGeneratorPrototype5.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from DisplayingTimer.fraction_changed, an SFFloat, to TrackGener"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/PushButtonExample.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'outerShapeMaterial  ' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Animation/ViewpointSequencerPrototype.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from BooleanToggle.toggle, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/SMAL/SavageObjectMetadataTemplate.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/SMAL/SavageTerrainMetadataTemplate.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/SMAL/SavageVehicleMetadataTemplate.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/Savage/Tools/Visualization/PajekVisualizationPrototypes.wrl",
+   "reason": "content-faults",
+   "fails": "Anchor has no field name to connect"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AdditiveManufacturing/CaffeinePubChem2519SticksColor.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AdditiveManufacturing/MetadataRootNodeTest.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataSet'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Animation/RotationCalculatorExample.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Animation/ViewpointSequencerPrototype.wrl",
+   "reason": "content-faults",
+   "fails": "ROUTE from BooleanToggle.toggle, which is initializeOnly"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/AllAudioGraphNodesTest.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Analyser {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/Filters.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'DynamicsCompressor {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/SingleAudio.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'SpatialSound {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/SpatialAudioCameraAnimation.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'ears of the user\". S' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/AudioSpatialSound/SplitChannels.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'Gain {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Conversions/SpriFishHeadOriginal.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Conversions/SpriStepAS1PE203.wrl",
+   "reason": "translation-metadata-moved",
+   "fails": "ClassicVRML: cannot read 'metadata MetadataStr'"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/GeometricShapes/ParallelepipedPrototype.wrl",
+   "reason": "content-faults",
+   "fails": "IndexedFaceSet has no field colorNode to connect"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Scanning/ScannerMetadataExample33.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read ']' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Scanning/ScannerMetadataExample4.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read ']' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/Scanning/originals/bananaVRML1.wrl",
+   "reason": "not-vrml97",
+   "fails": "ClassicVRML: cannot read 'Separator {' (expected '}')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/TextureMapping/MultiTextureDesignPattern.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'texture ImageTexture' (expected ']')"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/X3dForAdvancedModeling/TextureMapping/MultiTextureTeapot.wrl",
+   "reason": "translation-syntax",
+   "fails": "ClassicVRML: cannot read 'texture DEF x3dLogoT' (expected ']')"
+  },
+  {
+   "check": "vrml97 written",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/SpinGroupInternalSubsetDeclaration.wrl",
+   "reason": "self-declared-invalid",
+   "fails": "ROUTE names SpinGroup"
+  },
+  {
+   "check": "binary",
+   "path": "www.web3d.org/x3d/content/examples/Basic/CAD/CadGeometryExternPrototypes.x3db",
+   "reason": "binary-attribute-names",
+   "fails": "Shape has no field that holds a IndexedQuadSet"
+  },
+  {
+   "check": "binary",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/MobiusNurbs.x3db",
+   "reason": "binary-attribute-names",
+   "fails": "NurbsPatchSurface.uClosed: '4' is not true or false"
+  },
+  {
+   "check": "binary",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/NurbsCurveExample.x3db",
+   "reason": "binary-attribute-names",
+   "fails": "Shape has no field that holds a Transform"
+  },
+  {
+   "check": "binary",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/NurbsPatch.x3db",
+   "reason": "binary-attribute-names",
+   "fails": "NurbsPatchSurface.uClosed: '2' is not true or false"
+  },
+  {
+   "check": "binary",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/NurbsPatchImageTexture.x3db",
+   "reason": "binary-attribute-names",
+   "fails": "NurbsPatchSurface.uClosed: '2' is not true or false"
+  },
+  {
+   "check": "binary",
+   "path": "www.web3d.org/x3d/content/examples/Basic/NURBS/NurbsPatchSolid.x3db",
+   "reason": "binary-attribute-names",
+   "fails": "NurbsPatchSurface.uClosed: '2' is not true or false"
+  },
+  {
+   "check": "binary",
+   "path": "www.web3d.org/x3d/content/examples/Basic/development/ProtoMFNodeSensorExample.x3db",
+   "reason": "binary-attribute-names",
+   "fails": "Fast Infoset: Octet 0xa0 begins no child"
+  },
+  {
+   "check": "xml",
+   "path": "www.web3d.org/x3d/content/examples/Basic/Networking/NetworkSensorConnectionPrototypes.x3d",
+   "reason": "content-faults",
+   "fails": "Script declares metadata, a field of its node type"
+  },
+  {
+   "check": "xml",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Legacy/DiamondManLOA_2.x3d",
+   "reason": "content-faults",
+   "fails": "MetadataSet.metadata holds one node, given 3"
+  },
+  {
+   "check": "xml",
+   "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Poses/HAnimPoseExample.x3d",
+   "reason": "content-faults",
+   "fails": "ROUTE to HAnimPose.isLoaded: no such field"
+  }
+ ]
+}

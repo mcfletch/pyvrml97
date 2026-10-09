@@ -12,6 +12,7 @@ import pytest
 
 from vrml import node, protofunctions
 from vrml.x3d import builder as buildermodule
+from vrml.x3d import loads
 from vrml.x3d import nodes as x3d
 from vrml.x3d import readers, writers
 from vrml.x3d.builder import SceneBuilder, X3DLoadError
@@ -85,6 +86,35 @@ class TestNodes(unittest.TestCase):
         self.assertEqual(implied(x3d.Collision(), x3d.Shape()), 'children')
         self.assertEqual(implied(x3d.MetadataSet(), x3d.MetadataString()), 'value')
         self.assertIsNone(implied(x3d.Shape(), x3d.Transform()))
+
+    def test_a_use_of_an_enclosing_node_is_an_error_and_not_placed(self):
+        built = Built()
+        group = built.b.start_node('Group', DEF='LOOP')
+        inner = built.b.start_node('Transform')
+        built.b.start_node('Group', USE='LOOP')
+        built.end_node()
+        built.end_node()
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(list(inner.children), [])
+        self.assertIn("USE of 'LOOP' inside the node it names",
+                      [problem.message for problem in scene.problems])
+        self.assertEqual(list(group.children), [inner])
+
+    def test_a_script_may_hold_itself_in_a_field(self):
+        scene = loads(b"""<X3D version="3.3"><Scene><Script DEF="SELF">
+          <field name="me" type="SFNode" accessType="initializeOnly"><Script USE="SELF"/></field>
+          </Script></Scene></X3D>""")
+        self.assertEqual(problems(scene, 'error'), [])
+        script = scene.getDEF('SELF')
+        self.assertIs(script.me, script)
+
+    def test_a_field_a_subclass_hides_is_not_an_implied_container(self):
+        class Hiding(x3d.TextureBackground):
+            # An implementation's own attribute in place of an inherited field
+            backTexture = property(lambda _node: None)
+        self.assertEqual(buildermodule.implied_container(Hiding(), x3d.ImageTexture()),
+                         'bottomTexture')
 
     def test_a_named_field_takes_the_nodes_started_in_it(self):
         built = Built()
@@ -355,6 +385,15 @@ class TestDialects(unittest.TestCase):
                          ['VRML97 has no field Viewpoint.centerOfRotation'])
         self.assertEqual(list(viewpoint.centerOfRotation), [1, 2, 3])
 
+    def test_a_node_field_the_version_lacks_is_a_warning_and_is_read(self):
+        built = Built()
+        built.document('Full', '3.0')
+        appearance = built.node('Appearance', children=[lambda: built.node('PointProperties')])
+        warnings = problems(built.end_document(), 'warning')
+        self.assertEqual([p.message for p in warnings], [
+            'X3D 3.0 has no node PointProperties', 'X3D 3.0 has no field Appearance.pointProperties'])
+        self.assertIsInstance(appearance.pointProperties, x3d.PointProperties)
+
     def test_a_route_to_a_field_the_version_lacks_is_a_warning_and_is_made(self):
         built = Built()
         built.document('', '2.0')
@@ -371,6 +410,13 @@ class TestDialects(unittest.TestCase):
         built.node('LocalFog')
         warnings = problems(built.end_document(), 'warning')
         self.assertEqual([p.message for p in warnings], ['VRML97 has no node LocalFog'])
+
+    def test_a_vrml97_prototype_declaring_an_x3d_field_type_is_warned_of(self):
+        """VRML97 has no MFBool; X3D's converters write it into .wrl prototypes"""
+        scene = readers.read(b'#VRML V2.0 utf8\nPROTO P [ field MFBool flags [ TRUE ] ] { Group {} }\n',
+                             name='a.wrl')
+        self.assertEqual([p.message for p in scene.problems if p.severity == 'warning'],
+                         ['VRML97 has no field type MFBool (flags)'])
 
     def test_a_node_x3d_does_not_declare_is_no_version_warning(self):
         """An application's own node in its vocabulary is in no version of X3D"""
@@ -815,16 +861,35 @@ class TestDeclaredFields(unittest.TestCase):
         self.assertEqual([p.severity for p in scene.problems], ['warning'])
         self.assertIn('not run', scene.problems[0].message)
 
+    def test_a_script_declaring_one_of_its_own_fields_is_an_error(self):
+        built = Built()
+        script = built.b.start_node('Script', DEF='S')
+        built.field_text('url', '"a.js"')
+        built.declare_field('url', 'MFString', 'inputOutput')
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(script.url, ['a.js'])
+        self.assertIs(protofunctions.getField(script, 'url'), protofunctions.getField(x3d.Script, 'url'))
+        self.assertEqual([p.message for p in scene.problems if p.severity == 'error'],
+                         ['Script declares url, a field of its node type'])
+
+    def test_a_script_declares_a_field_its_version_does_not_give_it(self):
+        """Script has a description field from X3D 4.0"""
+        built = Built()
+        built.document('Immersive', '3.3')
+        script = built.b.start_node('Script')
+        built.declare_field('description', 'MFString', 'initializeOnly', '"a" "b"')
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(script.description, ['a', 'b'])
+        self.assertEqual([p.message for p in scene.problems if p.severity == 'error'], [])
+
     def test_a_shape_declares_no_fields(self):
         built = Built()
         built.b.start_node('Shape')
         built.declare_field('speed', 'SFFloat', 'initializeOnly', '2.5')
         built.end_node()
         self.assertEqual(len(problems(built.end_document(), 'error')), 1)
-
-
-if __name__ == '__main__':
-    unittest.main()
 
 
 def test_a_prototype_event_field_of_nodes_has_no_default():
@@ -898,12 +963,16 @@ METADATA_IN_SET = """<X3D version='%s'><Scene><WorldInfo>
     </WorldInfo></Scene></X3D>"""
 
 
-@pytest.mark.parametrize('version', ['3.3', '4.0'])
-def test_a_metadata_sets_children_are_its_values_in_any_version(version):
-    """X3D 3.x's default container for metadata is `metadata`; documents of that
-    age, and X_ITE, read a MetadataSet's children as its values all the same"""
-    found = readers.read((METADATA_IN_SET % version).encode(), name='a.x3d').children[0].metadata
+def test_a_metadata_sets_child_is_one_of_its_values_from_4_0():
+    found = readers.read((METADATA_IN_SET % '4.0').encode(), name='a.x3d').children[0].metadata
     assert not found.metadata and [type(item).__name__ for item in found.value] == ['MetadataString']
+
+
+@pytest.mark.parametrize('version', ['3.0', '3.3'])
+def test_a_metadata_sets_child_is_its_metadata_in_3_x(version):
+    """X3D 3.x's default container for a metadata node is `metadata`"""
+    found = readers.read((METADATA_IN_SET % version).encode(), name='a.x3d').children[0].metadata
+    assert not found.value and isinstance(found.metadata, x3d.MetadataString)
 
 
 def test_a_version_writes_a_container_field_where_its_default_differs():
@@ -911,3 +980,7 @@ def test_a_version_writes_a_container_field_where_its_default_differs():
     scene = readers.read((METADATA_IN_SET % '4.0').encode(), name='a.x3d')
     assert 'containerField="value"' in writers.write(scene, 'xml', version='3.3')
     assert 'containerField' not in writers.write(scene, 'xml', version='4.0')
+
+
+if __name__ == '__main__':
+    unittest.main()

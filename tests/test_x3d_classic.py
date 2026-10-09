@@ -279,6 +279,18 @@ class TestWhatWeb3DsConverterWrites(unittest.TestCase):
         self.assertIs(scene.children[1].appearance.texture, scene.getDEF('brick.jpg'))
         self.assertEqual([p.severity for p in scene.problems], ['warning', 'warning'])
 
+    def test_a_route_between_names_with_full_stops(self):
+        """A field name holds no full stop, so the last one ends the node's name"""
+        scene = x3d_document('DEF clock.a TimeSensor { }\nDEF Spin.b.c OrientationInterpolator { }\n'
+                             'ROUTE clock.a.fraction_changed TO Spin.b.c.set_fraction')
+        self.assertEqual([(protofunctions.defName(r.source), r.sourceField,
+                           protofunctions.defName(r.destination), r.destinationField)
+                          for r in scene.routes],
+                         [('clock.a', 'fraction_changed', 'Spin.b.c', 'set_fraction')])
+        self.assertEqual([p.message for p in scene.problems], [
+            "Name 'clock.a' holds a full stop", "Name 'Spin.b.c' holds a full stop",
+            "Name 'clock.a' holds a full stop", "Name 'Spin.b.c' holds a full stop"])
+
     def test_a_prototype_among_a_list_of_nodes(self):
         scene = x3d_document('Group { children [ EXTERNPROTO Far [ ] "far.x3dv"\n'
                              'Far {} ] }')

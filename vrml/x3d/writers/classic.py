@@ -133,11 +133,15 @@ class ClassicWriter(SceneWriter):
         prefix = 'DEF %s ' % name if name else ''
         indent = INDENT * (depth + 1)
         lines = []
-        connections = dict(self.connections(target))
+        connections = self.connections(target)
         for declared in self.own_declarations(target):
+            # A declaration carries one IS; any further one is a statement of its own
             written = self.dialect.dialect_name(type_name, declared.name)
-            lines.append(self.declaration_text(declared, depth + 1, connections.pop(written, '')))
-        for nodeField, protoField in sorted(connections.items()):
+            first = next((pair for pair in connections if pair[0] == written), None)
+            if first is not None:
+                connections.remove(first)
+            lines.append(self.declaration_text(declared, depth + 1, first[1] if first else ''))
+        for nodeField, protoField in connections:
             lines.append('%s IS %s' % (nodeField, protoField))
         source = 'field' if self.dialect.has_field(type_name, 'sourceCode') else 'url'
         for item in self.values(target, source):

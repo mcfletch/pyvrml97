@@ -118,6 +118,21 @@ class TestRoundTrip(unittest.TestCase):
                     protofunctions.getSceneGraph(scene.getProto('Lamp')), body, header=False))
                 self.assertEqual(sorted(node.ismaps(Lamp)), ['lightColor', 'size', 'switchOn'])
 
+    def test_a_node_field_connected_to_two_prototype_fields_keeps_both(self):
+        scene = x3d.loads(
+            '#X3D V4.0 utf8\nPROFILE Immersive\n'
+            'PROTO P [ initializeOnly MFVec3f spine [ 0 0 0 ] inputOnly MFVec3f set_spine\n'
+            '  inputOutput MFString code [ ] ] {\n'
+            '  Shape { geometry PointSet { coord Coordinate { point IS spine point IS set_spine } } }\n'
+            '  Script { inputOutput MFString code IS code initializeOnly MFVec3f spine IS spine\n'
+            '    spine IS set_spine } }\n'
+            'P { }\n', name='a.x3dv')
+        self.assertEqual(errors(scene), [])
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding))
+                self.assertIsNone(first_difference(scene, again))
+
     def test_an_external_prototype_keeps_its_urls(self):
         scene = everything()
         for encoding in ENCODINGS:
@@ -265,6 +280,41 @@ class TestFieldsWritten(unittest.TestCase):
         self.assertEqual(again.children[0].sourceCode.strip(), script.sourceCode)
 
 
+SCRIPT_DECLARING_DESCRIPTION = '''<X3D profile='Immersive' version='3.3'><Scene>
+    <Script><field name='description' type='MFString' accessType='initializeOnly' value='"a"'/>
+    </Script></Scene></X3D>'''
+
+
+class TestDeclarationsOfAVersionsFields(unittest.TestCase):
+    """X3D 3.x's Script has no description field; 4.0's has one"""
+
+    def test_a_script_keeps_its_declaration_in_its_own_version(self):
+        scene = x3d.loads(SCRIPT_DECLARING_DESCRIPTION, name='a.x3d')
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding))
+                self.assertEqual(again.children[0].description, ['a'])
+                self.assertIsNone(first_difference(scene, again))
+
+    def test_a_version_whose_node_has_the_field_refuses_the_declaration(self):
+        scene = x3d.loads(SCRIPT_DECLARING_DESCRIPTION, name='a.x3d')
+        with self.assertRaises(X3DWriteError) as raised:
+            x3d.dumps(scene, encoding='xml', version='4.0')
+        self.assertIn('Script declares description, a field of its node type', str(raised.exception))
+
+
+    def test_a_declaration_matching_the_versions_field_is_written_as_that_field(self):
+        """A 3.x Script's SFString inputOutput description is 4.0's own field"""
+        scene = x3d.loads(SCRIPT_DECLARING_DESCRIPTION.replace(
+            "type='MFString' accessType='initializeOnly' value='\"a\"'",
+            "type='SFString' accessType='inputOutput' value='a'"), name='a.x3d')
+        text = x3d.dumps(scene, encoding='xml', version='4.0')
+        self.assertNotIn("name='description'", text.replace('"', "'"))
+        again = x3d.loads(text)
+        self.assertEqual(again.children[0].description, 'a')
+        self.assertEqual([str(p) for p in again.problems if p.severity == 'error'], [])
+
+
 class TestWhatCannotBeWritten(unittest.TestCase):
     def test_a_number_with_no_text_form_names_its_field(self):
         for value in (float('nan'), float('inf')):
@@ -336,6 +386,22 @@ class TestXML(unittest.TestCase):
         text = x3d.dumps(everything())
         self.assertIn("<ProtoInstance name='Lamp'>", text.replace('"', "'"))
         self.assertIn("<fieldValue name='lightColor' value='0 1 0'/>", text.replace('"', "'"))
+
+    def test_a_connected_prototype_instance_gives_its_field_values_before_is(self):
+        """The schema's X3DPrototypeInstance: fieldValue elements, then IS"""
+        scene = x3d.loads(b'''<X3D profile='Immersive' version='4.0'><Scene>
+          <ProtoDeclare name='Spin'><ProtoInterface>
+            <field name='speed' type='SFTime' accessType='inputOutput' value='1'/>
+            <field name='stop' type='SFTime' accessType='inputOutput' value='0'/>
+          </ProtoInterface><ProtoBody><TimeSensor/></ProtoBody></ProtoDeclare>
+          <ProtoDeclare name='Outer'><ProtoInterface>
+            <field name='rate' type='SFTime' accessType='inputOutput' value='1'/>
+          </ProtoInterface><ProtoBody><Group><ProtoInstance name='Spin'>
+            <fieldValue name='stop' value='3'/>
+            <IS><connect nodeField='speed' protoField='rate'/></IS>
+          </ProtoInstance></Group></ProtoBody></ProtoDeclare></Scene></X3D>''', name='a.x3d')
+        text = x3d.dumps(scene, encoding='xml')
+        self.assertLess(text.index('<fieldValue'), text.index('<IS>'), text)
 
     def test_written_xml_is_valid_against_the_schema(self):
         from lxml import etree  # noqa: PLC0415 a test-only dependency

@@ -13,7 +13,7 @@ from typing import Any
 from xml.parsers import expat
 
 from vrml.x3d import codecs
-from vrml.x3d.builder import SceneBuilder
+from vrml.x3d.builder import XML_NAME, SceneBuilder
 from vrml.x3d.scene import X3DScene
 
 
@@ -42,6 +42,7 @@ class ElementReader:
 
     def __init__(self, builder: SceneBuilder) -> None:
         self.builder = builder
+        builder.def_names = XML_NAME
         self.stack: "list[_Element]" = []
         self.in_cdata = False
         self.statements: "dict[str, Callable[[dict[str, str]], _Element]]" = {
