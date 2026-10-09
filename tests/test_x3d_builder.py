@@ -101,6 +101,13 @@ class TestNodes(unittest.TestCase):
                       [problem.message for problem in scene.problems])
         self.assertEqual(list(group.children), [inner])
 
+    def test_a_script_may_hold_a_node_it_is_inside(self):
+        scene = loads(b"""<X3D version="3.3"><Scene><Transform DEF="ROOT">
+          <Script DEF="S"><field name="root" type="SFNode" accessType="initializeOnly">
+          <Transform USE="ROOT"/></field></Script></Transform></Scene></X3D>""")
+        self.assertEqual(problems(scene, 'error'), [])
+        self.assertIs(scene.getDEF('S').root, scene.getDEF('ROOT'))
+
     def test_a_script_may_hold_itself_in_a_field(self):
         scene = loads(b"""<X3D version="3.3"><Scene><Script DEF="SELF">
           <field name="me" type="SFNode" accessType="initializeOnly"><Script USE="SELF"/></field>

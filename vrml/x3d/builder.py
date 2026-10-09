@@ -367,10 +367,13 @@ class SceneBuilder:
                 self.problem('error', 'USE of %r, which no DEF names' % USE)
                 frame.skip = True
             elif (not isinstance(built, x3d.X3DScriptNode)
+                  and not isinstance(parent.node if parent is not None else None,
+                                     x3d.X3DScriptNode)
                   and any(open_frame.node is built for open_frame in self._frames)):
-                # A node inside itself makes the scene graph a loop. A Script
-                # holding itself in one of its fields is drawn by nobody, and
-                # is how a script reaches its own fields.
+                # A node inside itself makes the scene graph a loop. A Script's
+                # fields are drawn by nobody: a Script holding itself is how a
+                # script reaches its own fields, and one holding a node it is
+                # inside is how it reaches the scene around it.
                 self.problem('error', 'USE of %r inside the node it names' % USE, built)
                 frame.skip = True
             else:

@@ -104,7 +104,7 @@ def layer_on(path: Sequence[Any]) -> Any:
 
 def _children_of(node: Any) -> "list[Any]":
     """Every node held in `node`'s node-valued fields"""
-    found = []
+    found: "list[Any]" = []
     for declared in protofunctions.getFields(node):
         if not getattr(declared, 'nodes', False) or declared.name.startswith(' '):
             continue
