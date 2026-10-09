@@ -22,7 +22,7 @@ from typing import Any, cast
 
 from vrml import field, node, protofunctions, route
 from vrml.vrml97.scenegraph import SceneGraph
-from vrml.x3d import binding, codecs, dialect, dialects, extension, profiles, runtime
+from vrml.x3d import binding, codecs, dialect, dialects, extension, profiles, runtime, xite
 from vrml.x3d import nodes as x3d
 from vrml.x3d.dialect import DialectTables
 from vrml.x3d.scene import (
@@ -166,7 +166,7 @@ ExternResolver = Callable[[Sequence[str], str, str], 'type | None']
 XML_NAME = re.compile(r'[^\W\d][\w.\-]*\Z')
 
 #: What a document is built from when no prototypes are given.
-DEFAULT_VOCABULARY: "Mapping[str, type]" = {**x3d.CONCRETE_NODES, **runtime.PROTOTYPES}
+DEFAULT_VOCABULARY: "Mapping[str, type]" = {**xite.VOCABULARY, **runtime.PROTOTYPES}
 
 
 class SceneBuilder:
@@ -266,7 +266,7 @@ class SceneBuilder:
     def component(self, name: str, level: int) -> None:
         """A `component` statement"""
         name = profiles.COMPONENT_ALIASES.get(name, name)
-        if name not in profiles.COMPONENTS:
+        if name not in profiles.COMPONENTS and name not in profiles.EXTENSION_COMPONENTS:
             self.problem('warning', 'Unknown component %r' % name)
         self.scene.components.append(ComponentInfo(name=name, level=level))
 
@@ -341,7 +341,7 @@ class SceneBuilder:
         found = self._scope.proto(type_name)
         if found is None:
             found = self.vocabulary.get(type_name)
-            if self._engine and found is not None and found is x3d.CONCRETE_NODES.get(type_name):
+            if self._engine and found is not None and found is xite.VOCABULARY.get(type_name):
                 self._unknown_types.add(type_name)
         return found
 
@@ -386,7 +386,7 @@ class SceneBuilder:
             frame.skip = True
             self._frames.append(frame)
             return None
-        declared = x3d.CONCRETE_NODES.get(type_name)
+        declared = xite.declaration(type_name)
         if (declared is not None and issubclass(cls, declared)
                 and not self.dialect.has_node(type_name)):
             # A class that is not X3D's node is the vocabulary's own, in no version.

@@ -508,6 +508,35 @@ the X3D node to write in its place: an image held in memory as an
 ``ImageTexture`` with a ``data:`` URL, say. A node reached more than once has
 one equivalent, written once and used thereafter.
 
+X_ITE's nodes
+~~~~~~~~~~~~~
+
+X_ITE, a browser for X3D in a web page, declares nodes beyond X3D 4.1, and
+``vrml.x3d.xite`` declares them as X_ITE 16.4.3 gives them:
+
+- The ``X_ITE`` component, level 1: the material extension nodes
+  (``AnisotropyMaterialExtension``, ``ClearcoatMaterialExtension``,
+  ``DiffuseTransmissionMaterialExtension``, ``DispersionMaterialExtension``,
+  ``EmissiveStrengthMaterialExtension``, ``IORMaterialExtension``,
+  ``IridescenceMaterialExtension``, ``RetroreflectionMaterialExtension``,
+  ``SheenMaterialExtension``, ``SpecularMaterialExtension``,
+  ``TransmissionMaterialExtension``, ``VolumeMaterialExtension``,
+  ``VolumeScatterMaterialExtension``), ``BlendMode``, ``DepthMode``,
+  ``InstancedShape`` and ``SpecularGlossinessMaterial``.
+- ``ImageTextureAtlas``, in Texturing3D at level 1.
+- ``extensions`` on ``PhysicalMaterial``, which holds the material extension
+  nodes, and ``blendMode`` and ``depthMode`` on ``Appearance``.
+
+``xite.VOCABULARY`` is X3D's node types with these laid over them, and is
+what the readers build from: every encoding reads them, a ``COMPONENT
+X_ITE:1`` statement draws no warning, and an engine given no class for one
+is told so once, as for an X3D node. The writers write them in X3D 4.0 and
+later (``BlendMode`` from 3.3), refuse them in VRML97, and add the component
+statement a written node needs where neither the scene's statements nor its
+profile give it, since X_ITE loads the component from that statement. No
+profile includes the ``X_ITE`` component, so ``validate`` reports a node of
+it in a scene that does not name the component.
+
 The XML writer orders attributes as X3D canonical form does (``DEF``,
 ``USE``, a ``containerField`` the reader would not infer, then
 alphabetically) and delimits MFString attributes with single quotes.

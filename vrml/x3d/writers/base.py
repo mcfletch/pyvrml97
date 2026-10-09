@@ -16,7 +16,7 @@ from typing import Any, NamedTuple
 import numpy as np
 
 from vrml import field, node, protofunctions
-from vrml.x3d import dialects, extension
+from vrml.x3d import dialects, extension, profiles, xite
 from vrml.x3d import codecs
 from vrml.x3d.codecs import same
 from vrml.x3d import nodes as x3d
@@ -156,6 +156,8 @@ class SceneWriter:
         self._open: "set[Any]" = set()
         self._equivalents: "dict[Any, Any]" = {}
         self._extension_sets: "dict[Any, Any]" = {}
+        #: The components the X_ITE nodes written so far need, at their levels.
+        self._needed: "dict[str, int]" = {}
 
     @property
     def writes_units(self) -> bool:
@@ -315,7 +317,26 @@ class SceneWriter:
             return type_name, True
         if not self.dialect.has_node(type_name):
             self.problem('%s has no node %s' % (self.version_name, type_name))
+        elif type_name in xite.OWN_TYPES:
+            name, level = xite.component_of(type_name)
+            self._needed[name] = max(level, self._needed.get(name, 0))
         return type_name, False
+
+    def components(self) -> "list[tuple[str, int]]":
+        """(name, level) of each component statement: the scene's, then those
+        the X_ITE nodes written need that neither they nor the profile give
+
+        Asked once the scene's nodes are written.
+        """
+        found = [(str(item.name), int(item.level)) for item in self.scene.components]
+        chosen = profiles.PROFILES.get(self.profile)
+        given = chosen.levels() if chosen is not None else {}
+        for name, level in found:
+            given[name] = max(level, given.get(name, 0))
+        for name, level in sorted(self._needed.items()):
+            if given.get(name, 0) < level:
+                found.append((name, level))
+        return found
 
     def reference(self, target: Any) -> "tuple[str, bool]":
         """(name, is_use) for a node; ('', False) for an unnamed node

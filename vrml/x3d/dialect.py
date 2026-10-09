@@ -16,7 +16,7 @@ from typing import Any
 
 from vrml import field, node, protofunctions
 from vrml import fieldtypes  # noqa: F401 registers the field types used below
-from vrml.x3d import codecs
+from vrml.x3d import codecs, xite
 from vrml.x3d import nodes as x3d
 
 
@@ -92,7 +92,7 @@ class Dialect(node.Node):
     def tables(self) -> 'DialectTables':
         """The dialect as lookup tables, for one document's read or write"""
         return DialectTables(self.nodeTypes, self.renamed, self.defaults, self.absent,
-                             self.containers)
+                             self.containers, xite.types_in(self.version))
 
 
 class DialectTables:
@@ -109,8 +109,11 @@ class DialectTables:
         defaults: Iterable[FieldDefault],
         absent: Iterable[AbsentFields] = (),
         containers: Iterable[ContainerDefault] = (),
+        extra: Iterable[str] = (),
     ) -> None:
         self.nodeTypes = frozenset(nodeTypes)
+        #: Node types beyond X3D's that the version holds (`vrml.x3d.xite`).
+        self.extra = frozenset(extra)
         self.renames = {(item.nodeType, item.old): item.current for item in renamed}
         self.reverse = {(node_type, current): old
                         for (node_type, old), current in self.renames.items()}
@@ -126,6 +129,8 @@ class DialectTables:
 
     def has_node(self, node_type: str) -> bool:
         """Whether the version has the node type"""
+        if node_type in xite.OWN_TYPES:
+            return node_type in self.extra
         return not self.nodeTypes or node_type in self.nodeTypes
 
     def container(self, node_type: str) -> "str | None":
@@ -342,7 +347,7 @@ def declared_defaults(cls: type, type_name: str) -> "list[tuple[str, Any]]":
     found = _DECLARED_DEFAULTS.get(cls)
     if found is None:
         found = []
-        declaration = x3d.CONCRETE_NODES.get(type_name)
+        declaration = xite.VOCABULARY.get(type_name)
         if (declaration is not None and cls is not declaration
                 and not issubclass(cls, node.PrototypedNode)):
             for declared in protofunctions.getFields(declaration):

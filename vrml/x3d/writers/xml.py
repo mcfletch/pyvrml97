@@ -57,11 +57,6 @@ class XMLWriter(SceneWriter):
             root += ''.join(attribute(name, value % self.version if '%' in value else value)
                             for name, value in SCHEMA_ATTRIBUTES)
         lines.append('<X3D%s>' % root)
-        head = self.head()
-        if head:
-            lines.append(INDENT + '<head>')
-            lines.extend(INDENT * 2 + line for line in head)
-            lines.append(INDENT + '</head>')
         self.out: "list[str]" = []
         self.enter(self.scene)
         self.graph(self.scene, 2)
@@ -72,6 +67,11 @@ class XMLWriter(SceneWriter):
             self.element(2, 'EXPORT', [('AS', AS), ('localDEF', localDEF)])
         self.route_elements(self.scene, 2)
         self.leave()
+        head = self.head()
+        if head:
+            lines.append(INDENT + '<head>')
+            lines.extend(INDENT * 2 + line for line in head)
+            lines.append(INDENT + '</head>')
         if self.out:
             lines.append(INDENT + '<Scene>')
             lines.extend(self.out)
@@ -88,9 +88,9 @@ class XMLWriter(SceneWriter):
 
     def head(self) -> "list[str]":
         found = []
-        for item in self.scene.components:
-            found.append('<component%s/>' % (attribute('level', str(item.level))
-                                             + attribute('name', item.name)))
+        for name, level in self.components():
+            found.append('<component%s/>' % (attribute('level', str(level))
+                                             + attribute('name', name)))
         if self.writes_units:
             for item in self.scene.units:
                 found.append('<unit%s/>' % (
