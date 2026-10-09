@@ -50,6 +50,12 @@ A field's declaration carries its X3D interface:
     On node fields, the node types the field holds. Setting any other type
     raises ``ValueError``.
 
+The declarations and their defaults are generated from the X3D Unified
+Object Model 4.1. Where the 4.1 draft's text gives another default, the
+declaration keeps the object model's: ``GaussianSplats`` has ``castShadow``
+and ``pointerEvents`` true, as the 4.1 XML Schema does, where the text of
+clause 43 gives FALSE for both.
+
 Fields named by a Python keyword (the lights' ``global``) are read with
 ``getattr(light, 'global')`` and set with ``Light(**{'global': True})``.
 
@@ -396,7 +402,16 @@ binding the first where none is. ``binding.current_path(paths)`` is the path,
 among the paths a scene draws, to the topmost node of the stack those paths
 reach, bound again where it was beneath; with none reached, the first path's
 node is bound. A node in no scene is a stack of its own.
-Layers share their scene's stacks.
+
+Each layer of a ``LayerSet`` has stacks of its own (19775-1, 7.2.2), kept on
+the ``Layer`` or ``LayoutLayer`` node; layer 0, the scene's own children, uses
+the scene's. A node is on its layer's stacks once ``binding.place(node,
+layer)`` has put it there: a document read through ``vrml.x3d`` places every
+bindable inside its layers as it is built (``binding.place_layers(scene)``),
+and ``binding.current_path`` places each node whose path passes through a
+layer. ``binding.stack_owner(node)`` is the layer or scene that keeps a
+node's stacks, and ``binding.bound(layer, kind)`` the node on top of one of a
+layer's.
 
 The time a node is at is its scene's. Each node that stamps time is a
 ``vrml.x3d.timing.Timed``, whose ``now()`` calls the ``clock()`` of the scene

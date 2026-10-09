@@ -22,7 +22,7 @@ from typing import Any, cast
 
 from vrml import field, node, protofunctions, route
 from vrml.vrml97.scenegraph import SceneGraph
-from vrml.x3d import codecs, dialect, dialects, extension, profiles, runtime
+from vrml.x3d import binding, codecs, dialect, dialects, extension, profiles, runtime
 from vrml.x3d import nodes as x3d
 from vrml.x3d.dialect import DialectTables
 from vrml.x3d.scene import (
@@ -332,6 +332,7 @@ class SceneBuilder:
         scene.children = self._body.roots
         scene.routes = self._body.routes
         scene.problems = self._problems
+        binding.place_layers(scene)
         return scene
 
     # Nodes

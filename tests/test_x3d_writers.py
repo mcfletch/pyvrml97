@@ -107,6 +107,29 @@ class TestRoundTrip(unittest.TestCase):
                 self.assertEqual(errors(again), [])
                 self.assertIsNone(first_difference(scene, again))
 
+    def test_gaussian_splats_read_back_from_each_encoding(self):
+        """MFQuaternion orientations and the coefficient fields survive each encoding."""
+        scene = x3d.loads(
+            '<X3D profile="Full" version="4.1"><Scene><GaussianSplats DEF="Splats"'
+            ' positions="0 0 0, 1 2 3" orientations="0 0 0 1, 0 0.7071068 0 0.7071068"'
+            ' scales="0.1 0.2 0.3, 0.4 0.5 0.6" opacities="0.25 1"'
+            ' colorSpace="LIN_REC709_DISPLAY" castShadow="false"'
+            ' sphericalHarmonicsDegree0Coef0="1 0 0, 0 1 0"'
+            ' sphericalHarmonicsDegree1Coef2="0.5 -0.5 0.25, -1 2 -3"/></Scene></X3D>',
+            name=os.path.join(HERE, 'splats.x3d'))
+        self.assertEqual(errors(scene), [])
+        for encoding in ENCODINGS:
+            with self.subTest(encoding=encoding):
+                again = x3d.loads(x3d.dumps(scene, encoding=encoding), name=scene.baseURI)
+                self.assertEqual(errors(again), [])
+                self.assertIsNone(first_difference(scene, again))
+                splats = again.getDEF('Splats')
+                self.assertEqual([list(row) for row in splats.orientations],
+                                 [[0, 0, 0, 1], [0, 0.7071068, 0, 0.7071068]])
+                self.assertEqual(splats.colorSpace, 'LIN_REC709_DISPLAY')
+                self.assertFalse(splats.castShadow)
+                self.assertEqual(list(splats.sphericalHarmonicsDegree1Coef2[1]), [-1, 2, -3])
+
     def test_each_encoding_writes_the_prototype_bodies(self):
         scene = everything()
         for encoding in ENCODINGS:
