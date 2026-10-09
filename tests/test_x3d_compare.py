@@ -92,6 +92,18 @@ class TestWhatIsCompared(unittest.TestCase):
         found = first_difference(files.loads(text % '1'), files.loads(text % '2'))
         self.assertIn('P', found)
 
+    def test_a_prototype_field_declared_without_a_value_equals_one_declared_empty(self):
+        from vrml.x3d import files  # noqa: PLC0415 kept with its use
+        text = '#X3D V4.0 utf8\nPROFILE Immersive\nPROTO P [ inputOutput MFVec3f v %s ] { Group {} }\n'
+        self.assertIsNone(first_difference(files.loads(text % ''), files.loads(text % '[ ]')))
+        self.assertIn('P', first_difference(files.loads(text % ''), files.loads(text % '[ 0 0 0 ]')))
+
+    def test_a_body_scripts_url_given_by_is_is_not_compared(self):
+        from vrml.x3d import files  # noqa: PLC0415 kept with its use
+        text = ('#X3D V4.0 utf8\nPROFILE Immersive\n'
+                'PROTO P [ inputOutput MFString u [] ] { Script { url %s url IS u } }\n')
+        self.assertIsNone(first_difference(files.loads(text % '"a.js"'), files.loads(text % '[]')))
+
     def test_a_prototypes_body_is_compared(self):
         from vrml.x3d import files  # noqa: PLC0415 kept with its use
         text = '#X3D V4.0 utf8\nPROFILE Immersive\nPROTO P [ ] { %s {} }\n'

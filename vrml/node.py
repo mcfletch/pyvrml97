@@ -217,7 +217,9 @@ class PrototypedNode(object):
         sg = template.copy(copier)
         for fieldName, mappings in isMappings:
             sourceField = getField(self, fieldName)
-            hasDefault = hasattr(sourceField, 'getDefault')
+            # An event carries no value, so has no default to pass on
+            hasDefault = (hasattr(sourceField, 'getDefault')
+                          and not isinstance(sourceField, field.Event))
             default = sourceField.getDefault() if hasDefault else None
             for destination, destinationField in mappings:
                 # The mappings name the *prototype's* nodes, and this
@@ -597,23 +599,28 @@ def _passRootDown(client: Any, values: Any) -> None:
             Node.rootSceneGraph.fset(value, clientRoot, notify=0)
 
 
-def _changeSender(nodeRef: Any, field: Any) -> "Callable[..., Any]":
-    """Utility function to send node-change messages on olist updates"""
+def _changeSender(nodeRef: Any, watched: Any) -> "Callable[..., Any]":
+    """A receiver that sends a set message for `watched` when its list changes
 
-    def onOListChange(sender: Any, signal: Any, value: Any) -> None:
+    Every list of a node sends its changes from that node, naming its own
+    field; the message carries the list, as an assignment to the field would.
+    """
+
+    def onOListChange(signal: Any, value: Any, field: Any = None) -> None:
         client = nodeRef()
-        if client:
-            if signal == olist.OList.NEW_CHILD_EVT:
-                # A child appended to the list is attached as much as one
-                # assigned into it, so it learns the scene the same way.
-                _passRootDown(client, [value])
-            dispatcher.send(
-                ('set', field),
-                client,
-                value=sender,
-                subsignal=signal,
-                subvalue=value,
-            )
+        if not client or field is not watched:
+            return
+        if signal == olist.OList.NEW_CHILD_EVT:
+            # A child appended to the list is attached as much as one
+            # assigned into it, so it learns the scene the same way.
+            _passRootDown(client, [value])
+        dispatcher.send(
+            ('set', watched),
+            client,
+            value=client.__dict__.get(watched.name),
+            subsignal=signal,
+            subvalue=value,
+        )
 
     return onOListChange
 

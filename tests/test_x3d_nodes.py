@@ -210,6 +210,16 @@ class TestBehaviour(unittest.TestCase):
         np.testing.assert_allclose(part.localMatrices().data[0],
                                    x3d.Transform(**fields).localMatrices().data[0])
 
+    def test_the_hanim_transforms_transform_as_a_transform_does(self):
+        fields = dict(translation=(1, 2, 3), rotation=(0, 1, 0, 0.5), scale=(2, 2, 2),
+                      center=(0.5, 0, 0))
+        expected = x3d.Transform(**fields).localMatrices().data[0]
+        for kind in (x3d.HAnimHumanoid, x3d.HAnimJoint, x3d.HAnimSite):
+            with self.subTest(kind=kind.__name__):
+                transform = kind(**fields)
+                self.assertIsInstance(transform, nodetypes.Transforming)
+                np.testing.assert_allclose(transform.localMatrices().data[0], expected)
+
 
 if __name__ == '__main__':
     unittest.main()

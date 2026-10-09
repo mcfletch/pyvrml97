@@ -10,7 +10,6 @@ Node types, fields and field types the target version lacks are collected
 as problems, and `write()` raises `X3DWriteError` listing all of them.
 """
 
-import re
 from collections.abc import Iterable, Sequence
 from typing import Any, NamedTuple
 
@@ -21,15 +20,8 @@ from vrml.x3d import dialects, extension
 from vrml.x3d import codecs
 from vrml.x3d.codecs import same
 from vrml.x3d import nodes as x3d
-from vrml.x3d.builder import implied_container, scaled, unit_factor
-
-#: The field types VRML97 has (ISO/IEC 14772-1, section 5).
-VRML97_TYPES = frozenset((
-    'SFBool', 'SFColor', 'SFFloat', 'SFImage', 'SFInt32', 'SFNode', 'SFRotation',
-    'SFString', 'SFTime', 'SFVec2f', 'SFVec3f',
-    'MFColor', 'MFFloat', 'MFInt32', 'MFNode', 'MFRotation', 'MFString', 'MFTime',
-    'MFVec2f', 'MFVec3f',
-))
+from vrml.x3d.builder import XML_NAME, implied_container, scaled, unit_factor
+from vrml.x3d.dialect import VRML97_FIELD_TYPES
 
 #: VRML97's word for each access type.
 VRML97_ACCESS = {
@@ -39,11 +31,6 @@ VRML97_ACCESS = {
 
 #: The url schemes that mark a Script's program written inline.
 INLINE_SCHEMES = ('ecmascript:', 'javascript:', 'vrmlscript:')
-
-#: A DEF name in the XML and JSON encodings: an XML NCName, which is what the
-#: schema's xs:ID is -- a letter or underscore, then letters, digits, '_', '-'
-#: and '.'.
-XML_NAME = re.compile(r'[^\W\d][\w.\-]*\Z')
 
 #: Fields every prototype has that are pyvrml97's, not its interface's.
 _PROTOTYPE_FIELDS = frozenset(
@@ -136,9 +123,9 @@ class _Scope:
         self.protos = protos
         self.names: "dict[Any, str]" = {}
         self.written: "set[Any]" = set()
-        #: For each body node, its fields' IS connections: node field to
-        #: prototype field.
-        self.connections: "dict[Any, dict[str, str]]" = {}
+        #: For each body node, its fields' IS connections: node field to the
+        #: prototype fields it is connected to.
+        self.connections: "dict[Any, dict[str, list[str]]]" = {}
 
 
 class SceneWriter:
@@ -363,7 +350,7 @@ class SceneWriter:
         prototype = isinstance(target, node.PrototypedNode)
         return sorted(
             (name if prototype else self.dialect.dialect_name(type_name, name), protoField)
-            for name, protoField in found.items()
+            for name, protoFields in found.items() for protoField in protoFields
         )
 
     def _default(self, declared: Any, type_name: str, defaults: "dict[str, Any]") -> Any:
@@ -380,24 +367,39 @@ class SceneWriter:
             memo[key] = default
         return memo[key]
 
-    def _inherited(self, cls: type) -> "set[str]":
-        """The field and event names a class has from the declaration it extends"""
-        memo: "dict[type, set[str]]" = self.__dict__.setdefault('_inherited_names', {})
+    def _inherited(self, cls: type) -> "dict[str, Any]":
+        """The fields and events a class has from the declaration it extends, by name"""
+        memo: "dict[type, dict[str, Any]]" = self.__dict__.setdefault('_inherited_fields', {})
         if cls not in memo:
             base = next(item for item in cls.__mro__ if not item.__dict__.get(' declares', False))
-            memo[cls] = {item.name for item in protofunctions.getFields(base)
+            memo[cls] = {item.name: item for item in protofunctions.getFields(base)
                          + protofunctions.getFields(base, 1)}
         return memo[cls]
 
     def own_declarations(self, target: Any) -> "list[Declaration]":
-        """Fields a Script or shader node declares, with their current values"""
+        """Fields a Script or shader node declares, with their current values
+
+        A declaration may take the name of a field the node type has in
+        another version: X3D 3.x's Script declaring `description`. Where the
+        version being written has that field, of the same type and access,
+        the declaration is left out and its value written as that field;
+        otherwise the writer refuses it.
+        """
         cls = type(target)
         inherited = self._inherited(cls)
+        type_name = protofunctions.protoName(target)
         found = []
         connected = self._scopes[-1].connections.get(target, {}) if self._scopes else {}
         for declared in protofunctions.getFields(cls) + protofunctions.getFields(cls, 1):
-            if declared.name in inherited or declared.name.startswith(' '):
+            if inherited.get(declared.name) is declared or declared.name.startswith(' '):
                 continue
+            if declared.name in inherited and self.dialect.has_field(type_name, declared.name):
+                own = inherited[declared.name]
+                if (declared.typeName() == own.typeName()
+                        and getattr(declared, 'accessType', None) == getattr(own, 'accessType', None)):
+                    continue
+                self.problem('%s declares %s, a field of its node type'
+                             % (type_name, declared.name))
             value = None
             if isinstance(declared, field.Field) and declared.name not in connected:
                 value = declared.fget(target)
@@ -414,7 +416,7 @@ class SceneWriter:
 
     def declaration(self, declared: Any, value: Any) -> Declaration:
         type_name = str(declared.typeName())
-        if self.vrml97 and type_name not in VRML97_TYPES:
+        if self.vrml97 and type_name not in VRML97_FIELD_TYPES:
             self.problem('VRML97 has no field type %s (%s)' % (type_name, declared.name))
         return Declaration(declared.accessType, type_name, declared.name, value)
 
@@ -490,7 +492,11 @@ class SceneWriter:
                     continue
                 value = self.written_as(value)
             else:
-                default = self._default(declared, type_name, defaults)
+                # A declaration standing for the version's own field of its
+                # name is held to that field's default, not its own value.
+                builtin = self._inherited(type(target)).get(name, declared) \
+                    if type(target).__dict__.get(' declares', False) else declared
+                default = self._default(builtin, type_name, defaults)
                 if same(value, default):
                     continue
                 if not _finite(type_name_of, value):
@@ -561,7 +567,8 @@ class SceneWriter:
         scope = self.enter(graph)
         for protoField, targets in node.ismaps(proto).items():
             for target, nodeField in targets:
-                scope.connections.setdefault(target, {})[nodeField] = protoField
+                scope.connections.setdefault(target, {}).setdefault(nodeField, []).append(
+                    protoField)
         return graph
 
     # Routes and statements
@@ -628,4 +635,4 @@ class SceneWriter:
         """
         if isinstance(child, node.PrototypedNode) and name != 'children':
             return False
-        return implied_container(parent, child) == name
+        return implied_container(parent, child, self.dialect) == name

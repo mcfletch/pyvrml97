@@ -13,7 +13,7 @@ from typing import Any
 from xml.parsers import expat
 
 from vrml.x3d import codecs
-from vrml.x3d.builder import SceneBuilder
+from vrml.x3d.builder import XML_NAME, SceneBuilder
 from vrml.x3d.scene import X3DScene
 
 
@@ -42,6 +42,7 @@ class ElementReader:
 
     def __init__(self, builder: SceneBuilder) -> None:
         self.builder = builder
+        builder.def_names = XML_NAME
         self.stack: "list[_Element]" = []
         self.in_cdata = False
         self.statements: "dict[str, Callable[[dict[str, str]], _Element]]" = {
@@ -66,7 +67,14 @@ class ElementReader:
 
     def _start(self, name: str, attributes: "dict[str, str]") -> None:
         self._position()
-        if name in CONTAINERS:
+        if self._parent_kind() == 'foreign':
+            element = _Element('foreign')
+        elif ':' in name:
+            # An element of another namespace (an XML Signature, an
+            # application's own data) is not X3D: it and its content are skipped
+            self.builder.problem('info', 'Element %s of another namespace skipped' % name)
+            element = _Element('foreign')
+        elif name in CONTAINERS:
             element = _Element(name)
         elif name in self.statements:
             element = self.statements[name](attributes)

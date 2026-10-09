@@ -15,6 +15,7 @@ the scene's `problems` field; in strict mode the first error raises
 """
 
 import math
+import re
 import weakref
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast
@@ -159,6 +160,11 @@ class _Body:
 ExternResolver = Callable[[Sequence[str], str, str], 'type | None']
 
 
+#: A DEF name in the XML and JSON encodings: an XML NCName, which is what the
+#: schema's xs:ID is -- a letter or underscore, then letters, digits, '_', '-'
+#: and '.'.
+XML_NAME = re.compile(r'[^\W\d][\w.\-]*\Z')
+
 #: What a document is built from when no prototypes are given.
 DEFAULT_VOCABULARY: "Mapping[str, type]" = {**x3d.CONCRETE_NODES, **runtime.PROTOTYPES}
 
@@ -216,6 +222,9 @@ class SceneBuilder:
         self._problems: "list[LoadProblem]" = []
         self._scripts = 0
         self._unknown_types: "set[str]" = set()
+        #: What a DEF name in the document's encoding matches, where the
+        #: encoding's grammar does not already hold its reader to it.
+        self.def_names: "re.Pattern[str] | None" = None
 
     # Problems
 
@@ -426,6 +435,16 @@ class SceneBuilder:
         """Whether a DEF in the current scope has given `name` a node"""
         return self._lookup(name) is not None
 
+    def _current_name(self, target: Any, type_name: str, name: str) -> str:
+        """The current name of `type_name`'s field `name` in the document's dialect
+
+        A prototype instance keeps the names its prototype declares, even where the
+        prototype shares a name with an X3D node the dialect renames fields of.
+        """
+        if isinstance(target, node.PrototypedNode):
+            return name
+        return self.dialect.current_name(type_name, name)
+
     def field_type(self, name: str) -> "str | None":
         """The type of the open node's field `name`, as its document names it
 
@@ -436,8 +455,12 @@ class SceneBuilder:
             return None
         try:
             declared = protofunctions.getField(
-                frame.node, self.dialect.current_name(frame.type_name, name))
+                frame.node, self._current_name(frame.node, frame.type_name, name))
         except AttributeError:
+            return None
+        # An attribute of the node's class that is not a field (a prototype
+        # instance's `nodeType`) names no field
+        if not isinstance(declared, (field.Field, field.Event)):
             return None
         return str(declared.typeName())
 
@@ -493,6 +516,10 @@ class SceneBuilder:
         return self._scope.defs.get(name)
 
     def _define(self, name: str, built: Any) -> None:
+        if self.def_names is not None and not self.def_names.match(name):
+            # Kept, so the document's USE and ROUTE statements find it;
+            # an encoding that cannot hold the name does not write it
+            self.problem('warning', 'DEF name %r is not an XML name' % name, built)
         if name in self._scope.defs:
             self.problem('warning', 'DEF %r is named twice; the later node takes it' % name)
         self._scope.defs[name] = built
@@ -512,14 +539,19 @@ class SceneBuilder:
         if parent.target:
             containerField = parent.target[-1]
         name = self._container(parent, built, containerField)
-        if name is not None:
-            parent.children.setdefault(name, []).append(built)
+        if name is None:
+            return
+        if not isinstance(parent.node, node.PrototypedNode) and not self.dialect.has_field(
+                parent.type_name, name):
+            self.problem('warning', '%s has no field %s.%s'
+                         % (self.version_name, parent.type_name, name), parent.node)
+        parent.children.setdefault(name, []).append(built)
 
     def _container(self, parent: _Frame, built: Any, explicit: str) -> "str | None":
         """The parent field a node goes into: the explicit one, else the implied one"""
         name: "str | None"
         if explicit:
-            name = self.dialect.current_name(parent.type_name, explicit)
+            name = self._current_name(parent.node, parent.type_name, explicit)
             declared = _node_field(parent.node, name)
             if declared is not None and node.accepts(_field_types(declared), built):
                 return name
@@ -527,7 +559,9 @@ class SceneBuilder:
                 protofunctions.protoName(built))
             self.problem('error', '%s %s %s' % (parent.type_name, why, name), built)
             return None
-        name = implied_container(parent.node, built)
+        # The document's version's default container: X3D 3.x gives metadata
+        # nodes `metadata`, where 4.x gives them `value`
+        name = implied_container(parent.node, built, self.dialect)
         if name is None:
             self.problem('error', '%s has no field that holds a %s'
                          % (parent.type_name, protofunctions.protoName(built)), built)
@@ -571,15 +605,17 @@ class SceneBuilder:
         if frame.used:
             self.problem('error', 'USE node given field %s' % name, frame.node)
             return None, None
-        current = self.dialect.current_name(frame.type_name, name)
+        current = self._current_name(frame.node, frame.type_name, name)
         try:
             declared = protofunctions.getField(frame.node, current)
         except AttributeError:
-            self.problem('warning', '%s has no field %s' % (frame.type_name, name), frame.node)
-            return None, None
-        if not isinstance(declared, field.Field):
+            declared = None
+        if isinstance(declared, field.Event):
             self.problem('warning', '%s.%s is an event and takes no value'
                          % (frame.type_name, name), frame.node)
+            return None, None
+        if not isinstance(declared, field.Field):
+            self.problem('warning', '%s has no field %s' % (frame.type_name, name), frame.node)
             return None, None
         if not isinstance(frame.node, node.PrototypedNode) and not self.dialect.has_field(
                 frame.type_name, current):
@@ -620,11 +656,17 @@ class SceneBuilder:
         if not isinstance(frame.node, DECLARES_FIELDS):
             self.problem('error', '%s does not declare fields' % frame.type_name, frame.node)
             return
+        built = frame.node
+        own = type(built)
+        base = own.__mro__[1] if own.__dict__.get(' declares', False) else own
+        if (isinstance(getattr(base, name, None), (field.Field, field.Event))
+                and self.dialect.has_field(frame.type_name, name)):
+            self.problem('error', '%s declares %s, a field of its node type'
+                         % (frame.type_name, name), built)
+            return
         declared = self._declaration(name, type_name, accessType, text, value)
         if declared is None:
             return
-        built = frame.node
-        own = type(built)
         if not own.__dict__.get(' declares', False):
             own = type(own.__name__, (own,), {'PROTO': protofunctions.protoName(built),
                                               ' declares': True})
@@ -641,6 +683,8 @@ class SceneBuilder:
         if type_name not in field.baseFieldTypes:
             self.problem('error', 'Field %s has unknown type %s' % (name, type_name))
             return None
+        if self.scene.version == '2.0' and type_name not in dialect.VRML97_FIELD_TYPES:
+            self.problem('warning', 'VRML97 has no field type %s (%s)' % (type_name, name))
         if accessType in ('inputOnly', 'outputOnly', 'eventIn', 'eventOut'):
             return field.newEvent(name, type_name, accessType in ('outputOnly', 'eventOut'))
         if accessType not in ('inputOutput', 'initializeOnly', 'exposedField', 'field'):
@@ -695,6 +739,18 @@ class SceneBuilder:
         if declared is None:
             self.problem('error', 'Nodes given for an undeclared prototype field')
             return
+        if isinstance(declared, field.Event):
+            # An event carries no value, so has no default to give
+            if nodes:
+                self.problem('error', 'Prototype field %s is %s, which takes no default'
+                             % (declared.name, declared.accessType))
+            return
+        if not isinstance(declared, (node.SFNode, node.MFNode)):
+            # A field of values keeps the default its declaration gave it
+            if nodes:
+                self.problem('error', 'Prototype field %s is an %s, which takes no nodes'
+                             % (declared.name, declared.typeName()))
+            return
         default = nodes if isinstance(declared, node.MFNode) else (nodes[-1] if nodes else node.NULL)
         replacement = type(declared)(declared.name, declared.exposure, default)
         definition.fields[definition.fields.index(declared)] = replacement
@@ -740,7 +796,7 @@ class SceneBuilder:
             self.problem('error', 'IS names %s, which prototype %s does not declare'
                          % (protoField, definition.name), frame.node)
             return
-        current = self.dialect.current_name(frame.type_name, nodeField)
+        current = self._current_name(frame.node, frame.type_name, nodeField)
         try:
             declared = protofunctions.getField(frame.node, current)
         except AttributeError:
@@ -828,11 +884,11 @@ class SceneBuilder:
 
     def _route_field(self, target: Any, name: str, end: str) -> "str | None":
         type_name = protofunctions.protoName(target)
-        current = self.dialect.current_name(type_name, name)
+        current = self._current_name(target, type_name, name)
         for prefix, suffix in (('set_', ''), ('', '_changed')):
             if name.startswith(prefix) and name.endswith(suffix) and (prefix or suffix):
                 bare = name[len(prefix):len(name) - len(suffix)]
-                renamed = self.dialect.current_name(type_name, bare)
+                renamed = self._current_name(target, type_name, bare)
                 if renamed != bare:
                     current = prefix + renamed + suffix
         try:
@@ -881,20 +937,24 @@ def _node_field(target: Any, name: str) -> Any:
     return None
 
 
-def implied_container(parent: Any, child: Any) -> "str | None":
+def implied_container(parent: Any, child: Any, dialect: Any = None) -> "str | None":
     """The field of `parent` a `child` with no containerField goes into
 
-    The child type's default container where the parent has that field and
-    it accepts the child; else the first, by name, of the parent's node
-    fields that accepts it and is not shadowed under its name by the class;
-    None where none does. A prototype instance whose
-    node type is not known (an EXTERNPROTO not read) goes in `children`, the
+    The child type's default container, the `dialect`'s where it gives one
+    (a version's default that differs from the vocabulary's), where the
+    parent has that field and it accepts the child; else the first, by name,
+    of the parent's node fields that accepts it and is not shadowed under its
+    name by the class; None where none does. A prototype instance whose node
+    type is not known (an EXTERNPROTO not read) goes in `children`, the
     ProtoInstance's own default (ISO/IEC 19776-1), or nowhere.
     """
     if isinstance(child, node.PrototypedNode) and getattr(child, 'nodeType', None) is None:
         declared = _node_field(parent, 'children')
         return 'children' if declared is not None else None
-    default = getattr(child, 'CONTAINER_FIELD', '') or getattr(
+    own = child if not isinstance(child, node.PrototypedNode) else getattr(child, 'nodeType', None)
+    versioned = dialect.container(protofunctions.protoName(own)) if (
+        dialect is not None and own is not None) else None
+    default = versioned or getattr(child, 'CONTAINER_FIELD', '') or getattr(
         getattr(child, 'nodeType', None), 'CONTAINER_FIELD', '')
     if default:
         declared = _node_field(parent, default)

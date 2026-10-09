@@ -51,6 +51,19 @@ class FieldDefault(node.Node):
         return declared.coerce(codecs.decode(declared.typeName(), self.value))
 
 
+class ContainerDefault(node.Node):
+    """The field a version puts a node type in where no containerField names one
+
+    Reading that version, a node with no containerField goes there; writing
+    it, a node in another field is given its containerField. X3D 3.x gives
+    metadata nodes `metadata`, where 4.x gives them `value`.
+    """
+
+    PROTO = 'ContainerDefault'
+    nodeType = field.newField('nodeType', 'SFString', 1, '')
+    container = field.newField('container', 'SFString', 1, '')
+
+
 class AbsentFields(node.Node):
     """Fields and events of a vocabulary node type that a version lacks"""
 
@@ -74,10 +87,12 @@ class Dialect(node.Node):
     renamed = field.newField('renamed', 'MFNode', 1, list, requiredTypes=FieldRename)
     defaults = field.newField('defaults', 'MFNode', 1, list, requiredTypes=FieldDefault)
     absent = field.newField('absent', 'MFNode', 1, list, requiredTypes=AbsentFields)
+    containers = field.newField('containers', 'MFNode', 1, list, requiredTypes=ContainerDefault)
 
     def tables(self) -> 'DialectTables':
         """The dialect as lookup tables, for one document's read or write"""
-        return DialectTables(self.nodeTypes, self.renamed, self.defaults, self.absent)
+        return DialectTables(self.nodeTypes, self.renamed, self.defaults, self.absent,
+                             self.containers)
 
 
 class DialectTables:
@@ -93,6 +108,7 @@ class DialectTables:
         renamed: Iterable[FieldRename],
         defaults: Iterable[FieldDefault],
         absent: Iterable[AbsentFields] = (),
+        containers: Iterable[ContainerDefault] = (),
     ) -> None:
         self.nodeTypes = frozenset(nodeTypes)
         self.renames = {(item.nodeType, item.old): item.current for item in renamed}
@@ -106,10 +122,16 @@ class DialectTables:
         self.absent: "dict[str, frozenset[str]]" = {
             item.nodeType: frozenset(item.fields) for item in absent
         }
+        self.containers = {item.nodeType: item.container for item in containers}
 
     def has_node(self, node_type: str) -> bool:
         """Whether the version has the node type"""
         return not self.nodeTypes or node_type in self.nodeTypes
+
+    def container(self, node_type: str) -> "str | None":
+        """The field the version puts `node_type` in by default, where it differs
+        from the vocabulary's; None where it does not"""
+        return self.containers.get(node_type)
 
     def has_field(self, node_type: str, name: str) -> bool:
         """Whether the version's node type has the vocabulary's field `name`"""
@@ -127,6 +149,14 @@ class DialectTables:
         """(field name, value) for each field the version defaults differently"""
         return self._defaults.get(node_type, [])
 
+
+#: The field types VRML97 has (ISO/IEC 14772-1, section 5).
+VRML97_FIELD_TYPES = frozenset((
+    'SFBool', 'SFColor', 'SFFloat', 'SFImage', 'SFInt32', 'SFNode', 'SFRotation',
+    'SFString', 'SFTime', 'SFVec2f', 'SFVec3f',
+    'MFColor', 'MFFloat', 'MFInt32', 'MFNode', 'MFRotation', 'MFString', 'MFTime',
+    'MFVec2f', 'MFVec3f',
+))
 
 #: VRML97, ISO/IEC 14772-1:1997, against X3D 4.1. Clause numbers are those
 #: of ISO/IEC 14772-1 section 6, "Node reference".

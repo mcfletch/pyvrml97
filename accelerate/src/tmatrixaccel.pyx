@@ -3,30 +3,33 @@ from __future__ import division
 import numpy as np
 cimport numpy as np
 
-cdef float VERY_SMALL = 1e-6
-cdef float TWOPI = np.pi * 2.0
+cdef double VERY_SMALL = 1e-6
+cdef double TWOPI = np.pi * 2.0
 
-def transMatrix( float x=0.0, float y=0.0, float z=0.0 ):
+# Transforms are double precision, so a geocentric offset keeps its millimetres
+# until the camera's is taken from it; projections are single precision.
+
+def transMatrix( double x=0.0, double y=0.0, double z=0.0 ):
     """Produce a translation matrix moving (x,y,z)"""
     return np.array([
         [1.0,0.0,0.0,0.0],
         [0.0,1.0,0.0,0.0],
         [0.0,0.0,1.0,0.0], 
         [x,y,z,1.0],
-    ], dtype=np.float32 )
+    ], dtype=np.float64 )
 
-def scaleMatrix( float x=1.0, float y=1.0, float z=1.0 ):
+def scaleMatrix( double x=1.0, double y=1.0, double z=1.0 ):
     """Produce a scaling matrix scaling factor (x,y,z)"""
     return np.array([
         [x,0.0,0.0,0.0],
         [0.0,y,0.0,0.0],
         [0.0,0.0,z,0.0], 
         [0.0,0.0,0.0,1.0],
-    ], dtype=np.float32 )
+    ], dtype=np.float64 )
 
-def rotMatrix( float x=0.0, float y=1.0, float z=0.0, float a=0.0 ):
+def rotMatrix( double x=0.0, double y=1.0, double z=0.0, double a=0.0 ):
     """Produce a rotation matrix around vector x,y,z of angle a (radians)"""
-    cdef float c,s,t
+    cdef double c,s,t
     c = np.cos( a )
     s = np.sin( a )
     t = 1-c
@@ -51,7 +54,7 @@ def rotMatrix( float x=0.0, float y=1.0, float z=0.0, float a=0.0 ):
             [   x*y*t-z*s,  y2*t +c,    y*z*t+x*s,  0.0],
             [   x*z*t+y*s,  y*z*t-x*s,  z2*t+c,    0.0], 
             [   0.0,         0.0,         0.0,        1.0],
-        ], dtype=np.float32)
+        ], dtype=np.float64)
     else:
         return None
 

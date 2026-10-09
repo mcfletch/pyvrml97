@@ -14,7 +14,8 @@ sensor's own coordinates,
   pointer is still over the sensor's geometry.
 
 A `TouchSensor` sends `isOver`, the hit's point, normal and texture
-coordinate, `isActive` while held and `touchTime` for a release over it. The
+coordinate, `isActive` while held and `touchTime` for a release over it; a
+`GeoTouchSensor` sends the hit's point in its `geoSystem` as well. The
 drag sensors map the drag onto a plane (`PlaneSensor`), about an axis
 (`CylinderSensor`) or about a point (`SphereSensor`), each through the first
 hit, and send `trackPoint_changed` and their translation or rotation; with
@@ -33,11 +34,11 @@ from typing import Any, NamedTuple, Optional
 import numpy as np
 from numpy.typing import ArrayLike
 
-from vrml.x3d import interpolation, timing
+from vrml.x3d import geospatial, interpolation, timing
 from vrml.x3d import nodes as x3d
 
-__all__ = ['POINTING', 'CylinderSensor', 'Hit', 'PlaneSensor', 'Pointing', 'Ray',
-           'SphereSensor', 'TouchSensor']
+__all__ = ['POINTING', 'CylinderSensor', 'GeoTouchSensor', 'Hit', 'PlaneSensor', 'Pointing',
+           'Ray', 'SphereSensor', 'TouchSensor']
 
 
 class Hit(NamedTuple):
@@ -156,6 +157,16 @@ class TouchSensor(Pointing, x3d.TouchSensor):
     def end(self, over: bool, now: float) -> None:
         if over:
             self.touchTime = now
+
+
+class GeoTouchSensor(TouchSensor, x3d.GeoTouchSensor):
+    """A TouchSensor that sends the hit's point in its `geoSystem` too"""
+
+    PROTO = 'GeoTouchSensor'
+
+    def hit(self, hit: Hit) -> None:
+        super().hit(hit)
+        self.hitGeoCoord_changed = geospatial.geo_coordinates(self, _vector(hit.point))[0]
 
 
 class Dragging(Pointing):
@@ -293,4 +304,4 @@ class SphereSensor(Dragging, x3d.SphereSensor):
 
 #: Each pointing-device sensor class by its X3D name.
 POINTING: "dict[str, type]" = {cls.PROTO: cls for cls in (
-    CylinderSensor, PlaneSensor, SphereSensor, TouchSensor)}
+    CylinderSensor, GeoTouchSensor, PlaneSensor, SphereSensor, TouchSensor)}
