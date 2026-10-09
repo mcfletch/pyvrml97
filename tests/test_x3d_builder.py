@@ -116,6 +116,13 @@ class TestNodes(unittest.TestCase):
         script = scene.getDEF('SELF')
         self.assertIs(script.me, script)
 
+    def test_a_script_may_hold_a_node_it_is_inside(self):
+        scene = loads(b"""<X3D version="3.3"><Scene><Transform DEF="ROOT"><Script DEF="S">
+          <field name="root" type="SFNode" accessType="initializeOnly"><Transform USE="ROOT"/></field>
+          </Script></Transform></Scene></X3D>""")
+        self.assertEqual(problems(scene, 'error'), [])
+        self.assertIs(scene.getDEF('S').root, scene.getDEF('ROOT'))
+
     def test_a_field_a_subclass_hides_is_not_an_implied_container(self):
         class Hiding(x3d.TextureBackground):
             # An implementation's own attribute in place of an inherited field
