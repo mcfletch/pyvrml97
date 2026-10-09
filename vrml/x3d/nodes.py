@@ -1876,7 +1876,7 @@ class EnvironmentLight(X3DLightNode):
 setattr(EnvironmentLight, 'global', field.newField('global', 'SFBool', 1, True))
 
 
-class EspduTransform(X3DGroupingNode, X3DNetworkSensorNode):
+class EspduTransform(behaviours.LocalMatrices, nodetypes.Transforming, X3DGroupingNode, X3DNetworkSensorNode):
     """DIS component, level 1
 
     https://www.web3d.org/specifications/X3Dv4Draft/ISO-IEC19775-1v4.1-CD/Part01/components/dis.html#EspduTransform

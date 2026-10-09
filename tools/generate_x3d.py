@@ -124,6 +124,7 @@ MARKERS = {
     'Transform': 'Transforming',
     'Billboard': 'Transforming',
     'CADPart': 'Transforming',
+    'EspduTransform': 'Transforming',
     'HAnimHumanoid': 'Transforming',
     'HAnimJoint': 'Transforming',
     'HAnimSite': 'Transforming',
@@ -134,6 +135,7 @@ MARKERS = {
 BEHAVIOURS = {
     'Transform': ('LocalMatrices',),
     'CADPart': ('LocalMatrices',),
+    'EspduTransform': ('LocalMatrices',),
     'HAnimHumanoid': ('LocalMatrices',),
     'HAnimJoint': ('LocalMatrices',),
     'HAnimSite': ('LocalMatrices',),

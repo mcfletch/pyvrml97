@@ -1162,7 +1162,7 @@ class EnvironmentLight(X3DLightNode):
     specularTexture: _Field[Any, X3DEnvironmentTextureNode | None]
     def __init__(self, *, DEF: str = ..., ambientIntensity: float = ..., color: _Numbers = ..., diffuseCoefficients: _Numbers = ..., diffuseTexture: X3DEnvironmentTextureNode | None = ..., intensity: float = ..., metadata: X3DMetadataObject | None = ..., on: bool | int = ..., origin: _Numbers = ..., rotation: _Numbers = ..., shadowIntensity: float = ..., shadows: bool | int = ..., specularTexture: X3DEnvironmentTextureNode | None = ..., **fields: Any) -> None: ...
 
-class EspduTransform(X3DGroupingNode, X3DNetworkSensorNode):
+class EspduTransform(behaviours.LocalMatrices, nodetypes.Transforming, X3DGroupingNode, X3DNetworkSensorNode):
     PROTO: str
     COMPONENT: ClassVar[tuple[str, int]]
     CONTAINER_FIELD: ClassVar[str]
