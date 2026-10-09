@@ -950,10 +950,10 @@ def implied_container(parent: Any, child: Any, dialect: Any = None) -> "str | No
     The child type's default container, the `dialect`'s where it gives one
     (a version's default that differs from the vocabulary's), where the
     parent has that field and it accepts the child; else the first, by name,
-    of the parent's node fields (those its class does not hide) that accepts
-    it; None where none does. A prototype instance whose node type is not
-    known (an EXTERNPROTO not read) goes in `children`, the ProtoInstance's
-    own default (ISO/IEC 19776-1), or nowhere.
+    of the parent's node fields that accepts it and is not shadowed under its
+    name by the class; None where none does. A prototype instance whose node
+    type is not known (an EXTERNPROTO not read) goes in `children`, the
+    ProtoInstance's own default (ISO/IEC 19776-1), or nowhere.
     """
     if isinstance(child, node.PrototypedNode) and getattr(child, 'nodeType', None) is None:
         declared = _node_field(parent, 'children')
@@ -969,9 +969,8 @@ def implied_container(parent: Any, child: Any, dialect: Any = None) -> "str | No
             return str(default)
     for declared in sorted(protofunctions.getFields(parent), key=lambda f: f.name):
         if isinstance(declared, (node.SFNode, node.MFNode)) and not declared.name.startswith(' '):
-            # A field the node's class hides behind an attribute of its own is
-            # not one a child can be put in
-            if _node_field(parent, declared.name) is None:
+            # A field the class reads as something else under its name is no container
+            if _node_field(parent, declared.name) is not declared:
                 continue
             if node.accepts(_field_types(declared), child):
                 return str(declared.name)

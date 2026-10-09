@@ -892,10 +892,6 @@ class TestDeclaredFields(unittest.TestCase):
         self.assertEqual(len(problems(built.end_document(), 'error')), 1)
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 def test_a_prototype_event_field_of_nodes_has_no_default():
     scene = readers.read(b"""<X3D version='3.3'><Scene><ProtoDeclare name='P'><ProtoInterface>
         <field accessType='inputOnly' name='set_m' type='SFNode'/>
@@ -984,3 +980,7 @@ def test_a_version_writes_a_container_field_where_its_default_differs():
     scene = readers.read((METADATA_IN_SET % '4.0').encode(), name='a.x3d')
     assert 'containerField="value"' in writers.write(scene, 'xml', version='3.3')
     assert 'containerField' not in writers.write(scene, 'xml', version='4.0')
+
+
+if __name__ == '__main__':
+    unittest.main()
