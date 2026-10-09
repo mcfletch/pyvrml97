@@ -344,6 +344,21 @@ class SceneBuilder:
                 self._unknown_types.add(type_name)
         return found
 
+    def _encloses(self, built: Any) -> bool:
+        """Whether a USE of `built` here puts it inside itself
+
+        A node inside itself makes the scene graph a loop. A Script's fields
+        are not drawn, so a node held in one of them, the Script itself or a
+        node enclosing it (VRML97 Annex C's example 2), is a reference the
+        script reaches through, not a child.
+        """
+        for open_frame in reversed(self._frames):
+            if isinstance(open_frame.node, x3d.X3DScriptNode):
+                return False
+            if open_frame.node is built:
+                return True
+        return False
+
     def start_node(
         self,
         type_name: str,
@@ -365,11 +380,7 @@ class SceneBuilder:
             if built is None:
                 self.problem('error', 'USE of %r, which no DEF names' % USE)
                 frame.skip = True
-            elif (not isinstance(built, x3d.X3DScriptNode)
-                  and any(open_frame.node is built for open_frame in self._frames)):
-                # A node inside itself makes the scene graph a loop. A Script
-                # holding itself in one of its fields is drawn by nobody, and
-                # is how a script reaches its own fields.
+            elif self._encloses(built):
                 self.problem('error', 'USE of %r inside the node it names' % USE, built)
                 frame.skip = True
             else:

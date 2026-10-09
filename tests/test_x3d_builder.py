@@ -109,6 +109,33 @@ class TestNodes(unittest.TestCase):
         script = scene.getDEF('SELF')
         self.assertIs(script.me, script)
 
+    def test_a_script_field_may_hold_a_node_that_encloses_the_script(self):
+        """VRML97 Annex C's example 2: a Script holds itself and its parent."""
+        scene = loads(
+            '<X3D version="3.0"><Scene><Transform DEF="ROOT"><Script DEF="S">'
+            '<field accessType="initializeOnly" name="myself" type="SFNode">'
+            '<Script USE="S"/></field>'
+            '<field accessType="initializeOnly" name="root" type="SFNode">'
+            '<Transform USE="ROOT"/></field></Script></Transform></Scene></X3D>')
+        self.assertEqual(problems(scene, 'error'), [])
+        root = scene.getDEF('ROOT')
+        script = root.children[0]
+        self.assertIs(script.myself, script)
+        self.assertIs(script.root, root)
+
+    def test_a_use_of_an_enclosing_node_below_a_script_is_still_an_error(self):
+        built = Built()
+        built.b.start_node('Script', DEF='S')
+        group = built.b.start_node('Group', DEF='LOOP', containerField='metadata')
+        built.b.start_node('Group', USE='LOOP')
+        built.end_node()
+        built.end_node()
+        built.end_node()
+        scene = built.end_document()
+        self.assertEqual(list(group.children), [])
+        self.assertIn("USE of 'LOOP' inside the node it names",
+                      [problem.message for problem in scene.problems])
+
     def test_a_field_a_subclass_hides_is_not_an_implied_container(self):
         class Hiding(x3d.TextureBackground):
             # An implementation's own attribute in place of an inherited field
