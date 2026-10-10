@@ -56,3 +56,9 @@ type built from its bare declaration in such a read is reported once in
 A `startTime` set while it is active is dropped; `loop` and `cycleInterval`
 are read at each advance; `cycleTime` is the time the cycle began; the last
 `time` is the time it stopped.
+
+### `vrml.vrml200x` is removed
+
+`vrml.x3d` reads the ClassicVRML encoding. A program that built a parser with
+`vrml.vrml200x.parser.buildParser()` calls `vrml.x3d.files.load(path)` or
+`loads(text)`, which return the scene.
