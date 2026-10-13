@@ -15,7 +15,7 @@ from typing import Any
 import numpy as np
 
 from vrml import field, node, protofunctions
-from vrml.x3d import dialects, extension, profiles, xite
+from vrml.x3d import components, dialects, extension, profiles, xite
 from vrml.x3d import nodes as x3d
 from vrml.x3d.scene import LoadProblem
 
@@ -145,7 +145,7 @@ def validate(scene: Any, profile: "str | None" = None) -> "list[LoadProblem]":
     tables = chosen.tables()
     for current in _nodes(_roots(scene)):
         type_name = protofunctions.protoName(current)
-        declared_type = xite.declaration(type_name)
+        declared_type = xite.declaration(type_name) or components.declaration(type_name)
         in_vocabulary = declared_type is not None and isinstance(current, declared_type)
         if in_vocabulary and not tables.has_node(type_name):
             problems.append(LoadProblem(

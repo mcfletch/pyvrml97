@@ -37,7 +37,6 @@ from typing import Any, Callable, Optional
 from vrml import protofunctions
 from vrml.weaklist import WeakRefs
 import weakref
-#from vrml.weakkeydictfix import WeakKeyDictionary
 from pydispatch import dispatcher
 import traceback
 

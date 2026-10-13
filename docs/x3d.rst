@@ -190,11 +190,42 @@ What reading does:
   category, and its derived categories, into base units (metres, radians,
   kilograms, newtons). ``scene.units`` records them.
 - ``PROTO``/``ProtoDeclare`` makes a prototype class registered on the
-  scene. An ``EXTERNPROTO`` whose URL names a local file, relative to the
-  document, is read from that file (any encoding, eight levels deep at
-  most): the prototype its ``#name`` names, or, with none, the file's first
-  ``PROTO`` (not counting its ``EXTERNPROTO`` statements). Nothing is fetched over a network; ``extern_resolver`` lets an
-  application supply prototypes from elsewhere. An unresolved
+  scene. An ``EXTERNPROTO`` whose URL is a relative path to a file under the
+  document's folder is read from that file (any encoding, eight levels deep
+  at most, 64 MiB at most): the prototype its ``#name`` names, or, with none,
+  the file's first ``PROTO`` (not counting its ``EXTERNPROTO`` statements).
+  An absolute path, a ``file:`` URL, a path that leaves the folder (through
+  ``..`` or a symbolic link) and a network URL are not read, so a document
+  reads no file its author could not have put beside it.
+  ``extern_resolver=files.LocalPrototypes(prototypes, strict, root=folder)``
+  lets every document under ``folder`` name any file under it, for worlds
+  beside a shared prototype library. An application that reads prototypes
+  from anywhere else subclasses ``vrml.x3d.files.ExternPrototypes``, giving
+  ``locate(reference, base)`` (the name the file is known by, or ``None``
+  to refuse it) and ``read(reference, base)`` (its bytes); the class chooses
+  the prototype, reads each file once per load and holds the depth limit.
+  A document read by ``loads`` with no ``name`` has no folder and reads no
+  prototype files.
+- An ``EXTERNPROTO`` whose URLs include a known reference is built from the
+  vocabulary's own class for the node the reference names, and no file is
+  read for it. ``vrml.x3d.knownprotos.KNOWN`` holds the references: the
+  blaxxun and Bitmanagement forms for the VRML97 NURBS nodes
+  (``urn:inet:blaxxun.com:node:NurbsSurface``,
+  ``urn:inet:bitmanagement.de:node:NurbsSurface`` and
+  ``http://www.blaxxun.com/vrml/protos/nurbs.wrl#NurbsSurface``, and the same
+  for the other nine nodes). A reference is matched as text, without regard
+  to case or to ``http`` against ``https`` in everything but the node's name.
+  A known reference anywhere in the URL list is used ahead of a file listed
+  before it. The entry is used when the load's ``prototypes`` has the node
+  and the node has each field the ``EXTERNPROTO`` declares, with the declared
+  type; the load then records an ``info`` problem naming the reference and
+  the node. Where the node lacks a declared field, or holds it as another
+  type, the load records a warning and resolves the declaration from its
+  URLs. An application adds a reference with
+  ``KNOWN.add(KnownPrototype(references=['urn:example:node:Ball'],
+  readAs='Sphere'))``; a node declared under one name and read as another is
+  written under the vocabulary's name.
+- An unresolved
   ``EXTERNPROTO`` has its declared interface and no body, and is completed
   when ``builder.complete_extern_proto(extern, definition)`` is given the
   prototype class that defines it; it returns a message for each field the
@@ -507,6 +538,39 @@ A node with no X3D type of its own gives ``x3dEquivalent()``, which returns
 the X3D node to write in its place: an image held in memory as an
 ``ImageTexture`` with a ``data:`` URL, say. A node reached more than once has
 one equivalent, written once and used thereafter.
+
+A node type of an application's own
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A node X3D has no node for goes in a component of the application's own.
+The class names the node, its component and level, and the first X3D version
+a document may hold it in; ``vrml.x3d.components.register`` adds it to the
+vocabulary::
+
+    from vrml import field
+    from vrml.x3d import components, loads, dumps
+    from vrml.x3d import nodes as x3d
+
+    class Marker(x3d.X3DChildNode):
+        PROTO = 'ShopMarker'
+        COMPONENT = ('Shop', 1)
+        SINCE = '3.3'             # '3.0' where the class names none
+        CONTAINER_FIELD = 'children'
+        size = field.newField('size', 'SFFloat', 1, 1.0)
+
+    components.register(Marker)
+    scene = loads('#X3D V4.0 utf8\nPROFILE Interchange\nCOMPONENT Shop:1\n'
+                  'ShopMarker { size 3 }')
+    text = dumps(scene, encoding='xml')
+
+A registered node is read from every encoding, and written with the
+``COMPONENT`` statement for its component where the scene does not already
+name it. ``validate`` holds a scene to that statement as it does to X3D's
+own components. A version before the node's ``SINCE``, and VRML97, have no
+such node, and writing a scene holding one to either raises
+``X3DWriteError``. ``register`` raises ``ValueError`` for a node name or a
+component name that X3D or X_ITE has. A browser without the component does
+not read the document.
 
 X_ITE's nodes
 ~~~~~~~~~~~~~

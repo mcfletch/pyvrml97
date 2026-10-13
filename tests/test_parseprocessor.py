@@ -271,6 +271,13 @@ class TestErrors(unittest.TestCase):
             scene('NoSuchNodeType { }\n')
         self.assertIn('NoSuchNodeType', str(caught.exception))
 
+    def test_a_value_given_to_an_event_says_which_and_where(self):
+        with self.assertRaises(AttributeError) as caught:
+            scene('Group { }\nGroup { addChildren [ Shape { } ] }\n')
+        self.assertIn('addChildren', str(caught.exception))
+        self.assertIn('event', str(caught.exception))
+        self.assertIn('line 3', str(caught.exception))
+
 
 if __name__ == '__main__':
     unittest.main()

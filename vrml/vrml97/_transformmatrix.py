@@ -1,13 +1,13 @@
 """transformmatrix forward/backward calculation without accelerate support"""
 from typing import Any
 from math import pi
-from vrml.arrays import array, cos, sin, tan
+from vrml.arrays import Components, MatrixPair, array, cos, sin, tan
 # used to determine whether angles are non-null
 TWOPI = pi * 2.0
 # used to determine the center point of a transform
 VERY_SMALL = 1e-300
 
-def rotMatrix( source: Any=None ) -> Any:
+def rotMatrix( source: "Components | None" = None ) -> MatrixPair:
     """Convert a VRML rotation to rotation matrices
 
     Returns (R, R') (R and the inverse of R), with both
@@ -51,7 +51,7 @@ def rotMatrix( source: Any=None ) -> Any:
     else:
         return None, None
 
-def scaleMatrix( source: Any=None ) -> Any:
+def scaleMatrix( source: "Components | None" = None ) -> MatrixPair:
     """Convert a VRML scale to scale matrices
 
     Returns (S, S') (S and the inverse of S), with both
@@ -76,7 +76,7 @@ def scaleMatrix( source: Any=None ) -> Any:
     )
     return S, S1
 
-def transMatrix( source: Any=None ) -> Any:
+def transMatrix( source: "Components | None" = None ) -> MatrixPair:
     """Convert a VRML translation to translation matrices
 
     Returns (T, T') (T and the inverse of T), with both

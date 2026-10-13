@@ -225,6 +225,23 @@ class TestFieldsOnAPrototype(unittest.TestCase):
         with self.assertRaises(AttributeError):
             protofunctions.getField(self.built, 'nosuchfield')
 
+    def test_a_class_attribute_that_is_not_a_field_raises(self):
+        with self.assertRaises(AttributeError) as caught:
+            protofunctions.getField(basenodes.Transform, 'toString')
+        self.assertIn('toString', str(caught.exception))
+
+    def test_an_attribute_hiding_an_inherited_field_raises(self):
+        hiding = type('Hiding', (basenodes.Transform,), {'translation': None})
+        with self.assertRaises(AttributeError):
+            protofunctions.getField(hiding, 'translation')
+
+    def test_fields_and_events_are_listed_apart(self):
+        rung = field.newEvent('rung', 'SFBool', 1)
+        held = type('Held', (node.Node,), {'PROTO': 'Held', 'rung': rung})
+        self.assertNotIn(rung, protofunctions.getFields(held))
+        self.assertEqual(protofunctions.getFields(held, 1), [rung])
+        self.assertEqual(protofunctions.getFields(held, True), [rung])
+
     def test_a_field_stored_under_another_name_is_found_by_that_name(self):
         """A node's DEF is declared as `DEF` and stored as `' DEF'`, which
         is how a field keeps a name a program cannot write."""

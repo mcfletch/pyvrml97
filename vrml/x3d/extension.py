@@ -23,8 +23,8 @@ the writers write in its place.
 from collections.abc import Callable, Iterable
 from typing import Any, Optional
 
-from vrml import node, protofunctions
-from vrml.x3d import codecs, xite
+from vrml import field, node, protofunctions
+from vrml.x3d import codecs, components
 from vrml.x3d import nodes as x3d
 
 #: The metadata node a field of each type is written as, by type name.
@@ -41,7 +41,7 @@ def vocabulary_fields(type_name: str) -> "frozenset[str]":
     """The field names the X3D node type `type_name` declares; empty for an unknown type"""
     found = _VOCABULARY.get(type_name)
     if found is None:
-        cls = xite.VOCABULARY.get(type_name)
+        cls = components.vocabulary_class(type_name)
         names = protofunctions.getFields(cls) + protofunctions.getFields(cls, 1) if cls else []
         found = _VOCABULARY[type_name] = frozenset(item.name for item in names)
     return found
@@ -173,7 +173,8 @@ def node_from(entry: Any, make: "Callable[[str], Optional[type]]") -> Any:
             declared = protofunctions.getField(built, str(item.name))
         except AttributeError:
             continue
-        declared.fset(built, decode(declared, item, make), notify=False)
+        if isinstance(declared, field.Field):
+            declared.fset(built, decode(declared, item, make), notify=False)
     return built
 
 
@@ -192,6 +193,8 @@ def restore(target: Any, make: "Callable[[str], Optional[type]]",
         try:
             declared = protofunctions.getField(target, str(entry.name))
         except AttributeError:
+            declared = None
+        if not isinstance(declared, field.Field):
             report('%s has no field %s, named in its %s metadata'
                    % (protofunctions.protoName(target), entry.name, name))
             continue

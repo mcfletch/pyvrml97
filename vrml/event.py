@@ -9,7 +9,7 @@ outputs -- carries on the same cascade rather than starting another.
 
 import contextlib
 import contextvars
-from collections.abc import Iterator
+from collections.abc import Generator
 from typing import Any, Optional
 
 from pydispatch import dispatcher
@@ -25,7 +25,7 @@ def current() -> "Optional[Event]":
 
 
 @contextlib.contextmanager
-def forwarding(event: "Event") -> Iterator["Event"]:
+def forwarding(event: "Event") -> Generator["Event"]:
     """Make `event` the :func:`current` cascade within the block"""
     token = _CURRENT.set(event)
     try:

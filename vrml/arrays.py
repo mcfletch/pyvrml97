@@ -5,7 +5,8 @@ dot`` rather than reaching for numpy itself, and so that the few
 scenegraph-shaped helpers -- :func:`safeCompare`, :func:`contiguous` -- sit
 beside the numpy names they wrap.
 """
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, TypeAlias
 
 # Named rather than starred. `from numpy import *` puts 500 names in this
 # module so that consumers can reach about sixty of them, and every one of
@@ -25,6 +26,8 @@ from numpy import (
     sin, size, spacing, sqrt, sum, swapaxes, take,
     tan, test, tile, transpose, where, zeros,
 )
+from numpy import float64
+from numpy.typing import NDArray
 
 try:
     # TODO: don't import this here, as it's not
@@ -37,6 +40,14 @@ except ImportError as err:
 divide_safe = divide
 #: numpy dropped the name; a field type asks for it by this one.
 ArrayType = ndarray
+#: A 4x4 transformation matrix of doubles. The annotation carries the element
+#: type; numpy's own functions return arrays of unknown shape, so a 4x4 shape
+#: written here would be a cast at every place one is made.
+Matrix4: TypeAlias = NDArray[float64]
+#: A matrix and its inverse, or two Nones where both are the identity.
+MatrixPair: TypeAlias = 'tuple[Matrix4, Matrix4] | tuple[None, None]'
+#: The components of a vector or rotation: a sequence or an array.
+Components: TypeAlias = 'Sequence[int] | Sequence[float] | NDArray[Any]'
 
 
 def typeCode(a: Any) -> str:
@@ -54,7 +65,7 @@ seterr(all='ignore')
 
 
 def safeCompare(first: Any, second: Any) -> bool:
-    """Whether two field values are the same, without a numpy truth test
+    """Check for equality with array-aware handling
 
     Comparing two arrays answers an array, and `bool()` of that raises rather
     than answering -- which is what makes a plain `==` unusable here.
@@ -87,35 +98,15 @@ def safeCompare(first: Any, second: Any) -> bool:
 
 
 def contiguous(a: Any) -> Any:
-    """Force to a contiguous array"""
+    """Force the array a to be a contiguous array of the same type"""
     return array(a, typeCode(a))
 
 
 #: What `from vrml.arrays import *` provides.
 #:
-#: Declared rather than left to the star import. Without it a checker either
-#: sees nothing here -- so every `arrays.dot` in a consumer is an error in
-#: correct code -- or sees all 500 of numpy's names, which then shadow things
-#: the consumer defines itself: numpy's `log` ufunc landing on a module's
-#: `log = logging.getLogger(...)` is the one that bites.
-#:
-#: The list is what the packages that use this abstraction actually reach for,
-#: read from their source. A name a consumer needs and this omits is a
-#: NameError there, so the suites are what say this is complete; a checker
-#: reading a consumer will name anything missing.
-#: Deliberately absent: `log`, `tan` and `radians`. numpy's is a ufunc, and a consumer that does
-#: `from vrml.arrays import *` and then `log = logging.getLogger(__name__)` --
-#: which a dozen of them do -- has the two land on one name. Re-exporting it
-#: makes that a shadowing error in every one of them, and nothing here wants
-#: the logarithm badly enough to pay for it, and nothing in the workspace
-#: imports it from here by name.
-#:
-#: `sin`, `cos`, `sqrt`, `radians` and `tan` are here despite the same clash,
-#: because modules do ask for them by name and because the array versions are
-#: the ones wanted: `utilities.normalise` answers float32, and `x *
-#: math.sin(r)` keeps a float32 where `x * ar.sin(r)` widens to float64. A
-#: module that means the scalar one should say `math.` and be read as meaning
-#: it -- which is what `quaternion.py` now does.
+#: `sin`, `cos`, `sqrt`, `radians` and `tan` are here despite having
+#: name clashes, `log` is explicitly left out because it produces too
+#: many conflicts
 
 __all__ = [
     'ArrayType', 'abs', 'acos', 'allclose', 'angle', 'any',

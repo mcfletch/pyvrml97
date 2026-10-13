@@ -16,7 +16,7 @@ from typing import Any, NamedTuple
 import numpy as np
 
 from vrml import field, node, protofunctions
-from vrml.x3d import dialects, extension, profiles, xite
+from vrml.x3d import components, dialects, extension, profiles, xite
 from vrml.x3d import codecs
 from vrml.x3d.codecs import same
 from vrml.x3d import nodes as x3d
@@ -317,8 +317,9 @@ class SceneWriter:
             return type_name, True
         if not self.dialect.has_node(type_name):
             self.problem('%s has no node %s' % (self.version_name, type_name))
-        elif type_name in xite.OWN_TYPES:
-            name, level = xite.component_of(type_name)
+        elif type_name in xite.OWN_TYPES or components.declaration(type_name) is not None:
+            name, level = (xite.component_of(type_name) if type_name in xite.OWN_TYPES
+                           else components.component_of(type_name))
             self._needed[name] = max(level, self._needed.get(name, 0))
         return type_name, False
 

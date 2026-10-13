@@ -36,6 +36,12 @@ class Glossy(nodes.Material):
     layers = field.newField('layers', 'MFNode', 1, list)
 
 
+class Rubbed(Glossy):
+    """A Glossy with an event of its own"""
+
+    rubbed = field.newEvent('rubbed', 'SFFloat', 1)
+
+
 class Plain(nodes.Material):
     """A Material with a field and no extension set"""
 
@@ -164,6 +170,12 @@ class TestReading(unittest.TestCase):
             '"sheen"', '"shine"')
         read = x3d.loads(text, prototypes={'Material': Glossy})
         self.assertTrue(any('shine' in str(problem) for problem in read.problems))
+
+    def test_an_entry_naming_an_event_is_reported(self):
+        text = x3d.dumps(scene_of(Glossy(sheen=0.5))).replace("'sheen'", "'rubbed'").replace(
+            '"sheen"', '"rubbed"')
+        read = x3d.loads(text, prototypes={'Material': Rubbed})
+        self.assertTrue(any('rubbed' in str(problem) for problem in read.problems))
 
 
 class TestEquivalents(unittest.TestCase):

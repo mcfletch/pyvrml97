@@ -161,10 +161,11 @@ class ParseProcessor(DispatchProcessor):
         newNode = prototype()
         # The declaration's default where the class gives another, then
         # VRML97's own where it differs from X3D's.
-        for fieldName, value in dialect.declared_defaults(type(newNode), GI):
-            getField(newNode, fieldName).fset(newNode, value, notify=0)
-        for fieldName, value in self.dialect.defaults(GI):
-            getField(newNode, fieldName).fset(newNode, value, notify=0)
+        for fieldName, value in (
+                dialect.declared_defaults(type(newNode), GI) + self.dialect.defaults(GI)):
+            declared = getField(newNode, fieldName)
+            if isinstance(declared, field.Field):
+                declared.fset(newNode, value, notify=False)
         root(newNode, self.sceneGraphStack[0])
         if name:
             self.sceneGraphStack[-1].regDefName(name, newNode)
@@ -346,7 +347,7 @@ class ParseProcessor(DispatchProcessor):
         name = getString(name, buffer)
         clientNode = self.nodeStack[-1]
         try:
-            field = getField(clientNode, name)
+            declared = getField(clientNode, name)
         except AttributeError:
             raise AttributeError(
                 """Unknown field name %s for node type %s on line %s"""
@@ -361,14 +362,21 @@ class ParseProcessor(DispatchProcessor):
             set = node.ismaps(self.prototypeStack[-1])
             set.setdefault(mapName, []).append((clientNode, name))
         else:
-            self.fieldTypeStack.append(field.typeName())
+            if isinstance(declared, field.Event):
+                raise AttributeError(
+                    """%s is an event of node type %s and takes no value, on line %s"""
+                    % (
+                        name,
+                        protoName(clientNode),
+                        lines(end=start, buffer=buffer),
+                    )
+                )
+            self.fieldTypeStack.append(declared.typeName())
             try:
                 value = dispatch(self, value, buffer)
-                if isinstance(clientNode, node.PrototypedNode):
-                    # prototyped nodes get IS-value updates
-                    field.fset(clientNode, value, notify=1)
-                else:
-                    field.fset(clientNode, value, notify=0)
+                # prototyped nodes get IS-value updates
+                declared.fset(clientNode, value,
+                              notify=isinstance(clientNode, node.PrototypedNode))
             finally:
                 self.fieldTypeStack.pop()
 

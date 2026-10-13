@@ -77,17 +77,26 @@ class Node(object):
             try:
                 f = getField(self, key)
             except AttributeError:
-                raise AttributeError(
-                    """Unrecognised attribute %r for node type %r"""
-                    % (key, self.__class__.__name__)
-                ) from None
-            else:
-                if not (hasattr(f, '__get__') and hasattr(f, '__set__')):
+                if not hasattr(type(self), key):
+                    raise AttributeError(
+                        """Unrecognised attribute %r for node type %r"""
+                        % (key, self.__class__.__name__)
+                    ) from None
+                attribute = getattr(type(self), key)
+                if not (hasattr(attribute, '__get__') and hasattr(attribute, '__set__')):
                     raise TypeError(
                         """Attempt to set a non-field attribute %s to %s for node type %s"""
                         % (key, value, self.__class__.__name__)
-                    )
-                f.fset(self, value)
+                    ) from None
+                # A property, or another descriptor that takes a value
+                setattr(self, key, value)
+                continue
+            if isinstance(f, field.Event):
+                raise TypeError(
+                    """%s is an event of node type %s and takes no value"""
+                    % (key, self.__class__.__name__)
+                )
+            f.fset(self, value)
 
     def __str__(self) -> str:
         """Get a friendly representation of the Node"""
@@ -198,13 +207,14 @@ class PrototypedNode(object):
         from vrml import route  # noqa: PLC0415 cycle: vrml.route imports this module
 
         isMappings = None
+        template = None
         for cls in self.__class__.__mro__[:-1]:
             template = PrototypedNode.scenegraph.fget(cls)
             if template:
                 # use ismaps for the instantiated scenegraph
                 isMappings = list(ismaps(cls).items())
                 break
-        if isMappings is None:
+        if isMappings is None or template is None:
             # no scenegraph defined...
             from vrml.vrml97 import scenegraph  # noqa: PLC0415 cycle: vrml.vrml97.scenegraph imports this module
 
@@ -218,9 +228,8 @@ class PrototypedNode(object):
         for fieldName, mappings in isMappings:
             sourceField = getField(self, fieldName)
             # An event carries no value, so has no default to pass on
-            hasDefault = (hasattr(sourceField, 'getDefault')
-                          and not isinstance(sourceField, field.Event))
-            default = sourceField.getDefault() if hasDefault else None
+            hasDefault = isinstance(sourceField, field.Field)
+            default = sourceField.getDefault() if isinstance(sourceField, field.Field) else None
             for destination, destinationField in mappings:
                 # The mappings name the *prototype's* nodes, and this
                 # instance's body is a copy of those -- so the wiring has to
@@ -239,13 +248,11 @@ class PrototypedNode(object):
                 )
                 if hasDefault:
                     try:
-                        getField(destination, destinationField).fset(
-                            destination,
-                            default,
-                            notify=0,
-                        )
+                        destinationDeclared = getField(destination, destinationField)
                     except AttributeError:
-                        pass
+                        continue
+                    if isinstance(destinationDeclared, field.Field):
+                        destinationDeclared.fset(destination, default, notify=False)
         PrototypedNode.scenegraph.fset(self, sg)
 
     def __getattr__(self, name: str) -> Any:

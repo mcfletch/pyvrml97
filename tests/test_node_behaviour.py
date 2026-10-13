@@ -47,6 +47,38 @@ class TestBuildingOne(unittest.TestCase):
             Odd(method=1)
         self.assertIn('method', str(caught.exception))
 
+    def test_a_property_is_set_through_its_setter(self):
+        class Tagged(node.Node):
+            PROTO = 'Tagged'
+
+            @property
+            def tag(self):
+                return self._tag
+
+            @tag.setter
+            def tag(self, value):
+                self._tag = value.upper()
+
+        self.assertEqual(Tagged(tag='a').tag, 'A')
+
+    def test_a_property_with_no_setter_is_refused(self):
+        class Fixed(node.Node):
+            PROTO = 'Fixed'
+            tag = property(lambda _node: 'fixed')
+
+        with self.assertRaises(AttributeError):
+            Fixed(tag='a')
+
+    def test_an_event_takes_no_value(self):
+        class Bell(node.Node):
+            PROTO = 'Bell'
+            rung = field.newEvent('rung', 'SFBool', 1)
+
+        with self.assertRaises(TypeError) as caught:
+            Bell(rung=True)
+        self.assertIn('rung', str(caught.exception))
+        self.assertIn('event', str(caught.exception))
+
     def test_a_value_the_field_refuses_is_refused(self):
         with self.assertRaises(ValueError):
             basenodes.Transform(translation='not a vector')

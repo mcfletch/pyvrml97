@@ -51,11 +51,50 @@ not supply keeps pyvrml97's behaviour (a `TimeSensor`, a `BooleanFilter`). A
 type built from its bare declaration in such a read is reported once in
 `scene.problems`, as `info`.
 
+### `protofunctions.getField` returns a field or an event, and nothing else
+
+`getField` is declared as returning `Field | Event`, and `getFields` as
+returning a list of `Field`, or of `Event` when asked for events. A caller
+that sets or reads a value narrows first, since an `Event` has no `fset`,
+`fget` or `fhas`:
+
+```python
+declared = protofunctions.getField(node, name)
+if isinstance(declared, field.Field):
+    declared.fset(node, value)
+```
+
+A class attribute that is neither (a method, a property, a constant) raises
+`AttributeError`, as an undeclared name does, where 2.3 returned the
+attribute. An attribute that hides an inherited field of its name hides it
+from `getField` too.
+
+A value given to an event is refused: `Node(isActive=True)` raises
+`TypeError`, and a VRML97 document that gives an event a value raises
+`AttributeError` naming the event, the node type and the line.
+
+`protoName(obj, value)` returns the name it set.
+
 ### The TimeSensor follows 19775-1 8.4.1 while it runs
 
 A `startTime` set while it is active is dropped; `loop` and `cycleInterval`
 are read at each advance; `cycleTime` is the time the cycle began; the last
 `time` is the time it stopped.
+
+### An `EXTERNPROTO` naming a known reference is the vocabulary's node
+
+An `EXTERNPROTO` whose URLs include a reference in `vrml.x3d.knownprotos.KNOWN`
+(the blaxxun and Bitmanagement URNs and URL for the VRML97 NURBS nodes) gives
+the load's own class for that node where 2.3 gave a prototype with no body.
+A program that tested such a node with `isinstance(node, PrototypedNode)`
+finds the node class. See [docs/x3d.rst](docs/x3d.rst).
+
+### `DialectTables.has_node` counts registered node types
+
+A node class registered with `vrml.x3d.components.register` is a node type of
+every X3D version from its `SINCE` on. A program that asked
+`has_node('ItsOwnNode')` to tell its own nodes from X3D's gets `True` for a
+registered one.
 
 ### `vrml.vrml200x` is removed
 

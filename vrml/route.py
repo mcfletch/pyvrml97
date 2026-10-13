@@ -88,9 +88,10 @@ class ROUTE( node.Node ):
         A signal that carries no event joins the cascade being forwarded,
         or begins one.
         """
+        current = eventmodule.current()
         if event is None:
-            event = eventmodule.current() or eventmodule.Event()
-        if eventmodule.current() is not event:
+            event = current or eventmodule.Event()
+        if current is not event:
             with eventmodule.forwarding(event):
                 return self._forward(sender, signal, destination, destinationField,
                                      event, value)

@@ -22,7 +22,10 @@ from typing import Any, cast
 
 from vrml import field, node, protofunctions, route
 from vrml.vrml97.scenegraph import SceneGraph
-from vrml.x3d import binding, codecs, dialect, dialects, extension, profiles, runtime, xite
+from vrml.x3d import (
+    binding, codecs, components, dialect, dialects, extension, knownprotos, profiles, runtime,
+    xite,
+)
 from vrml.x3d import nodes as x3d
 from vrml.x3d.dialect import DialectTables
 from vrml.x3d.scene import (
@@ -101,6 +104,9 @@ class _Scope:
         self.parent = parent
         self.defs: "dict[str, Any]" = {}
         self.protos: "dict[str, type]" = {}
+        #: The vocabulary's name for each declared name a known reference
+        #: gave a node class (`vrml.x3d.knownprotos`).
+        self.read_as: "dict[str, str]" = {}
         #: Local names an IMPORT statement promises, bound when the Inline
         #: that exports them has loaded.
         self.imports: "set[str]" = set()
@@ -113,6 +119,15 @@ class _Scope:
                 return found
             scope = scope.parent
         return None
+
+    def node_name(self, name: str) -> str:
+        """The vocabulary's name for the node type a document names `name`"""
+        scope: "_Scope | None" = self
+        while scope is not None:
+            if name in scope.protos:
+                return scope.read_as.get(name, name)
+            scope = scope.parent
+        return name
 
 
 class _Frame:
@@ -193,7 +208,7 @@ class SceneBuilder:
         extern_resolver: "ExternResolver | None" = None,
     ) -> None:
         self.vocabulary: "Mapping[str, type]" = (
-            {**DEFAULT_VOCABULARY, **prototypes} if prototypes else DEFAULT_VOCABULARY)
+            {**DEFAULT_VOCABULARY, **components.nodes(), **(prototypes or {})})
         #: Whether an engine gave its own classes, so a type built from its
         #: bare declaration is one the engine does not implement.
         self._engine = bool(prototypes)
@@ -386,6 +401,7 @@ class SceneBuilder:
             frame.skip = True
             self._frames.append(frame)
             return None
+        type_name = self._scope.node_name(type_name)
         declared = xite.declaration(type_name)
         if (declared is not None and issubclass(cls, declared)
                 and not self.dialect.has_node(type_name)):
@@ -417,7 +433,7 @@ class SceneBuilder:
             declared = protofunctions.getField(built, name)
             if isinstance(declared, node.MFNode):
                 declared.fset(built, values, notify=frame.notify)
-            elif values:
+            elif values and isinstance(declared, field.Field):
                 if len(values) > 1:
                     self.problem('error', '%s.%s holds one node, given %d'
                                  % (frame.type_name, name, len(values)), built)
@@ -426,11 +442,13 @@ class SceneBuilder:
         for name, value in dialect.declared_defaults(type(built), frame.type_name):
             if name not in frame.set_fields:
                 declared = protofunctions.getField(built, name)
-                declared.fset(built, declared.copyValue(value), notify=False)
+                if isinstance(declared, field.Field):
+                    declared.fset(built, declared.copyValue(value), notify=False)
         for name, value in self.dialect.defaults(frame.type_name):
             if name not in frame.set_fields:
                 declared = protofunctions.getField(built, name)
-                declared.fset(built, declared.copyValue(value), notify=False)
+                if isinstance(declared, field.Field):
+                    declared.fset(built, declared.copyValue(value), notify=False)
         extension.restore(built, self._resolve_type,
                           lambda message: self.problem('warning', message, built))
         return built
@@ -834,10 +852,36 @@ class SceneBuilder:
         definition.connections.append((protoField, frame.node, current))
         frame.set_fields.add(current)
 
+    def _known_node(self, definition: _ProtoDefinition) -> "type | None":
+        """The vocabulary's class for an EXTERNPROTO whose URLs name one, registered
+        in the enclosing scope; None for one that is resolved as its URLs say"""
+        found = knownprotos.KNOWN.find(definition.urls)
+        if found is None:
+            return None
+        reference, entry = found
+        name = str(entry.readAs)
+        cls = self.vocabulary.get(name)
+        if cls is None:
+            return None
+        difference = knownprotos.interface_difference(
+            definition.fields, cls, lambda declared: self.dialect.current_name(name, declared))
+        if difference:
+            self.problem('warning', 'EXTERNPROTO %s: %s is known as the node %s, %s'
+                         % (definition.name, reference, name, difference))
+            return None
+        self.problem('info', 'EXTERNPROTO %s: %s is read as the node %s'
+                     % (definition.name, reference, name))
+        definition.scope.protos[definition.name] = cls
+        definition.scope.read_as[definition.name] = name
+        return cls
+
     def end_proto(self) -> "type | None":
         """Finish the prototype: its class, registered in the enclosing scope"""
         definition = self._protos.pop()
         if definition.extern:
+            known = self._known_node(definition)
+            if known is not None:
+                return known
             cls = cast(ProtoClass, node.prototype(definition.name, definition.fields,
                                                   externalURL=definition.urls))
             node.PENDING_PROTOTYPES[cls] = weakref.WeakSet()
