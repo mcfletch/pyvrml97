@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from vrml import protofunctions
-from vrml.x3d import codecs, readers
+from vrml.x3d import readers
 from vrml.x3d import nodes as x3d
 from vrml.x3d.readers import classic
 
@@ -160,21 +160,21 @@ class TestNumberLists(unittest.TestCase):
         self.assertIn('Coordinate.point', errors(scene)[0].message)
 
     @pytest.mark.serial
-    def test_parsing_a_list_costs_less_than_decoding_it(self):
+    def test_a_list_of_numbers_costs_less_than_a_list_of_scalars(self):
         """The grammar does not take the numbers of a list one by one"""
         body = ' '.join('%.6f' % value for value in np.random.default_rng(1).normal(size=200000))
-        document = '#X3D V3.3 utf8\nCoordinate { point [ %s ] }\n' % body
+        numbers = '#X3D V3.3 utf8\nCoordinate { point [ %s ] }\n' % body
+        # One word in the list and the grammar reads every item as a scalar.
+        scalars = '#X3D V3.3 utf8\nCoordinate { point [ %s TRUE ] }\n' % body
 
-        def fastest(call):
+        def fastest(document):
             times = []
             for _ in range(5):
                 start = time.perf_counter()
-                call()
+                self.assertEqual(classic.PARSER.parse(document)[2], len(document))
                 times.append(time.perf_counter() - start)
             return min(times)
-        parsing = fastest(lambda: classic.PARSER.parse(document))
-        decoding = fastest(lambda: codecs.decode('MFVec3f', body))
-        self.assertLess(parsing, 0.75 * decoding)
+        self.assertLess(fastest(numbers), 0.5 * fastest(scalars))
 
 
 class TestStatements(unittest.TestCase):

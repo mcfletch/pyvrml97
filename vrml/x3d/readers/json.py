@@ -22,6 +22,9 @@ from vrml.x3d.scene import X3DScene
 PROTOTYPE_NAME = frozenset(('@name',))
 #: A DEF's node type, the members that are not its fields, and its object.
 _Definition = tuple[str, frozenset[str], Mapping]
+#: The problem reported when `json` or this reader reaches the interpreter's
+#: recursion limit, which either may reach first.
+TOO_DEEP = 'JSON: nodes nested too deeply to read'
 
 
 def _typed(type_name: str, value: Any) -> Any:
@@ -62,6 +65,9 @@ class JSONReader:
         except (ValueError, UnicodeDecodeError) as error:
             self.builder.problem('error', 'JSON: %s' % error)
             return self.builder.end_document(complete=False)
+        except RecursionError:
+            self.builder.problem('error', TOO_DEEP)
+            return self.builder.end_document(complete=False)
         top = document.get('X3D') if isinstance(document, dict) else None
         if not isinstance(top, dict):
             self.builder.problem('error', 'JSON document has no X3D object')
@@ -72,7 +78,7 @@ class JSONReader:
             with self._at('Scene'):
                 self._scope(self._object(top.get('Scene'), 'Scene').get('-children'))
         except RecursionError:
-            self.builder.problem('error', 'JSON: nodes nested too deeply to read')
+            self.builder.problem('error', TOO_DEEP)
             return self.builder.end_document(complete=False)
         return self.builder.end_document()
 

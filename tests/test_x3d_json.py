@@ -65,12 +65,13 @@ class TestTheDocument(unittest.TestCase):
             self.assertEqual([p.severity for p in scene.problems], ['error'])
 
     def test_nodes_nested_past_the_readers_depth_are_an_error(self):
-        inner = {'Group': {}}
-        for _ in range(400):
-            inner = {'Group': {'-children': [inner]}}
-        scene = read([inner])
-        self.assertEqual([p.severity for p in scene.problems], ['error'])
-        self.assertIsInstance(scene.children[0], x3d.Group)
+        # Written as text: `json.dumps` has a depth of its own to run out of.
+        for depth in (400, 100000):
+            nested = '{"Group":{"-children":[' * depth + '{"Group":{}}' + ']}}' * depth
+            document = '{"X3D":{"Scene":{"-children":[%s]}}}' % nested
+            scene = readers.read(document.encode('utf-8'), encoding='json')
+            self.assertEqual([p.severity for p in scene.problems], ['error'], depth)
+            self.assertIn('nested too deeply', scene.problems[0].message)
 
 
 class TestNodes(unittest.TestCase):
