@@ -54,13 +54,13 @@ looks like.
 It announced the removal and left the child in the list. Only the slice form
 deleted anything.
 
-### A node appended to a scene learns which scene it is in
+### A node appended to a scene gets scene root
 
 `scene.children.append(node)` left the node without a scene root, so `getProto`
 and the DEF names did not reach it; only assignment to the whole field passed
 the root down. Both do now.
 
-## What a file can say that it could not
+## Format improvements
 
 - **Every registered field type can be read.** `SFVec4f`, `SFVec2d`, `SFVec3d`,
   `SFVec4d`, `SFUInt32`, `SFArray32`, `MFVec4f`, `MFVec2d`, `MFVec3d`,
@@ -70,9 +70,6 @@ the root down. Both do now.
 - **A file that is a header and nothing else parses**, as does one whose last
   line is a comment.
 - **A PROTO declared without a body can be written out.**
-
-## What the writer gets right
-
 - An **MFString** field is written as a list of strings rather than as a list of
   nodes. A node with a non-empty MFString — `Text`, `WorldInfo`, `Anchor`,
   `ImageTexture`, `Script`, `Inline` — was written with an opening bracket that
