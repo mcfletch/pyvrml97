@@ -11,12 +11,16 @@ at some point want to create a real "prototype" class,
 we could do so with most changes confined to this
 module.
 """
+from __future__ import annotations
 
 import weakref
-from typing import TYPE_CHECKING, Any, Literal, Optional, TypeAlias, overload
+from typing import TYPE_CHECKING, Any, Literal, Optional, overload
 from vrml import field
 from vrml import field as fieldmodule
 if TYPE_CHECKING:
+    # typing has TypeAlias from Python 3.10; the annotations naming it are
+    # not evaluated, so only the checker needs the name.
+    from typing import TypeAlias
     # Under a private name: the modules that star-import this one include
     # vrml.node, which defines Node.
     from vrml import node as _node

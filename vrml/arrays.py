@@ -5,8 +5,15 @@ dot`` rather than reaching for numpy itself, and so that the few
 scenegraph-shaped helpers -- :func:`safeCompare`, :func:`contiguous` -- sit
 beside the numpy names they wrap.
 """
+from __future__ import annotations
+
 from collections.abc import Sequence
-from typing import Any, TypeAlias
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    # typing has TypeAlias from Python 3.10; the annotations naming it are
+    # not evaluated, so only the checker needs the name.
+    from typing import TypeAlias
 
 # Named rather than starred. `from numpy import *` puts 500 names in this
 # module so that consumers can reach about sixty of them, and every one of
