@@ -1,5 +1,3 @@
-import importlib
-
 import numpy as np
 import pytest
 import unittest
@@ -90,11 +88,14 @@ class TestTransformMatrix( unittest.TestCase ):
                 assert allclose(firstmatrix,secondmatrix, atol=0.000001), (firstmatrix,secondmatrix,name)
 
 
-@pytest.mark.parametrize('module', ['vrml.vrml97._transformmatrix',
-                                    'vrml.vrml97._transformmatrix_accel'])
-def test_transform_matrices_are_double_precision(module):
+@pytest.mark.parametrize('found', [
+    pytest.param(_transformmatrix, id='python'),
+    pytest.param(_transformmatrix_accel, id='accelerated', marks=pytest.mark.skipif(
+        _transformmatrix_accel is None, reason='the accelerator is not installed',
+    )),
+])
+def test_transform_matrices_are_double_precision(found):
     """A geocentric offset survives to the millimetre"""
-    found = importlib.import_module(module)
     forward, inverse = found.transMatrix((6378137.123, -4.5e6, 0.001))
     assert forward.dtype == np.float64
     assert forward[3, 0] == pytest.approx(6378137.123, abs=1e-6)
