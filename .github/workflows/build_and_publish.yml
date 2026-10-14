@@ -70,29 +70,6 @@ jobs:
           name: cibw-sdist-accel
           path: dist/*.tar.gz
 
-  upload_pypi_test:
-    needs: [build_wheels, build_sdist, build_sdist_accel]
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
-    # only push to pypi if we are pushing to master
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/develop')
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          # unpacks all CIBW artifacts into dist/
-          pattern: cibw-*
-          path: dist
-          merge-multiple: true
-
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-          # Skip files already on PyPI so a re-run doesn't 400 the whole job on a
-          # single conflicting file. (Does not bypass PyPI's ">14 days" rule for
-          # genuinely new files added to an old release.)
-          skip-existing: true
 
   # Whether there is anything to publish. Asked before the upload rather than
   # left to PyPI to reject, so a push that does not bump the version is an
