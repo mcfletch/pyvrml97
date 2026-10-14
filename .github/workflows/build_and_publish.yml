@@ -130,4 +130,3 @@ jobs:
           # single conflicting file. (Does not bypass PyPI's ">14 days" rule for
           # genuinely new files added to an old release.)
           skip-existing: true
-        # repository-url: https://test.pypi.org/legacy/
