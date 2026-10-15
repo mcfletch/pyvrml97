@@ -40,7 +40,7 @@ class MovieTexture(timesensor.Clocked, x3d.MovieTexture):
         """`speed`"""
         return float(self.speed)
 
-    def _send(self, _now: float, elapsed: float, fraction: float) -> None:
+    def _send(self, now: float, elapsed: float, fraction: float) -> None:  # noqa: ARG002 - the base method's signature is kept
         self.__dict__['_fraction'] = fraction
         self.elapsedTime = elapsed
 

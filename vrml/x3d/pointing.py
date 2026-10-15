@@ -182,7 +182,7 @@ class Dragging(Pointing):
         """`point` (or a direction) in the sensor's turned coordinates"""
         return np.asarray(self.turning().T @ _vector(point))
 
-    def end(self, _over: bool, _now: float) -> None:
+    def end(self, over: bool, now: float) -> None:  # noqa: ARG002 - the base method's signature is kept
         last = self.__dict__.get('_last')
         if self.autoOffset and last is not None:
             self.offset = last
@@ -191,7 +191,7 @@ class Dragging(Pointing):
 class PlaneSensor(Dragging, x3d.PlaneSensor):
     """A drag across the plane through the first hit, parallel to z=0"""
 
-    def start(self, hit: Hit, _ray: Ray) -> None:
+    def start(self, hit: Hit, ray: Ray) -> None:  # noqa: ARG002 - the base method's signature is kept
         self.__dict__.update(_first=self.into(hit.point), _last=None)
 
     def drag(self, ray: Ray) -> None:
@@ -278,7 +278,7 @@ def _quaternion_between(a: np.ndarray, b: np.ndarray) -> np.ndarray:
 class SphereSensor(Dragging, x3d.SphereSensor):
     """A drag over the sphere about the sensor's origin through the first hit"""
 
-    def start(self, hit: Hit, _ray: Ray) -> None:
+    def start(self, hit: Hit, ray: Ray) -> None:  # noqa: ARG002 - the base method's signature is kept
         first = _vector(hit.point)
         self.__dict__.update(_first=first, _radius=float(np.linalg.norm(first)), _last=None)
 
