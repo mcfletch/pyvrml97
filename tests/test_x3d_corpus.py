@@ -199,6 +199,8 @@ class CorpusTests:
     """The checks, over whichever directory of scenes a subclass names"""
 
     directory = ''
+    #: What the recorded faults' paths have before the scene's path under `directory`
+    prefix = ''
     #: Scenes whose content has a problem the readers report: the first two
     #: route to an initializeOnly field of their own prototype, and
     #: XmpMetadataEmbedded gives MFString values without quotes.
@@ -218,7 +220,7 @@ class CorpusTests:
 
     def holds(self, check, path, found):
         """`found`, the failures `check` reports of `path`, is none, or names its recorded fault"""
-        relative = os.path.relpath(path, self.directory).replace(os.sep, '/')
+        relative = self.prefix + os.path.relpath(path, self.directory).replace(os.sep, '/')
         found = [without_addresses(str(item)) for item in found]
         entry = self.faults.get((check, relative))
         if entry is None:
@@ -331,6 +333,7 @@ class CorpusTests:
 
 class TestTheCommittedSubset(CorpusTests, unittest.TestCase):
     directory = SUBSET
+    prefix = 'www.web3d.org/x3d/content/examples/'
 
     def test_the_subset_is_there(self):
         self.assertGreaterEqual(len(self.paths), 25)

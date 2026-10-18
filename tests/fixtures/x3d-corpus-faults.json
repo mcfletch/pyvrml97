@@ -4016,6 +4016,18 @@
    "path": "www.web3d.org/x3d/content/examples/HumanoidAnimation/Poses/HAnimPoseExample.x3d",
    "reason": "content-faults",
    "fails": "ROUTE to HAnimPose.isLoaded: no such field"
+  },
+  {
+   "check": "encoding",
+   "path": "www.web3d.org/x3d/content/examples/ConformanceNist/STEP/CTC05/NistCtc05Asme1Ap242V2Spri.x3dv",
+   "reason": "translation-metadata-doubled",
+   "fails": "children[3].metadata.value: 3 nodes != 7"
+  },
+  {
+   "check": "vrml97",
+   "path": "www.web3d.org/x3d/content/examples/ConformanceNist/STEP/CTC05/NistCtc05Asme1Ap242V2Spri.wrl",
+   "reason": "translation-unreadable",
+   "fails": "cannot read 'metadata MetadataStr"
   }
  ]
 }

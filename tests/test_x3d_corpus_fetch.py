@@ -40,7 +40,7 @@ MEMBERS = [
 
 
 def extracted(root):
-    return sorted(os.path.relpath(os.path.join(path, name), root)
+    return sorted(os.path.relpath(os.path.join(path, name), root).replace(os.sep, '/')
                   for path, _dirs, names in os.walk(root) for name in names)
 
 
