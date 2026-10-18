@@ -23,7 +23,7 @@ dependencies = [
     # 2.2.4 has none past 3.11 and its mxTextTools C extension does not compile
     # against a current GCC, so an install that resolves to it fails to build.
     # Named as a pre-release so an installer does not skip it.
-    "simpleparse >= 3.0.0a3",
+    "simpleparse >= 3.0.1a2",
 ]
 keywords = [
     "VRML",
