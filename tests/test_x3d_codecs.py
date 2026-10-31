@@ -14,6 +14,7 @@ import numpy as np
 from vrml import field
 from vrml import fieldtypes  # noqa: F401 registers the types newField looks up
 from vrml.x3d import codecs
+from vrml.x3d.writers import json as json_writer
 
 
 def held(type_name, text):
@@ -228,6 +229,21 @@ class TestWriting(unittest.TestCase):
         declared = field.newField('value', 'SFVec3f')
         self.assertEqual(codecs.encode('SFVec3f', declared.coerce([0.1, 1, -2.5])),
                          '0.1 1 -2.5')
+
+    def test_a_float32_type_held_in_doubles_is_written_at_float32_precision(self):
+        """MFRotation is held in doubles that a document's text was read into
+        at float32 precision; the text they read from is what comes back."""
+        declared = field.newField('value', 'MFRotation')
+        held = declared.coerce(np.array([[0, 1, 0, 6.28000020980835]], np.float64))
+        self.assertEqual(codecs.encode('MFRotation', held), '0 1 0 6.28')
+
+    def test_a_double_type_keeps_its_precision(self):
+        self.assertEqual(codecs.encode('MFDouble', [6.28000020980835]), '6.28000020980835')
+
+    def test_a_float32_type_is_written_at_float32_precision_in_json(self):
+        declared = field.newField('value', 'MFRotation')
+        held = declared.coerce(np.array([[0, 1, 0, 6.28000020980835]], np.float64))
+        self.assertEqual(json_writer.json_value('MFRotation', held), [0, 1, 0, 6.28])
 
     def test_a_small_number_is_written_without_an_exponent(self):
         # The schema's patterns for colours and other unit ranges allow an

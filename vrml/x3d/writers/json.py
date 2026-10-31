@@ -41,6 +41,8 @@ def json_value(type_name: str, value: Any) -> Any:
         return [int(item) for image in value for item in np.asarray(image).ravel()]
     if type_name in ('SFInt32', 'SFFloat', 'SFDouble', 'SFTime'):
         return _number(value)
+    if type_name in codecs.FLOAT32_TYPES:
+        value = codecs.single(value)
     return [_number(item) for item in np.asarray(value).ravel()]
 
 

@@ -319,6 +319,25 @@ ENCODERS.update({
 })
 
 
+def single(value: Any) -> Any:
+    """`value` at the precision of a float32 type
+
+    A field of these types is held in doubles where an engine chooses, but its
+    document gives it at float32 precision, which is also the precision it
+    is written at.
+    """
+    return np.asarray(value, dtype=np.float32)
+
+
+def _at_single(encoder: "Callable[[Any], str]") -> "Callable[[Any], str]":
+    def encode(value: Any) -> str:
+        return encoder(single(value))
+    return encode
+
+
+ENCODERS.update({name: _at_single(ENCODERS[name]) for name in FLOAT32_TYPES})
+
+
 def encode(type_name: str, value: Any) -> str:
     """`value`, of a field of type `type_name`, as XML attribute text
 
